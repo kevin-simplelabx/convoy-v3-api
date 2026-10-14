@@ -1,0 +1,8008 @@
+{
+  "school": {
+    "name": "St. Stephen's School",
+    "short": "SSS",
+    "lat": 1.31879,
+    "lng": 103.917258,
+    "address": "20 Siglap View, Singapore 455789"
+  },
+  "riders": [
+    {
+      "rid": "S-27001",
+      "name": "Aiden Rahman",
+      "postal": "370066",
+      "address": "66 Circuit Road, Singapore 370066",
+      "lat": 1.326536,
+      "lng": 103.887673,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27002",
+      "name": "Isabel Wong",
+      "postal": "370075",
+      "address": "75 Circuit Road, Macpherson Blossom, Singapore 370075",
+      "lat": 1.325259,
+      "lng": 103.889482,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27003",
+      "name": "Priya Wee",
+      "postal": "371018",
+      "address": "18A Circuit Road, Macpherson Residency, Singapore 371018",
+      "lat": 1.329321,
+      "lng": 103.888072,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27004",
+      "name": "Hannah Goh",
+      "postal": "372083",
+      "address": "83B Circuit Road, Macpherson Spring, Singapore 372083",
+      "lat": 1.323461,
+      "lng": 103.890038,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27005",
+      "name": "Ryan Sim",
+      "postal": "381123",
+      "address": "123 Paya Lebar Way, Singapore 381123",
+      "lat": 1.322756,
+      "lng": 103.883235,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27006",
+      "name": "Denise Toh",
+      "postal": "387395",
+      "address": "20 Sims Drive, Penrose, Singapore 387395",
+      "lat": 1.319413,
+      "lng": 103.879496,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27007",
+      "name": "Xavier Pillai",
+      "postal": "387396",
+      "address": "22 Sims Drive, Penrose, Singapore 387396",
+      "lat": 1.31949,
+      "lng": 103.879995,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27008",
+      "name": "Grace Fernandez",
+      "postal": "387906",
+      "address": "8 Lorong 37 Geylang, Guilin Mansions, Singapore 387906",
+      "lat": 1.315788,
+      "lng": 103.88996,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27009",
+      "name": "Nadia Tan",
+      "postal": "387946",
+      "address": "16 Lorong 35 Geylang, Sixteen35 Residences, Singapore 387946",
+      "lat": 1.315474,
+      "lng": 103.888828,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27010",
+      "name": "Vikram Lee",
+      "postal": "390052",
+      "address": "52 Cassia Crescent, Singapore 390052",
+      "lat": 1.310672,
+      "lng": 103.885032,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27011",
+      "name": "Marcus Quek",
+      "postal": "390052",
+      "address": "52 Cassia Crescent, Singapore 390052",
+      "lat": 1.310712,
+      "lng": 103.885072,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27012",
+      "name": "Bernice Koh",
+      "postal": "390087",
+      "address": "87 Jalan Satu, Mountbatten Community Club, Singapore 390087",
+      "lat": 1.309205,
+      "lng": 103.886918,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27013",
+      "name": "Samuel Chan",
+      "postal": "391007",
+      "address": "7 Pine Close, Singapore 391007",
+      "lat": 1.307676,
+      "lng": 103.882412,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27014",
+      "name": "Elena Yeo",
+      "postal": "398414",
+      "address": "9 Lorong 28 Geylang, Atrium Residences, Singapore 398414",
+      "lat": 1.313337,
+      "lng": 103.886158,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27015",
+      "name": "Lucas Ismail",
+      "postal": "398432",
+      "address": "28 Lorong 28 Geylang, Melosa, Singapore 398432",
+      "lat": 1.312537,
+      "lng": 103.885403,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27016",
+      "name": "Wei Jie Ho",
+      "postal": "399936",
+      "address": "34 Dakota Crescent, Dakota Residences, Singapore 399936",
+      "lat": 1.306373,
+      "lng": 103.887085,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27017",
+      "name": "Kai Kumar",
+      "postal": "399947",
+      "address": "82 Dakota Crescent, Waterbank At Dakota, Singapore 399947",
+      "lat": 1.306703,
+      "lng": 103.889574,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27018",
+      "name": "Zara Ong",
+      "postal": "400002",
+      "address": "2 Eunos Crescent, Singapore 400002",
+      "lat": 1.320754,
+      "lng": 103.902873,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27019",
+      "name": "Nathan D’Souza",
+      "postal": "400010",
+      "address": "10 Eunos Crescent, Singapore 400010",
+      "lat": 1.322287,
+      "lng": 103.902721,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27020",
+      "name": "Chloe Ng",
+      "postal": "400302",
+      "address": "302 Ubi Avenue 1, Singapore 400302",
+      "lat": 1.330026,
+      "lng": 103.900995,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27021",
+      "name": "Jun Wei Teo",
+      "postal": "400313",
+      "address": "313 Ubi Avenue 1, Kampong Ubi Greenville, Singapore 400313",
+      "lat": 1.32906,
+      "lng": 103.903899,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27022",
+      "name": "Rayyan Pereira",
+      "postal": "400341",
+      "address": "341 Ubi Avenue 1, Kampong Ubi View, Singapore 400341",
+      "lat": 1.326713,
+      "lng": 103.901561,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27023",
+      "name": "Ian Nair",
+      "postal": "408966",
+      "address": "900 Sims Avenue, Parc Esta, Singapore 408966",
+      "lat": 1.318446,
+      "lng": 103.903431,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27024",
+      "name": "Sarah Low",
+      "postal": "408969",
+      "address": "906 Sims Avenue, Parc Esta, Singapore 408969",
+      "lat": 1.317774,
+      "lng": 103.903589,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27025",
+      "name": "Gabriel Chong",
+      "postal": "408970",
+      "address": "908 Sims Avenue, Parc Esta, Singapore 408970",
+      "lat": 1.317744,
+      "lng": 103.90314,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27026",
+      "name": "Yvonne Chua",
+      "postal": "409044",
+      "address": "233 Paya Lebar Road, Le Crescendo, Singapore 409044",
+      "lat": 1.330497,
+      "lng": 103.888409,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27027",
+      "name": "Haris Seah",
+      "postal": "409044",
+      "address": "233 Paya Lebar Road, Le Crescendo, Singapore 409044",
+      "lat": 1.330537,
+      "lng": 103.888449,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27028",
+      "name": "Owen Lim",
+      "postal": "410101",
+      "address": "101 Lengkong Tiga, Kembangan Gardens, Singapore 410101",
+      "lat": 1.32516,
+      "lng": 103.910889,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27029",
+      "name": "Ethan Yusof",
+      "postal": "410102",
+      "address": "102 Lengkong Tiga, Kembangan Gardens, Singapore 410102",
+      "lat": 1.325579,
+      "lng": 103.910658,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27030",
+      "name": "Natalie Loh",
+      "postal": "410103",
+      "address": "103 Lengkong Tiga, Kembangan Gardens, Singapore 410103",
+      "lat": 1.325855,
+      "lng": 103.910599,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27031",
+      "name": "Caleb Rahman",
+      "postal": "410103",
+      "address": "103 Lengkong Tiga, Kembangan Gardens, Singapore 410103",
+      "lat": 1.325895,
+      "lng": 103.910639,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27032",
+      "name": "Valerie Wong",
+      "postal": "410643",
+      "address": "643 Bedok Reservoir Road, Eunos Tenaga Ville, Singapore 410643",
+      "lat": 1.33091,
+      "lng": 103.905857,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27033",
+      "name": "Farhan Wee",
+      "postal": "410655",
+      "address": "655 Jalan Tenaga, Eunos Damai Ville, Singapore 410655",
+      "lat": 1.333359,
+      "lng": 103.906851,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27034",
+      "name": "Mei Ling Goh",
+      "postal": "416826",
+      "address": "32 Lorong Mydin, Astoria Park, Singapore 416826",
+      "lat": 1.321255,
+      "lng": 103.912348,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27035",
+      "name": "Umairah Sim",
+      "postal": "416827",
+      "address": "34 Lorong Mydin, Astoria Park, Singapore 416827",
+      "lat": 1.321778,
+      "lng": 103.912252,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27036",
+      "name": "Leah Toh",
+      "postal": "416976",
+      "address": "72A Lorong Melayu, Kembangan Estate, Singapore 416976",
+      "lat": 1.322386,
+      "lng": 103.91035,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27037",
+      "name": "Aaron Pillai",
+      "postal": "417111",
+      "address": "42A Lorong Marzuki, Kembangan Estate, Singapore 417111",
+      "lat": 1.322274,
+      "lng": 103.909133,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27038",
+      "name": "Rachel Fernandez",
+      "postal": "417660",
+      "address": "51C Lengkong Empat, Astor, Singapore 417660",
+      "lat": 1.328796,
+      "lng": 103.912964,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27039",
+      "name": "Darius Tan",
+      "postal": "418739",
+      "address": "16C Jalan Rimau, Singapore 418739",
+      "lat": 1.329185,
+      "lng": 103.908102,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27040",
+      "name": "Kavya Lee",
+      "postal": "418739",
+      "address": "16C Jalan Rimau, Singapore 418739",
+      "lat": 1.329225,
+      "lng": 103.908142,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27041",
+      "name": "Sofia Quek",
+      "postal": "419154",
+      "address": "1 Jalan Kembangan, The Trumps, Singapore 419154",
+      "lat": 1.320026,
+      "lng": 103.913487,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27042",
+      "name": "Jasmine Koh",
+      "postal": "419572",
+      "address": "30 Jalan Daud, The Heliconia, Singapore 419572",
+      "lat": 1.326353,
+      "lng": 103.9089,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27043",
+      "name": "Timothy Chan",
+      "postal": "419833",
+      "address": "382 Changi Road, The Champagne, Singapore 419833",
+      "lat": 1.318049,
+      "lng": 103.910667,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27044",
+      "name": "Joanna Yeo",
+      "postal": "420004",
+      "address": "4 Joo Chiat Road, Singapore 420004",
+      "lat": 1.315408,
+      "lng": 103.89894,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27045",
+      "name": "Aiden Ismail",
+      "postal": "423401",
+      "address": "63A Lorong M Telok Kurau, Palacio, Singapore 423401",
+      "lat": 1.311492,
+      "lng": 103.914071,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27046",
+      "name": "Isabel Ho",
+      "postal": "423833",
+      "address": "199 Telok Kurau Road, Cadence Light, Singapore 423833",
+      "lat": 1.312452,
+      "lng": 103.911015,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27047",
+      "name": "Priya Kumar",
+      "postal": "423844",
+      "address": "246 Telok Kurau Road, Residence Twenty-Two, Singapore 423844",
+      "lat": 1.311012,
+      "lng": 103.911042,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27048",
+      "name": "Hannah Ong",
+      "postal": "424158",
+      "address": "34H Saint Patrick's Road, Singapore 424158",
+      "lat": 1.307505,
+      "lng": 103.913451,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27049",
+      "name": "Ryan D’Souza",
+      "postal": "424171",
+      "address": "56 Saint Patrick's Road, Saint Patrick's Residences, Singapore 424171",
+      "lat": 1.307523,
+      "lng": 103.914925,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27050",
+      "name": "Denise Ng",
+      "postal": "424179",
+      "address": "76 Saint Patrick's Road, Seventy St. Patricks, Singapore 424179",
+      "lat": 1.307905,
+      "lng": 103.915163,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27051",
+      "name": "Xavier Teo",
+      "postal": "424211",
+      "address": "130 Saint Patrick's Road, Grand Duchess At Saint Patrick's, Singapore 424211",
+      "lat": 1.30851,
+      "lng": 103.91594,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27052",
+      "name": "Grace Pereira",
+      "postal": "424212",
+      "address": "132 Saint Patrick's Road, Grand Duchess At Saint Patrick's, Singapore 424212",
+      "lat": 1.308194,
+      "lng": 103.916058,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27053",
+      "name": "Nadia Nair",
+      "postal": "425141",
+      "address": "11 Lorong N Telok Kurau, Berkeley Residences, Singapore 425141",
+      "lat": 1.309619,
+      "lng": 103.909258,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27054",
+      "name": "Vikram Low",
+      "postal": "425163",
+      "address": "38 Lorong N Telok Kurau, Palmera Residence, Singapore 425163",
+      "lat": 1.309505,
+      "lng": 103.911289,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27055",
+      "name": "Marcus Chong",
+      "postal": "425357",
+      "address": "58 Lorong M Telok Kurau, Singapore 425357",
+      "lat": 1.310842,
+      "lng": 103.913064,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27056",
+      "name": "Bernice Chua",
+      "postal": "425359",
+      "address": "59A Lorong M Telok Kurau, Singapore 425359",
+      "lat": 1.31132,
+      "lng": 103.913384,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27057",
+      "name": "Samuel Seah",
+      "postal": "425380",
+      "address": "70 Lorong M Telok Kurau, The Seawind, Singapore 425380",
+      "lat": 1.310904,
+      "lng": 103.914316,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27058",
+      "name": "Elena Lim",
+      "postal": "425380",
+      "address": "70 Lorong M Telok Kurau, The Seawind, Singapore 425380",
+      "lat": 1.310944,
+      "lng": 103.914356,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27059",
+      "name": "Lucas Yusof",
+      "postal": "425412",
+      "address": "76 Lorong M Telok Kurau, The Seawind, Singapore 425412",
+      "lat": 1.31048,
+      "lng": 103.91363,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27060",
+      "name": "Wei Jie Loh",
+      "postal": "425609",
+      "address": "10 Lorong K Telok Kurau, Kings Apartments, Singapore 425609",
+      "lat": 1.311911,
+      "lng": 103.907721,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27061",
+      "name": "Kai Rahman",
+      "postal": "425610",
+      "address": "12 Lorong K Telok Kurau, Kings Apartments, Singapore 425610",
+      "lat": 1.311911,
+      "lng": 103.907721,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27062",
+      "name": "Zara Wong",
+      "postal": "425634",
+      "address": "29B Lorong K Telok Kurau, Seng Hua Gardens, Singapore 425634",
+      "lat": 1.312825,
+      "lng": 103.908345,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27063",
+      "name": "Nathan Wee",
+      "postal": "425687",
+      "address": "70 Lorong K Telok Kurau, The Cristallo, Singapore 425687",
+      "lat": 1.312663,
+      "lng": 103.911509,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27064",
+      "name": "Chloe Goh",
+      "postal": "426258",
+      "address": "68 Lorong G Telok Kurau, The Medley, Singapore 426258",
+      "lat": 1.316989,
+      "lng": 103.911237,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27065",
+      "name": "Jun Wei Sim",
+      "postal": "426327",
+      "address": "61 Lorong G Telok Kurau, Espira Spring, Singapore 426327",
+      "lat": 1.317778,
+      "lng": 103.910426,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27066",
+      "name": "Rayyan Toh",
+      "postal": "427711",
+      "address": "532 Joo Chiat Road, Parc Seabreeze, Singapore 427711",
+      "lat": 1.30404,
+      "lng": 103.905803,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27067",
+      "name": "Ian Pillai",
+      "postal": "428440",
+      "address": "30 Jago Close, Singapore 428440",
+      "lat": 1.306321,
+      "lng": 103.908214,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27068",
+      "name": "Sarah Fernandez",
+      "postal": "428751",
+      "address": "30 East Coast Road, Katong V, Singapore 428751",
+      "lat": 1.303947,
+      "lng": 103.902826,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27069",
+      "name": "Gabriel Tan",
+      "postal": "428751",
+      "address": "30 East Coast Road, Katong V, Singapore 428751",
+      "lat": 1.303987,
+      "lng": 103.902866,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27070",
+      "name": "Yvonne Lee",
+      "postal": "428778",
+      "address": "66 East Coast Road, The Flow Mall, Singapore 428778",
+      "lat": 1.304574,
+      "lng": 103.904203,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27071",
+      "name": "Haris Quek",
+      "postal": "428778",
+      "address": "66 East Coast Road, The Flow Mall, Singapore 428778",
+      "lat": 1.304614,
+      "lng": 103.904243,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27072",
+      "name": "Owen Koh",
+      "postal": "428829",
+      "address": "139 East Coast Road, Singapore 428829",
+      "lat": 1.306313,
+      "lng": 103.905072,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27073",
+      "name": "Ethan Chan",
+      "postal": "428829",
+      "address": "139 East Coast Road, Singapore 428829",
+      "lat": 1.306353,
+      "lng": 103.905112,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27074",
+      "name": "Natalie Yeo",
+      "postal": "428866",
+      "address": "158 East Coast Road, Singapore 428866",
+      "lat": 1.306363,
+      "lng": 103.906001,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27075",
+      "name": "Caleb Ismail",
+      "postal": "428866",
+      "address": "158 East Coast Road, Singapore 428866",
+      "lat": 1.306403,
+      "lng": 103.906041,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27076",
+      "name": "Valerie Ho",
+      "postal": "428866",
+      "address": "158 East Coast Road, Singapore 428866",
+      "lat": 1.306443,
+      "lng": 103.906081,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27077",
+      "name": "Farhan Kumar",
+      "postal": "428866",
+      "address": "158 East Coast Road, Singapore 428866",
+      "lat": 1.306483,
+      "lng": 103.906121,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27078",
+      "name": "Mei Ling Ong",
+      "postal": "429031",
+      "address": "458 East Coast Road, Singapore 429031",
+      "lat": 1.308952,
+      "lng": 103.913997,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27079",
+      "name": "Umairah D’Souza",
+      "postal": "429248",
+      "address": "84 Duku Road, Singapore 429248",
+      "lat": 1.310244,
+      "lng": 103.906365,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27080",
+      "name": "Leah Ng",
+      "postal": "430003",
+      "address": "3 Haig Road, Haig View, Singapore 430003",
+      "lat": 1.311703,
+      "lng": 103.897379,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27081",
+      "name": "Aaron Teo",
+      "postal": "436914",
+      "address": "121 Tanjong Rhu Road, Tanjong Ria Condominium, Singapore 436914",
+      "lat": 1.296624,
+      "lng": 103.874305,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27082",
+      "name": "Rachel Pereira",
+      "postal": "436914",
+      "address": "121 Tanjong Rhu Road, Tanjong Ria Condominium, Singapore 436914",
+      "lat": 1.296664,
+      "lng": 103.874345,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27083",
+      "name": "Darius Nair",
+      "postal": "436917",
+      "address": "201 Tanjong Rhu Road, Parkshore, Singapore 436917",
+      "lat": 1.296732,
+      "lng": 103.870634,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27084",
+      "name": "Kavya Low",
+      "postal": "436923",
+      "address": "183 Tanjong Rhu Road, Sanctuary Green, Singapore 436923",
+      "lat": 1.295946,
+      "lng": 103.87137,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27085",
+      "name": "Sofia Chong",
+      "postal": "437037",
+      "address": "249 Tanjong Katong Road, Singapore 437037",
+      "lat": 1.308223,
+      "lng": 103.895274,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27086",
+      "name": "Jasmine Chua",
+      "postal": "437874",
+      "address": "51 Meyer Road, The Belvedere, Singapore 437874",
+      "lat": 1.297049,
+      "lng": 103.887645,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27087",
+      "name": "Timothy Seah",
+      "postal": "437894",
+      "address": "66 Meyer Road, La Meyer, Singapore 437894",
+      "lat": 1.297681,
+      "lng": 103.889729,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27088",
+      "name": "Joanna Lim",
+      "postal": "437932",
+      "address": "121 Meyer Road, The Makena, Singapore 437932",
+      "lat": 1.297693,
+      "lng": 103.894446,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27089",
+      "name": "Aiden Yusof",
+      "postal": "437991",
+      "address": "3 Meyer Place, Meyer Residence, Singapore 437991",
+      "lat": 1.298588,
+      "lng": 103.886195,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27090",
+      "name": "Isabel Loh",
+      "postal": "438051",
+      "address": "10 Margate Road, Meier Suites, Singapore 438051",
+      "lat": 1.298775,
+      "lng": 103.888518,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27091",
+      "name": "Priya Rahman",
+      "postal": "438133",
+      "address": "70 Lim Ah Woo Road, Suites @ Guillemard, Singapore 438133",
+      "lat": 1.31252,
+      "lng": 103.89176,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27092",
+      "name": "Hannah Wong",
+      "postal": "438448",
+      "address": "19 Jalan Nuri, Singapore 438448",
+      "lat": 1.298724,
+      "lng": 103.892434,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27093",
+      "name": "Ryan Wee",
+      "postal": "438622",
+      "address": "18 Ipoh Lane, Emery Point, Singapore 438622",
+      "lat": 1.311586,
+      "lng": 103.895824,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27094",
+      "name": "Denise Goh",
+      "postal": "438791",
+      "address": "152 Haig Road, Haig Court, Singapore 438791",
+      "lat": 1.306565,
+      "lng": 103.898292,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27095",
+      "name": "Xavier Sim",
+      "postal": "439089",
+      "address": "21 Fort Road, Fort Gardens, Singapore 439089",
+      "lat": 1.299139,
+      "lng": 103.884876,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27096",
+      "name": "Grace Toh",
+      "postal": "439089",
+      "address": "21 Fort Road, Fort Gardens, Singapore 439089",
+      "lat": 1.299179,
+      "lng": 103.884916,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27097",
+      "name": "Nadia Pillai",
+      "postal": "439431",
+      "address": "21 Butterworth Lane, Butterworth View, Singapore 439431",
+      "lat": 1.312718,
+      "lng": 103.895272,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27098",
+      "name": "Vikram Fernandez",
+      "postal": "439445",
+      "address": "2 Butterworth Lane, Butterworth 8, Singapore 439445",
+      "lat": 1.312122,
+      "lng": 103.894664,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27099",
+      "name": "Marcus Tan",
+      "postal": "439445",
+      "address": "2 Butterworth Lane, Butterworth 8, Singapore 439445",
+      "lat": 1.312162,
+      "lng": 103.894704,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27100",
+      "name": "Bernice Lee",
+      "postal": "439612",
+      "address": "89 Branksome Road, Singapore 439612",
+      "lat": 1.303159,
+      "lng": 103.889445,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27101",
+      "name": "Samuel Quek",
+      "postal": "439829",
+      "address": "125 Arthur Road, Arthur Mansions, Singapore 439829",
+      "lat": 1.298902,
+      "lng": 103.887152,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27102",
+      "name": "Elena Koh",
+      "postal": "439865",
+      "address": "15 Amber Road, Seaview Point, Singapore 439865",
+      "lat": 1.299531,
+      "lng": 103.899817,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27103",
+      "name": "Lucas Chan",
+      "postal": "439959",
+      "address": "12 Amber Gardens, King's Mansion, Singapore 439959",
+      "lat": 1.300613,
+      "lng": 103.898409,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27104",
+      "name": "Wei Jie Yeo",
+      "postal": "439966",
+      "address": "35 Amber Gardens, The Esta, Singapore 439966",
+      "lat": 1.301765,
+      "lng": 103.89973,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27105",
+      "name": "Kai Ismail",
+      "postal": "439966",
+      "address": "35 Amber Gardens, The Esta, Singapore 439966",
+      "lat": 1.301805,
+      "lng": 103.89977,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27106",
+      "name": "Zara Ho",
+      "postal": "439968",
+      "address": "33 Amber Gardens, The Esta, Singapore 439968",
+      "lat": 1.301901,
+      "lng": 103.900094,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27107",
+      "name": "Nathan Kumar",
+      "postal": "439968",
+      "address": "33 Amber Gardens, The Esta, Singapore 439968",
+      "lat": 1.301941,
+      "lng": 103.900134,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27108",
+      "name": "Chloe Ong",
+      "postal": "439980",
+      "address": "18 Amber Gardens, Amber Park, Singapore 439980",
+      "lat": 1.300378,
+      "lng": 103.899209,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27109",
+      "name": "Jun Wei D’Souza",
+      "postal": "439981",
+      "address": "18A Amber Gardens, Amber Park, Singapore 439981",
+      "lat": 1.300378,
+      "lng": 103.899209,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27110",
+      "name": "Rayyan Ng",
+      "postal": "440013",
+      "address": "13 Marine Terrace, Marine Terrace Breeze, Singapore 440013",
+      "lat": 1.304042,
+      "lng": 103.915576,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27111",
+      "name": "Ian Teo",
+      "postal": "440017",
+      "address": "17 Marine Terrace, Marine Terrace Breeze, Singapore 440017",
+      "lat": 1.303768,
+      "lng": 103.914176,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27112",
+      "name": "Sarah Pereira",
+      "postal": "440032",
+      "address": "32 Marine Crescent, Marine Crescent Ville, Singapore 440032",
+      "lat": 1.303178,
+      "lng": 103.911807,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27113",
+      "name": "Gabriel Nair",
+      "postal": "440032",
+      "address": "32 Marine Crescent, Marine Crescent Ville, Singapore 440032",
+      "lat": 1.303218,
+      "lng": 103.911847,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27114",
+      "name": "Yvonne Low",
+      "postal": "440043",
+      "address": "43 Marine Crescent, Marine Crescent Gardens, Singapore 440043",
+      "lat": 1.305519,
+      "lng": 103.913022,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27115",
+      "name": "Haris Chong",
+      "postal": "440044",
+      "address": "44 Marine Crescent, Marine Crescent Gardens, Singapore 440044",
+      "lat": 1.304733,
+      "lng": 103.913088,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27116",
+      "name": "Owen Chua",
+      "postal": "440047",
+      "address": "47 Marine Crescent, Marine Crescent Gardens, Singapore 440047",
+      "lat": 1.305724,
+      "lng": 103.912531,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27117",
+      "name": "Ethan Seah",
+      "postal": "440052",
+      "address": "52 Marine Terrace, Marine Terrace Haven, Singapore 440052",
+      "lat": 1.305848,
+      "lng": 103.916307,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27118",
+      "name": "Natalie Lim",
+      "postal": "440052",
+      "address": "52 Marine Terrace, Marine Terrace Haven, Singapore 440052",
+      "lat": 1.305888,
+      "lng": 103.916347,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27119",
+      "name": "Caleb Yusof",
+      "postal": "440052",
+      "address": "52 Marine Terrace, Marine Terrace Haven, Singapore 440052",
+      "lat": 1.305928,
+      "lng": 103.916387,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27120",
+      "name": "Valerie Loh",
+      "postal": "440089",
+      "address": "89 Marine Parade Central, Singapore 440089",
+      "lat": 1.30129,
+      "lng": 103.906459,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27121",
+      "name": "Farhan Rahman",
+      "postal": "448870",
+      "address": "12 Siglap Link, Seaside Residences, Singapore 448870",
+      "lat": 1.307734,
+      "lng": 103.927837,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27122",
+      "name": "Mei Ling Wong",
+      "postal": "448908",
+      "address": "5 Siglap Road, Mandarin Gardens, Singapore 448908",
+      "lat": 1.307406,
+      "lng": 103.923482,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27123",
+      "name": "Umairah Wee",
+      "postal": "448909",
+      "address": "7 Siglap Road, Mandarin Gardens, Singapore 448909",
+      "lat": 1.307699,
+      "lng": 103.925107,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27124",
+      "name": "Leah Goh",
+      "postal": "448909",
+      "address": "7 Siglap Road, Mandarin Gardens, Singapore 448909",
+      "lat": 1.307739,
+      "lng": 103.925147,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27125",
+      "name": "Aaron Sim",
+      "postal": "449029",
+      "address": "5 Marine Vista, Neptune Court, Singapore 449029",
+      "lat": 1.307073,
+      "lng": 103.922514,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27126",
+      "name": "Rachel Toh",
+      "postal": "449269",
+      "address": "80 Marine Parade Road, Parkway Parade, Singapore 449269",
+      "lat": 1.30107,
+      "lng": 103.905279,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27127",
+      "name": "Darius Pillai",
+      "postal": "449269",
+      "address": "80 Marine Parade Road, Parkway Parade, Singapore 449269",
+      "lat": 1.30111,
+      "lng": 103.905319,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27128",
+      "name": "Kavya Fernandez",
+      "postal": "449287",
+      "address": "5000D Marine Parade Road, Laguna Park, Singapore 449287",
+      "lat": 1.309046,
+      "lng": 103.930835,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27129",
+      "name": "Sofia Tan",
+      "postal": "449314",
+      "address": "91 Marine Parade Road, Marine Blue, Singapore 449314",
+      "lat": 1.304056,
+      "lng": 103.904877,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27130",
+      "name": "Jasmine Lee",
+      "postal": "455110",
+      "address": "37C Woo Mon Chew Road, Singapore 455110",
+      "lat": 1.316627,
+      "lng": 103.928894,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27131",
+      "name": "Timothy Quek",
+      "postal": "455110",
+      "address": "37C Woo Mon Chew Road, Singapore 455110",
+      "lat": 1.316667,
+      "lng": 103.928934,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27132",
+      "name": "Joanna Koh",
+      "postal": "455200",
+      "address": "6 Upper East Coast Road, Singapore 455200",
+      "lat": 1.312333,
+      "lng": 103.925541,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27133",
+      "name": "Aiden Chan",
+      "postal": "456701",
+      "address": "24 Metropole Drive, Opera Estate, Singapore 456701",
+      "lat": 1.321208,
+      "lng": 103.925206,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27134",
+      "name": "Isabel Yeo",
+      "postal": "456701",
+      "address": "24 Metropole Drive, Opera Estate, Singapore 456701",
+      "lat": 1.321248,
+      "lng": 103.925246,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27135",
+      "name": "Priya Ismail",
+      "postal": "457138",
+      "address": "10D Jalan Ulu Siglap, Singapore 457138",
+      "lat": 1.314479,
+      "lng": 103.928764,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27136",
+      "name": "Hannah Ho",
+      "postal": "457258",
+      "address": "61C Jalan Tua Kong, Elite Court, Singapore 457258",
+      "lat": 1.316853,
+      "lng": 103.925055,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27137",
+      "name": "Ryan Kumar",
+      "postal": "457258",
+      "address": "61C Jalan Tua Kong, Elite Court, Singapore 457258",
+      "lat": 1.316893,
+      "lng": 103.925095,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27138",
+      "name": "Denise Ong",
+      "postal": "457269",
+      "address": "6 Jalan Tua Kong, Crescendo Park, Singapore 457269",
+      "lat": 1.313389,
+      "lng": 103.926358,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27139",
+      "name": "Xavier D’Souza",
+      "postal": "457269",
+      "address": "6 Jalan Tua Kong, Crescendo Park, Singapore 457269",
+      "lat": 1.313429,
+      "lng": 103.926398,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27140",
+      "name": "Grace Ng",
+      "postal": "457398",
+      "address": "21 Jalan Sempadan, Villa Marina, Singapore 457398",
+      "lat": 1.311061,
+      "lng": 103.927963,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27141",
+      "name": "Nadia Teo",
+      "postal": "457398",
+      "address": "21 Jalan Sempadan, Villa Marina, Singapore 457398",
+      "lat": 1.311101,
+      "lng": 103.928003,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27142",
+      "name": "Vikram Pereira",
+      "postal": "457398",
+      "address": "21 Jalan Sempadan, Villa Marina, Singapore 457398",
+      "lat": 1.311141,
+      "lng": 103.928043,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27143",
+      "name": "Marcus Nair",
+      "postal": "457573",
+      "address": "40 Jalan Keris, Seaside Park, Singapore 457573",
+      "lat": 1.310201,
+      "lng": 103.920079,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27144",
+      "name": "Bernice Low",
+      "postal": "457601",
+      "address": "2G Jalan Jamal, Sunny Terrace, Singapore 457601",
+      "lat": 1.312875,
+      "lng": 103.925105,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27145",
+      "name": "Samuel Chong",
+      "postal": "458625",
+      "address": "20 Ernani Street, Opera Estate, Singapore 458625",
+      "lat": 1.319977,
+      "lng": 103.925652,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27146",
+      "name": "Elena Chua",
+      "postal": "458704",
+      "address": "23 Elliot Road, Elliot At The East Coast, Singapore 458704",
+      "lat": 1.311482,
+      "lng": 103.930606,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27147",
+      "name": "Lucas Seah",
+      "postal": "458876",
+      "address": "53 Elite Park Avenue, South Union Park, Singapore 458876",
+      "lat": 1.315194,
+      "lng": 103.924676,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27148",
+      "name": "Wei Jie Lim",
+      "postal": "458950",
+      "address": "59 East Coast Terrace, Axis @ Siglap, Singapore 458950",
+      "lat": 1.311864,
+      "lng": 103.923826,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27149",
+      "name": "Kai Yusof",
+      "postal": "458965",
+      "address": "520 East Coast Road, Ocean Park, Singapore 458965",
+      "lat": 1.310129,
+      "lng": 103.918411,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27150",
+      "name": "Zara Loh",
+      "postal": "459030",
+      "address": "644 East Coast Road, Singapore 459030",
+      "lat": 1.311514,
+      "lng": 103.92277,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27151",
+      "name": "Nathan Rahman",
+      "postal": "459059",
+      "address": "695B East Coast Road, Frankel Estate, Singapore 459059",
+      "lat": 1.31197,
+      "lng": 103.921966,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27152",
+      "name": "Chloe Wong",
+      "postal": "459347",
+      "address": "47A Dunbar Walk, Frankel Estate, Singapore 459347",
+      "lat": 1.314041,
+      "lng": 103.915777,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27153",
+      "name": "Jun Wei Wee",
+      "postal": "459728",
+      "address": "1B Carmen Street, Opera Estate, Singapore 459728",
+      "lat": 1.316111,
+      "lng": 103.926828,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27154",
+      "name": "Rayyan Goh",
+      "postal": "460011",
+      "address": "11 Chai Chee Road, Singapore 460011",
+      "lat": 1.326911,
+      "lng": 103.924884,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27155",
+      "name": "Ian Sim",
+      "postal": "460019",
+      "address": "19 Bedok South Road, Singapore 460019",
+      "lat": 1.319757,
+      "lng": 103.934274,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27156",
+      "name": "Sarah Toh",
+      "postal": "460025",
+      "address": "25 Chai Chee Road, Ansar Garden, Singapore 460025",
+      "lat": 1.323763,
+      "lng": 103.924156,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27157",
+      "name": "Gabriel Pillai",
+      "postal": "460028",
+      "address": "28 New Upper Changi Road, Singapore 460028",
+      "lat": 1.323695,
+      "lng": 103.934995,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27158",
+      "name": "Yvonne Fernandez",
+      "postal": "460030",
+      "address": "30 Chai Chee Avenue, Ansar Garden, Singapore 460030",
+      "lat": 1.324601,
+      "lng": 103.92496,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27159",
+      "name": "Haris Tan",
+      "postal": "460032",
+      "address": "32 Bedok South Avenue 2, Singapore 460032",
+      "lat": 1.322626,
+      "lng": 103.937816,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27160",
+      "name": "Owen Lee",
+      "postal": "460061",
+      "address": "61 Chai Chee Road, Ping-An Gardens, Singapore 460061",
+      "lat": 1.325109,
+      "lng": 103.920738,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27161",
+      "name": "Ethan Quek",
+      "postal": "460061",
+      "address": "61 Chai Chee Road, Ping-An Gardens, Singapore 460061",
+      "lat": 1.325149,
+      "lng": 103.920778,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27162",
+      "name": "Natalie Koh",
+      "postal": "460065",
+      "address": "65 New Upper Changi Road, Singapore 460065",
+      "lat": 1.324679,
+      "lng": 103.93977,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27163",
+      "name": "Caleb Chan",
+      "postal": "460066",
+      "address": "66 Bedok South Avenue 3, Siglap Lucky Valley, Singapore 460066",
+      "lat": 1.318494,
+      "lng": 103.943872,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27164",
+      "name": "Valerie Yeo",
+      "postal": "460077",
+      "address": "77 Bedok North Road, Singapore 460077",
+      "lat": 1.328696,
+      "lng": 103.941996,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27165",
+      "name": "Farhan Ismail",
+      "postal": "460081",
+      "address": "81 Bedok North Road, Singapore 460081",
+      "lat": 1.328916,
+      "lng": 103.940529,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27166",
+      "name": "Mei Ling Ho",
+      "postal": "460097",
+      "address": "97 Bedok North Avenue 4, Singapore 460097",
+      "lat": 1.332966,
+      "lng": 103.939963,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27167",
+      "name": "Umairah Kumar",
+      "postal": "460099",
+      "address": "99 Bedok North Avenue 4, Pearl Garden, Singapore 460099",
+      "lat": 1.333932,
+      "lng": 103.93947,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27168",
+      "name": "Leah Ong",
+      "postal": "460128",
+      "address": "128 Bedok North Street 2, Singapore 460128",
+      "lat": 1.32774,
+      "lng": 103.939006,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27169",
+      "name": "Aaron D’Souza",
+      "postal": "460164",
+      "address": "164 Bedok South Road, Siglap East, Singapore 460164",
+      "lat": 1.320115,
+      "lng": 103.94657,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27170",
+      "name": "Rachel Ng",
+      "postal": "460165",
+      "address": "165 Bedok South Road, Siglap East, Singapore 460165",
+      "lat": 1.320309,
+      "lng": 103.94609,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27171",
+      "name": "Darius Teo",
+      "postal": "460167",
+      "address": "167 Bedok South Avenue 3, Siglap East, Singapore 460167",
+      "lat": 1.31964,
+      "lng": 103.944965,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27172",
+      "name": "Kavya Pereira",
+      "postal": "460167",
+      "address": "167 Bedok South Avenue 3, Siglap East, Singapore 460167",
+      "lat": 1.31968,
+      "lng": 103.945005,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27173",
+      "name": "Sofia Nair",
+      "postal": "460172",
+      "address": "172 Bedok South Road, Siglap East, Singapore 460172",
+      "lat": 1.320669,
+      "lng": 103.94469,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27174",
+      "name": "Jasmine Low",
+      "postal": "460172",
+      "address": "172 Bedok South Road, Siglap East, Singapore 460172",
+      "lat": 1.320709,
+      "lng": 103.94473,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27175",
+      "name": "Timothy Chong",
+      "postal": "460180",
+      "address": "180 Bedok North Road, Vista 8, Singapore 460180",
+      "lat": 1.326713,
+      "lng": 103.940892,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27176",
+      "name": "Joanna Chua",
+      "postal": "460183",
+      "address": "183 Bedok North Road, Vista 8, Singapore 460183",
+      "lat": 1.326437,
+      "lng": 103.941851,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27177",
+      "name": "Aiden Seah",
+      "postal": "460428",
+      "address": "428 Bedok North Road, Garden Hill, Singapore 460428",
+      "lat": 1.32954,
+      "lng": 103.92765,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27178",
+      "name": "Isabel Lim",
+      "postal": "460547",
+      "address": "547 Bedok North Street 3, Bedok North Green, Singapore 460547",
+      "lat": 1.330331,
+      "lng": 103.925432,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27179",
+      "name": "Priya Yusof",
+      "postal": "460556",
+      "address": "556 Bedok North Street 3, Singapore 460556",
+      "lat": 1.332643,
+      "lng": 103.922504,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27180",
+      "name": "Hannah Loh",
+      "postal": "460557",
+      "address": "557 Bedok North Street 3, Singapore 460557",
+      "lat": 1.332859,
+      "lng": 103.922291,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27181",
+      "name": "Ryan Rahman",
+      "postal": "460557",
+      "address": "557 Bedok North Street 3, Singapore 460557",
+      "lat": 1.332899,
+      "lng": 103.922331,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27182",
+      "name": "Denise Wong",
+      "postal": "461001",
+      "address": "1 Chai Chee Road, Ping Yi Gardens, Singapore 461001",
+      "lat": 1.327969,
+      "lng": 103.922716,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27183",
+      "name": "Xavier Wee",
+      "postal": "461001",
+      "address": "1 Chai Chee Road, Ping Yi Gardens, Singapore 461001",
+      "lat": 1.328009,
+      "lng": 103.922756,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27184",
+      "name": "Grace Goh",
+      "postal": "461035",
+      "address": "35 Chai Chee Avenue, Ansar Garden, Singapore 461035",
+      "lat": 1.32482,
+      "lng": 103.926258,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27185",
+      "name": "Nadia Sim",
+      "postal": "461037",
+      "address": "37 Chai Chee Avenue, Ansar Garden, Singapore 461037",
+      "lat": 1.325442,
+      "lng": 103.926208,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27186",
+      "name": "Vikram Toh",
+      "postal": "461187",
+      "address": "187A Bedok North Street 4, Fengshan Greenville, Singapore 461187",
+      "lat": 1.330871,
+      "lng": 103.940211,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27187",
+      "name": "Marcus Pillai",
+      "postal": "461808",
+      "address": "808A Chai Chee Road, Ping Yi Greens, Singapore 461808",
+      "lat": 1.32687,
+      "lng": 103.923848,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27188",
+      "name": "Bernice Fernandez",
+      "postal": "462094",
+      "address": "94C Bedok North Avenue 4, Singapore 462094",
+      "lat": 1.333614,
+      "lng": 103.942628,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27189",
+      "name": "Samuel Tan",
+      "postal": "462188",
+      "address": "188B Bedok North Street 4, Fengshan Greenville, Singapore 462188",
+      "lat": 1.331962,
+      "lng": 103.941468,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27190",
+      "name": "Elena Lee",
+      "postal": "465419",
+      "address": "6 Tanah Merah Kechil Link, Urban Vista, Singapore 465419",
+      "lat": 1.327306,
+      "lng": 103.945078,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27191",
+      "name": "Lucas Quek",
+      "postal": "465463",
+      "address": "5 Bedok South Avenue 3, Grandeur Park Residences, Singapore 465463",
+      "lat": 1.325882,
+      "lng": 103.945619,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27192",
+      "name": "Wei Jie Koh",
+      "postal": "465501",
+      "address": "30 Bedok North Drive, Bedok Residences, Singapore 465501",
+      "lat": 1.324289,
+      "lng": 103.928789,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27193",
+      "name": "Kai Chan",
+      "postal": "465527",
+      "address": "56 Tanah Merah Kechil Avenue, Casa Merah, Singapore 465527",
+      "lat": 1.329576,
+      "lng": 103.944985,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27194",
+      "name": "Zara Yeo",
+      "postal": "465533",
+      "address": "68 Tanah Merah Kechil Avenue, Casa Merah, Singapore 465533",
+      "lat": 1.328864,
+      "lng": 103.94617,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27195",
+      "name": "Nathan Ismail",
+      "postal": "466019",
+      "address": "20 Kew Walk, Singapore 466019",
+      "lat": 1.319877,
+      "lng": 103.949233,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27196",
+      "name": "Chloe Ho",
+      "postal": "466311",
+      "address": "150 Kew Drive, Singapore 466311",
+      "lat": 1.321872,
+      "lng": 103.948799,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27197",
+      "name": "Jun Wei Kumar",
+      "postal": "466327",
+      "address": "2 Kew Avenue, Singapore 466327",
+      "lat": 1.320328,
+      "lng": 103.947321,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27198",
+      "name": "Rayyan Ong",
+      "postal": "466377",
+      "address": "1A Wiltshire Road, Singapore 466377",
+      "lat": 1.317762,
+      "lng": 103.941619,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27199",
+      "name": "Ian D’Souza",
+      "postal": "466491",
+      "address": "415 Upper East Coast Road, Singapore 466491",
+      "lat": 1.315076,
+      "lng": 103.939481,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27200",
+      "name": "Sarah Ng",
+      "postal": "466504",
+      "address": "459 Upper East Coast Road, The Summit, Singapore 466504",
+      "lat": 1.316679,
+      "lng": 103.941615,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27201",
+      "name": "Gabriel Teo",
+      "postal": "466781",
+      "address": "5 Sennett Road, Singapore Hokkien Huay Kuan Cultural Academy, Singapore 466781",
+      "lat": 1.315666,
+      "lng": 103.938534,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27202",
+      "name": "Yvonne Pereira",
+      "postal": "466781",
+      "address": "5 Sennett Road, Singapore Hokkien Huay Kuan Cultural Academy, Singapore 466781",
+      "lat": 1.315706,
+      "lng": 103.938574,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27203",
+      "name": "Haris Nair",
+      "postal": "466814",
+      "address": "35 Sennett Road, East Coast Hill, Singapore 466814",
+      "lat": 1.319213,
+      "lng": 103.937785,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27204",
+      "name": "Owen Low",
+      "postal": "466870",
+      "address": "44 Sennett Place, East Coast Hill, Singapore 466870",
+      "lat": 1.317414,
+      "lng": 103.936693,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27205",
+      "name": "Ethan Chong",
+      "postal": "467448",
+      "address": "16 Lucky View, Singapore 467448",
+      "lat": 1.317528,
+      "lng": 103.939638,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27206",
+      "name": "Natalie Chua",
+      "postal": "467617",
+      "address": "63 Lucky Heights, Singapore 467617",
+      "lat": 1.317837,
+      "lng": 103.941044,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27207",
+      "name": "Caleb Seah",
+      "postal": "467964",
+      "address": "30 Kew Drive, Kew Grove, Singapore 467964",
+      "lat": 1.320165,
+      "lng": 103.952302,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27208",
+      "name": "Valerie Lim",
+      "postal": "468098",
+      "address": "30 Jalan Remis, Spring Park Estate, Singapore 468098",
+      "lat": 1.315529,
+      "lng": 103.936623,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27209",
+      "name": "Farhan Yusof",
+      "postal": "469000",
+      "address": "750 Chai Chee Road, ESR Bizpark @ Chai Chee, Singapore 469000",
+      "lat": 1.323652,
+      "lng": 103.922103,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27210",
+      "name": "Mei Ling Loh",
+      "postal": "469000",
+      "address": "750 Chai Chee Road, ESR Bizpark @ Chai Chee, Singapore 469000",
+      "lat": 1.323692,
+      "lng": 103.922143,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27211",
+      "name": "Umairah Rahman",
+      "postal": "469000",
+      "address": "750 Chai Chee Road, ESR Bizpark @ Chai Chee, Singapore 469000",
+      "lat": 1.323732,
+      "lng": 103.922183,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27212",
+      "name": "Leah Wong",
+      "postal": "469298",
+      "address": "299 Bedok South Avenue 3, Bedok Court, Singapore 469298",
+      "lat": 1.321592,
+      "lng": 103.944671,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27213",
+      "name": "Aaron Wee",
+      "postal": "469332",
+      "address": "202 Bedok South Avenue 1, Singapore 469332",
+      "lat": 1.321937,
+      "lng": 103.931535,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27214",
+      "name": "Rachel Goh",
+      "postal": "469360",
+      "address": "37 Bedok Road, Country Park Condominium, Singapore 469360",
+      "lat": 1.321175,
+      "lng": 103.954787,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27215",
+      "name": "Darius Sim",
+      "postal": "469568",
+      "address": "51 Bedok Road, Country Park Condominium, Singapore 469568",
+      "lat": 1.321529,
+      "lng": 103.954079,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27216",
+      "name": "Kavya Toh",
+      "postal": "469659",
+      "address": "21 Bedok North Street 1, Singapore 469659",
+      "lat": 1.326847,
+      "lng": 103.930806,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27217",
+      "name": "Sofia Pillai",
+      "postal": "469659",
+      "address": "21 Bedok North Street 1, Singapore 469659",
+      "lat": 1.326887,
+      "lng": 103.930846,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27218",
+      "name": "Jasmine Fernandez",
+      "postal": "469662",
+      "address": "11 Bedok North Street 1, Heartbeat @ Bedok, Singapore 469662",
+      "lat": 1.326864,
+      "lng": 103.93213,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27219",
+      "name": "Timothy Tan",
+      "postal": "469662",
+      "address": "11 Bedok North Street 1, Heartbeat @ Bedok, Singapore 469662",
+      "lat": 1.326904,
+      "lng": 103.93217,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27220",
+      "name": "Joanna Lee",
+      "postal": "469972",
+      "address": "26 Bayshore Road, The Bayshore, Singapore 469972",
+      "lat": 1.312453,
+      "lng": 103.938156,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27221",
+      "name": "Aiden Quek",
+      "postal": "469974",
+      "address": "30 Bayshore Road, The Bayshore, Singapore 469974",
+      "lat": 1.312992,
+      "lng": 103.939914,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27222",
+      "name": "Isabel Koh",
+      "postal": "469974",
+      "address": "30 Bayshore Road, The Bayshore, Singapore 469974",
+      "lat": 1.313032,
+      "lng": 103.939954,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27223",
+      "name": "Priya Chan",
+      "postal": "469985",
+      "address": "66 Bayshore Road, Bayshore Park, Singapore 469985",
+      "lat": 1.310772,
+      "lng": 103.937978,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27224",
+      "name": "Hannah Yeo",
+      "postal": "469992",
+      "address": "80 Bayshore Road, Costa Del Sol, Singapore 469992",
+      "lat": 1.311659,
+      "lng": 103.940281,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27225",
+      "name": "Ryan Ismail",
+      "postal": "470106",
+      "address": "106 Bedok Reservoir Road, Eunos Vista, Singapore 470106",
+      "lat": 1.329502,
+      "lng": 103.909382,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27226",
+      "name": "Denise Ho",
+      "postal": "470115",
+      "address": "115 Bedok Reservoir Road, Eunos Vista, Singapore 470115",
+      "lat": 1.330674,
+      "lng": 103.908738,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27227",
+      "name": "Xavier Kumar",
+      "postal": "470127",
+      "address": "127 Bedok Reservoir Road, Eunos Spring, Singapore 470127",
+      "lat": 1.332846,
+      "lng": 103.911171,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27228",
+      "name": "Grace Ong",
+      "postal": "470131",
+      "address": "131 Bedok Reservoir Road, Eunos Spring, Singapore 470131",
+      "lat": 1.333122,
+      "lng": 103.911711,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27229",
+      "name": "Nadia D’Souza",
+      "postal": "470149",
+      "address": "149 Bedok Reservoir Road, Eunos Spring, Singapore 470149",
+      "lat": 1.335769,
+      "lng": 103.91278,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27230",
+      "name": "Vikram Ng",
+      "postal": "470150",
+      "address": "150 Bedok Reservoir Road, Eunos Spring, Singapore 470150",
+      "lat": 1.336154,
+      "lng": 103.912672,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27231",
+      "name": "Marcus Teo",
+      "postal": "470150",
+      "address": "150 Bedok Reservoir Road, Eunos Spring, Singapore 470150",
+      "lat": 1.336194,
+      "lng": 103.912712,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27232",
+      "name": "Bernice Pereira",
+      "postal": "470608",
+      "address": "608 Bedok Reservoir Road, Eunos Rainbow, Singapore 470608",
+      "lat": 1.331841,
+      "lng": 103.913196,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27233",
+      "name": "Samuel Nair",
+      "postal": "470704",
+      "address": "704 Bedok Reservoir Road, Reservoir Rise, Singapore 470704",
+      "lat": 1.336355,
+      "lng": 103.920204,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27234",
+      "name": "Elena Low",
+      "postal": "470710",
+      "address": "710 Bedok Reservoir Road, Bedok Reservoir Garden, Singapore 470710",
+      "lat": 1.335574,
+      "lng": 103.92382,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27235",
+      "name": "Lucas Chong",
+      "postal": "470713",
+      "address": "713 Bedok Reservoir Road, Bedok Reservoir Garden, Singapore 470713",
+      "lat": 1.336312,
+      "lng": 103.922392,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27236",
+      "name": "Wei Jie Chua",
+      "postal": "470714",
+      "address": "714 Bedok Reservoir Road, Bedok Reservoir Garden, Singapore 470714",
+      "lat": 1.337031,
+      "lng": 103.923285,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27237",
+      "name": "Kai Seah",
+      "postal": "470717",
+      "address": "717 Bedok Reservoir Road, Bedok Reservoir Garden, Singapore 470717",
+      "lat": 1.337552,
+      "lng": 103.925449,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27238",
+      "name": "Zara Lim",
+      "postal": "470772",
+      "address": "772 Bedok Reservoir View, Longvale, Singapore 470772",
+      "lat": 1.336463,
+      "lng": 103.937895,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27239",
+      "name": "Nathan Yusof",
+      "postal": "470773",
+      "address": "773 Bedok Reservoir View, Longvale, Singapore 470773",
+      "lat": 1.336316,
+      "lng": 103.937458,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27240",
+      "name": "Chloe Loh",
+      "postal": "472747",
+      "address": "747B Bedok Reservoir Crescent, Belvia, Singapore 472747",
+      "lat": 1.33666,
+      "lng": 103.921625,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27241",
+      "name": "Jun Wei Rahman",
+      "postal": "475558",
+      "address": null,
+      "lat": null,
+      "lng": null,
+      "level": "Sec 1",
+      "addrStatus": "POSTAL_NOT_FOUND"
+    },
+    {
+      "rid": "S-27242",
+      "name": "Rayyan Wong",
+      "postal": "478933",
+      "address": "15 Bedok Reservoir View, Aquarius By The Park, Singapore 478933",
+      "lat": 1.337615,
+      "lng": 103.93685,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27243",
+      "name": "Ian Wee",
+      "postal": "479232",
+      "address": "2 Bedok Reservoir View, The Clearwater, Singapore 479232",
+      "lat": 1.337983,
+      "lng": 103.934392,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27244",
+      "name": "Sarah Goh",
+      "postal": "479232",
+      "address": "2 Bedok Reservoir View, The Clearwater, Singapore 479232",
+      "lat": 1.338023,
+      "lng": 103.934432,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27245",
+      "name": "Gabriel Sim",
+      "postal": "479234",
+      "address": "6 Bedok Reservoir View, The Clearwater, Singapore 479234",
+      "lat": 1.337492,
+      "lng": 103.933665,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27246",
+      "name": "Yvonne Toh",
+      "postal": "479251",
+      "address": "772 Bedok Reservoir Road, Waterfront Key, Singapore 479251",
+      "lat": 1.337509,
+      "lng": 103.93139,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27247",
+      "name": "Haris Pillai",
+      "postal": "479251",
+      "address": "772 Bedok Reservoir Road, Waterfront Key, Singapore 479251",
+      "lat": 1.337549,
+      "lng": 103.93143,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27248",
+      "name": "Owen Fernandez",
+      "postal": "479264",
+      "address": "736 Bedok Reservoir Road, Waterfront Isle, Singapore 479264",
+      "lat": 1.338091,
+      "lng": 103.927623,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27249",
+      "name": "Ethan Tan",
+      "postal": "479264",
+      "address": "736 Bedok Reservoir Road, Waterfront Isle, Singapore 479264",
+      "lat": 1.338131,
+      "lng": 103.927663,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27250",
+      "name": "Natalie Lee",
+      "postal": "479301",
+      "address": "569 Bedok Reservoir Road, Archipelago, Singapore 479301",
+      "lat": 1.337991,
+      "lng": 103.920885,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27251",
+      "name": "Caleb Quek",
+      "postal": "486230",
+      "address": "185 Upper Changi Road East, Summer Gardens, Singapore 486230",
+      "lat": 1.331382,
+      "lng": 103.950252,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27252",
+      "name": "Valerie Koh",
+      "postal": "486364",
+      "address": "10 Eastwood Road, Eastwood Green, Singapore 486364",
+      "lat": 1.322359,
+      "lng": 103.954741,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27253",
+      "name": "Farhan Chan",
+      "postal": "486524",
+      "address": "12 Eastwood Green, Eastwood Green Terraces, Singapore 486524",
+      "lat": 1.32234,
+      "lng": 103.955818,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27254",
+      "name": "Mei Ling Yeo",
+      "postal": "488184",
+      "address": "38 Jalan Simpang Bedok, Canary Park, Singapore 488184",
+      "lat": 1.333198,
+      "lng": 103.947207,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27255",
+      "name": "Umairah Ismail",
+      "postal": "489916",
+      "address": "103 Bedok Ria Crescent, Bedok Ria, Singapore 489916",
+      "lat": 1.325943,
+      "lng": 103.954347,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27256",
+      "name": "Leah Ho",
+      "postal": "489929",
+      "address": "41A Bedok Ria Crescent, Stratford Court, Singapore 489929",
+      "lat": 1.328473,
+      "lng": 103.951356,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27257",
+      "name": "Aaron Kumar",
+      "postal": "506860",
+      "address": "64 Flora Drive, Parc Olympia, Singapore 506860",
+      "lat": 1.355773,
+      "lng": 103.964917,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27258",
+      "name": "Rachel Ong",
+      "postal": "506865",
+      "address": "57 Flora Drive, The Inflora, Singapore 506865",
+      "lat": 1.35627,
+      "lng": 103.966261,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27259",
+      "name": "Darius D’Souza",
+      "postal": "506868",
+      "address": "50 Flora Drive, Parc Olympia, Singapore 506868",
+      "lat": 1.35531,
+      "lng": 103.965526,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27260",
+      "name": "Kavya Ng",
+      "postal": "507061",
+      "address": "59 Jalan Sinar Bulan, Changi Heights, Singapore 507061",
+      "lat": 1.362727,
+      "lng": 103.972621,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27261",
+      "name": "Sofia Teo",
+      "postal": "507233",
+      "address": "37 Loyang View, Loyang Villas, Singapore 507233",
+      "lat": 1.36372,
+      "lng": 103.96587,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27262",
+      "name": "Jasmine Pereira",
+      "postal": "507385",
+      "address": "216 Loyang Rise, Loyang Villas, Singapore 507385",
+      "lat": 1.363214,
+      "lng": 103.96645,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27263",
+      "name": "Timothy Nair",
+      "postal": "509058",
+      "address": "200 Loyang Avenue, Loyang Valley, Singapore 509058",
+      "lat": 1.368496,
+      "lng": 103.970019,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27264",
+      "name": "Joanna Low",
+      "postal": "509059",
+      "address": "202 Loyang Avenue, Loyang Valley, Singapore 509059",
+      "lat": 1.368081,
+      "lng": 103.969549,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27265",
+      "name": "Aiden Chong",
+      "postal": "509059",
+      "address": "202 Loyang Avenue, Loyang Valley, Singapore 509059",
+      "lat": 1.368121,
+      "lng": 103.969589,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27266",
+      "name": "Isabel Chua",
+      "postal": "509739",
+      "address": "23 Flora Road, Estella Gardens, Singapore 509739",
+      "lat": 1.360408,
+      "lng": 103.967089,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27267",
+      "name": "Priya Seah",
+      "postal": "510103",
+      "address": "103 Pasir Ris Street 12, Singapore 510103",
+      "lat": 1.367695,
+      "lng": 103.958404,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27268",
+      "name": "Hannah Lim",
+      "postal": "510114",
+      "address": "114 Pasir Ris Street 11, Singapore 510114",
+      "lat": 1.368451,
+      "lng": 103.954961,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27269",
+      "name": "Ryan Yusof",
+      "postal": "510181",
+      "address": "181 Pasir Ris Street 11, Singapore 510181",
+      "lat": 1.364398,
+      "lng": 103.960572,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27270",
+      "name": "Denise Loh",
+      "postal": "510212",
+      "address": "212 Pasir Ris Street 21, Singapore 510212",
+      "lat": 1.367779,
+      "lng": 103.960766,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27271",
+      "name": "Xavier Rahman",
+      "postal": "510411",
+      "address": "411 Pasir Ris Drive 6, Singapore 510411",
+      "lat": 1.372502,
+      "lng": 103.954367,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27272",
+      "name": "Grace Wong",
+      "postal": "510422",
+      "address": "422 Pasir Ris Drive 6, Singapore 510422",
+      "lat": 1.370426,
+      "lng": 103.954517,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27273",
+      "name": "Nadia Wee",
+      "postal": "510458",
+      "address": "458 Pasir Ris Drive 4, Singapore 510458",
+      "lat": 1.371415,
+      "lng": 103.959637,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27274",
+      "name": "Vikram Goh",
+      "postal": "518134",
+      "address": "139 Pasir Ris Grove, D'Nest, Singapore 518134",
+      "lat": 1.368574,
+      "lng": 103.945571,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27275",
+      "name": "Marcus Sim",
+      "postal": "518146",
+      "address": "28 Pasir Ris Link, Sea Esta, Singapore 518146",
+      "lat": 1.377789,
+      "lng": 103.959618,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27276",
+      "name": "Bernice Toh",
+      "postal": "518169",
+      "address": "23 Pasir Ris Link, Watercolours, Singapore 518169",
+      "lat": 1.375953,
+      "lng": 103.959954,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27277",
+      "name": "Samuel Pillai",
+      "postal": "518172",
+      "address": "115 Pasir Ris Grove, The Palette, Singapore 518172",
+      "lat": 1.369722,
+      "lng": 103.944974,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27278",
+      "name": "Elena Fernandez",
+      "postal": "519286",
+      "address": "89 Pasir Ris Heights, Vue 8 Residence, Singapore 519286",
+      "lat": 1.38137,
+      "lng": 103.9404,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27279",
+      "name": "Lucas Tan",
+      "postal": "520252",
+      "address": "252 Tampines Street 21, Singapore 520252",
+      "lat": 1.352547,
+      "lng": 103.949064,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27280",
+      "name": "Wei Jie Lee",
+      "postal": "520262",
+      "address": "262 Tampines Street 21, Singapore 520262",
+      "lat": 1.353757,
+      "lng": 103.95097,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27281",
+      "name": "Kai Quek",
+      "postal": "520274",
+      "address": "274 Tampines Street 22, Singapore 520274",
+      "lat": 1.3483,
+      "lng": 103.950059,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27282",
+      "name": "Zara Koh",
+      "postal": "520278",
+      "address": "278 Tampines Street 22, Singapore 520278",
+      "lat": 1.346784,
+      "lng": 103.951137,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27283",
+      "name": "Nathan Chan",
+      "postal": "520334",
+      "address": "334 Tampines Street 32, Singapore 520334",
+      "lat": 1.35239,
+      "lng": 103.961042,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27284",
+      "name": "Chloe Yeo",
+      "postal": "520410",
+      "address": "410 Tampines Street 41, Sun Plaza View, Singapore 520410",
+      "lat": 1.358778,
+      "lng": 103.946271,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27285",
+      "name": "Jun Wei Ismail",
+      "postal": "520460",
+      "address": "460 Tampines Street 42, Singapore 520460",
+      "lat": 1.358299,
+      "lng": 103.955006,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27286",
+      "name": "Rayyan Ho",
+      "postal": "520709",
+      "address": "709 Tampines Street 71, Tampines Starlight, Singapore 520709",
+      "lat": 1.35799,
+      "lng": 103.937435,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27287",
+      "name": "Ian Kumar",
+      "postal": "520726",
+      "address": "726 Tampines Street 71, Tampines Courtview, Singapore 520726",
+      "lat": 1.356984,
+      "lng": 103.935887,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27288",
+      "name": "Sarah Ong",
+      "postal": "520726",
+      "address": "726 Tampines Street 71, Tampines Courtview, Singapore 520726",
+      "lat": 1.357024,
+      "lng": 103.935927,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27289",
+      "name": "Gabriel D’Souza",
+      "postal": "520841",
+      "address": "841 Tampines Street 83, Tampines Palmwalk, Singapore 520841",
+      "lat": 1.351609,
+      "lng": 103.934497,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27290",
+      "name": "Yvonne Ng",
+      "postal": "520868",
+      "address": "868 Tampines Street 83, Tampines Vista, Singapore 520868",
+      "lat": 1.354776,
+      "lng": 103.93398,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27291",
+      "name": "Haris Teo",
+      "postal": "520893",
+      "address": "893 Tampines Avenue 8, Singapore 520893",
+      "lat": 1.348471,
+      "lng": 103.930228,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27292",
+      "name": "Owen Pereira",
+      "postal": "520909",
+      "address": "909 Tampines Avenue 4, Tampines Palmsville, Singapore 520909",
+      "lat": 1.350197,
+      "lng": 103.939407,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27293",
+      "name": "Ethan Nair",
+      "postal": "521127",
+      "address": "127 Tampines Street 11, Singapore 521127",
+      "lat": 1.345432,
+      "lng": 103.950648,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27294",
+      "name": "Natalie Low",
+      "postal": "521228",
+      "address": "228 Tampines Street 23, Singapore 521228",
+      "lat": 1.355604,
+      "lng": 103.954652,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27295",
+      "name": "Caleb Chong",
+      "postal": "522495",
+      "address": "495C Tampines Street 43, Singapore 522495",
+      "lat": 1.363239,
+      "lng": 103.951625,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27296",
+      "name": "Valerie Chua",
+      "postal": "522871",
+      "address": "871B Tampines Street 86, Tampines Greenlace, Singapore 522871",
+      "lat": 1.356511,
+      "lng": 103.931957,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27297",
+      "name": "Farhan Seah",
+      "postal": "523519",
+      "address": "519C Tampines Central 8, Centrale 8 At Tampines, Singapore 523519",
+      "lat": 1.356213,
+      "lng": 103.93996,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27298",
+      "name": "Mei Ling Lim",
+      "postal": "523876",
+      "address": "876C Tampines Avenue 8, Tampines Greenbloom, Singapore 523876",
+      "lat": 1.353396,
+      "lng": 103.930259,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27299",
+      "name": "Umairah Yusof",
+      "postal": "524519",
+      "address": "519D Tampines Central 8, Centrale 8 At Tampines, Singapore 524519",
+      "lat": 1.356208,
+      "lng": 103.939594,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27300",
+      "name": "Leah Loh",
+      "postal": "524519",
+      "address": "519D Tampines Central 8, Centrale 8 At Tampines, Singapore 524519",
+      "lat": 1.356248,
+      "lng": 103.939634,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27301",
+      "name": "Aaron Rahman",
+      "postal": "525856",
+      "address": "856E Tampines Street 82, Tampines Arcadia, Singapore 525856",
+      "lat": 1.352917,
+      "lng": 103.938795,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27302",
+      "name": "Rachel Wong",
+      "postal": "527492",
+      "address": "492G Tampines Street 45, Tampines Greenedge, Singapore 527492",
+      "lat": 1.364241,
+      "lng": 103.955085,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27303",
+      "name": "Darius Wee",
+      "postal": "528464",
+      "address": "43 Tampines Lane, Treasure At Tampines, Singapore 528464",
+      "lat": 1.344058,
+      "lng": 103.946745,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27304",
+      "name": "Kavya Goh",
+      "postal": "528476",
+      "address": "19 Tampines Lane, Treasure At Tampines, Singapore 528476",
+      "lat": 1.344626,
+      "lng": 103.948575,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27305",
+      "name": "Sofia Sim",
+      "postal": "528514",
+      "address": "121 Tampines Street 86, Parc Central Residences, Singapore 528514",
+      "lat": 1.356338,
+      "lng": 103.930315,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27306",
+      "name": "Jasmine Toh",
+      "postal": "528536",
+      "address": "113 Tampines Street 86, The Alps Residences, Singapore 528536",
+      "lat": 1.355623,
+      "lng": 103.929526,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27307",
+      "name": "Timothy Pillai",
+      "postal": "528540",
+      "address": "53 Tampines Street 86, The Tapestry, Singapore 528540",
+      "lat": 1.353056,
+      "lng": 103.928213,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27308",
+      "name": "Joanna Fernandez",
+      "postal": "528540",
+      "address": "53 Tampines Street 86, The Tapestry, Singapore 528540",
+      "lat": 1.353096,
+      "lng": 103.928253,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27309",
+      "name": "Aiden Tan",
+      "postal": "528542",
+      "address": "57 Tampines Street 86, The Tapestry, Singapore 528542",
+      "lat": 1.353905,
+      "lng": 103.928606,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27310",
+      "name": "Isabel Lee",
+      "postal": "528570",
+      "address": "27 Tampines Street 86, The Santorini, Singapore 528570",
+      "lat": 1.352539,
+      "lng": 103.927822,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27311",
+      "name": "Priya Quek",
+      "postal": "528574",
+      "address": "35 Tampines Street 86, The Santorini, Singapore 528574",
+      "lat": 1.351967,
+      "lng": 103.928142,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27312",
+      "name": "Hannah Koh",
+      "postal": "528769",
+      "address": "11 Tampines Central 7, The Tampines Trilliant, Singapore 528769",
+      "lat": 1.358923,
+      "lng": 103.940498,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27313",
+      "name": "Ryan Chan",
+      "postal": "528787",
+      "address": "47 Simei Rise, Savannah Condopark, Singapore 528787",
+      "lat": 1.348528,
+      "lng": 103.962845,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27314",
+      "name": "Denise Yeo",
+      "postal": "528833",
+      "address": "3 Simei Street 6, Eastpoint Mall, Singapore 528833",
+      "lat": 1.342706,
+      "lng": 103.953025,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27315",
+      "name": "Xavier Ismail",
+      "postal": "528833",
+      "address": "3 Simei Street 6, Eastpoint Mall, Singapore 528833",
+      "lat": 1.342746,
+      "lng": 103.953065,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27316",
+      "name": "Grace Ho",
+      "postal": "529498",
+      "address": "498M Tampines Street 45, Singapore 529498",
+      "lat": 1.36189,
+      "lng": 103.957741,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27317",
+      "name": "Nadia Kumar",
+      "postal": "529596",
+      "address": "5 Tampines Avenue 8, Arc At Tampines, Singapore 529596",
+      "lat": 1.350044,
+      "lng": 103.927858,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27318",
+      "name": "Vikram Ong",
+      "postal": "529782",
+      "address": "77 Tampines Avenue 1, Waterview, Singapore 529782",
+      "lat": 1.347937,
+      "lng": 103.926273,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27319",
+      "name": "Marcus D’Souza",
+      "postal": "530662",
+      "address": "662 Hougang Avenue 4, Singapore 530662",
+      "lat": 1.374377,
+      "lng": 103.882875,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27320",
+      "name": "Bernice Ng",
+      "postal": "531377",
+      "address": "377A Hougang Street 32, Hougang Rivercourt, Singapore 531377",
+      "lat": 1.36302,
+      "lng": 103.894665,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27321",
+      "name": "Samuel Teo",
+      "postal": "531377",
+      "address": "377A Hougang Street 32, Hougang Rivercourt, Singapore 531377",
+      "lat": 1.36306,
+      "lng": 103.894705,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27322",
+      "name": "Elena Pereira",
+      "postal": "533815",
+      "address": "45 Hougang Avenue 7, Riverfront Residences, Singapore 533815",
+      "lat": 1.370889,
+      "lng": 103.899645,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27323",
+      "name": "Lucas Nair",
+      "postal": "533815",
+      "address": "45 Hougang Avenue 7, Riverfront Residences, Singapore 533815",
+      "lat": 1.370929,
+      "lng": 103.899685,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27324",
+      "name": "Wei Jie Low",
+      "postal": "543298",
+      "address": "298C Compassvale Street, Compassvale Green, Singapore 543298",
+      "lat": 1.39627,
+      "lng": 103.900983,
+      "level": "Sec 4"
+    },
+    {
+      "rid": "S-27325",
+      "name": "Kai Chong",
+      "postal": "798592",
+      "address": "100 Gerald Drive, Seletar Springs Condominium, Singapore 798592",
+      "lat": 1.3882,
+      "lng": 103.878494,
+      "level": "Sec 1"
+    },
+    {
+      "rid": "S-27326",
+      "name": "Zara Chua",
+      "postal": "798592",
+      "address": "100 Gerald Drive, Seletar Springs Condominium, Singapore 798592",
+      "lat": 1.38824,
+      "lng": 103.878534,
+      "level": "Sec 2"
+    },
+    {
+      "rid": "S-27327",
+      "name": "Nathan Seah",
+      "postal": "823269",
+      "address": "269C Punggol Field, Punggol Sapphire, Singapore 823269",
+      "lat": 1.403652,
+      "lng": 103.898532,
+      "level": "Sec 3"
+    },
+    {
+      "rid": "S-27328",
+      "name": "Chloe Lim",
+      "postal": "824128",
+      "address": "128D Punggol Field Walk, Singapore 824128",
+      "lat": 1.392968,
+      "lng": 103.911962,
+      "level": "Sec 4"
+    }
+  ],
+  "stops": [
+    {
+      "uid": "k1",
+      "id": "BDSZ03-0001",
+      "name": "Jalan Kembangan – The Trumps",
+      "points": [
+        {
+          "pid": "kp1",
+          "name": "Kerbside along Jalan Kembangan, near The Trumps",
+          "lat": 1.320043,
+          "lng": 103.9139,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "419154"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k2",
+      "id": "BDSZ05-0001",
+      "name": "Dunbar Walk – Frankel Estate",
+      "points": [
+        {
+          "pid": "kp2",
+          "name": "Kerbside along Dunbar Walk, near Frankel Estate",
+          "lat": 1.31407,
+          "lng": 103.916025,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "459347"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k3",
+      "id": "BDSZ05-0002",
+      "name": "Lorong G Telok Kurau – The Medley",
+      "points": [
+        {
+          "pid": "kp3",
+          "name": "Kerbside along Lorong G Telok Kurau, near The Medley",
+          "lat": 1.317304,
+          "lng": 103.910867,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "419833",
+        "426258",
+        "426327"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k4",
+      "id": "BDSZ03-0002",
+      "name": "Lorong Mydin – Astoria Park",
+      "points": [
+        {
+          "pid": "kp4",
+          "name": "Kerbside along Lorong Mydin, near Astoria Park",
+          "lat": 1.321818,
+          "lng": 103.911336,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "416826",
+        "416827",
+        "416976"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k5",
+      "id": "BDSZ03-0003",
+      "name": "Chai Chee Drive – Ping-An Gardens",
+      "points": [
+        {
+          "pid": "kp5",
+          "name": "Kerbside along Chai Chee Drive, near Ping-An Gardens",
+          "lat": 1.325099,
+          "lng": 103.919745,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "460061"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k6",
+      "id": "BDSZ03-0004",
+      "name": "Chai Chee Road – Esr Bizpark @ Chai Chee",
+      "points": [
+        {
+          "pid": "kp6",
+          "name": "Kerbside along Chai Chee Road, near Esr Bizpark @ Chai Chee",
+          "lat": 1.323811,
+          "lng": 103.923022,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "460025",
+        "469000"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k7",
+      "id": "BDSZ05-0003",
+      "name": "Burnfoot Terrace – Frankel Estate",
+      "points": [
+        {
+          "pid": "kp7",
+          "name": "Kerbside along Burnfoot Terrace, near Frankel Estate",
+          "lat": 1.312398,
+          "lng": 103.92185,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "459059"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k8",
+      "id": "BDSZ05-0004",
+      "name": "Elite Terrace – Elite Court",
+      "points": [
+        {
+          "pid": "kp8",
+          "name": "Kerbside along Elite Terrace, near Elite Court",
+          "lat": 1.316207,
+          "lng": 103.924914,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "457258",
+        "458876"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k9",
+      "id": "BDSZ05-0005",
+      "name": "Lorong M Telok Kurau – Blk 59A",
+      "points": [
+        {
+          "pid": "kp9",
+          "name": "Kerbside along Lorong M Telok Kurau, near Blk 59A",
+          "lat": 1.311242,
+          "lng": 103.913763,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "423401",
+        "425357",
+        "425359",
+        "425380",
+        "425412"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k10",
+      "id": "BDSZ05-0006",
+      "name": "Norma Terrace – Opera Estate",
+      "points": [
+        {
+          "pid": "kp10",
+          "name": "Kerbside along Norma Terrace, near Opera Estate",
+          "lat": 1.320885,
+          "lng": 103.925424,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "456701",
+        "458625"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k11",
+      "id": "BDSZ03-0005",
+      "name": "Lorong Marzuki – Kembangan Estate",
+      "points": [
+        {
+          "pid": "kp11",
+          "name": "Kerbside along Lorong Marzuki, near Kembangan Estate",
+          "lat": 1.32247,
+          "lng": 103.909155,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "417111"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k12",
+      "id": "BDSZ05-0007",
+      "name": "Jalan Keris – Seaside Park",
+      "points": [
+        {
+          "pid": "kp12",
+          "name": "Kerbside along Jalan Keris, near Seaside Park",
+          "lat": 1.310099,
+          "lng": 103.919469,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "457573",
+        "458965"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k13",
+      "id": "BDSZ03-0006",
+      "name": "Lengkong Tiga – Kembangan Gardens",
+      "points": [
+        {
+          "pid": "kp13",
+          "name": "Kerbside along Lengkong Tiga, near Kembangan Gardens",
+          "lat": 1.325647,
+          "lng": 103.911157,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "410101",
+        "410102",
+        "410103"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k14",
+      "id": "BDSZ05-0008",
+      "name": "Telok Kurau Road – Cadence Light",
+      "points": [
+        {
+          "pid": "kp14",
+          "name": "Kerbside along Telok Kurau Road, near Cadence Light",
+          "lat": 1.312094,
+          "lng": 103.910967,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "423833",
+        "423844",
+        "425687"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k15",
+      "id": "BDSZ05-0009",
+      "name": "East Coast Terrace – Axis @ Siglap",
+      "points": [
+        {
+          "pid": "kp15",
+          "name": "Kerbside along East Coast Terrace, near Axis @ Siglap",
+          "lat": 1.31123,
+          "lng": 103.923476,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "458950",
+        "459030"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k16",
+      "id": "BDSZ03-0007",
+      "name": "Chai Chee Avenue – Ansar Garden",
+      "points": [
+        {
+          "pid": "kp16",
+          "name": "Kerbside along Chai Chee Avenue, near Ansar Garden",
+          "lat": 1.324887,
+          "lng": 103.925249,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "460030",
+        "461035",
+        "461037"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k17",
+      "id": "BDSZ05-0010",
+      "name": "Jalan Tua Kong – Crescendo Park",
+      "points": [
+        {
+          "pid": "kp17",
+          "name": "Kerbside along Jalan Tua Kong, near Crescendo Park",
+          "lat": 1.313219,
+          "lng": 103.925842,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "457269",
+        "457601"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k18",
+      "id": "BDSZ05-0011",
+      "name": "East Coast Road – Grand Duchess At Saint Patrick's",
+      "points": [
+        {
+          "pid": "kp18",
+          "name": "Kerbside along East Coast Road, near Grand Duchess At Saint Patrick's",
+          "lat": 1.308624,
+          "lng": 103.915304,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "424171",
+        "424179",
+        "424211",
+        "424212"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k19",
+      "id": "BDSZ03-0008",
+      "name": "Lengkong Empat – Astor",
+      "points": [
+        {
+          "pid": "kp19",
+          "name": "Kerbside along Lengkong Empat, near Astor",
+          "lat": 1.328716,
+          "lng": 103.913359,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "417660"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k20",
+      "id": "BDSZ03-0009",
+      "name": "Chai Chee Road – Ping Yi Greens",
+      "points": [
+        {
+          "pid": "kp20",
+          "name": "Kerbside along Chai Chee Road, near Ping Yi Greens",
+          "lat": 1.326918,
+          "lng": 103.924275,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "460011",
+        "461808"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k21",
+      "id": "BDSZ05-0012",
+      "name": "Figaro Street – Blk 37C",
+      "points": [
+        {
+          "pid": "kp21",
+          "name": "Kerbside along Figaro Street, near Blk 37C",
+          "lat": 1.316376,
+          "lng": 103.9279,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "455110",
+        "459728"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k22",
+      "id": "BDSZ05-0013",
+      "name": "Siglap Gardens – Blk 6",
+      "points": [
+        {
+          "pid": "kp22",
+          "name": "Kerbside along Siglap Gardens, near Blk 6",
+          "lat": 1.311824,
+          "lng": 103.925678,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "455200"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k23",
+      "id": "BDSZ03-0010",
+      "name": "Jalan Daud – The Heliconia",
+      "points": [
+        {
+          "pid": "kp23",
+          "name": "Kerbside along Jalan Daud, near The Heliconia",
+          "lat": 1.326029,
+          "lng": 103.908998,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "419572"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k24",
+      "id": "BDSZ05-0014",
+      "name": "Saint Patrick's Road – Blk 458",
+      "points": [
+        {
+          "pid": "kp24",
+          "name": "Kerbside along Saint Patrick's Road, near Blk 458",
+          "lat": 1.308314,
+          "lng": 103.913812,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "424158",
+        "429031"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k25",
+      "id": "BDSZ03-0011",
+      "name": "Chai Chee Street – Ping Yi Gardens",
+      "points": [
+        {
+          "pid": "kp25",
+          "name": "Kerbside along Chai Chee Street, near Ping Yi Gardens",
+          "lat": 1.328403,
+          "lng": 103.92281,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "461001"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k26",
+      "id": "BDSZ05-0015",
+      "name": "Lorong N Telok Kurau – Palmera Residence",
+      "points": [
+        {
+          "pid": "kp26",
+          "name": "Kerbside along Lorong N Telok Kurau, near Palmera Residence",
+          "lat": 1.309557,
+          "lng": 103.910362,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "425141",
+        "425163"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k27",
+      "id": "BDSZ05-0016",
+      "name": "Lorong K Telok Kurau – Kings Apartments",
+      "points": [
+        {
+          "pid": "kp27",
+          "name": "Kerbside along Lorong K Telok Kurau, near Kings Apartments",
+          "lat": 1.312243,
+          "lng": 103.907727,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "425609",
+        "425610",
+        "425634"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k28",
+      "id": "BDSZ05-0017",
+      "name": "Jalan Ulu Siglap – Blk 10D",
+      "points": [
+        {
+          "pid": "kp28",
+          "name": "Kerbside along Jalan Ulu Siglap, near Blk 10D",
+          "lat": 1.31461,
+          "lng": 103.928515,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "457138"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k29",
+      "id": "BDSZ07-0001",
+      "name": "Marine Parade Road – Mandarin Gardens",
+      "points": [
+        {
+          "pid": "kp29",
+          "name": "Kerbside along Marine Parade Road, near Mandarin Gardens",
+          "lat": 1.308378,
+          "lng": 103.923355,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "448908"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k30",
+      "id": "BDSZ07-0002",
+      "name": "Marine Vista – Neptune Court",
+      "points": [
+        {
+          "pid": "kp30",
+          "name": "Kerbside along Marine Vista, near Neptune Court",
+          "lat": 1.30709,
+          "lng": 103.921801,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "449029"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k31",
+      "id": "BDSZ04-0001",
+      "name": "Bedok North Drive – Bedok Residences",
+      "points": [
+        {
+          "pid": "kp31",
+          "name": "Kerbside along Bedok North Drive, near Bedok Residences",
+          "lat": 1.323964,
+          "lng": 103.928557,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "465501"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k32",
+      "id": "BDSZ05-0018",
+      "name": "JALAN KAMPUNG SIGLAP – Villa Marina",
+      "points": [
+        {
+          "pid": "kp32",
+          "name": "Kerbside along JALAN KAMPUNG SIGLAP, near Villa Marina",
+          "lat": 1.310474,
+          "lng": 103.927663,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "457398"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k33",
+      "id": "GLSZ05-0001",
+      "name": "Changi Road – Parc Esta",
+      "points": [
+        {
+          "pid": "kp33",
+          "name": "Kerbside along Changi Road, near Parc Esta",
+          "lat": 1.317291,
+          "lng": 103.90354,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "408966",
+        "408969",
+        "408970"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k34",
+      "id": "MPSZ03-0001",
+      "name": "Marine Terrace – Marine Terrace Haven",
+      "points": [
+        {
+          "pid": "kp34",
+          "name": "Kerbside along Marine Terrace, near Marine Terrace Haven",
+          "lat": 1.304964,
+          "lng": 103.916119,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "440013",
+        "440052"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k35",
+      "id": "MPSZ02-0001",
+      "name": "Duku Road – Blk 84",
+      "points": [
+        {
+          "pid": "kp35",
+          "name": "Kerbside along Duku Road, near Blk 84",
+          "lat": 1.310333,
+          "lng": 103.906223,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "429248"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k36",
+      "id": "BDSZ01-0001",
+      "name": "Jalan Punai – Blk 16C",
+      "points": [
+        {
+          "pid": "kp36",
+          "name": "Kerbside along Jalan Punai, near Blk 16C",
+          "lat": 1.329617,
+          "lng": 103.908479,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "418739",
+        "470106",
+        "470115"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k37",
+      "id": "MPSZ03-0002",
+      "name": "Marine Crescent – Marine Crescent Gardens",
+      "points": [
+        {
+          "pid": "kp37",
+          "name": "Kerbside along Marine Crescent, near Marine Crescent Gardens",
+          "lat": 1.305237,
+          "lng": 103.913391,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "440043",
+        "440047"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k38",
+      "id": "BDSZ04-0002",
+      "name": "Bedok North Avenue 1 – Garden Hill",
+      "points": [
+        {
+          "pid": "kp38",
+          "name": "Kerbside along Bedok North Avenue 1, near Garden Hill",
+          "lat": 1.329798,
+          "lng": 103.927704,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "460428"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k39",
+      "id": "BDSZ01-0002",
+      "name": "Bedok Reservoir Road – Eunos Spring",
+      "points": [
+        {
+          "pid": "kp39",
+          "name": "Kerbside along Bedok Reservoir Road, near Eunos Spring",
+          "lat": 1.332248,
+          "lng": 103.912125,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "470127",
+        "470131",
+        "470608"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k40",
+      "id": "BDSZ07-0003",
+      "name": "Siglap Road – Mandarin Gardens",
+      "points": [
+        {
+          "pid": "kp40",
+          "name": "Kerbside along Siglap Road, near Mandarin Gardens",
+          "lat": 1.307378,
+          "lng": 103.926155,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "448909"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k41",
+      "id": "GLSZ05-0002",
+      "name": "Eunos Crescent – Blk 10",
+      "points": [
+        {
+          "pid": "kp41",
+          "name": "Kerbside along Eunos Crescent, near Blk 10",
+          "lat": 1.321539,
+          "lng": 103.902849,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "400002",
+        "400010"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k42",
+      "id": "BDSZ04-0003",
+      "name": "Bedok North Street 3 – Bedok North Green",
+      "points": [
+        {
+          "pid": "kp42",
+          "name": "Kerbside along Bedok North Street 3, near Bedok North Green",
+          "lat": 1.330484,
+          "lng": 103.925077,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "460547"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k43",
+      "id": "BDSZ04-0004",
+      "name": "Bedok North Street 3 – Blk 556",
+      "points": [
+        {
+          "pid": "kp43",
+          "name": "Kerbside along Bedok North Street 3, near Blk 556. Nearest road on the same side, over 150 m walk",
+          "lat": 1.332632,
+          "lng": 103.92228,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "460556",
+        "460557"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k44",
+      "id": "BDSZ05-0019",
+      "name": "Elliot Road – Elliot At The East Coast",
+      "points": [
+        {
+          "pid": "kp44",
+          "name": "Kerbside along Elliot Road, near Elliot At The East Coast",
+          "lat": 1.312037,
+          "lng": 103.930551,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "458704"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k45",
+      "id": "BDSZ05-0020",
+      "name": "Bedok South Avenue 1 – Blk 202",
+      "points": [
+        {
+          "pid": "kp45",
+          "name": "Kerbside along Bedok South Avenue 1, near Blk 202",
+          "lat": 1.322051,
+          "lng": 103.931898,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "469332"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k46",
+      "id": "MPSZ03-0003",
+      "name": "Marine Crescent – Marine Crescent Gardens",
+      "points": [
+        {
+          "pid": "kp46",
+          "name": "Kerbside along Marine Crescent, near Marine Crescent Gardens",
+          "lat": 1.304307,
+          "lng": 103.913259,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "440017",
+        "440044"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k47",
+      "id": "MPSZ02-0002",
+      "name": "Jago Close – Blk 30",
+      "points": [
+        {
+          "pid": "kp47",
+          "name": "Kerbside along Jago Close, near Blk 30",
+          "lat": 1.30645,
+          "lng": 103.908348,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "428440"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k48",
+      "id": "MPSZ03-0004",
+      "name": "Marine Crescent – Marine Crescent Ville",
+      "points": [
+        {
+          "pid": "kp48",
+          "name": "Kerbside along Marine Crescent, near Marine Crescent Ville. Nearest road on the same side, over 150 m walk",
+          "lat": 1.304366,
+          "lng": 103.912039,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "440032"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k49",
+      "id": "BDSZ07-0004",
+      "name": "Siglap Link – Seaside Residences",
+      "points": [
+        {
+          "pid": "kp49",
+          "name": "Kerbside along Siglap Link, near Seaside Residences",
+          "lat": 1.307327,
+          "lng": 103.927993,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "448870"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k50",
+      "id": "BDSZ07-0005",
+      "name": "Marine Parade Road – Laguna Park",
+      "points": [
+        {
+          "pid": "kp50",
+          "name": "Kerbside along Marine Parade Road, near Laguna Park",
+          "lat": 1.309684,
+          "lng": 103.930379,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "449287"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k51",
+      "id": "BDSZ04-0005",
+      "name": "Bedok North Street 1 – Blk 21",
+      "points": [
+        {
+          "pid": "kp51",
+          "name": "Kerbside along Bedok North Street 1, near Blk 21",
+          "lat": 1.327056,
+          "lng": 103.930702,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "469659",
+        "469662"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k52",
+      "id": "BDSZ01-0003",
+      "name": "Bedok Reservoir Road – Eunos Tenaga Ville",
+      "points": [
+        {
+          "pid": "kp52",
+          "name": "Kerbside along Bedok Reservoir Road, near Eunos Tenaga Ville",
+          "lat": 1.330685,
+          "lng": 103.905991,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "410643"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k53",
+      "id": "MPSZ02-0003",
+      "name": "East Coast Road – Blk 158",
+      "points": [
+        {
+          "pid": "kp53",
+          "name": "Kerbside along East Coast Road, near Blk 158",
+          "lat": 1.306208,
+          "lng": 103.905895,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "428866"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k54",
+      "id": "BDSZ06-0001",
+      "name": "Bedok South Road – Blk 19",
+      "points": [
+        {
+          "pid": "kp54",
+          "name": "Kerbside along Bedok South Road, near Blk 19",
+          "lat": 1.319349,
+          "lng": 103.934296,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "460019"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k55",
+      "id": "GLSZ03-0001",
+      "name": "Ubi Avenue 1 – Kampong Ubi Greenville",
+      "points": [
+        {
+          "pid": "kp55",
+          "name": "Kerbside along Ubi Avenue 1, near Kampong Ubi Greenville. Nearest road on the same side, over 150 m walk",
+          "lat": 1.3281,
+          "lng": 103.902905,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "400313"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k56",
+      "id": "GLSZ03-0002",
+      "name": "Ubi Avenue 1 – Kampong Ubi View",
+      "points": [
+        {
+          "pid": "kp56",
+          "name": "Kerbside along Ubi Avenue 1, near Kampong Ubi View",
+          "lat": 1.326988,
+          "lng": 103.901541,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "400341"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k57",
+      "id": "MPSZ02-0004",
+      "name": "Joo Chiat Road – Blk 139",
+      "points": [
+        {
+          "pid": "kp57",
+          "name": "Kerbside along Joo Chiat Road, near Blk 139",
+          "lat": 1.306114,
+          "lng": 103.904818,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "428829"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k58",
+      "id": "BDSZ02-0001",
+      "name": "Bedok Reservoir Crescent – Reservoir Rise",
+      "points": [
+        {
+          "pid": "kp58",
+          "name": "Kerbside along Bedok Reservoir Crescent, near Reservoir Rise",
+          "lat": 1.33751,
+          "lng": 103.919718,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "470704"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k59",
+      "id": "BDSZ01-0004",
+      "name": "Jalan Tenaga – Eunos Damai Ville",
+      "points": [
+        {
+          "pid": "kp59",
+          "name": "Kerbside along Jalan Tenaga, near Eunos Damai Ville",
+          "lat": 1.333141,
+          "lng": 103.906285,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "410655"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k60",
+      "id": "BDSZ01-0005",
+      "name": "Kaki Bukit Avenue 1 – Eunos Spring",
+      "points": [
+        {
+          "pid": "kp60",
+          "name": "Kerbside along Kaki Bukit Avenue 1, near Eunos Spring",
+          "lat": 1.33636,
+          "lng": 103.912595,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "470149",
+        "470150"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k61",
+      "id": "MPSZ02-0005",
+      "name": "Joo Chiat Road – Parc Seabreeze",
+      "points": [
+        {
+          "pid": "kp61",
+          "name": "Kerbside along Joo Chiat Road, near Parc Seabreeze",
+          "lat": 1.304251,
+          "lng": 103.906218,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "427711"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k62",
+      "id": "BDSZ06-0002",
+      "name": "New Upper Changi Road – Blk 28",
+      "points": [
+        {
+          "pid": "kp62",
+          "name": "Kerbside along New Upper Changi Road, near Blk 28",
+          "lat": 1.324475,
+          "lng": 103.934997,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "460028"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k63",
+      "id": "GLSZ05-0003",
+      "name": "Joo Chiat Road – Blk 4",
+      "points": [
+        {
+          "pid": "kp63",
+          "name": "Kerbside along Joo Chiat Road, near Blk 4",
+          "lat": 1.315053,
+          "lng": 103.898392,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "420004"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k64",
+      "id": "BDSZ02-0002",
+      "name": "Bedok Reservoir Road – Bedok Reservoir Garden",
+      "points": [
+        {
+          "pid": "kp64",
+          "name": "Kerbside along Bedok Reservoir Road, near Bedok Reservoir Garden. Nearest road on the same side, over 150 m walk",
+          "lat": 1.337469,
+          "lng": 103.922615,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "470710",
+        "470713",
+        "470714",
+        "472747"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k65",
+      "id": "BDSZ06-0003",
+      "name": "Sennett Lane – East Coast Hill",
+      "points": [
+        {
+          "pid": "kp65",
+          "name": "Kerbside along Sennett Lane, near East Coast Hill",
+          "lat": 1.316572,
+          "lng": 103.936624,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "466870",
+        "468098"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k66",
+      "id": "BDSZ02-0003",
+      "name": "Bedok Reservoir Road – Archipelago",
+      "points": [
+        {
+          "pid": "kp66",
+          "name": "Kerbside along Bedok Reservoir Road, near Archipelago",
+          "lat": 1.337544,
+          "lng": 103.920029,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "479301"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k67",
+      "id": "MPSZ03-0005",
+      "name": "Brooke Road – The Flow Mall",
+      "points": [
+        {
+          "pid": "kp67",
+          "name": "Kerbside along Brooke Road, near The Flow Mall",
+          "lat": 1.304018,
+          "lng": 103.903762,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "428751",
+        "428778",
+        "449314"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k68",
+      "id": "GLSZ03-0003",
+      "name": "Ubi Avenue 1 – Blk 302",
+      "points": [
+        {
+          "pid": "kp68",
+          "name": "Kerbside along Ubi Avenue 1, near Blk 302",
+          "lat": 1.32983,
+          "lng": 103.900371,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "400302"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k69",
+      "id": "BDSZ06-0004",
+      "name": "Bedok South Avenue 2 – Blk 32",
+      "points": [
+        {
+          "pid": "kp69",
+          "name": "Kerbside along Bedok South Avenue 2, near Blk 32",
+          "lat": 1.322603,
+          "lng": 103.937421,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "460032"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k70",
+      "id": "BDSZ06-0005",
+      "name": "Sennett Avenue – East Coast Hill",
+      "points": [
+        {
+          "pid": "kp70",
+          "name": "Kerbside along Sennett Avenue, near East Coast Hill",
+          "lat": 1.319082,
+          "lng": 103.937785,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "466814"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k71",
+      "id": "MPSZ03-0006",
+      "name": "Marine Parade Central – Blk 89",
+      "points": [
+        {
+          "pid": "kp71",
+          "name": "Kerbside along Marine Parade Central, near Blk 89",
+          "lat": 1.30133,
+          "lng": 103.905988,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "440089",
+        "449269"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k72",
+      "id": "BDSZ02-0004",
+      "name": "Bedok Reservoir Road – Bedok Reservoir Garden",
+      "points": [
+        {
+          "pid": "kp72",
+          "name": "Kerbside along Bedok Reservoir Road, near Bedok Reservoir Garden",
+          "lat": 1.338238,
+          "lng": 103.925337,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "470717"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k73",
+      "id": "GLSZ05-0004",
+      "name": "Haig Road – Haig View",
+      "points": [
+        {
+          "pid": "kp73",
+          "name": "Kerbside along Haig Road, near Haig View",
+          "lat": 1.311435,
+          "lng": 103.896798,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "430003",
+        "438622"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k74",
+      "id": "BDSZ06-0006",
+      "name": "Sennett Road – Singapore Hokkien Huay Kuan Cultural Academy",
+      "points": [
+        {
+          "pid": "kp74",
+          "name": "Kerbside along Sennett Road, near Singapore Hokkien Huay Kuan Cultural Academy",
+          "lat": 1.315633,
+          "lng": 103.938807,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "466491",
+        "466781"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k75",
+      "id": "MPSZ02-0006",
+      "name": "Haig Road – Haig Court",
+      "points": [
+        {
+          "pid": "kp75",
+          "name": "Kerbside along Haig Road, near Haig Court",
+          "lat": 1.306836,
+          "lng": 103.898872,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "438791"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k76",
+      "id": "BDSZ08-0001",
+      "name": "Bayshore Road – The Bayshore",
+      "points": [
+        {
+          "pid": "kp76",
+          "name": "Kerbside along Bayshore Road, near The Bayshore",
+          "lat": 1.311854,
+          "lng": 103.93815,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "469972",
+        "469985"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k77",
+      "id": "BDSZ02-0005",
+      "name": "Bedok Reservoir Road – Waterfront Isle",
+      "points": [
+        {
+          "pid": "kp77",
+          "name": "Kerbside along Bedok Reservoir Road, near Waterfront Isle",
+          "lat": 1.338505,
+          "lng": 103.928257,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "479264"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k78",
+      "id": "GLSZ05-0005",
+      "name": "Butterworth Lane – Butterworth View",
+      "points": [
+        {
+          "pid": "kp78",
+          "name": "Kerbside along Butterworth Lane, near Butterworth View",
+          "lat": 1.312431,
+          "lng": 103.895033,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "439431",
+        "439445"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k79",
+      "id": "BDSZ06-0007",
+      "name": "New Upper Changi Road – Blk 65",
+      "points": [
+        {
+          "pid": "kp79",
+          "name": "Kerbside along New Upper Changi Road, near Blk 65",
+          "lat": 1.325096,
+          "lng": 103.939768,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "460065"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k80",
+      "id": "BDSZ04-0006",
+      "name": "Bedok North Street 2 – Blk 128",
+      "points": [
+        {
+          "pid": "kp80",
+          "name": "Kerbside along Bedok North Street 2, near Blk 128",
+          "lat": 1.327467,
+          "lng": 103.939071,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "460128"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k81",
+      "id": "BDSZ06-0008",
+      "name": "Lucky Heights – Blk 63",
+      "points": [
+        {
+          "pid": "kp81",
+          "name": "Kerbside along Lucky Heights, near Blk 63",
+          "lat": 1.317472,
+          "lng": 103.940776,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "466377",
+        "466504",
+        "467448",
+        "467617"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k82",
+      "id": "BDSZ08-0002",
+      "name": "Bayshore Road – The Bayshore",
+      "points": [
+        {
+          "pid": "kp82",
+          "name": "Kerbside along Bayshore Road, near The Bayshore",
+          "lat": 1.312436,
+          "lng": 103.939998,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "469974",
+        "469992"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k83",
+      "id": "BDSZ02-0006",
+      "name": "Bedok Reservoir Road – Waterfront Key",
+      "points": [
+        {
+          "pid": "kp83",
+          "name": "Kerbside along Bedok Reservoir Road, near Waterfront Key",
+          "lat": 1.337896,
+          "lng": 103.931394,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "479251"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k84",
+      "id": "MPSZ02-0007",
+      "name": "Dunman Lane – Blk 249",
+      "points": [
+        {
+          "pid": "kp84",
+          "name": "Kerbside along Dunman Lane, near Blk 249",
+          "lat": 1.308855,
+          "lng": 103.895212,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "437037"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k85",
+      "id": "BDSZ04-0007",
+      "name": "Bedok North Road – Vista 8",
+      "points": [
+        {
+          "pid": "kp85",
+          "name": "Kerbside along Bedok North Road, near Vista 8",
+          "lat": 1.3266,
+          "lng": 103.940386,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "460180"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k86",
+      "id": "BDSZ02-0007",
+      "name": "Bedok North Avenue 3 – The Clearwater",
+      "points": [
+        {
+          "pid": "kp86",
+          "name": "Kerbside along Bedok North Avenue 3, near The Clearwater",
+          "lat": 1.337423,
+          "lng": 103.933152,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [],
+      "areas": [],
+      "idHistory": [],
+      "off": [
+        "kp86"
+      ]
+    },
+    {
+      "uid": "k87",
+      "id": "BDSZ04-0008",
+      "name": "Bedok North Road – Blk 81",
+      "points": [
+        {
+          "pid": "kp87",
+          "name": "Kerbside along Bedok North Road, near Blk 81",
+          "lat": 1.32858,
+          "lng": 103.94004,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "460081"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k88",
+      "id": "MPSZ03-0007",
+      "name": "Amber Gardens – The Esta",
+      "points": [
+        {
+          "pid": "kp88",
+          "name": "Kerbside along Amber Gardens, near The Esta",
+          "lat": 1.301387,
+          "lng": 103.899251,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "439959",
+        "439966",
+        "439968"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k89",
+      "id": "BDSZ02-0008",
+      "name": "Bedok Reservoir View – Aquarius By The Park",
+      "points": [
+        {
+          "pid": "kp89",
+          "name": "Kerbside along Bedok Reservoir View, near Aquarius By The Park. Nearest road on the same side, over 150 m walk",
+          "lat": 1.336574,
+          "lng": 103.935556,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "470772",
+        "470773"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k90",
+      "id": "BDSZ04-0009",
+      "name": "New Upper Changi Road – Vista 8",
+      "points": [
+        {
+          "pid": "kp90",
+          "name": "Kerbside along New Upper Changi Road, near Vista 8",
+          "lat": 1.325793,
+          "lng": 103.942029,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "460183"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k91",
+      "id": "BDSZ04-0010",
+      "name": "Bedok North Street 4 – Fengshan Greenville",
+      "points": [
+        {
+          "pid": "kp91",
+          "name": "Kerbside along Bedok North Street 4, near Fengshan Greenville",
+          "lat": 1.330854,
+          "lng": 103.939733,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "461187"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k92",
+      "id": "MPSZ03-0008",
+      "name": "Amber Road – Seaview Point",
+      "points": [
+        {
+          "pid": "kp92",
+          "name": "Kerbside along Amber Road, near Seaview Point",
+          "lat": 1.29981,
+          "lng": 103.899729,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "439865",
+        "439980",
+        "439981"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k93",
+      "id": "GLSZ05-0006",
+      "name": "Lim Ah Woo Road – Suites @ Guillemard",
+      "points": [
+        {
+          "pid": "kp93",
+          "name": "Kerbside along Lim Ah Woo Road, near Suites @ Guillemard",
+          "lat": 1.312612,
+          "lng": 103.892038,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "438133"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k94",
+      "id": "BDSZ02-0009",
+      "name": "Bedok Reservoir View – The Clearwater",
+      "points": [
+        {
+          "pid": "kp94",
+          "name": "Kerbside along Bedok Reservoir View, near The Clearwater",
+          "lat": 1.337984,
+          "lng": 103.93483,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "479232",
+        "479234"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k95",
+      "id": "BDSZ04-0011",
+      "name": "Bedok North Avenue 4 – Pearl Garden",
+      "points": [
+        {
+          "pid": "kp95",
+          "name": "Kerbside along Bedok North Avenue 4, near Pearl Garden",
+          "lat": 1.332723,
+          "lng": 103.939993,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "460097"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k96",
+      "id": "BDSZ06-0009",
+      "name": "Bedok South Avenue 3 – Bedok Court",
+      "points": [
+        {
+          "pid": "kp96",
+          "name": "Kerbside along Bedok South Avenue 3, near Bedok Court",
+          "lat": 1.321552,
+          "lng": 103.94405,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "469298"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k97",
+      "id": "BDSZ06-0010",
+      "name": "Bedok South Avenue 3 – Siglap East",
+      "points": [
+        {
+          "pid": "kp97",
+          "name": "Kerbside along Bedok South Avenue 3, near Siglap East",
+          "lat": 1.32,
+          "lng": 103.944353,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "460167",
+        "460172"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k98",
+      "id": "BDSZ06-0011",
+      "name": "Bedok South Avenue 3 – Siglap Lucky Valley",
+      "points": [
+        {
+          "pid": "kp98",
+          "name": "Kerbside along Bedok South Avenue 3, near Siglap Lucky Valley",
+          "lat": 1.31876,
+          "lng": 103.944609,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "460066"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k99",
+      "id": "BDSZ04-0012",
+      "name": "Jalan Tanjong – Blk 77",
+      "points": [
+        {
+          "pid": "kp99",
+          "name": "Kerbside along Jalan Tanjong, near Blk 77",
+          "lat": 1.32839,
+          "lng": 103.941192,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "460077"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k100",
+      "id": "BDSZ04-0013",
+      "name": "Pari Dedap Walk – Fengshan Greenville",
+      "points": [
+        {
+          "pid": "kp100",
+          "name": "Kerbside along Pari Dedap Walk, near Fengshan Greenville",
+          "lat": 1.332088,
+          "lng": 103.941436,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "462188"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k101",
+      "id": "GLSZ04-0001",
+      "name": "Lorong 37 Geylang – Guilin Mansions",
+      "points": [
+        {
+          "pid": "kp101",
+          "name": "Kerbside along Lorong 37 Geylang, near Guilin Mansions",
+          "lat": 1.315728,
+          "lng": 103.889658,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "387906",
+        "387946"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k102",
+      "id": "GLSZ02-0001",
+      "name": "Circuit Road – Macpherson Spring",
+      "points": [
+        {
+          "pid": "kp102",
+          "name": "Kerbside along Circuit Road, near Macpherson Spring",
+          "lat": 1.322887,
+          "lng": 103.889366,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "372083"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k103",
+      "id": "BDSZ04-0014",
+      "name": "Tanah Merah Kechil Link – Urban Vista",
+      "points": [
+        {
+          "pid": "kp103",
+          "name": "Kerbside along Tanah Merah Kechil Link, near Urban Vista",
+          "lat": 1.327768,
+          "lng": 103.944549,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "465419"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k104",
+      "id": "BDSZ04-0015",
+      "name": "Bedok North Avenue 4 – Blk 94C",
+      "points": [
+        {
+          "pid": "kp104",
+          "name": "Kerbside along Bedok North Avenue 4, near Blk 94C",
+          "lat": 1.334024,
+          "lng": 103.941924,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "462094"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k105",
+      "id": "GLSZ02-0002",
+      "name": "Circuit Link – Blk 66",
+      "points": [
+        {
+          "pid": "kp105",
+          "name": "Kerbside along Circuit Link, near Blk 66",
+          "lat": 1.325897,
+          "lng": 103.888575,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "370066",
+        "370075"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k106",
+      "id": "BDSZ06-0012",
+      "name": "Bedok South Road – Siglap East",
+      "points": [
+        {
+          "pid": "kp106",
+          "name": "Kerbside along Bedok South Road, near Siglap East",
+          "lat": 1.320656,
+          "lng": 103.946816,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "460164",
+        "460165"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k107",
+      "id": "BDSZ06-0013",
+      "name": "Jalan Limau Kasturi – Grandeur Park Residences",
+      "points": [
+        {
+          "pid": "kp107",
+          "name": "Kerbside along Jalan Limau Kasturi, near Grandeur Park Residences",
+          "lat": 1.325306,
+          "lng": 103.946207,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "465463"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k108",
+      "id": "MPSZ01-0001",
+      "name": "Crescent Road – Waterbank At Dakota",
+      "points": [
+        {
+          "pid": "kp108",
+          "name": "Kerbside along Crescent Road, near Waterbank At Dakota",
+          "lat": 1.306271,
+          "lng": 103.890088,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "399947"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k109",
+      "id": "BDSZ02-0010",
+      "name": "Tampines Avenue 10 Park Connector – Waterview",
+      "points": [
+        {
+          "pid": "kp109",
+          "name": "Kerbside along Tampines Avenue 10 Park Connector, near Waterview. Nearest road on the same side, over 150 m walk",
+          "lat": 1.349327,
+          "lng": 103.927241,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "529782"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k110",
+      "id": "BDSZ04-0016",
+      "name": "Tanah Merah Kechil Avenue – Casa Merah",
+      "points": [
+        {
+          "pid": "kp110",
+          "name": "Kerbside along Tanah Merah Kechil Avenue, near Casa Merah",
+          "lat": 1.329339,
+          "lng": 103.946148,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "465527",
+        "465533"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k111",
+      "id": "BDSZ06-0014",
+      "name": "Kew Crescent – Blk 2",
+      "points": [
+        {
+          "pid": "kp111",
+          "name": "Kerbside along Kew Crescent, near Blk 2",
+          "lat": 1.320064,
+          "lng": 103.948093,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "466019",
+        "466327"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k112",
+      "id": "MPSZ01-0002",
+      "name": "Meyer Road – The Makena",
+      "points": [
+        {
+          "pid": "kp112",
+          "name": "Kerbside along Meyer Road, near The Makena",
+          "lat": 1.298054,
+          "lng": 103.894323,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "437932"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k113",
+      "id": "BDSZ06-0015",
+      "name": "Kew Drive – Blk 150",
+      "points": [
+        {
+          "pid": "kp113",
+          "name": "Kerbside along Kew Drive, near Blk 150",
+          "lat": 1.321748,
+          "lng": 103.948667,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "466311"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k114",
+      "id": "MPSZ01-0003",
+      "name": "Jalan Nuri – Blk 19",
+      "points": [
+        {
+          "pid": "kp114",
+          "name": "Kerbside along Jalan Nuri, near Blk 19",
+          "lat": 1.298623,
+          "lng": 103.892805,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "438448"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k115",
+      "id": "MPSZ01-0004",
+      "name": "Branksome Road – Blk 89",
+      "points": [
+        {
+          "pid": "kp115",
+          "name": "Kerbside along Branksome Road, near Blk 89",
+          "lat": 1.30343,
+          "lng": 103.889418,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "439612"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k116",
+      "id": "GLSZ04-0002",
+      "name": "Jalan Dua – Mountbatten Community Club",
+      "points": [
+        {
+          "pid": "kp116",
+          "name": "Kerbside along Jalan Dua, near Mountbatten Community Club",
+          "lat": 1.308888,
+          "lng": 103.88697,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "390087"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k117",
+      "id": "GLSZ02-0003",
+      "name": "Balam Road – Le Crescendo",
+      "points": [
+        {
+          "pid": "kp117",
+          "name": "Kerbside along Balam Road, near Le Crescendo",
+          "lat": 1.33023,
+          "lng": 103.887344,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "371018",
+        "409044"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k118",
+      "id": "TMSZ03-0001",
+      "name": "Tampines Avenue 1 – Blk 893",
+      "points": [
+        {
+          "pid": "kp118",
+          "name": "Kerbside along Tampines Avenue 1, near Blk 893",
+          "lat": 1.348176,
+          "lng": 103.930111,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "520893"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k119",
+      "id": "GLSZ04-0003",
+      "name": "Lorong 28 Geylang – Melosa",
+      "points": [
+        {
+          "pid": "kp119",
+          "name": "Kerbside along Lorong 28 Geylang, near Melosa",
+          "lat": 1.312658,
+          "lng": 103.88559,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "398414",
+        "398432"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k120",
+      "id": "GLSZ04-0004",
+      "name": "Dakota Crescent – Dakota Residences",
+      "points": [
+        {
+          "pid": "kp120",
+          "name": "Kerbside along Dakota Crescent, near Dakota Residences",
+          "lat": 1.306745,
+          "lng": 103.886968,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "399936"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k121",
+      "id": "TMSZ03-0002",
+      "name": "Tampines Street 86 – Arc At Tampines",
+      "points": [
+        {
+          "pid": "kp121",
+          "name": "Kerbside along Tampines Street 86, near Arc At Tampines",
+          "lat": 1.350179,
+          "lng": 103.927671,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "529596"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k122",
+      "id": "GLSZ04-0005",
+      "name": "Cassia Crescent – Blk 52",
+      "points": [
+        {
+          "pid": "kp122",
+          "name": "Kerbside along Cassia Crescent, near Blk 52",
+          "lat": 1.310145,
+          "lng": 103.885287,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "390052"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k123",
+      "id": "GLSZ02-0004",
+      "name": "Paya Lebar Way – Blk 123",
+      "points": [
+        {
+          "pid": "kp123",
+          "name": "Kerbside along Paya Lebar Way, near Blk 123. Nearest road on the same side, over 150 m walk",
+          "lat": 1.323284,
+          "lng": 103.884396,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "381123"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k124",
+      "id": "BDSZ04-0017",
+      "name": "Jalan Simpang Bedok – Canary Park",
+      "points": [
+        {
+          "pid": "kp124",
+          "name": "Kerbside along Jalan Simpang Bedok, near Canary Park",
+          "lat": 1.332932,
+          "lng": 103.947199,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "488184"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k125",
+      "id": "MPSZ01-0005",
+      "name": "Meyer Road – La Meyer",
+      "points": [
+        {
+          "pid": "kp125",
+          "name": "Kerbside along Meyer Road, near La Meyer",
+          "lat": 1.298072,
+          "lng": 103.889408,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "437894",
+        "438051"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k126",
+      "id": "BDSZ04-0018",
+      "name": "Jalan Chempaka Kuning – Summer Gardens",
+      "points": [
+        {
+          "pid": "kp126",
+          "name": "Kerbside along Jalan Chempaka Kuning, near Summer Gardens",
+          "lat": 1.330078,
+          "lng": 103.951204,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "486230"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k127",
+      "id": "BDSZ06-0016",
+      "name": "Kew Drive – Kew Grove",
+      "points": [
+        {
+          "pid": "kp127",
+          "name": "Kerbside along Kew Drive, near Kew Grove",
+          "lat": 1.319951,
+          "lng": 103.952352,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "467964"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k128",
+      "id": "TMSZ03-0003",
+      "name": "Tampines Street 86 – The Santorini",
+      "points": [
+        {
+          "pid": "kp128",
+          "name": "Kerbside along Tampines Street 86, near The Santorini",
+          "lat": 1.351724,
+          "lng": 103.928443,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "528540",
+        "528570",
+        "528574"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k129",
+      "id": "BDSZ06-0017",
+      "name": "Bedok Ria Crescent – Stratford Court",
+      "points": [
+        {
+          "pid": "kp129",
+          "name": "Kerbside along Bedok Ria Crescent, near Stratford Court",
+          "lat": 1.328071,
+          "lng": 103.951722,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "489929"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k130",
+      "id": "GLSZ04-0006",
+      "name": "Jalan Lima – Blk 7",
+      "points": [
+        {
+          "pid": "kp130",
+          "name": "Kerbside along Jalan Lima, near Blk 7",
+          "lat": 1.307445,
+          "lng": 103.883245,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "391007"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k131",
+      "id": "MPSZ01-0006",
+      "name": "Meyer Road – Arthur Mansions",
+      "points": [
+        {
+          "pid": "kp131",
+          "name": "Kerbside along Meyer Road, near Arthur Mansions",
+          "lat": 1.297908,
+          "lng": 103.886975,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "437874",
+        "437991",
+        "439829"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k132",
+      "id": "TMSZ03-0004",
+      "name": "Tampines Street 86 – Tampines Greenbloom",
+      "points": [
+        {
+          "pid": "kp132",
+          "name": "Kerbside along Tampines Street 86, near Tampines Greenbloom",
+          "lat": 1.353583,
+          "lng": 103.929442,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "528542"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k133",
+      "id": "TMSZ03-0005",
+      "name": "Tampines Street 83 – Tampines Palmwalk",
+      "points": [
+        {
+          "pid": "kp133",
+          "name": "Kerbside along Tampines Street 83, near Tampines Palmwalk",
+          "lat": 1.351791,
+          "lng": 103.933881,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "520841"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k134",
+      "id": "GLSZ04-0007",
+      "name": "Sims Drive – Penrose",
+      "points": [
+        {
+          "pid": "kp134",
+          "name": "Kerbside along Sims Drive, near Penrose",
+          "lat": 1.318555,
+          "lng": 103.87996,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "387395",
+        "387396"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k135",
+      "id": "BDSZ06-0018",
+      "name": "Jalan Bilal – Country Park Condominium",
+      "points": [
+        {
+          "pid": "kp135",
+          "name": "Kerbside along Jalan Bilal, near Country Park Condominium",
+          "lat": 1.321423,
+          "lng": 103.954817,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "469360",
+        "469568"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k136",
+      "id": "BDSZ06-0019",
+      "name": "Bedok Ria Crescent – Bedok Ria",
+      "points": [
+        {
+          "pid": "kp136",
+          "name": "Kerbside along Bedok Ria Crescent, near Bedok Ria",
+          "lat": 1.325738,
+          "lng": 103.954195,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "489916"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k137",
+      "id": "BDSZ06-0020",
+      "name": "Eastwood Green – Eastwood Green Terraces",
+      "points": [
+        {
+          "pid": "kp137",
+          "name": "Kerbside along Eastwood Green, near Eastwood Green Terraces",
+          "lat": 1.322377,
+          "lng": 103.955594,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "486364",
+        "486524"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k138",
+      "id": "KLSZ05-0001",
+      "name": "Tanjong Rhu Road – Fort Gardens",
+      "points": [
+        {
+          "pid": "kp138",
+          "name": "Kerbside along Tanjong Rhu Road, near Fort Gardens",
+          "lat": 1.299166,
+          "lng": 103.884109,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "439089"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k139",
+      "id": "TMSZ02-0001",
+      "name": "Tampines Lane – Treasure At Tampines",
+      "points": [
+        {
+          "pid": "kp139",
+          "name": "Kerbside along Tampines Lane, near Treasure At Tampines",
+          "lat": 1.344919,
+          "lng": 103.946124,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "528464"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k140",
+      "id": "TMSZ03-0006",
+      "name": "Tampines Street 86 – Parc Central Residences",
+      "points": [
+        {
+          "pid": "kp140",
+          "name": "Kerbside along Tampines Street 86, near Parc Central Residences",
+          "lat": 1.355617,
+          "lng": 103.930549,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "528514",
+        "528536"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k141",
+      "id": "TMSZ03-0007",
+      "name": "Tampines Street 82 – Tampines Palmsville",
+      "points": [
+        {
+          "pid": "kp141",
+          "name": "Kerbside along Tampines Street 82, near Tampines Palmsville. Nearest road on the same side, over 150 m walk",
+          "lat": 1.350045,
+          "lng": 103.939349,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "520909"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k142",
+      "id": "TMSZ03-0008",
+      "name": "Tampines Street 83 – Tampines Vista",
+      "points": [
+        {
+          "pid": "kp142",
+          "name": "Kerbside along Tampines Street 83, near Tampines Vista",
+          "lat": 1.353982,
+          "lng": 103.933829,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "520868"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k143",
+      "id": "TMSZ03-0009",
+      "name": "Tampines Avenue 8 – Tampines Greenlace",
+      "points": [
+        {
+          "pid": "kp143",
+          "name": "Kerbside along Tampines Avenue 8, near Tampines Greenlace",
+          "lat": 1.356076,
+          "lng": 103.931324,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "522871"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k144",
+      "id": "TMSZ03-0010",
+      "name": "Tampines Street 82 – Tampines Arcadia",
+      "points": [
+        {
+          "pid": "kp144",
+          "name": "Kerbside along Tampines Street 82, near Tampines Arcadia",
+          "lat": 1.352657,
+          "lng": 103.938947,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "525856"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k145",
+      "id": "TMSZ02-0002",
+      "name": "Tampines Street 11 – Treasure At Tampines",
+      "points": [
+        {
+          "pid": "kp145",
+          "name": "Kerbside along Tampines Street 11, near Treasure At Tampines",
+          "lat": 1.345428,
+          "lng": 103.948096,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "528476"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k146",
+      "id": "TMSZ02-0003",
+      "name": "Tampines Street 11 – Blk 127",
+      "points": [
+        {
+          "pid": "kp146",
+          "name": "Kerbside along Tampines Street 11, near Blk 127",
+          "lat": 1.345583,
+          "lng": 103.95048,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "521127"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k147",
+      "id": "TMSZ04-0001",
+      "name": "Simei Street 6 – Eastpoint Mall",
+      "points": [
+        {
+          "pid": "kp147",
+          "name": "Kerbside along Simei Street 6, near Eastpoint Mall",
+          "lat": 1.342519,
+          "lng": 103.952695,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "528833"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k148",
+      "id": "TMSZ02-0004",
+      "name": "Tampines Street 11 – Blk 278",
+      "points": [
+        {
+          "pid": "kp148",
+          "name": "Kerbside along Tampines Street 11, near Blk 278",
+          "lat": 1.346602,
+          "lng": 103.951199,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "520278"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k149",
+      "id": "TMSZ02-0005",
+      "name": "Tampines Street 11 – Blk 274",
+      "points": [
+        {
+          "pid": "kp149",
+          "name": "Kerbside along Tampines Street 11, near Blk 274",
+          "lat": 1.34812,
+          "lng": 103.950056,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "520274"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k150",
+      "id": "TMSZ03-0011",
+      "name": "Tampines Street 71 – Tampines Courtview",
+      "points": [
+        {
+          "pid": "kp150",
+          "name": "Kerbside along Tampines Street 71, near Tampines Courtview",
+          "lat": 1.35739,
+          "lng": 103.936313,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "520726"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k151",
+      "id": "TMSZ02-0006",
+      "name": "Tampines Central 8 – Centrale 8 At Tampines",
+      "points": [
+        {
+          "pid": "kp151",
+          "name": "Kerbside along Tampines Central 8, near Centrale 8 At Tampines",
+          "lat": 1.35587,
+          "lng": 103.93943,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "523519",
+        "524519"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k152",
+      "id": "TMSZ02-0007",
+      "name": "Tampines Street 21 – Blk 252",
+      "points": [
+        {
+          "pid": "kp152",
+          "name": "Kerbside along Tampines Street 21, near Blk 252",
+          "lat": 1.352384,
+          "lng": 103.949072,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "520252"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k153",
+      "id": "TMSZ02-0008",
+      "name": "Tampines Central 7 – The Tampines Trilliant",
+      "points": [
+        {
+          "pid": "kp153",
+          "name": "Kerbside along Tampines Central 7, near The Tampines Trilliant",
+          "lat": 1.358897,
+          "lng": 103.940666,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "528769"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k154",
+      "id": "KLSZ05-0002",
+      "name": "Tanjong Rhu Road – Tanjong Ria Condominium",
+      "points": [
+        {
+          "pid": "kp154",
+          "name": "Kerbside along Tanjong Rhu Road, near Tanjong Ria Condominium",
+          "lat": 1.29629,
+          "lng": 103.874325,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "436914"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k155",
+      "id": "TMSZ02-0009",
+      "name": "Tampines Street 21 – Blk 262",
+      "points": [
+        {
+          "pid": "kp155",
+          "name": "Kerbside along Tampines Street 21, near Blk 262",
+          "lat": 1.353588,
+          "lng": 103.951558,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "520262"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k156",
+      "id": "TMSZ02-0010",
+      "name": "Tampines Street 41 – Sun Plaza View",
+      "points": [
+        {
+          "pid": "kp156",
+          "name": "Kerbside along Tampines Street 41, near Sun Plaza View",
+          "lat": 1.358478,
+          "lng": 103.946553,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "520410"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k157",
+      "id": "HGSZ02-0001",
+      "name": "Hougang Street 32 – Hougang Rivercourt",
+      "points": [
+        {
+          "pid": "kp157",
+          "name": "Kerbside along Hougang Street 32, near Hougang Rivercourt",
+          "lat": 1.363429,
+          "lng": 103.894567,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "531377"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k158",
+      "id": "KLSZ05-0003",
+      "name": "Tanjong Rhu Road – Parkshore",
+      "points": [
+        {
+          "pid": "kp158",
+          "name": "Kerbside along Tanjong Rhu Road, near Parkshore",
+          "lat": 1.297114,
+          "lng": 103.871347,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "436917",
+        "436923"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k159",
+      "id": "TMSZ02-0011",
+      "name": "Tampines Avenue 7 – Blk 228",
+      "points": [
+        {
+          "pid": "kp159",
+          "name": "Kerbside along Tampines Avenue 7, near Blk 228",
+          "lat": 1.356202,
+          "lng": 103.954578,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "521228"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k160",
+      "id": "TMSZ04-0002",
+      "name": "Simei Rise – Savannah Condopark",
+      "points": [
+        {
+          "pid": "kp160",
+          "name": "Kerbside along Simei Rise, near Savannah Condopark",
+          "lat": 1.348412,
+          "lng": 103.962899,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "528787"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k161",
+      "id": "TMSZ02-0012",
+      "name": "Tampines Street 43 – Blk 495C",
+      "points": [
+        {
+          "pid": "kp161",
+          "name": "Kerbside along Tampines Street 43, near Blk 495C. Nearest road on the same side, over 150 m walk",
+          "lat": 1.362101,
+          "lng": 103.950899,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "522495"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k162",
+      "id": "TMSZ02-0013",
+      "name": "Tampines Street 42 – Blk 460",
+      "points": [
+        {
+          "pid": "kp162",
+          "name": "Kerbside along Tampines Street 42, near Blk 460",
+          "lat": 1.358602,
+          "lng": 103.95505,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "520460"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k163",
+      "id": "TMSZ02-0014",
+      "name": "Tampines Street 33 – Blk 334",
+      "points": [
+        {
+          "pid": "kp163",
+          "name": "Kerbside along Tampines Street 33, near Blk 334",
+          "lat": 1.352154,
+          "lng": 103.960987,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "520334"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k164",
+      "id": "HGSZ02-0002",
+      "name": "Saint Xavier's Lane – Riverfront Residences",
+      "points": [
+        {
+          "pid": "kp164",
+          "name": "Kerbside along Saint Xavier's Lane, near Riverfront Residences",
+          "lat": 1.370009,
+          "lng": 103.899534,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "533815"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k165",
+      "id": "PRSZ03-0001",
+      "name": "Pasir Ris Grove – The Palette",
+      "points": [
+        {
+          "pid": "kp165",
+          "name": "Kerbside along Pasir Ris Grove, near The Palette",
+          "lat": 1.370344,
+          "lng": 103.946143,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "518134"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k166",
+      "id": "TMSZ02-0015",
+      "name": "Tampines Street 45 – Blk 498M",
+      "points": [
+        {
+          "pid": "kp166",
+          "name": "Kerbside along Tampines Street 45, near Blk 498M",
+          "lat": 1.361701,
+          "lng": 103.957467,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "529498"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k167",
+      "id": "TMSZ02-0016",
+      "name": "Tampines Street 45 – Tampines Greenedge",
+      "points": [
+        {
+          "pid": "kp167",
+          "name": "Kerbside along Tampines Street 45, near Tampines Greenedge. Nearest road on the same side, over 150 m walk",
+          "lat": 1.363147,
+          "lng": 103.95637,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "527492"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k168",
+      "id": "PRSZ08-0001",
+      "name": "Flora Drive – Parc Olympia",
+      "points": [
+        {
+          "pid": "kp168",
+          "name": "Kerbside along Flora Drive, near Parc Olympia",
+          "lat": 1.35551,
+          "lng": 103.965694,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "506860",
+        "506868"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k169",
+      "id": "PRSZ05-0001",
+      "name": "Pasir Ris Drive 1 – Blk 114",
+      "points": [
+        {
+          "pid": "kp169",
+          "name": "Kerbside along Pasir Ris Drive 1, near Blk 114",
+          "lat": 1.368247,
+          "lng": 103.955179,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "510114"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k170",
+      "id": "PRSZ05-0002",
+      "name": "Pasir Ris Street 11 – Blk 181",
+      "points": [
+        {
+          "pid": "kp170",
+          "name": "Kerbside along Pasir Ris Street 11, near Blk 181",
+          "lat": 1.364375,
+          "lng": 103.960244,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "510181"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k171",
+      "id": "PRSZ05-0003",
+      "name": "Pasir Ris Street 12 – Blk 103",
+      "points": [
+        {
+          "pid": "kp171",
+          "name": "Kerbside along Pasir Ris Street 12, near Blk 103",
+          "lat": 1.367523,
+          "lng": 103.958318,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "510103"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k172",
+      "id": "PRSZ05-0004",
+      "name": "Pasir Ris Drive 6 – Blk 422",
+      "points": [
+        {
+          "pid": "kp172",
+          "name": "Kerbside along Pasir Ris Drive 6, near Blk 422. Nearest road on the same side, over 150 m walk",
+          "lat": 1.371736,
+          "lng": 103.954874,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "510411",
+        "510422"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k173",
+      "id": "PRSZ05-0005",
+      "name": "Pasir Ris Drive 4 – Blk 212",
+      "points": [
+        {
+          "pid": "kp173",
+          "name": "Kerbside along Pasir Ris Drive 4, near Blk 212",
+          "lat": 1.367971,
+          "lng": 103.960887,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "510212"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k174",
+      "id": "PRSZ08-0002",
+      "name": "Mariam Walk – Estella Gardens",
+      "points": [
+        {
+          "pid": "kp174",
+          "name": "Kerbside along Mariam Walk, near Estella Gardens",
+          "lat": 1.359897,
+          "lng": 103.966005,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "509739"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k175",
+      "id": "HGSZ04-0001",
+      "name": "Hougang Avenue 9 – Blk 662",
+      "points": [
+        {
+          "pid": "kp175",
+          "name": "Kerbside along Hougang Avenue 9, near Blk 662",
+          "lat": 1.374623,
+          "lng": 103.882994,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "530662"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k176",
+      "id": "PRSZ08-0003",
+      "name": "Loyang View – Loyang Villas",
+      "points": [
+        {
+          "pid": "kp176",
+          "name": "Kerbside along Loyang View, near Loyang Villas",
+          "lat": 1.363632,
+          "lng": 103.965965,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "507233"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k177",
+      "id": "PRSZ02-0001",
+      "name": "Pasir Ris Drive 10 – Vue 8 Residence",
+      "points": [
+        {
+          "pid": "kp177",
+          "name": "Kerbside along Pasir Ris Drive 10, near Vue 8 Residence",
+          "lat": 1.382346,
+          "lng": 103.941074,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "519286"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k178",
+      "id": "PRSZ05-0006",
+      "name": "Pasir Ris Drive 4 – Blk 458",
+      "points": [
+        {
+          "pid": "kp178",
+          "name": "Kerbside along Pasir Ris Drive 4, near Blk 458",
+          "lat": 1.371276,
+          "lng": 103.959973,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "510458"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k179",
+      "id": "PRSZ07-0001",
+      "name": "Jalan Sinar Bulan – Changi Heights",
+      "points": [
+        {
+          "pid": "kp179",
+          "name": "Kerbside along Jalan Sinar Bulan, near Changi Heights",
+          "lat": 1.362583,
+          "lng": 103.972662,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "507061"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k180",
+      "id": "PRSZ06-0001",
+      "name": "Loyang Avenue – Loyang Valley",
+      "points": [
+        {
+          "pid": "kp180",
+          "name": "Kerbside along Loyang Avenue, near Loyang Valley",
+          "lat": 1.369014,
+          "lng": 103.97028,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "509058",
+        "509059"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k181",
+      "id": "PRSZ04-0001",
+      "name": "Pasir Ris Link – Sea Esta",
+      "points": [
+        {
+          "pid": "kp181",
+          "name": "Kerbside along Pasir Ris Link, near Sea Esta",
+          "lat": 1.3772,
+          "lng": 103.959731,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "518146"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k182",
+      "id": "PGSZ04-0001",
+      "name": "Punggol Field Walk – Blk 128D",
+      "points": [
+        {
+          "pid": "kp182",
+          "name": "Kerbside along Punggol Field Walk, near Blk 128D",
+          "lat": 1.392608,
+          "lng": 103.91211,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "824128"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k183",
+      "id": "SESZ03-0001",
+      "name": "Compassvale Crescent – Compassvale Green",
+      "points": [
+        {
+          "pid": "kp183",
+          "name": "Kerbside along Compassvale Crescent, near Compassvale Green. Nearest road on the same side, over 150 m walk",
+          "lat": 1.396054,
+          "lng": 103.900822,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "543298"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k184",
+      "id": "HGSZ05-0001",
+      "name": "Gerald Drive – Seletar Springs Condominium",
+      "points": [
+        {
+          "pid": "kp184",
+          "name": "Kerbside along Gerald Drive, near Seletar Springs Condominium",
+          "lat": 1.3871,
+          "lng": 103.878492,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "798592"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "k185",
+      "id": "PGSZ03-0001",
+      "name": "Punggol Field – Punggol Sapphire",
+      "points": [
+        {
+          "pid": "kp185",
+          "name": "Kerbside along Punggol Field, near Punggol Sapphire",
+          "lat": 1.403128,
+          "lng": 103.898688,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "postalCodes": [
+        "823269"
+      ],
+      "areas": [],
+      "idHistory": []
+    },
+    {
+      "uid": "n1790584618794",
+      "id": "PRSZ03-0002",
+      "name": "The Palette - Condo PUDO",
+      "points": [
+        {
+          "pid": "p1790584622366",
+          "sfx": "A",
+          "name": "",
+          "lat": 1.370521,
+          "lng": 103.945184,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "idHistory": [],
+      "retired": [],
+      "postalCodes": [
+        "518172"
+      ],
+      "areas": []
+    },
+    {
+      "uid": "n1790585682925",
+      "id": "PRSZ04-0002",
+      "name": "Watercolours - Guardhouse",
+      "points": [
+        {
+          "pid": "p1790585688030",
+          "sfx": "A",
+          "name": "",
+          "lat": 1.376881,
+          "lng": 103.960345,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "idHistory": [],
+      "retired": [],
+      "postalCodes": [
+        "518169"
+      ],
+      "areas": []
+    },
+    {
+      "uid": "n1790586429225",
+      "id": "PRSZ08-0005",
+      "name": "The Inflora - Condo PUDO",
+      "points": [
+        {
+          "pid": "p1790586431124",
+          "sfx": "A",
+          "name": "",
+          "lat": 1.355963,
+          "lng": 103.966016,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "idHistory": [],
+      "retired": [],
+      "postalCodes": [
+        "506865"
+      ],
+      "areas": []
+    },
+    {
+      "uid": "n1790586338589",
+      "id": "PRSZ08-0004",
+      "name": "Loyang Rise Estate",
+      "points": [
+        {
+          "pid": "p1790586340443",
+          "sfx": "A",
+          "name": "",
+          "lat": 1.36308,
+          "lng": 103.966514,
+          "usage": "both",
+          "sizes": [
+            "S"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "idHistory": [],
+      "retired": [],
+      "postalCodes": [
+        "507385"
+      ],
+      "areas": []
+    },
+    {
+      "uid": "n1790587822989",
+      "id": "TMSZ03-0013",
+      "name": "Tampines Greenbloom PUDO",
+      "points": [
+        {
+          "pid": "p1790587825188",
+          "sfx": "A",
+          "name": "",
+          "lat": 1.353506,
+          "lng": 103.929507,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "idHistory": [],
+      "retired": [],
+      "postalCodes": [
+        "523876"
+      ],
+      "areas": []
+    },
+    {
+      "uid": "n1790587659700",
+      "id": "TMSZ03-0012",
+      "name": "Below Blk 708",
+      "points": [
+        {
+          "pid": "p1790587661194",
+          "sfx": "A",
+          "name": "",
+          "lat": 1.35813,
+          "lng": 103.937015,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "idHistory": [],
+      "retired": [],
+      "postalCodes": [
+        "520709"
+      ],
+      "areas": []
+    },
+    {
+      "uid": "n1790588373503",
+      "id": "BDSZ02-0011",
+      "name": "Aquarius - Outside Condo",
+      "points": [
+        {
+          "pid": "p1790588381066",
+          "sfx": "A",
+          "name": "",
+          "lat": 1.337547,
+          "lng": 103.935248,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "idHistory": [],
+      "retired": [],
+      "postalCodes": [
+        "478933"
+      ],
+      "areas": []
+    },
+    {
+      "uid": "n1790590428999",
+      "id": "BDSZ04-0019",
+      "name": "Bus Stop Opp Blk 88",
+      "points": [
+        {
+          "pid": "p1790590439455",
+          "sfx": "A",
+          "name": "",
+          "lat": 1.33342,
+          "lng": 103.938866,
+          "usage": "both",
+          "sizes": [
+            "S",
+            "M",
+            "L"
+          ],
+          "primary": true,
+          "streetView": ""
+        }
+      ],
+      "idHistory": [],
+      "retired": [],
+      "postalCodes": [
+        "460099"
+      ],
+      "areas": []
+    }
+  ],
+  "counters": {
+    "BDSZ03": 11,
+    "BDSZ05": 20,
+    "BDSZ07": 5,
+    "BDSZ04": 18,
+    "GLSZ05": 6,
+    "MPSZ03": 8,
+    "MPSZ02": 7,
+    "BDSZ01": 5,
+    "BDSZ06": 20,
+    "GLSZ03": 3,
+    "BDSZ02": 10,
+    "BDSZ08": 2,
+    "GLSZ04": 7,
+    "GLSZ02": 4,
+    "MPSZ01": 6,
+    "TMSZ03": 11,
+    "KLSZ05": 3,
+    "TMSZ02": 16,
+    "TMSZ04": 2,
+    "HGSZ02": 2,
+    "PRSZ03": 1,
+    "PRSZ08": 3,
+    "PRSZ05": 6,
+    "HGSZ04": 1,
+    "PRSZ02": 1,
+    "PRSZ07": 1,
+    "PRSZ06": 1,
+    "PRSZ04": 1,
+    "PGSZ04": 1,
+    "SESZ03": 1,
+    "HGSZ05": 1,
+    "PGSZ03": 1
+  }
+}

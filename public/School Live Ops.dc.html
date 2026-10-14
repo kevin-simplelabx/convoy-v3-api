@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/convoy-design-system-cacf45d7-0cc4-4e8f-b783-77cf9d27134e/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/convoy-design-system-cacf45d7-0cc4-4e8f-b783-77cf9d27134e/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/convoy-design-system-cacf45d7-0cc4-4e8f-b783-77cf9d27134e/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/convoy-design-system-cacf45d7-0cc4-4e8f-b783-77cf9d27134e/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/convoy-design-system-cacf45d7-0cc4-4e8f-b783-77cf9d27134e/tokens/radius.css">
+  <link rel="stylesheet" href="_ds/convoy-design-system-cacf45d7-0cc4-4e8f-b783-77cf9d27134e/tokens/elevation.css">
+  <link rel="stylesheet" href="_ds/convoy-design-system-cacf45d7-0cc4-4e8f-b783-77cf9d27134e/tokens/motion.css">
+  <link rel="stylesheet" href="_ds/convoy-design-system-cacf45d7-0cc4-4e8f-b783-77cf9d27134e/tokens/semantic.css">
+  <link rel="stylesheet" href="_ds/convoy-design-system-cacf45d7-0cc4-4e8f-b783-77cf9d27134e/tokens/base.css">
+  <link rel="stylesheet" href="_ds/convoy-design-system-cacf45d7-0cc4-4e8f-b783-77cf9d27134e/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+  <script src="_ds/convoy-design-system-cacf45d7-0cc4-4e8f-b783-77cf9d27134e/_ds_bundle.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+  <style>
+    a { color: var(--teal-500); text-decoration: none; font-weight: 600; }
+    a:hover { color: var(--teal-800); text-decoration: underline; }
+    .lo-map.leaflet-container { font-family: var(--font-sans); background: #EEF0EE; }
+    .lo-map .leaflet-control-attribution { font-size: 9px; background: rgba(255,255,255,.85); }
+    .lo-tip.leaflet-tooltip { font-family: var(--font-sans); font-size: 12px; font-weight: 700; color: #212121; border: none; border-radius: 8px; box-shadow: 0 2px 10px rgba(22,22,22,.16); padding: 5px 9px; }
+    .lo-tip.leaflet-tooltip:before { display: none; }
+  </style>
+</helmet>
+<div ref="{{ rootRef }}" style="font-family:var(--font-sans);color:var(--ink-800);display:flex;flex-direction:column;gap:16px;padding:{{ pad }};min-height:{{ minH }};box-sizing:border-box;background:var(--ink-025);min-width:0">
+
+  <sc-if value="{{ v.ov }}" hint-placeholder-val="{{ true }}">
+  <div data-screen-label="Live Ops" style="display:flex;flex-direction:column;gap:16px;min-width:0">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-height:46px">
+      <div style="flex:1 1 240px;min-width:0;display:flex;flex-direction:column;gap:2px">
+        <h1 style="margin:0;font-size:18px;font-weight:700;letter-spacing:.04em;text-transform:uppercase">Live Ops</h1>
+        <span style="font-size:13px;color:var(--ink-500)">{{ school }} | {{ dateTxt }}</span>
+      </div>
+      <div style="width:300px;max-width:100%"><x-import component-from-global-scope="ConvoyDesignSystem_cacf45.Select" value="{{ sess.v }}" options="{{ sess.opts }}" on-change="{{ sess.on }}" hint-size="100%,44px"></x-import></div>
+      <div style="display:flex;align-items:center;gap:10px;height:44px;padding:0 16px;box-sizing:border-box;background:var(--white);border:1px solid var(--ink-100);border-radius:8px">
+        <span style="width:8px;height:8px;border-radius:50%;background:{{ clock.dot }}"></span>
+        <span style="font-size:12px;font-weight:700;color:var(--ink-500)">{{ clock.lbl }}</span>
+        <span style="font-size:18px;font-weight:700;font-variant-numeric:tabular-nums">{{ clock.t }}</span>
+      </div>
+    </div>
+
+    <sc-if value="{{ err }}" hint-placeholder-val="{{ false }}"><div style="padding:16px 20px;background:var(--red-050);border-radius:8px;font-size:14px;font-weight:600;color:var(--red-600)">{{ err }}</div></sc-if>
+
+    <sc-if value="{{ v.load }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:10px;padding:20px;background:var(--white);border:1px solid var(--ink-100);border-radius:8px;font-size:14px;color:var(--ink-500)"><x-import component-from-global-scope="ConvoyDesignSystem_cacf45.Icon" name="sync" size="{{ 20 }}" color="var(--teal-600)" hint-size="20px,20px"></x-import>Loading live data</div></sc-if>
+    <sc-if value="{{ v.idle }}" hint-placeholder-val="{{ false }}">
+      <div style="background:var(--white);border:1px solid var(--ink-100);border-radius:8px;padding:48px 32px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center">
+        <x-import component-from-global-scope="ConvoyDesignSystem_cacf45.Icon" name="schedule" size="{{ 32 }}" color="var(--teal-600)" hint-size="32px,32px"></x-import>
+        <span style="font-size:16px;font-weight:700">{{ idle.t }}</span>
+        <span style="font-size:14px;color:var(--ink-500);max-width:440px;text-wrap:pretty">{{ idle.d }}</span>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ v.live }}" hint-placeholder-val="{{ true }}">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr));gap:12px">
+      <div style="background:var(--white);border:1px solid var(--ink-100);border-radius:8px;padding:14px 18px;display:flex;flex-direction:column;gap:6px;min-width:0">
+        <span style="font-size:12px;font-weight:700;color:var(--ink-500)">Session Progress</span>
+        <span style="font-size:28px;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums">{{ k.prog }}</span>
+        <div style="height:6px;border-radius:3px;background:var(--ink-050);overflow:hidden"><div style="height:100%;width:{{ k.progW }};background:var(--teal-600);transition:width 400ms cubic-bezier(.2,0,.2,1)"></div></div>
+        <span style="font-size:12px;color:var(--ink-500);font-variant-numeric:tabular-nums">{{ k.progSub }}</span>
+      </div>
+      <div style="background:var(--white);border:1px solid var(--ink-100);border-radius:8px;padding:14px 18px;display:flex;flex-direction:column;gap:6px;min-width:0">
+        <span style="font-size:12px;font-weight:700;color:var(--ink-500)">Buses on the Road</span>
+        <span style="font-size:28px;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums">{{ k.bus }}</span>
+        <span style="font-size:12px;color:var(--ink-500);font-variant-numeric:tabular-nums">{{ k.busSub }}</span>
+      </div>
+      <div style="background:var(--white);border:1px solid var(--ink-100);border-radius:8px;padding:14px 18px;display:flex;flex-direction:column;gap:6px;min-width:0">
+        <span style="font-size:12px;font-weight:700;color:var(--ink-500)">Students on Board</span>
+        <span style="font-size:28px;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums">{{ k.stu }}</span>
+        <span style="font-size:12px;color:var(--ink-500);font-variant-numeric:tabular-nums">{{ k.stuSub }}</span>
+      </div>
+      <div style="background:var(--white);border:1px solid var(--ink-100);border-radius:8px;padding:14px 18px;display:flex;flex-direction:column;gap:6px;min-width:0">
+        <span style="font-size:12px;font-weight:700;color:var(--ink-500)">Expected Completion</span>
+        <span style="font-size:28px;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums;color:{{ k.compFg }}">{{ k.comp }}</span>
+        <span style="font-size:12px;color:var(--ink-500);font-variant-numeric:tabular-nums">{{ k.compSub }}</span>
+      </div>
+      <div style="background:var(--white);border:1px solid var(--ink-100);border-radius:8px;padding:14px 18px;display:flex;flex-direction:column;gap:6px;min-width:0">
+        <span style="font-size:12px;font-weight:700;color:var(--ink-500)">Routes Needing Attention</span>
+        <span style="font-size:28px;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums;color:{{ k.attFg }}">{{ k.att }}</span>
+        <span style="font-size:12px;color:var(--ink-500)">{{ k.attSub }}</span>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:stretch">
+      <div style="flex:2 1 560px;min-width:0;height:560px;position:relative;background:var(--white);border:1px solid var(--ink-100);border-radius:8px;overflow:hidden">
+        <div ref="{{ ovRef }}" style="position:absolute;inset:0;z-index:0"></div>
+        <div style="position:absolute;top:12px;right:12px;z-index:1;border-radius:8px;box-shadow:0 2px 10px rgba(22,22,22,.16)">
+          <x-import component-from-global-scope="ConvoyDesignSystem_cacf45.IconButton" icon="fit_screen" label="Show all routes" variant="outline" size="{{ 40 }}" color="var(--teal-800)" on-click="{{ fitOv }}" hint-size="40px,40px"></x-import>
+        </div>
+        <div style="position:absolute;left:12px;bottom:12px;z-index:1;display:flex;align-items:center;gap:6px 14px;flex-wrap:wrap;max-width:calc(100% - 80px);padding:8px 16px;box-sizing:border-box;background:var(--white);border-radius:18px;box-shadow:0 2px 10px rgba(22,22,22,.16);font-size:12px;font-weight:600">
+          <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:var(--teal-800)"></span>On time</span>
+          <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:var(--orange-500)"></span>Late or delay expected</span>
+          <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:var(--red-500)"></span>Critical</span>
+          <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:var(--ink-300)"></span>Not started</span>
+          <span style="display:flex;align-items:center;gap:4px"><x-import component-from-global-scope="ConvoyDesignSystem_cacf45.Icon" name="warning" size="{{ 16 }}" color="var(--red-500)" hint-size="16px,16px"></x-import>Traffic incident</span>
+        </div>
+      </div>
+      <div style="flex:1 1 320px;min-width:0;height:560px;display:flex;flex-direction:column;background:var(--white);border:1px solid var(--ink-100);border-radius:8px;overflow:hidden">
+        <div style="flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--ink-100)">
+          <span style="font-size:15px;font-weight:700">Needs Attention</span>
+          <sc-if value="{{ at.has }}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="ConvoyDesignSystem_cacf45.CountChip" tone="danger" hint-size="22px,22px">{{ at.n }}</x-import></sc-if>
+          <span style="flex:1"></span>
+          <span style="font-size:12px;color:var(--ink-500);font-variant-numeric:tabular-nums">As of {{ clock.hm }}</span>
+        </div>
+        <div style="flex:1;min-height:0;overflow-y:auto">
+          <sc-for list="{{ at.items }}" as="x" hint-placeholder-count="4">
+            <div role="button" tabIndex="0" onClick="{{ x.open }}" style="display:flex;gap:12px;align-items:flex-start;padding:14px 20px;border-bottom:1px solid var(--ink-100);cursor:pointer" style-hover="background:var(--ink-025)">
+              <x-import component-from-global-scope="ConvoyDesignSystem_cacf45.Icon" name="{{ x.icon }}" size="{{ 22 }}" color="{{ x.fg }}" hint-size="22px,22px"></x-import>
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
+                <span style="font-size:14px;font-weight:700;line-height:1.3">{{ x.title }}</span>
+                <span style="font-size:13px;line-height:1.45;color:var(--ink-500);text-wrap:pretty">{{ x.body }}</span>
+              </div>
+              <x-import component-from-global-scope="ConvoyDesignSystem_cacf45.Icon" name="chevron_right" size="{{ 20 }}" color="var(--ink-300)" hint-size="20px,20px"></x-import>
+            </div>
+          </sc-for>
+          <sc-if value="{{ at.none }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:10px;padding:20px;font-size:14px;color:var(--ink-500)"><x-import component-from-global-scope="ConvoyDesignSystem_cacf45.Icon" name="check_circle" size="{{ 20 }}" color="var(--green-600)" hint-size="20px,20px"></x-import>All routes running to plan</div></sc-if>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:var(--white);border:1px solid var(--ink-100);border-radius:8px;overflow:hidden">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 20px;border-bottom:1px solid var(--ink-100)">
+        <span style="flex:1 1 auto;font-size:15px;font-weight:700">Routes</span>
+        <sc-for list="{{ rf }}" as="f" hint-placeholder-count="4"><x-import component-from-global-scope="ConvoyDesignSystem_cacf45.FilterChip" active="{{ f.on }}" count="{{ f.n }}" on-click="{{ f.tap }}" hint-size="120px,44px"><span style="white-space:nowrap">{{ f.l }}</span></x-import></sc-for>
+      </div>
+      <div style="overflow-x:auto"><div style="min-width:1040px">
+        <div style="display:grid;grid-template-columns:minmax(150px,1.5fr) minmax(110px,1fr) 136px minmax(80px,.8fr) minmax(140px,1.25fr) minmax(130px,1.3fr) 86px 20px;gap:14px;padding:10px 20px;font-size:12px;font-weight:700;color:var(--ink-500);background:var(--ink-025);border-bottom:1px solid var(--ink-100)">
+          <span>Route</span><span>Bus and Driver</span><span>Status</span><span>Stops</span><span>Students</span><span>Next Stop</span><span>School ETA</span><span></span>
+        </div>
+        <sc-for list="{{ rows }}" as="r" hint-placeholder-count="10">
+          <div role="button" tabIndex="0" onClick="{{ r.open }}" onMouseEnter="{{ r.enter }}" onMouseLeave="{{ r.leave }}" style="display:grid;grid-template-columns:minmax(150px,1.5fr) minmax(110px,1fr) 136px minmax(80px,.8fr) minmax(140px,1.25fr) minmax(130px,1.3fr) 86px 20px;gap:14px;align-items:center;padding:12px 20px;border-bottom:1px solid var(--ink-100);font-size:14px;cursor:pointer" style-hover="background:var(--ink-025)">
+            <div style="display:flex;align-items:center;gap:10px;min-width:0">
+              <span style="flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:42px;height:24px;border-radius:4px;background:var(--teal-800);color:var(--white);font-size:12px;font-weight:700">{{ r.id }}</span>
+              <span style="min-width:0;font-weight:700;line-height:1.3;text-wrap:pretty">{{ r.name }}</span>
+            </div>
+            <div style="min-width:0;display:flex;flex-direction:column;gap:1px">
+              <span style="font-weight:600;font-variant-numeric:tabular-nums">{{ r.plate }}</span>
+              <span style="font-size:12px;line-height:1.3;color:var(--ink-500)">{{ r.driver }}</span>
+            </div>
+            <div style="display:flex"><x-import component-from-global-scope="ConvoyDesignSystem_cacf45.StatusBadge" tone="{{ r.tone }}" size="sm" hint-size="90px,22px">{{ r.label }}</x-import></div>
+            <div style="min-width:0;display:flex;flex-direction:column;gap:5px">
+              <div style="height:6px;border-radius:3px;background:var(--ink-050);overflow:hidden"><div style="height:100%;width:{{ r.pW }};background:var(--teal-600);transition:width 400ms cubic-bezier(.2,0,.2,1)"></div></div>
+              <span style="font-size:12px;color:var(--ink-500);font-variant-numeric:tabular-nums">{{ r.stops }}</span>
+            </div>
+            <div style="min-width:0;display:flex;flex-direction:column;gap:5px">
+              <div style="display:flex;height:6px;border-radius:3px;background:var(--ink-050);overflow:hidden">
+                <span style="width:{{ r.wS }};background:var(--green-600)"></span><span style="width:{{ r.wB }};background:var(--teal-600)"></span><span style="flex:1"></span><span style="width:{{ r.wA }};background:var(--red-300)"></span>
+              </div>
+              <span style="font-size:12px;line-height:1.35;color:var(--ink-500);font-variant-numeric:tabular-nums">{{ r.stu }}</span>
+            </div>
+            <div style="min-width:0;display:flex;flex-direction:column;gap:1px">
+              <span style="font-size:13px;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{ r.next }}</span>
+              <span style="font-size:12px;color:var(--ink-500);font-variant-numeric:tabular-nums">{{ r.nextT }}</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:1px">
+              <span style="font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;color:{{ r.etaFg }}">{{ r.eta }}</span>
+              <span style="font-size:12px;color:var(--ink-500);font-variant-numeric:tabular-nums">{{ r.plan }}</span>
+            </div>
+            <x-import component-from-global-scope="ConvoyDesignSystem_cacf45.Icon" name="chevron_right" size="{{ 20 }}" color="var(--ink-300)" hint-size="20px,20px"></x-import>
+          </div>
+        </sc-for>
+        <sc-if value="{{ rowsNone }}" hint-placeholder-val="{{ false }}"><div style="padding:20px;font-size:14px;color:var(--ink-500)">No routes match this filter</div></sc-if>
+      </div></div>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">
+      <div style="flex:3 1 480px;min-width:0;background:var(--white);border:1px solid var(--ink-100);border-radius:8px;overflow:hidden">
+        <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding:14px 20px;border-bottom:1px solid var(--ink-100)">
+          <span style="font-size:15px;font-weight:700">Traffic Reports</span>
+          <span style="font-size:12px;color:var(--ink-500)">On or near today's routes</span>
+        </div>
+        <sc-for list="{{ tr.items }}" as="x" hint-placeholder-count="3">
+          <div style="display:flex;gap:12px;align-items:flex-start;padding:14px 20px;border-bottom:1px solid var(--ink-100)">
+            <x-import component-from-global-scope="ConvoyDesignSystem_cacf45.Icon" name="{{ x.icon }}" size="{{ 22 }}" color="{{ x.fg }}" hint-size="22px,22px"></x-import>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
+              <span style="font-size:14px;font-weight:700;line-height:1.3">{{ x.title }}</span>
+              <span style="font-size:13px;line-height:1.45;color:var(--ink-500);text-wrap:pretty">{{ x.desc }}</span>
+              <span style="font-size:12px;color:var(--ink-400);font-variant-numeric:tabular-nums">{{ x.since }}</span>
+            </div>
+            <div style="flex:0 1 auto;display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end">
+              <sc-for list="{{ x.routes }}" as="y" hint-placeholder-count="1"><button type="button" onClick="{{ y.open }}" style="height:28px;padding:0 12px;border-radius:14px;border:1px solid var(--ink-100);background:var(--white);font-family:var(--font-sans);font-size:12px;font-weight:700;color:var(--teal-800);cursor:pointer;font-variant-numeric:tabular-nums;white-space:nowrap" style-hover="background:var(--ink-025)">{{ y.l }}</button></sc-for>
+              <sc-if value="{{ x.cleared }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="ConvoyDesignSystem_cacf45.StatusBadge" tone="neutral" size="sm" hint-size="70px,22px">Cleared</x-import></sc-if>
+            </div>
+          </div>
+        </sc-for>
+        <sc-if value="{{ tr.none }}" hint-placeholder-val="{{ false }}"><div style="padding:20px;font-size:14px;color:var(--ink-500)">No incidents reported near today's routes</div></sc-if>
+      </div>
+      <div style="flex:2 1 340px;min-width:0;background:var(--white);border:1px solid var(--ink-100);border-radius:8px;overflow:hidden">
+        <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding:14px 20px;border-bottom:1px solid var(--ink-100)">
+          <span style="font-size:15px;font-weight:700">Weather</span>
+          <span style="font-size:12px;color:var(--ink-500);font-variant-numeric:tabular-nums">2-hour forecast, {{ wx.valid }}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;padding:16px 20px">
+          <x-import component-from-global-scope="ConvoyDesignSystem_cacf45.Icon" name="{{ wx.icon }}" size="{{ 40 }}" color="var(--teal-600)" hint-size="40px,40px"></x-import>
+          <span style="font-size:28px;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums">{{ wx.temp }}</span>
+          <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+            <span style="font-size:14px;font-weight:700">{{ wx.cond }}</span>
+            <span style="font-size:12px;color:var(--ink-500)">At the school</span>
+          </div>
+        </div>
+        <div style="margin:0 20px 14px;display:flex;gap:8px;align-items:flex-start;padding:10px 12px;border-radius:8px;background:{{ wx.noteBg }}">
+          <x-import component-from-global-scope="ConvoyDesignSystem_cacf45.Icon" name="{{ wx.noteIcon }}" size="{{ 18 }}" color="{{ wx.noteFg }}" hint-size="18px,18px"></x-import>
+          <span style="font-size:12px;line-height:1.45;color:var(--ink-700);text-wrap:pretty">{{ wx.note }}</span>
+        </div>
+        <sc-for list="{{ wx.areas }}" as="a" hint-placeholder-count="6">
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr) auto;gap:12px;align-items:center;padding:9px 20px;border-top:1px solid var(--ink-100);font-size:13px">
+            <span style="font-weight:600">{{ a.name }}</span>
+            <span style="display:flex;align-items:flex-start;gap:8px;min-width:0;color:{{ a.fg }};font-weight:{{ a.fw }}"><x-import component-from-global-scope="ConvoyDesignSystem_cacf45.Icon" name="{{ a.icon }}" size="{{ 18 }}" color="{{ a.ic }}" hint-size="18px,18px"></x-import><span style="min-width:0;line-height:1.35;text-wrap:pretty">{{ a.cond }}</span></span>
+            <span style="font-size:12px;color:var(--ink-500);font-variant-numeric:tabular-nums">{{ a.routes }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    </sc-if>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ v.rt }}" hint-placeholder-val="{{ false }}">
+  <div data-screen-label="Route Detail" style="display:flex;flex-direction:column;gap:16px;min-width:0">
+    <div style="display:flex;margin:-8px 0 -8px -12px"><x-import component-from-global-scope="ConvoyDesignSystem_cacf45.Button" variant="ghost" size="sm" icon="arrow_back" icon-position="left" on-click="{{ back }}" hint-size="110px,36px">Live Ops</x-import></div>
+    <div style="display:flex;align-items:center;gap:12px 16px;flex-wrap:wrap;min-height:46px">
+      <span style="flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:52px;height:32px;border-radius:4px;background:var(--teal-800);color:var(--white);font-size:15px;font-weight:700">{{ rt.id }}</span>
+      <div style="flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:2px">
+        <h1 style="margin:0;font-size:18px;font-weight:700;letter-spacing:.04em;text-transform:uppercase">{{ rt.name }}</h1>
+        <span style="font-size:13px;color:var(--ink-500);font-variant-numeric:tabular-nums">{{ rt.sub }}</span>
+      </div>
+      <x-import component-from-global-scope="ConvoyDesignSystem_cacf45.StatusBadge" tone="{{ rt.tone }}" hint-size="100px,28px">{{ rt.label }}</x-import>
+      <div style="display:flex;align-items:center;gap:10px;height:44px;padding:0 16px;box-sizing:border-box;background:var(--white);border:1px solid var(--ink-100);border-radius:8px">
+        <span style="width:8px;height:8px;border-radius:50%;background:{{ clock.dot }}"></span>
+        <span style="font-size:12px;font-weight:700;color:var(--ink-500)">{{ clock.lbl }}</span>
+        <span style="font-size:18px;font-weight:700;font-variant-numeric:tabular-nums">{{ clock.t }}</span>
+      </div>
+    </div>
+    <sc-if value="{{ rt.alertOn }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;gap:12px;align-items:flex-start;padding:14px 18px;border-radius:8px;background:{{ rt.alertBg }}">
+        <x-import component-from-global-scope="ConvoyDesignSystem_cacf45.Icon" name="{{ rt.alertIcon }}" size="{{ 22 }}" color="{{ rt.alertFg }}" hint-size="22px,22px"></x-import>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+          <span style="font-size:14px;font-weight:700">{{ rt.alertT }}</span>
+          <span style="font-size:13px;line-height:1.45;color:var(--ink-700);text-wrap:pretty">{{ rt.alertD }}</span>
+        </div>
+      </div>
+    </sc-if>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:12px">
+      <div style="background:var(--white);border:1px solid var(--ink-100);border-radius:8px;padding:14px 18px;display:flex;flex-direction:column;gap:6px;min-width:0">
+        <span style="font-size:12px;font-weight:700;color:var(--ink-500)">Stops</span>
+        <span style="font-size:28px;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums">{{ rt.k.stops }}</span>
+        <div style="height:6px;border-radius:3px;background:var(--ink-050);overflow:hidden"><div style="height:100%;width:{{ rt.k.pW }};background:var(--teal-600);transition:width 400ms cubic-bezier(.2,0,.2,1)"></div></div>
+        <span style="font-size:12px;color:var(--ink-500)">{{ rt.k.stopsSub }}</span>
+      </div>
+      <div style="background:var(--white);border:1px solid var(--ink-100);border-radius:8px;padding:14px 18px;display:flex;flex-direction:column;gap:6px;min-width:0">
+        <span style="font-size:12px;font-weight:700;color:var(--ink-500)">{{ rt.k.stuLbl }}</span>
+        <span style="font-size:28px;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums">{{ rt.k.stu }}</span>
+        <span style="font-size:12px;color:var(--ink-500);font-variant-numeric:tabular-nums">{{ rt.k.stuSub }}</span>
+      </div>
+      <div style="background:var(--white);border:1px solid var(--ink-100);border-radius:8px;padding:14px 18px;display:flex;flex-direction:column;gap:6px;min-width:0">
+        <span style="font-size:12px;font-weight:700;color:var(--ink-500)">{{ rt.k.etaLbl }}</span>
+        <span style="font-size:28px;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums;color:{{ rt.k.etaFg }}">{{ rt.k.eta }}</span>
+        <span style="font-size:12px;color:var(--ink-500);font-variant-numeric:tabular-nums">{{ rt.k.etaSub }}</span>
+      </div>
+      <div style="background:var(--white);border:1px solid var(--ink-100);border-radius:8px;padding:14px 18px;display:flex;flex-direction:column;gap:8px;min-width:0">
+        <span style="font-size:12px;font-weight:700;color:var(--ink-500)">Attendance Method</span>
+        <div style="display:grid;grid-template-columns:minmax(0,1fr);gap:4px">
+          <sc-for list="{{ rt.k.methods }}" as="m" hint-placeholder-count="4">
+            <span style="display:flex;align-items:center;gap:6px;font-size:13px;min-width:0"><x-import component-from-global-scope="ConvoyDesignSystem_cacf45.Icon" name="{{ m.icon }}" size="{{ 18 }}" color="var(--teal-600)" hint-size="18px,18px"></x-import><span style="flex:1;min-width:0">{{ m.l }}</span><span style="font-weight:700;font-variant-numeric:tabular-nums">{{ m.n }}</span></span>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:stretch">
+      <div style="flex:3 1 520px;min-width:0;height:520px;position:relative;background:var(--white);border:1px solid var(--ink-100);border-radius:8px;overflow:hidden">
+        <div ref="{{ rtRef }}" style="position:absolute;inset:0;z-index:0"></div>
+        <div style="position:absolute;top:12px;right:12px;z-index:1;display:flex;gap:8px">
+          <div style="border-radius:8px;box-shadow:0 2px 10px rgba(22,22,22,.16)"><x-import component-from-global-scope="ConvoyDesignSystem_cacf45.IconButton" icon="directions_bus" label="Follow bus" variant="outline" size="{{ 40 }}" color="var(--teal-800)" on-click="{{ rt.toBus }}" hint-size="40px,40px"></x-import></div>
+          <div style="border-radius:8px;box-shadow:0 2px 10px rgba(22,22,22,.16)"><x-import component-from-global-scope="ConvoyDesignSystem_cacf45.IconButton" icon="fit_screen" label="Show whole route" variant="outline" size="{{ 40 }}" color="var(--teal-800)" on-click="{{ rt.fit }}" hint-size="40px,40px"></x-import></div>
+        </div>
+        <div style="position:absolute;left:12px;bottom:12px;z-index:1;display:flex;align-items:center;gap:6px 14px;flex-wrap:wrap;max-width:calc(100% - 80px);padding:8px 16px;box-sizing:border-box;background:var(--white);border-radius:18px;box-shadow:0 2px 10px rgba(22,22,22,.16);font-size:12px;font-weight:600">
+          <span style="display:flex;align-items:center;gap:6px"><span style="width:16px;height:4px;border-radius:2px;background:var(--ink-250)"></span>Travelled</span>
+          <span style="display:flex;align-items:center;gap:6px"><span style="width:16px;height:4px;border-radius:2px;background:var(--teal-600)"></span>Ahead</span>
+          <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;box-sizing:border-box;border:2px solid var(--white);background:var(--orange-500);box-shadow:0 0 0 1px var(--ink-100)"></span>Pick-up GPS point</span>
+        </div>
+      </div>
+      <div style="flex:2 1 340px;min-width:0;height:520px;display:flex;flex-direction:column;gap:16px">
+        <div style="flex:0 0 auto;background:var(--white);border:1px solid var(--ink-100);border-radius:8px;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid var(--ink-100)">
+            <img src="assets/fleet/bus-1.png" alt="Bus" style="flex:0 0 auto;width:48px;height:38px;object-fit:contain">
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+              <span style="font-size:16px;font-weight:700;font-variant-numeric:tabular-nums">{{ rt.plate }}</span>
+              <span style="font-size:12px;color:var(--ink-500)">{{ rt.busSub }}</span>
+            </div>
+            <div style="flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:1px">
+              <span style="font-size:18px;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums">{{ rt.load }}</span>
+              <span style="font-size:11px;color:var(--ink-400)">On Board</span>
+            </div>
+          </div>
+          <sc-for list="{{ rt.crew }}" as="c" hint-placeholder-count="2">
+            <div style="display:flex;align-items:center;gap:12px;padding:10px 18px">
+              <x-import component-from-global-scope="ConvoyDesignSystem_cacf45.Avatar" src="{{ c.img }}" name="{{ c.name }}" size="{{ 40 }}" hint-size="40px,40px"></x-import>
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
+                <span style="font-size:14px;font-weight:700">{{ c.name }}</span>
+                <span style="font-size:12px;color:var(--ink-500);font-variant-numeric:tabular-nums">{{ c.role }} | {{ c.phone }}</span>
+              </div>
+              <x-import component-from-global-scope="ConvoyDesignSystem_cacf45.IconButton" icon="call" label="{{ c.callLbl }}" variant="outline" size="{{ 40 }}" color="var(--teal-800)" on-click="{{ c.call }}" hint-size="40px,40px"></x-import>
+            </div>
+          </sc-for>
+        </div>
+        <div style="flex:1;min-height:0;display:flex;flex-direction:column;background:var(--white);border:1px solid var(--ink-100);border-radius:8px;overflow:hidden">
+          <div style="flex:0 0 auto;padding:12px 18px;font-size:15px;font-weight:700;border-bottom:1px solid var(--ink-100)">Trip Log</div>
+          <div style="flex:1;min-height:0;overflow-y:auto;padding:6px 0">
+            <sc-for list="{{ rt.log }}" as="e" hint-placeholder-count="6">
+              <div style="display:flex;gap:10px;align-items:flex-start;padding:7px 18px">
+                <span style="flex:0 0 40px;font-size:12px;font-weight:700;color:var(--ink-500);font-variant-numeric:tabular-nums;padding-top:1px">{{ e.t }}</span>
+                <x-import component-from-global-scope="ConvoyDesignSystem_cacf45.Icon" name="{{ e.icon }}" size="{{ 18 }}" color="{{ e.fg }}" hint-size="18px,18px"></x-import>
+                <span style="flex:1;min-width:0;font-size:13px;line-height:1.4;text-wrap:pretty">{{ e.text }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:var(--white);border:1px solid var(--ink-100);border-radius:8px;overflow:hidden">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 20px;border-bottom:1px solid var(--ink-100)">
+        <span style="flex:1 1 auto;font-size:15px;font-weight:700">Stops and Students</span>
+        <sc-for list="{{ rt.sf }}" as="f" hint-placeholder-count="6"><x-import component-from-global-scope="ConvoyDesignSystem_cacf45.FilterChip" active="{{ f.on }}" count="{{ f.n }}" on-click="{{ f.tap }}" hint-size="120px,44px"><span style="white-space:nowrap">{{ f.l }}</span></x-import></sc-for>
+        <x-import component-from-global-scope="ConvoyDesignSystem_cacf45.SearchInput" placeholder="Search student" value="{{ rt.q }}" on-change="{{ rt.onQ }}" width="{{ 220 }}" hint-size="220px,44px"></x-import>
+      </div>
+      <div style="overflow-x:auto"><div style="min-width:960px">
+        <div style="display:grid;grid-template-columns:minmax(0,1.4fr) 130px minmax(0,1fr) minmax(0,1.35fr) minmax(0,1fr);gap:14px;padding:10px 20px 10px 56px;font-size:12px;font-weight:700;color:var(--ink-500);background:var(--white);border-bottom:1px solid var(--ink-100)">
+          <span>Student</span><span>Status</span><span>Picked Up</span><span>GPS Recorded Location</span><span>Checked In at School</span>
+        </div>
+        <sc-for list="{{ rt.groups }}" as="g" hint-placeholder-count="5">
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--ink-025);border-bottom:1px solid var(--ink-100)">
+            <span style="flex:0 0 auto;width:24px;height:24px;border-radius:50%;box-sizing:border-box;border:{{ g.numBd }};background:{{ g.numBg }};color:{{ g.numFg }};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">{{ g.num }}</span>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px">
+              <span style="font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ g.name }}</span>
+              <span style="font-size:12px;color:var(--ink-500);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ g.pt }}</span>
+            </div>
+            <span style="flex:0 0 auto;font-size:12px;color:var(--ink-500);font-variant-numeric:tabular-nums">Scheduled {{ g.sched }}</span>
+            <span style="flex:0 0 130px;text-align:right;font-size:13px;font-weight:700;color:{{ g.actFg }};font-variant-numeric:tabular-nums">{{ g.act }}</span>
+          </div>
+          <sc-for list="{{ g.riders }}" as="x" hint-placeholder-count="3">
+            <div style="display:grid;grid-template-columns:minmax(0,1.4fr) 130px minmax(0,1fr) minmax(0,1.35fr) minmax(0,1fr);gap:14px;align-items:center;padding:10px 20px 10px 56px;border-bottom:1px solid var(--ink-100);background:{{ x.bg }};font-size:14px">
+              <div style="min-width:0;display:flex;flex-direction:column;gap:1px">
+                <span style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ x.name }}</span>
+                <span style="font-size:12px;color:var(--ink-500);font-variant-numeric:tabular-nums">{{ x.meta }}</span>
+              </div>
+              <div style="display:flex"><x-import component-from-global-scope="ConvoyDesignSystem_cacf45.StatusBadge" tone="{{ x.tone }}" size="sm" hint-size="90px,22px">{{ x.st }}</x-import></div>
+              <div style="min-width:0;display:flex;align-items:center;gap:8px">
+                <sc-if value="{{ x.puOn }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="ConvoyDesignSystem_cacf45.Icon" name="{{ x.puIcon }}" size="{{ 18 }}" color="var(--teal-600)" hint-size="18px,18px"></x-import></sc-if>
+                <div style="min-width:0;display:flex;flex-direction:column;gap:1px">
+                  <span style="font-variant-numeric:tabular-nums;color:{{ x.puFg }};font-weight:{{ x.puFw }}">{{ x.pu }}</span>
+                  <span style="font-size:12px;color:var(--ink-500)">{{ x.puM }}</span>
+                </div>
+              </div>
+              <div style="min-width:0">
+                <sc-if value="{{ x.gpsOn }}" hint-placeholder-val="{{ false }}">
+                  <button type="button" onClick="{{ x.focus }}" title="Show on map" style="display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:0;border:none;background:transparent;cursor:pointer;font-family:var(--font-sans);text-align:left">
+                    <span style="display:flex;align-items:center;gap:4px;font-size:13px;font-weight:600;color:var(--teal-800);font-variant-numeric:tabular-nums"><x-import component-from-global-scope="ConvoyDesignSystem_cacf45.Icon" name="location_on" size="{{ 16 }}" hint-size="16px,16px"></x-import>{{ x.gps }}</span>
+                    <span style="font-size:12px;color:{{ x.gdFg }};font-weight:{{ x.gdFw }}">{{ x.gd }}</span>
+                  </button>
+                </sc-if>
+                <sc-if value="{{ x.gpsOff }}" hint-placeholder-val="{{ true }}"><span style="font-size:13px;color:var(--ink-400)">N/A</span></sc-if>
+              </div>
+              <div style="min-width:0;display:flex;align-items:center;gap:8px">
+                <sc-if value="{{ x.inOn }}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="ConvoyDesignSystem_cacf45.Icon" name="{{ x.inIcon }}" size="{{ 18 }}" color="var(--green-600)" hint-size="18px,18px"></x-import></sc-if>
+                <div style="min-width:0;display:flex;flex-direction:column;gap:1px">
+                  <span style="font-variant-numeric:tabular-nums;color:{{ x.inFg }}">{{ x.inT }}</span>
+                  <span style="font-size:12px;color:var(--ink-500)">{{ x.inM }}</span>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+        </sc-for>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 20px;background:var(--ink-025)">
+          <span style="flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:{{ rt.end.bg }};display:flex;align-items:center;justify-content:center"><x-import component-from-global-scope="ConvoyDesignSystem_cacf45.Icon" name="school" size="{{ 14 }}" color="{{ rt.end.fg }}" hint-size="14px,14px"></x-import></span>
+          <span style="flex:1;min-width:0;font-size:14px;font-weight:700">{{ school }}</span>
+          <span style="flex:0 0 auto;font-size:12px;color:var(--ink-500);font-variant-numeric:tabular-nums">Scheduled {{ rt.end.sched }}</span>
+          <span style="flex:0 0 130px;text-align:right;font-size:13px;font-weight:700;color:{{ rt.end.actFg }};font-variant-numeric:tabular-nums">{{ rt.end.act }}</span>
+        </div>
+        <sc-if value="{{ rt.none }}" hint-placeholder-val="{{ false }}"><div style="padding:20px;font-size:14px;color:var(--ink-500);border-top:1px solid var(--ink-100)">No students match</div></sc-if>
+      </div></div>
+    </div>
+  </div>
+  </sc-if>
+
+  <div aria-live="polite" style="position:fixed;left:0;right:0;bottom:24px;z-index:400;display:flex;justify-content:center;pointer-events:none;opacity:{{ toast.op }};transition:opacity 180ms cubic-bezier(.2,0,.2,1)">
+    <div style="display:flex;align-items:center;gap:8px;padding:12px 16px;border-radius:8px;background:var(--ink-900);color:var(--white);font-size:13px;font-weight:600;box-shadow:0 4px 16px rgba(22,22,22,.10)">
+      <x-import component-from-global-scope="ConvoyDesignSystem_cacf45.Icon" name="call" size="{{ 18 }}" color="var(--green-300)" hint-size="18px,18px"></x-import>{{ toast.msg }}
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;embedded&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;speed&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;1&quot;,&quot;10&quot;,&quot;30&quot;],&quot;default&quot;:&quot;10&quot;,&quot;tsType&quot;:&quot;'1'|'10'|'30'&quot;,&quot;label&quot;:&quot;Clock Speed&quot;},&quot;startAt&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;06:50&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Start Time&quot;},&quot;route&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;B01&quot;,&quot;B02&quot;,&quot;B03&quot;,&quot;B04&quot;,&quot;B05&quot;,&quot;B06&quot;,&quot;B07&quot;,&quot;B08&quot;,&quot;B09&quot;,&quot;B10&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Open Route&quot;},&quot;school&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;},&quot;date&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  state = { tick: 0, ready: false, err: '', rid: undefined, sess: 'am', rf: 'all', sf: 'all', q: '', sel: null, toast: '', toastOn: false };
+
+  M = { card: ['Card (NFC)', 'contactless'], qr: ['QR', 'qr_code_scanner'], palm: ['Palm', 'back_hand'], manual: ['Manual', 'touch_app'] };
+  INC = { accident: ['car_crash', 'var(--red-500)', '#FF3D17'], congestion: ['traffic', 'var(--orange-500)', '#FF8400'], roadworks: ['construction', 'var(--orange-500)', '#FF8400'], breakdown: ['car_repair', 'var(--ink-400)', '#888888'] };
+  WX = {
+    temp: '27°C', cond: 'Cloudy', icon: 'cloud', valid: '06:30 to 08:30',
+    note: 'Showers over Tampines and Pasir Ris from 07:00. Allow 3 to 5 min on B06, B07 and B08',
+    areas: [['Pasir Ris', 'Thundery showers from 07:00', 'thunderstorm', 'B07, B08', 2], ['Tampines', 'Showers from 07:00', 'rainy', 'B06, B07, B08', 1], ['Punggol', 'Light showers', 'rainy', 'B09', 1], ['Hougang', 'Cloudy', 'cloud', 'B09', 0], ['Bedok', 'Cloudy', 'cloud', 'B05, B06', 0], ['Paya Lebar', 'Cloudy', 'cloud', 'B10', 0], ['Geylang', 'Partly cloudy', 'partly_cloudy_day', 'B01, B10', 0], ['Marine Parade', 'Partly cloudy', 'partly_cloudy_day', 'B02, B03, B04', 0]]
+  };
+
+  componentDidMount() {
+    this._t0 = Date.now();
+    fetch('data/liveops.json').then(r => r.json()).then(d => { this.prep(d); this.setState({ ready: true }); }).catch(() => this.setState({ err: 'Live data could not load. Reload the page to try again' }));
+    this._iv = setInterval(() => this.setState(s => ({ tick: s.tick + 1 })), 1000);
+    this._mv = setInterval(() => this.moveMarkers(), 250);
+  }
+  componentDidUpdate(pp) { if (pp.speed !== this.props.speed || pp.startAt !== this.props.startAt) this._t0 = Date.now(); }
+  componentWillUnmount() { clearInterval(this._iv); clearInterval(this._mv); clearTimeout(this._tt); this.killMap('ov'); this.killMap('rt'); }
+
+  hv(a, b) { const r = Math.PI / 180, dl = (b[0] - a[0]) * r, dn = (b[1] - a[1]) * r, x = Math.sin(dl / 2) ** 2 + Math.cos(a[0] * r) * Math.cos(b[0] * r) * Math.sin(dn / 2) ** 2; return 6371000 * 2 * Math.asin(Math.sqrt(x)); }
+  pad(n) { return String(n).padStart(2, '0'); }
+  hm(m) { const x = Math.floor(m + 1e-6); return this.pad(Math.floor(x / 60)) + ':' + this.pad(x % 60); }
+  hms(m) { const s = Math.floor(m * 60 + 1e-6); return this.pad(Math.floor(s / 3600)) + ':' + this.pad(Math.floor(s / 60) % 60) + ':' + this.pad(s % 60); }
+  speed() { const v = +this.props.speed; return v > 0 ? v : 10; }
+  start() { const m = /^(\d{1,2}):(\d{2})$/.exec(String(this.props.startAt || '06:50').trim()); return m ? +m[1] * 60 + +m[2] : 410; }
+  now() { const st = this.start(), span = Math.max(5, 455 - st), el = (Date.now() - (this._t0 || Date.now())) / 60000 * this.speed(); return st + (el % span); }
+
+  prep(d) {
+    d.routes.forEach(r => { const c = [0]; for (let i = 1; i < r.line.length; i++) c.push(c[i - 1] + this.hv(r.line[i - 1], r.line[i])); r.cum = c; r.sc = r.stops.map(s => c[s.idx]).concat([c[c.length - 1]]); r.fin = r.delay ? r.delay[r.delay.length - 1][1] : 0; });
+    this.D = d;
+  }
+  route(id) { return this.D && this.D.routes.find(r => r.id === id); }
+  dAt(r, t) { const P = r.delay; if (!P) return 0; if (t <= P[0][0]) return P[0][1]; for (let i = 1; i < P.length; i++) if (t <= P[i][0]) return P[i - 1][1] + (P[i][1] - P[i - 1][1]) * (t - P[i - 1][0]) / (P[i][0] - P[i - 1][0]); return P[P.length - 1][1]; }
+  actualOf(r, x) { if (!r.delay) return x; let lo = x - 1, hi = x + 40; for (let i = 0; i < 28; i++) { const m = (lo + hi) / 2; if (m - this.dAt(r, m) < x) lo = m; else hi = m; } return hi; }
+  posAt(r, te) {
+    const S = r.stops, n = S.length, sc = r.sc; let dist;
+    if (te <= S[0].arr) dist = sc[0]; else { dist = sc[n]; for (let i = 0; i < n; i++) { if (te <= S[i].dep) { dist = sc[i]; break; } const na = i + 1 < n ? S[i + 1].arr : r.schoolArr; if (te < na) { dist = sc[i] + (te - S[i].dep) / (na - S[i].dep) * (sc[i + 1] - sc[i]); break; } } }
+    const c = r.cum, L = r.line; let lo = 1, hi = c.length - 1; while (lo < hi) { const m = (lo + hi) >> 1; if (c[m] < dist) lo = m + 1; else hi = m; }
+    const k = lo, f = c[k] === c[k - 1] ? 0 : (dist - c[k - 1]) / (c[k] - c[k - 1]);
+    return { dist, k, ll: [L[k - 1][0] + (L[k][0] - L[k - 1][0]) * f, L[k - 1][1] + (L[k][1] - L[k - 1][1]) * f] };
+  }
+  core(r, t) {
+    const S = r.stops, n = S.length, cur = this.dAt(r, t), te = t - cur;
+    const started = te >= S[0].arr, arrived = te >= r.schoolArr;
+    const lost = !!r.gpsLost && t >= r.gpsLost[0] && t < r.gpsLost[1] && !arrived;
+    let done = 0, at = -1; S.forEach((s, i) => { if (te >= s.dep) done++; else if (te >= s.arr) at = i; });
+    const known = !!r.delay && t >= r.known, exp = arrived ? cur : Math.max(cur, known ? r.fin : 0);
+    const arrAct = arrived ? this.actualOf(r, r.schoolArr) : 0, eta = arrived ? arrAct : r.schoolArr + exp;
+    const next = arrived ? -1 : S.findIndex(s => te < s.dep);
+    const pT = lost ? r.gpsLost[0] : t, p = this.posAt(r, pT - this.dAt(r, pT));
+    let label, tone, col;
+    if (!started) { label = 'Not started'; tone = 'neutral'; col = '#909090'; }
+    else if (arrived) { label = 'Arrived ' + this.hm(arrAct); tone = 'success'; col = '#00C853'; }
+    else if (lost) { label = 'GPS lost'; tone = 'danger'; col = '#FF3D17'; }
+    else if (cur >= 10) { label = 'Late ' + Math.round(cur) + ' min'; tone = 'danger'; col = '#FF3D17'; }
+    else if (cur > 3) { label = 'Late ' + Math.round(cur) + ' min'; tone = 'warning'; col = '#FF8400'; }
+    else if (exp > 3) { label = 'Delay expected'; tone = 'warning'; col = '#FF8400'; }
+    else { label = 'On time'; tone = 'success'; col = '#004F59'; }
+    return { te, cur, exp, started, arrived, lost, done, at, n, next, eta, arrAct, ll: p.ll, k: p.k, dist: p.dist, label, tone, col };
+  }
+  stu(r, c) {
+    const out = [];
+    r.stops.forEach((s, i) => { const done = c.te >= s.dep, aA = done ? this.actualOf(r, s.arr) : 0, dw = s.dep - s.arr; let j = 0;
+      s.riders.forEach(x => { const k = x.nr ? 'nr' : done ? (x.ns ? 'ns' : c.arrived ? 'school' : 'onboard') : 'waiting'; const bt = k === 'onboard' || k === 'school' ? aA + Math.min(dw - 0.1, (j++) * 0.15) : 0; out.push({ x, s, i, k, bt, dt: k === 'school' ? c.arrAct + x.dOff * 0.5 : 0 }); }); });
+    return out;
+  }
+  count(list) { const o = { waiting: 0, onboard: 0, school: 0, nr: 0, ns: 0 }; list.forEach(z => o[z.k]++); o.total = list.length; return o; }
+  reason(r, t) {
+    const inc = (this.D.incidents || []).find(i => i.status !== 'cleared' && t >= i.since && i.routes.some(y => y.id === r.id));
+    if (inc) return inc.title;
+    if (r.id === 'B06') return 'Showers forecast over Tampines from 07:00';
+    return 'Slow traffic along the route';
+  }
+
+  flash(msg) { clearTimeout(this._tt); this.setState({ toast: msg, toastOn: true }); this._tt = setTimeout(() => this.setState({ toastOn: false }), 2600); }
+  rootRef = el => { this.rootEl = el; };
+  toTop() { let p = this.rootEl && this.rootEl.parentElement; while (p && p !== document.body) { const o = getComputedStyle(p).overflowY; if ((o === 'auto' || o === 'scroll') && p.scrollHeight > p.clientHeight) { p.scrollTop = 0; return; } p = p.parentElement; } window.scrollTo(0, 0); }
+  openRoute(id) { this.hl(null); this.setState({ rid: id, sf: 'all', q: '', sel: null }, () => this.toTop()); }
+  curRid() { return this.state.rid === undefined ? (this.props.route || null) : this.state.rid; }
+
+  ovRef = el => this.mapRef('ov', el);
+  rtRef = el => this.mapRef('rt', el);
+  mapRef(k, el) { const M = (this._m = this._m || {}); if (M[k] && M[k].el === el) return; this.killMap(k); if (el) { M[k] = { el }; this.initMap(k); } }
+  killMap(k) { const M = this._m || {}; if (M[k]) { clearTimeout(M[k].tm); if (M[k].map) M[k].map.remove(); delete M[k]; } }
+  tiles(L, map) { L.tileLayer('https://www.onemap.gov.sg/maps/tiles/Default/{z}/{x}/{y}.png', { minZoom: 11, maxZoom: 19, detectRetina: true, attribution: 'OneMap © Singapore Land Authority' }).addTo(map); }
+  glyph(icon, size, col) { return '<span class="cv-icon" style="font-family:var(--font-icon);font-size:' + size + 'px;line-height:1;color:' + col + ';font-variation-settings:\'FILL\' 1">' + icon + '</span>'; }
+  pin(icon, bg, fg, bd, size) { const L = window.L; return L.divIcon({ className: '', iconSize: [size, size], iconAnchor: [size / 2, size / 2], html: '<div style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;background:' + bg + ';border:' + bd + ';box-sizing:border-box;box-shadow:0 2px 10px rgba(22,22,22,.16);display:flex;align-items:center;justify-content:center">' + this.glyph(icon, Math.round(size * 0.55), fg) + '</div>' }); }
+  busIcon(id, col) { const L = window.L; return L.divIcon({ className: '', iconSize: [70, 26], iconAnchor: [35, 13], html: '<div style="display:flex;align-items:center;justify-content:center;gap:3px;width:max-content;margin:0 auto;height:26px;padding:0 9px 0 6px;box-sizing:border-box;border-radius:13px;background:' + col + ';border:2px solid #fff;box-shadow:0 2px 10px rgba(22,22,22,.16);color:#fff;font-family:Montserrat,sans-serif;font-size:12px;font-weight:700;white-space:nowrap">' + this.glyph('directions_bus', 15, '#fff') + id + '</div>' }); }
+  stopIcon(n, st) { const L = window.L, bg = st === 'done' ? '#004F59' : '#FFFFFF', fg = st === 'done' ? '#FFFFFF' : st === 'at' ? '#004F59' : '#525754', bd = st === 'todo' ? '2px solid #ACACAC' : '2px solid #004F59'; return L.divIcon({ className: '', iconSize: [22, 22], iconAnchor: [11, 11], html: '<div style="width:22px;height:22px;border-radius:50%;background:' + bg + ';border:' + bd + ';box-sizing:border-box;box-shadow:0 1px 4px rgba(22,22,22,.18);display:flex;align-items:center;justify-content:center;font-family:Montserrat,sans-serif;font-size:11px;font-weight:700;color:' + fg + '">' + n + '</div>' }); }
+  incMarker(L, i) { const I = this.INC[i.type] || this.INC.congestion, cl = i.status === 'cleared'; return L.marker(i.ll, { icon: this.pin(I[0], '#FFFFFF', cl ? '#888888' : I[2], '2px solid ' + (cl ? '#ACACAC' : I[2]), 30), zIndexOffset: 500 }).bindTooltip(i.title + (cl ? ' (cleared)' : ''), { direction: 'top', offset: [0, -16], className: 'lo-tip' }); }
+
+  initMap(k) {
+    const M = (this._m || {})[k], L = window.L; if (!M) return;
+    if (!L || !this.D) { M.tm = setTimeout(() => this.initMap(k), 150); return; }
+    M.el.classList.add('lo-map');
+    const map = L.map(M.el, { zoomControl: false, fadeAnimation: false, zoomSnap: 0.25 }); L.control.zoom({ position: 'bottomright' }).addTo(map);
+    map.attributionControl.setPrefix(false); this.tiles(L, map); M.map = map;
+    const D = this.D, sch = D.school.ll;
+    L.marker(sch, { icon: this.pin('school', '#008C95', '#FFFFFF', '2px solid #FFFFFF', 34), zIndexOffset: 400 }).addTo(map).bindTooltip(D.school.name, { direction: 'top', offset: [0, -18], className: 'lo-tip' });
+    if (k === 'ov') {
+      M.lines = {}; M.bus = {}; M.inc = [];
+      D.routes.forEach(r => { M.lines[r.id] = L.polyline(r.line, { color: '#80C6CA', weight: 3, opacity: 1 }).addTo(map).on('click', () => this.openRoute(r.id)).bindTooltip(r.id + ' ' + r.name, { sticky: true, className: 'lo-tip' }); });
+      M.fit = () => { map.invalidateSize(); map.fitBounds(L.latLngBounds([].concat(...D.routes.map(r => r.line))), { padding: [36, 36], animate: false }); };
+    } else {
+      const r = this.route(this.curRid()); if (!r) return;
+      M.rid = r.id; M.stops = []; M.dots = L.layerGroup().addTo(map); M.nDots = -1;
+      M.casing = L.polyline([], { color: '#FFFFFF', weight: 9, interactive: false }).addTo(map);
+      M.ahead = L.polyline([], { color: '#008C95', weight: 5, interactive: false }).addTo(map);
+      M.past = L.polyline([], { color: '#ACACAC', weight: 5, interactive: false }).addTo(map);
+      r.stops.forEach((s, i) => { M.stops.push(L.marker(s.ll, { icon: this.stopIcon(i + 1, 'todo'), zIndexOffset: 300 }).addTo(map).bindTooltip((i + 1) + '. ' + s.name, { direction: 'top', offset: [0, -12], className: 'lo-tip' })); });
+      (D.incidents || []).filter(i => i.routes.some(y => y.id === r.id)).forEach(i => this.incMarker(L, i).addTo(map));
+      M.bus1 = L.marker(r.stops[0].ll, { zIndexOffset: 1000, icon: this.busIcon(r.id, '#004F59') }).addTo(map);
+      M.fit = () => { map.invalidateSize(); map.fitBounds(L.latLngBounds(r.line), { padding: [40, 40], animate: false }); };
+    }
+    M.fit(); setTimeout(() => M.fit && this._m && this._m[k] === M && M.fit(), 140);
+    this.moveMarkers();
+  }
+  hl(id) { const O = (this._m || {}).ov; if (!O || !O.lines) return; Object.keys(O.lines).forEach(k => { const on = k === id; O.lines[k].setStyle({ color: on ? '#004F59' : '#80C6CA', weight: on ? 6 : 3 }); if (on) O.lines[k].bringToFront(); }); }
+  moveMarkers() {
+    const L = window.L, M = this._m || {}; if (!L || !this.D) return;
+    const t = this.now(), live = this.state.sess === 'am';
+    const O = M.ov;
+    if (O && O.map && O.lines) {
+      const tN = (this.D.incidents || []).filter(i => t >= i.since).map(i => i.id).join(',');
+      if (O.incKey !== tN) { O.incKey = tN; (O.inc || []).forEach(m => m.remove()); O.inc = (this.D.incidents || []).filter(i => t >= i.since).map(i => this.incMarker(L, i).addTo(O.map)); }
+      this.D.routes.forEach(r => {
+        const c = this.core(r, t); let mk = O.bus[r.id];
+        if (c.arrived || !live) { if (mk && O.map.hasLayer(mk)) mk.remove(); return; }
+        if (!mk) { mk = O.bus[r.id] = L.marker(c.ll, { zIndexOffset: 1000 }).on('click', () => this.openRoute(r.id)); mk.bindTooltip('', { direction: 'top', offset: [0, -14], className: 'lo-tip' }); }
+        if (!O.map.hasLayer(mk)) mk.addTo(O.map);
+        mk.setLatLng(c.ll); if (mk._key !== c.col) { mk._key = c.col; mk.setIcon(this.busIcon(r.id, c.col)); }
+        const tip = r.id + ' | ' + r.plate + ' | ' + c.label; if (mk._tip !== tip) { mk._tip = tip; mk.setTooltipContent(tip); }
+      });
+    }
+    const R = M.rt;
+    if (R && R.map && R.rid) {
+      const r = this.route(R.rid); if (!r) return; const c = this.core(r, t), line = r.line;
+      const past = line.slice(0, c.k).concat([c.ll]), rest = [c.ll].concat(line.slice(c.k));
+      R.past.setLatLngs(past); R.ahead.setLatLngs(rest); R.casing.setLatLngs(rest);
+      R.bus1.setLatLng(c.ll); if (R.bus1._key !== c.col) { R.bus1._key = c.col; R.bus1.setIcon(this.busIcon(r.id, c.col)); }
+      r.stops.forEach((s, i) => { const st = c.te >= s.dep ? 'done' : c.te >= s.arr ? 'at' : 'todo', m = R.stops[i]; if (m._st !== st) { m._st = st; m.setIcon(this.stopIcon(i + 1, st)); } });
+      const S = this.stu(r, c).filter(z => z.k === 'onboard' || z.k === 'school'), key = S.length + '|' + (this.state.sel || '');
+      if (R.nDots !== key) { R.nDots = key; R.dots.clearLayers(); S.forEach(z => { const on = z.x.rid === this.state.sel; L.circleMarker(z.x.gps, { radius: on ? 8 : 5, color: on ? '#004F59' : '#FFFFFF', weight: on ? 3 : 2, fillColor: '#FF8400', fillOpacity: 1 }).addTo(R.dots).bindTooltip(z.x.name + ' | ' + this.hm(z.bt) + ' | ' + this.M[z.x.method][0], { direction: 'top', offset: [0, -6], className: 'lo-tip' }).on('click', () => this.setState({ sel: z.x.rid })); }); }
+    }
+  }
+  focus(z) { const R = (this._m || {}).rt; this.setState({ sel: z.x.rid }); if (R && R.map) R.map.setView(z.x.gps, 18, { animate: true }); }
+
+  renderVals() {
+    const s = this.state, D = this.D, t = this.now(), live = s.sess === 'am', rid = this.curRid(), embedded = this.props.embedded === true || this.props.embedded === 'true';
+    const school = this.props.school || "St. Stephen's School";
+    const iso = /^\d{4}-\d{2}-\d{2}$/.test(String(this.props.date || '')) ? this.props.date : '2026-10-12', dt = new Date(iso + 'T00:00:00');
+    const dateTxt = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dt.getDay()] + ' ' + dt.getDate() + ' ' + ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][dt.getMonth()] + ' ' + dt.getFullYear();
+    const sessDef = [['am', 'Morning Pick-up | 05:40 to 07:15'], ['pm', 'Afternoon Drop-off | 13:30 to 14:45'], ['cca', 'CCA Drop-off | 16:30 to 17:45']];
+    const base = {
+      pad: embedded ? '0' : '24px', minH: embedded ? '0' : '100vh', school, dateTxt, err: s.err, rootRef: this.rootRef, ovRef: this.ovRef, rtRef: this.rtRef,
+      sess: { v: s.sess, opts: sessDef.map(([value, label]) => ({ value, label })), on: e => { const v = e && e.target ? e.target.value : e; this.setState({ sess: v }); } },
+      clock: { t: live ? this.hms(t) : this.hms(t), hm: this.hm(t), lbl: live ? 'LIVE' : 'NOW', dot: live ? 'var(--green-600)' : 'var(--ink-250)' },
+      fitOv: () => { const O = (this._m || {}).ov; if (O && O.fit) O.fit(); },
+      back: () => this.setState({ rid: null, sel: null }, () => this.toTop()),
+      toast: { msg: s.toast, op: s.toastOn ? 1 : 0 },
+      idle: { t: '', d: '' }, k: {}, at: { items: [], has: false, none: false, n: '' }, rf: [], rows: [], rowsNone: false, tr: { items: [], none: false }, wx: {}, rt: { k: {}, crew: [], log: [], groups: [], sf: [], end: {} }
+    };
+    const showRt = !!rid && !!D && !!this.route(rid);
+    base.v = { ov: !showRt, rt: showRt, live: live && !!D, idle: !live, load: live && !D && !s.err };
+    if (!live) { const d0 = sessDef.find(x => x[0] === s.sess); base.idle = { t: d0[1].split(' | ')[0] + ' has not started', d: 'Buses for this session show here once the first trip starts at ' + d0[1].split(' | ')[1].split(' to ')[0] + '.' }; }
+    if (!D) return base;
+
+    const C = {}; D.routes.forEach(r => { const c = this.core(r, t); C[r.id] = { c, st: this.stu(r, c) }; C[r.id].n = this.count(C[r.id].st); });
+    const all = D.routes.map(r => ({ r, ...C[r.id] }));
+
+    if (!showRt) {
+      let sd = 0, stTot = 0, onR = 0, arr = 0, ns = 0; const tot = { waiting: 0, onboard: 0, school: 0, nr: 0, ns: 0, total: 0 };
+      let eta = 0, plan = 0;
+      all.forEach(({ r, c, n }) => { stTot += c.n + 1; sd += c.done + (c.arrived ? 1 : 0); if (c.arrived) arr++; else if (c.started) onR++; else ns++; Object.keys(tot).forEach(k2 => tot[k2] += n[k2]); eta = Math.max(eta, c.eta); plan = Math.max(plan, r.schoolArr); });
+      const dl = Math.round(eta - plan);
+      const items = [];
+      all.forEach(({ r, c, st }) => {
+        if (c.arrived || !c.started) { st.filter(z => z.k === 'ns').forEach(z => items.push({ sev: 2, rid: r.id, icon: 'person_off', fg: 'var(--orange-500)', title: r.id + ' student not at stop', body: z.x.name + ' was not at ' + z.s.name + '. ' + r.attendant.name + ' called the parent at ' + this.hm(this.actualOf(r, z.s.dep)) })); return; }
+        if (c.lost) items.push({ sev: 4, rid: r.id, icon: 'gps_off', fg: 'var(--red-500)', title: r.id + ' GPS signal lost', body: 'No position since ' + this.hm(r.gpsLost[0]) + '. Last seen near ' + (r.stops[Math.max(0, c.next - 1)] || r.stops[0]).name });
+        if (c.cur > 3) items.push({ sev: c.cur >= 10 ? 4 : 3, rid: r.id, icon: 'schedule', fg: c.cur >= 10 ? 'var(--red-500)' : 'var(--orange-500)', title: r.id + ' running ' + Math.round(c.cur) + ' min late', body: this.reason(r, t) + '. School ETA ' + this.hm(c.eta) + ', planned ' + this.hm(r.schoolArr) });
+        else if (c.exp > 3) items.push({ sev: 2, rid: r.id, icon: 'update', fg: 'var(--orange-500)', title: r.id + ' delay expected, ' + Math.round(c.exp) + ' min', body: this.reason(r, t) + '. School ETA ' + this.hm(c.eta) + ', planned ' + this.hm(r.schoolArr) });
+        st.filter(z => z.k === 'ns').forEach(z => items.push({ sev: 2, rid: r.id, icon: 'person_off', fg: 'var(--orange-500)', title: r.id + ' student not at stop', body: z.x.name + ' was not at ' + z.s.name + '. ' + r.attendant.name + ' called the parent at ' + this.hm(this.actualOf(r, z.s.dep)) }));
+      });
+      items.sort((a, b) => b.sev - a.sev);
+      const attR = new Set(items.map(x => x.rid)).size;
+      base.k = {
+        prog: Math.round(sd / stTot * 100) + '%', progW: (sd / stTot * 100).toFixed(1) + '%', progSub: sd + ' of ' + stTot + ' stops done, school included',
+        bus: String(onR), busSub: arr + ' arrived | ' + ns + ' not started | ' + D.routes.length + ' in session',
+        stu: String(tot.onboard), stuSub: tot.school + ' at school | ' + tot.waiting + ' waiting | ' + (tot.nr + tot.ns) + ' absent',
+        comp: this.hm(eta), compFg: dl > 3 ? 'var(--orange-500)' : 'var(--ink-800)', compSub: 'Planned ' + this.hm(plan) + (dl > 0 ? ' | ' + dl + ' min late' : ' | On plan'),
+        att: String(attR), attFg: attR ? 'var(--red-500)' : 'var(--green-600)', attSub: attR ? items.length + (items.length === 1 ? ' issue' : ' issues') + ' open' : 'Nothing needs attention'
+      };
+      base.at = { items: items.map(x => ({ ...x, open: () => this.openRoute(x.rid) })), has: items.length > 0, none: !items.length, n: String(items.length) };
+      const isLate = z => z.c.started && !z.c.arrived && (z.c.tone === 'warning' || z.c.tone === 'danger');
+      const FD = [['all', 'All', () => true], ['road', 'On the Road', z => z.c.started && !z.c.arrived], ['late', 'Delayed', isLate], ['done', 'Arrived', z => z.c.arrived]];
+      const fFn = (FD.find(f => f[0] === s.rf) || FD[0])[2];
+      base.rf = FD.map(([id, l, fn]) => ({ l, n: all.filter(fn).length, on: s.rf === id, tap: () => this.setState({ rf: id }) }));
+      base.rows = all.filter(fFn).map(({ r, c, n }) => {
+        const w = x => (x / Math.max(1, n.total) * 100).toFixed(1) + '%', nx = c.next >= 0 ? r.stops[c.next] : null;
+        return {
+          id: r.id, name: r.name, plate: r.plate, driver: r.driver.name, label: c.label, tone: c.tone,
+          pW: ((c.done + (c.arrived ? 1 : 0)) / (c.n + 1) * 100).toFixed(1) + '%', stops: (c.done + (c.arrived ? 1 : 0)) + ' of ' + (c.n + 1),
+          wS: w(n.school), wB: w(n.onboard), wA: w(n.nr + n.ns),
+          stu: c.arrived ? n.school + ' at school' + (n.nr + n.ns ? ' | ' + (n.nr + n.ns) + ' absent' : '') : n.onboard + ' on board | ' + n.waiting + ' waiting',
+          next: c.arrived ? school : nx ? (c.at === c.next ? 'At ' : '') + nx.name : school,
+          nextT: c.arrived ? 'Arrived ' + this.hm(c.arrAct) : nx ? (c.at === c.next ? 'Boarding now' : 'ETA ' + this.hm(nx.arr + c.cur)) : '',
+          eta: this.hm(c.eta), plan: 'Plan ' + this.hm(r.schoolArr), etaFg: c.eta - r.schoolArr > 3 ? 'var(--orange-500)' : 'var(--ink-800)',
+          open: () => this.openRoute(r.id), enter: () => this.hl(r.id), leave: () => this.hl(null)
+        };
+      });
+      base.rowsNone = !base.rows.length;
+      const inc = (D.incidents || []).filter(i => t >= i.since).sort((a, b) => (a.status === 'cleared') - (b.status === 'cleared') || b.since - a.since);
+      base.tr = { none: !inc.length, items: inc.map(i => { const I = this.INC[i.type] || this.INC.congestion, cl = i.status === 'cleared'; return { icon: I[0], fg: cl ? 'var(--ink-400)' : I[1], title: i.title, desc: i.desc, since: 'Reported ' + this.hm(i.since), cleared: cl, routes: cl ? [] : i.routes.map(y => ({ l: y.id + ' | +' + y.delay + ' min', open: () => this.openRoute(y.id) })) }; }) };
+      const W = this.WX, rainOn = t >= 390;
+      base.wx = { temp: W.temp, cond: W.cond, icon: W.icon, valid: W.valid, note: W.note, noteBg: rainOn ? 'var(--orange-050)' : 'var(--teal-050)', noteFg: rainOn ? 'var(--orange-500)' : 'var(--teal-600)', noteIcon: rainOn ? 'rainy' : 'info',
+        areas: W.areas.map(([name, cond, icon, routes, sev]) => ({ name, cond, icon, routes, ic: sev ? 'var(--orange-500)' : 'var(--teal-600)', fg: sev ? 'var(--ink-800)' : 'var(--ink-700)', fw: sev ? 700 : 400 })) };
+      return base;
+    }
+
+    const r = this.route(rid), { c, st, n } = C[rid];
+    const boarded = st.filter(z => z.k === 'onboard' || z.k === 'school');
+    const mc = { card: 0, qr: 0, palm: 0, manual: 0 }; boarded.forEach(z => mc[z.x.method]++);
+    const lateNow = c.started && !c.arrived && (c.tone === 'warning' || c.tone === 'danger');
+    const ev = [];
+    const push = (tm, icon, fg, text) => { if (tm <= t + 1e-6) ev.push({ tm, icon, fg, text }); };
+    if (c.started) push(this.actualOf(r, r.stops[0].arr) - 0.01, 'flag', 'var(--teal-600)', 'Trip started at ' + r.stops[0].name);
+    r.stops.forEach((s0, i) => {
+      if (c.te < s0.arr) return; const aA = this.actualOf(r, s0.arr);
+      if (i > 0) push(aA, 'location_on', 'var(--teal-600)', 'Arrived at ' + s0.name);
+      if (c.te >= s0.dep) {
+        const here = st.filter(z => z.i === i), b = here.filter(z => z.k === 'onboard' || z.k === 'school');
+        here.filter(z => z.k === 'ns').forEach(z => push(this.actualOf(r, s0.dep), 'person_off', 'var(--orange-500)', z.x.name + ' not at stop. ' + r.attendant.name + ' called the parent'));
+        b.filter(z => z.x.method === 'manual').forEach(z => push(z.bt, 'touch_app', 'var(--ink-500)', z.x.name + ' marked present manually by ' + r.attendant.name));
+        push(this.actualOf(r, s0.dep), 'how_to_reg', 'var(--green-600)', b.length + (b.length === 1 ? ' student' : ' students') + ' boarded at ' + s0.name);
+      }
+    });
+    (D.incidents || []).filter(i => i.routes.some(y => y.id === r.id)).forEach(i => push(i.since, (this.INC[i.type] || this.INC.congestion)[0], (this.INC[i.type] || this.INC.congestion)[1], i.title + ' reported. Expected delay ' + i.routes.find(y => y.id === r.id).delay + ' min'));
+    if (r.id === 'B06') push(r.known, 'rainy', 'var(--orange-500)', 'Showers forecast over Tampines from 07:00. Expected delay 4 min');
+    if (r.gpsLost) { push(r.gpsLost[0], 'gps_off', 'var(--red-500)', 'GPS signal lost'); push(r.gpsLost[1], 'gps_fixed', 'var(--green-600)', 'GPS signal restored'); }
+    if (c.arrived) push(c.arrAct, 'school', 'var(--green-600)', 'Arrived at ' + school + '. ' + n.school + ' students checked in');
+    ev.sort((a, b) => b.tm - a.tm);
+    const FS = [['all', 'All'], ['waiting', 'Waiting'], ['onboard', 'On Board'], ['school', 'At School'], ['nr', 'Not Required'], ['ns', 'No Show']];
+    const q = s.q.trim().toLowerCase();
+    const STL = { waiting: ['Waiting', 'neutral'], onboard: ['On board', 'info'], school: ['At school', 'success'], nr: ['Not required', 'danger'], ns: ['No show', 'warning'] };
+    const groups = [];
+    r.stops.forEach((s0, i) => {
+      const done = c.te >= s0.dep, at = c.te >= s0.arr && !done, dep = done ? this.actualOf(r, s0.dep) : 0, dl = done ? Math.round(dep - s0.dep) : Math.round(c.cur);
+      const rs = st.filter(z => z.i === i && (s.sf === 'all' || z.k === s.sf) && (!q || z.x.name.toLowerCase().includes(q) || z.x.rid.toLowerCase().includes(q)));
+      if ((s.sf !== 'all' || q) && !rs.length) return;
+      groups.push({
+        num: String(i + 1), name: s0.name, pt: s0.pt, sched: this.hm(s0.arr),
+        act: done ? 'Departed ' + this.hm(dep) + (dl > 0 ? ' (+' + dl + ')' : '') : at ? 'At stop now' : 'ETA ' + this.hm(s0.arr + c.cur),
+        actFg: (done ? dl : c.cur) > 3 ? 'var(--orange-500)' : at ? 'var(--teal-800)' : 'var(--ink-800)',
+        numBg: done ? 'var(--teal-800)' : 'var(--white)', numFg: done ? 'var(--white)' : at ? 'var(--teal-800)' : 'var(--ink-500)', numBd: done || at ? '2px solid var(--teal-800)' : '2px solid var(--ink-250)',
+        riders: rs.map(z => {
+          const x = z.x, b = z.k === 'onboard' || z.k === 'school', far = x.gd > 50, Mm = this.M[x.method], Md = this.M[x.dMethod];
+          return {
+            name: x.name, meta: x.level + ' | ' + x.rid, st: STL[z.k][0], tone: STL[z.k][1], bg: s.sel === x.rid ? 'var(--teal-050)' : 'var(--white)',
+            puOn: b, puIcon: Mm[1], pu: b ? this.hm(z.bt) : z.k === 'waiting' ? 'Expected ' + this.hm(s0.arr + c.cur) : z.k === 'nr' ? 'Bus not required' : 'Not at stop',
+            puM: b ? Mm[0] + (x.method === 'manual' ? ' by ' + r.attendant.name : '') : z.k === 'nr' ? 'Marked by parent' : z.k === 'ns' ? 'Parent called' : '',
+            puFg: b ? 'var(--ink-800)' : z.k === 'ns' ? 'var(--orange-500)' : 'var(--ink-500)', puFw: b ? 600 : 400,
+            gpsOn: b, gpsOff: !b, gps: x.gps[0].toFixed(5) + ', ' + x.gps[1].toFixed(5), gd: x.gd + ' m from stop' + (far ? ', check location' : ''), gdFg: far ? 'var(--orange-500)' : 'var(--ink-500)', gdFw: far ? 700 : 400,
+            focus: () => this.focus(z),
+            inOn: z.k === 'school', inIcon: Md[1], inT: z.k === 'school' ? this.hm(z.dt) : b ? 'ETA ' + this.hm(c.eta) : 'N/A', inM: z.k === 'school' ? Md[0] + ' at gate' : '', inFg: z.k === 'school' ? 'var(--ink-800)' : 'var(--ink-400)'
+          };
+        })
+      });
+    });
+    const al = c.lost ? { i: 'gps_off', fg: 'var(--red-500)', bg: 'var(--red-050)', t: 'GPS signal lost', d: 'No position since ' + this.hm(r.gpsLost[0]) + '. The map shows the last known position. Call the driver to confirm location' }
+      : lateNow ? { i: c.cur > 3 ? 'schedule' : 'update', fg: c.tone === 'danger' ? 'var(--red-500)' : 'var(--orange-500)', bg: c.tone === 'danger' ? 'var(--red-050)' : 'var(--orange-050)', t: c.cur > 3 ? 'Running ' + Math.round(c.cur) + ' min late' : 'Delay expected, ' + Math.round(c.exp) + ' min', d: this.reason(r, t) + '. School ETA ' + this.hm(c.eta) + ', planned ' + this.hm(r.schoolArr) } : null;
+    const eDl = Math.round(c.eta - r.schoolArr);
+    base.rt = {
+      id: r.id, name: r.name, plate: r.plate, label: c.label, tone: c.tone,
+      sub: r.plate + ' | ' + r.type + ' | ' + r.operator + ' | ' + r.km + ' km | ' + r.stops.length + ' stops',
+      busSub: r.type + ' | ' + r.operator, load: n.onboard + '/' + r.seats,
+      alertOn: !!al, alertIcon: al ? al.i : 'info', alertFg: al ? al.fg : '', alertBg: al ? al.bg : '', alertT: al ? al.t : '', alertD: al ? al.d : '',
+      k: {
+        stops: (c.done + (c.arrived ? 1 : 0)) + ' of ' + (c.n + 1), pW: ((c.done + (c.arrived ? 1 : 0)) / (c.n + 1) * 100).toFixed(1) + '%',
+        stopsSub: c.arrived ? 'Trip complete' : !c.started ? 'Starts ' + this.hm(r.stops[0].arr) : c.at >= 0 ? 'At stop ' + (c.at + 1) + ' now' : c.next >= 0 ? 'Next: stop ' + (c.next + 1) : 'Heading to school',
+        stuLbl: c.arrived ? 'Students at School' : 'Students on Board', stu: String(c.arrived ? n.school : n.onboard),
+        stuSub: c.arrived ? (n.nr + ' not required | ' + n.ns + ' no show') : (n.waiting + ' waiting | ' + n.school + ' at school | ' + (n.nr + n.ns) + ' absent'),
+        etaLbl: c.arrived ? 'Arrived at School' : 'School ETA', eta: this.hm(c.eta), etaFg: eDl > 3 ? 'var(--orange-500)' : 'var(--ink-800)', etaSub: 'Planned ' + this.hm(r.schoolArr) + (eDl > 0 ? ' | ' + eDl + ' min late' : eDl < 0 ? ' | ' + (-eDl) + ' min early' : ' | On plan'),
+        methods: ['card', 'qr', 'palm', 'manual'].map(m => ({ l: this.M[m][0], icon: this.M[m][1], n: String(mc[m]) }))
+      },
+      crew: [r.driver, r.attendant].map(p => ({ ...p, callLbl: 'Call ' + p.name, call: () => this.flash('Calling ' + p.name + ' ' + p.phone) })),
+      log: ev.map(e => ({ t: this.hm(e.tm), icon: e.icon, fg: e.fg, text: e.text })),
+      sf: FS.map(([id, l]) => ({ l, n: id === 'all' ? n.total : n[id], on: s.sf === id, tap: () => this.setState({ sf: id }) })),
+      q: s.q, onQ: e => this.setState({ q: e && e.target ? e.target.value : String(e || '') }),
+      groups, none: !groups.length,
+      end: { sched: this.hm(r.schoolArr), act: c.arrived ? 'Arrived ' + this.hm(c.arrAct) : 'ETA ' + this.hm(c.eta), actFg: eDl > 3 ? 'var(--orange-500)' : c.arrived ? 'var(--green-600)' : 'var(--ink-800)', bg: c.arrived ? 'var(--green-600)' : 'var(--teal-600)', fg: 'var(--white)' },
+      fit: () => { const R = (this._m || {}).rt; if (R && R.fit) R.fit(); },
+      toBus: () => { const R = (this._m || {}).rt; if (R && R.map) R.map.setView(c.ll, 17, { animate: true }); }
+    };
+    return base;
+  }
+}
+</script>
+</body>
+</html>

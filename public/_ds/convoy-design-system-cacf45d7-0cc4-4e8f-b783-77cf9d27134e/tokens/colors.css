@@ -1,0 +1,70 @@
+/* Convoy palette — every value sampled directly from the product screenshots. */
+:root {
+  /* Brand teal — the whole identity hangs off these two */
+  --teal-900: #003840;
+  --teal-800: #004f59; /* CONVOY wordmark, nav rail, primary button */
+  --teal-700: #20656e; /* primary hover */
+  --teal-600: #008c95; /* accent: charts, status icons, links, "Available" */
+  --teal-500: #209aa2; /* inline link text */
+  --teal-400: #60b7bd;
+  --teal-300: #80c6ca;
+  --teal-200: #b0c8cb;
+  --teal-100: #e5edee; /* selected nav item / selected pill fill */
+  --teal-050: #e5f3f4; /* info tint, scheduler teal block */
+
+  /* Neutrals — warm-free greys, pure black is never used */
+  --ink-900: #161616; /* dark map panel */
+  --ink-800: #212121; /* body + headings */
+  --ink-700: #3d3d3d;
+  --ink-600: #525754;
+  --ink-500: #747474;
+  --ink-400: #888888; /* "Offline", muted meta */
+  --ink-300: #909090; /* placeholders, inactive segment text */
+  --ink-250: #acacac;
+  --ink-200: #b5b5b5; /* inactive rail icons */
+  --ink-150: #c7c7c7;
+  --ink-100: #e0e0e0; /* borders, dividers */
+  --ink-075: #e3e3e3;
+  --ink-050: #eeeeee;
+  --ink-025: #f4f4f4; /* page background + filled input */
+  --white: #ffffff;
+
+  /* Semantic status colours */
+  --green-600: #00c853; /* Completed / Arrived / Reset Filters */
+  --green-500: #1cce66;
+  --green-300: #73e1a0;
+  --green-200: #acedc7;
+  --green-050: #e6faee; /* success tint */
+
+  --orange-600: #ef7c02;
+  --orange-500: #ff8400; /* On Trip / On the way */
+  --orange-400: #ff921c;
+  --orange-300: #ffb362;
+  --orange-050: #ffefdf;
+
+  --red-600: #e50000;
+  --red-500: #ff3d17; /* destructive, notification badge, required-off */
+  --red-400: #ff5534;
+  --red-300: #ffb6a8;
+  --red-050: #ffece8; /* error tint, scheduler conflict block */
+  --maroon-700: #9d1313;
+
+  --blue-500: #4285f4; /* speed legend low band (Google map palette) */
+  --blue-400: #5cadff;
+  --blue-050: #d0e1fc;
+  --lime-500: #83c950;
+
+  /* Speed / heat ramp used on replay + trip maps, slow → fast */
+  --speed-0: #4285f4;
+  --speed-20: #5cadff;
+  --speed-40: #83c950;
+  --speed-60: #ef7c02;
+  --speed-80: #e50000;
+  --speed-100: #9d1313;
+
+  /* Scheduler block fills — one per trip state */
+  --block-scheduled: #e5f3f4;
+  --block-confirmed: #e6faee;
+  --block-conflict: #ffece8;
+  --block-unassigned: #ffffff;
+}

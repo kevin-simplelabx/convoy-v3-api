@@ -1,0 +1,27 @@
+/* 4px base grid. Field-to-field rhythm in the Convoy forms is 16px;
+   card padding is 20-24px; page gutter is 24px. */
+:root {
+  --space-0: 0;
+  --space-1: 2px;
+  --space-2: 4px;
+  --space-3: 6px;
+  --space-4: 8px;
+  --space-5: 12px;
+  --space-6: 16px;
+  --space-7: 20px;
+  --space-8: 24px;
+  --space-9: 32px;
+  --space-10: 40px;
+  --space-11: 48px;
+  --space-12: 64px;
+
+  /* Fixed chrome dimensions, measured from the screenshots */
+  --rail-width: 88px;        /* dark teal icon rail (Live View, Scheduler, Reports) */
+  --rail-width-compact: 44px;/* white rail when a section flyout is open */
+  --flyout-width: 216px;     /* section nav panel */
+  --topbar-height: 65px;
+  --field-height: 44px;
+  --control-height-sm: 36px;
+  --page-gutter: 24px;
+  --card-padding: 20px;
+}

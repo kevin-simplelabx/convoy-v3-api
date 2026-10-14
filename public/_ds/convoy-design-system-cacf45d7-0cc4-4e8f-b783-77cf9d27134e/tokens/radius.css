@@ -1,0 +1,12 @@
+/* Convoy is a soft-rectangle system: 8px on nearly everything,
+   4px on small status badges, full pills only for tags and count chips. */
+:root {
+  --radius-xs: 3px;  /* checkbox */
+  --radius-sm: 4px;  /* status badge */
+  --radius-md: 6px;  /* nav flyout item, menu row */
+  --radius-lg: 8px;  /* the default: inputs, buttons, cards, pills, blocks */
+  --radius-xl: 12px; /* popovers, dropdown menus, map overlays */
+  --radius-2xl: 16px;/* large map cards */
+  --radius-pill: 999px;
+  --radius-circle: 50%;
+}
