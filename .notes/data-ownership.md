@@ -23,7 +23,7 @@ Bắt đầu menu mới: lọc theo cột **Màn sửa sẽ ở**, những dòng
 | platform | portal_jwts, portal_sign_in_codes | ghi | Client Portal sign-in | — |
 | clients | rate_cards (+ vehicle_types, periods, ranges, rates, distance_bands, amounts) | ghi | Trips > Rate Cards | — |
 | fleet | vehicles, vehicle_teams, operators, drivers, operator_drivers, attendants, vehicle_driver_schedules | ghi | Edit Vehicle, External Vehicle, Fleet (mọi trang) | — |
-| fleet | fuel_companies, fuel_entries, fuel_alerts | ghi | Fleet > Fuel & Energy | Finance (Vehicle Financials đọc chi phí) |
+| fleet | fuel_companies, fuel_entries, fuel_alerts | ghi | Fleet > Fuel & Energy | — (Vehicle Financials đọc chi phí) |
 | fleet | vehicle_log_cards, vehicle_insurance_policies, vehicle_insurance_documents | ghi | Edit Vehicle | Fleet |
 | fleet | external_vehicle_share_links, external_vehicle_submissions | ghi | Fleet > External Vehicles, trang Share Form public | — |
 | fleet | driver_invites | ghi (SMS chỉ ghi lại) | Fleet > Drivers, Operator Drivers | — |
@@ -52,5 +52,10 @@ Người dùng của dữ liệu `trip_occurrences` (đọc): Ops Control, Live 
 | pay | driver_pay_schemes, driver_vehicle_types | ghi | HR > Drivers | — |
 | pay | driver_pay_months (+ lines, runs) | ghi | HR > Earnings (Confirm / Reopen) | Finance (payroll sau) |
 | pay | driver_point_lots, driver_point_deductions, driver_point_allocations | ghi | HR > Points, Confirm Month (bonus) | Driver app (đổi reward) |
+
+| finance | finance_settings, finance_approvers | ghi | Finance > Finance Settings | — |
+| finance | client_invoices (+ lines, line_runs, payments, sends) | ghi | Finance > Client Invoices | Client Portal (client xem / trả) |
+| finance | operator_cost_overrides, operator_pay_items, operator_pay_batches (+ con) | ghi | Finance > Operator Payments | — |
+| finance | vehicle_financials, vehicle_loan_payments, vehicle_finance_entries, vehicle_cost_spike_acks | ghi | Finance > Vehicle Financials | — |
 
 Thêm bảng mới → thêm 1 dòng ở đây.

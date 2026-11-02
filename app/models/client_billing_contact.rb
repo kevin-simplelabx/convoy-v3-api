@@ -43,4 +43,19 @@ class ClientBillingContact < ApplicationRecord
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP, message: "%{value} looks wrong" }, allow_nil: true
   validates :email, presence: { message: "is needed, or tick Attention" }, unless: :attention?
   validates :name, presence: { message: "is needed for the person under Attention" }, if: :attention?
+
+  # Send Invoices To saved whole: empty rows dropped, up to MAX people, someone To when anyone has an email.
+  def self.replace!(billable, rows)
+    rows = Array(rows).map { |r| r.to_h.symbolize_keys }.reject { |r| r[:name].blank? && r[:email].blank? }
+    raise ApplicationService::Error, "Up to #{MAX} people" if rows.size > MAX
+    if rows.any? { |r| r[:email].present? } && rows.none? { |r| r[:email].present? && r[:send_as].to_s != "cc" }
+      raise ApplicationService::Error, "Send the invoice To at least one person, not only CC"
+    end
+
+    billable.billing_contacts.delete_all
+    rows.each_with_index do |r, i|
+      billable.billing_contacts.create!(company_id: billable.company_id, name: r[:name], email: r[:email], send_as: r[:send_as].presence || "to",
+                                        attention: ActiveModel::Type::Boolean.new.cast(r[:attention]) || false, position: i)
+    end
+  end
 end

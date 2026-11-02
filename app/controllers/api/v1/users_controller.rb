@@ -10,7 +10,8 @@ module Api
         scope = scope.where(status: params[:status]) if params[:status].in?(User.statuses.keys)
         scope = scope.includes(:schools, :created_by).ransack(ransack_params).result.order(:name)
         render_page scope, UserBlueprint, view: :manage, actor: current_user,
-                                          meta: { counts: { all: counts.values.sum, active: counts["active"].to_i, suspended: counts["suspended"].to_i } }
+                                          meta: { counts: { all: counts.values.sum, active: counts["active"].to_i, suspended: counts["suspended"].to_i },
+                                                  maker_checker_warning: maker_checker_warning?(counts["active"].to_i) }
       end
 
       def show
@@ -53,6 +54,9 @@ module Api
       private
 
       def find_user = policy_scope(User).find(params[:id])
+
+      # Maker-checker is on for operator pay runs but fewer than two users are active: nobody can approve.
+      def maker_checker_warning?(active) = active < 2 && FinanceSetting.exists?(approval: "maker")
 
       def act(action)
         user = authorize find_user

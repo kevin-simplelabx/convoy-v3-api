@@ -7,7 +7,7 @@
 module ApiDocs
   class OpenApiBuilder
     DOCS = Rails.root.join(".api-documents")
-    MENUS = { "scheduler.md" => "Scheduler", "trips.md" => "Trips", "fleet.md" => "Fleet", "settings.md" => "Settings", "clients.md" => "Clients", "hr.md" => "HR",
+    MENUS = { "scheduler.md" => "Scheduler", "trips.md" => "Trips", "fleet.md" => "Fleet", "settings.md" => "Settings", "clients.md" => "Clients", "hr.md" => "HR", "finance.md" => "Finance",
               "README.md" => "Common" }.freeze
     # Folder = the Convoy OS menu that owns the resource (.notes/data-ownership.md), not the doc that first names it.
     FOLDERS = {
@@ -22,10 +22,11 @@ module ApiDocs
                     external_share_links external_vehicle_submissions public/share_forms],
       "Clients" => %w[clients client_sites client_end_customers client_pickup_points client_users pickup_points],
       "HR" => %w[pay_rate_plans pay_schemes pay_drivers pay_earnings pay_simulator pay_bonuses pay_points pay_rewards pay_audit_log],
+      "Finance" => %w[finance_settings client_invoices client_billing finance_documents operator_payments vehicle_financials vehicle_pl],
       "Client Portal" => %w[portal/sessions portal/passwords],
       "Settings" => %w[users profiles companies countries country_requests calendars calendar_days public_holidays]
     }.flat_map { |folder, names| names.map { [ "api/v1/#{it}", folder ] } }.to_h.freeze
-    ORDER = %w[Common Scheduler Trips Fleet Clients HR Settings Client\ Portal Other].freeze
+    ORDER = %w[Common Scheduler Trips Fleet Clients Finance HR Settings Client\ Portal Other].freeze
     MENTION = %r{`(GET|POST|PATCH|PUT|DELETE) (/[^`\s?]*)}
     PUBLIC = %w[api/v1/sessions#create api/v1/downloads#show api/v1/portal/sessions#lookup api/v1/portal/sessions#code
                 api/v1/portal/sessions#verify api/v1/portal/sessions#create api/v1/portal/passwords#create].freeze

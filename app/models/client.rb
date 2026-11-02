@@ -3,21 +3,24 @@
 # Table name: clients
 # Database name: primary
 #
-#  id                :bigint           not null, primary key
-#  billing_address   :text
-#  code              :string           not null
-#  contact_name      :string
-#  discarded_at      :datetime
-#  email             :string
-#  kind              :string           default("company"), not null
-#  name              :string           not null
-#  on_time_allowance :integer          default(3), not null
-#  phone             :string
-#  uen               :string
-#  created_at        :datetime         not null
-#  updated_at        :datetime         not null
-#  company_id        :bigint           not null
-#  rate_card_id      :bigint
+#  id                 :bigint           not null, primary key
+#  billing_address    :text
+#  code               :string           not null
+#  contact_name       :string
+#  default_po         :string
+#  discarded_at       :datetime
+#  email              :string
+#  kind               :string           default("company"), not null
+#  late_cancel_hours  :integer          default(24), not null
+#  name               :string           not null
+#  on_time_allowance  :integer          default(3), not null
+#  payment_terms_days :integer
+#  phone              :string
+#  uen                :string
+#  created_at         :datetime         not null
+#  updated_at         :datetime         not null
+#  company_id         :bigint           not null
+#  rate_card_id       :bigint
 #
 # Indexes
 #
@@ -64,9 +67,14 @@ class Client < ApplicationRecord
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
   validates :uen, format: { with: Uen::FORMAT, message: Uen::MESSAGE }, allow_nil: true
   validates :on_time_allowance, numericality: { only_integer: true, in: 0..15 }
+  validates :payment_terms_days, numericality: { only_integer: true, in: 0..365 }, allow_nil: true
+  validates :late_cancel_hours, numericality: { only_integer: true, in: 0..720 }
   validate :individual_reachable
 
   def self.ransackable_attributes(_auth = nil) = %w[name code kind email uen]
+
+  # Invoice terms (days): set on the client, else 0 for individuals ("Due on receipt") and 30 for others.
+  def terms_days = payment_terms_days || (individual? ? 0 : 30)
 
   # Main contractor: the trips we run for them are sub-contracted.
   def main_contractor? = transport_company?

@@ -1,0 +1,2 @@
+class VehicleFinancialDecorator < ApplicationDecorator
+end

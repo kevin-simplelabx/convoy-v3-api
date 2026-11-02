@@ -807,6 +807,220 @@ ALTER SEQUENCE public.client_end_customers_id_seq OWNED BY public.client_end_cus
 
 
 --
+-- Name: client_invoice_line_runs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.client_invoice_line_runs (
+    id bigint NOT NULL,
+    client_invoice_line_id bigint NOT NULL,
+    occurrence_id bigint NOT NULL,
+    occurrence_date date NOT NULL,
+    start_time integer,
+    trip_label character varying,
+    amount numeric(12,2) NOT NULL,
+    waived boolean DEFAULT false NOT NULL,
+    active boolean DEFAULT true NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: client_invoice_line_runs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.client_invoice_line_runs_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: client_invoice_line_runs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.client_invoice_line_runs_id_seq OWNED BY public.client_invoice_line_runs.id;
+
+
+--
+-- Name: client_invoice_lines; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.client_invoice_lines (
+    id bigint NOT NULL,
+    client_invoice_id bigint NOT NULL,
+    "position" integer DEFAULT 0 NOT NULL,
+    source character varying DEFAULT 'manual'::character varying NOT NULL,
+    trip_id bigint,
+    ref character varying,
+    description character varying NOT NULL,
+    details text,
+    period_text character varying,
+    quantity numeric(10,2) DEFAULT 1.0 NOT NULL,
+    unit_price numeric(12,2),
+    amount numeric(12,2) DEFAULT 0.0 NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT client_invoice_lines_source CHECK (((source)::text = ANY ((ARRAY['trip'::character varying, 'late_cancel'::character varying, 'manual'::character varying])::text[])))
+);
+
+
+--
+-- Name: client_invoice_lines_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.client_invoice_lines_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: client_invoice_lines_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.client_invoice_lines_id_seq OWNED BY public.client_invoice_lines.id;
+
+
+--
+-- Name: client_invoice_payments; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.client_invoice_payments (
+    id bigint NOT NULL,
+    client_invoice_id bigint NOT NULL,
+    paid_on date NOT NULL,
+    amount numeric(12,2) NOT NULL,
+    method character varying NOT NULL,
+    reference character varying,
+    recorded_by_id bigint,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT client_invoice_payments_amount CHECK ((amount > (0)::numeric))
+);
+
+
+--
+-- Name: client_invoice_payments_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.client_invoice_payments_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: client_invoice_payments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.client_invoice_payments_id_seq OWNED BY public.client_invoice_payments.id;
+
+
+--
+-- Name: client_invoice_sends; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.client_invoice_sends (
+    id bigint NOT NULL,
+    client_invoice_id bigint NOT NULL,
+    to_emails character varying[] DEFAULT '{}'::character varying[] NOT NULL,
+    cc_emails character varying[] DEFAULT '{}'::character varying[] NOT NULL,
+    sent_by_id bigint,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: client_invoice_sends_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.client_invoice_sends_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: client_invoice_sends_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.client_invoice_sends_id_seq OWNED BY public.client_invoice_sends.id;
+
+
+--
+-- Name: client_invoices; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.client_invoices (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    kind character varying DEFAULT 'invoice'::character varying NOT NULL,
+    number character varying,
+    status character varying DEFAULT 'draft'::character varying NOT NULL,
+    client_id bigint NOT NULL,
+    client_site_id bigint,
+    invoice_id bigint,
+    trip_id bigint,
+    bill_to_name character varying,
+    bill_to_uen character varying,
+    bill_to_address text,
+    attention character varying,
+    po character varying,
+    issued_on date,
+    terms_days integer DEFAULT 30 NOT NULL,
+    due_on date,
+    period_from date,
+    period_to date,
+    gst_on boolean DEFAULT false NOT NULL,
+    gst_rate numeric(5,2) DEFAULT 0.0 NOT NULL,
+    gst_mode character varying DEFAULT 'excl'::character varying NOT NULL,
+    subtotal numeric(12,2) DEFAULT 0.0 NOT NULL,
+    gst numeric(12,2) DEFAULT 0.0 NOT NULL,
+    total numeric(12,2) DEFAULT 0.0 NOT NULL,
+    reason text,
+    notes text,
+    created_by_id bigint,
+    issued_at timestamp(6) without time zone,
+    issued_by_id bigint,
+    voided_at timestamp(6) without time zone,
+    voided_by_id bigint,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT client_invoices_kind CHECK (((kind)::text = ANY ((ARRAY['invoice'::character varying, 'credit_note'::character varying])::text[]))),
+    CONSTRAINT client_invoices_status CHECK (((status)::text = ANY ((ARRAY['draft'::character varying, 'issued'::character varying, 'void'::character varying])::text[])))
+);
+
+
+--
+-- Name: client_invoices_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.client_invoices_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: client_invoices_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.client_invoices_id_seq OWNED BY public.client_invoices.id;
+
+
+--
 -- Name: client_pickup_points; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -978,7 +1192,10 @@ CREATE TABLE public.clients (
     discarded_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    rate_card_id bigint
+    rate_card_id bigint,
+    payment_terms_days integer,
+    default_po character varying,
+    late_cancel_hours integer DEFAULT 24 NOT NULL
 );
 
 
@@ -1695,6 +1912,98 @@ CREATE SEQUENCE public.external_vehicle_submissions_id_seq
 --
 
 ALTER SEQUENCE public.external_vehicle_submissions_id_seq OWNED BY public.external_vehicle_submissions.id;
+
+
+--
+-- Name: finance_approvers; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.finance_approvers (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    can_prepare boolean DEFAULT true NOT NULL,
+    can_approve boolean DEFAULT false NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: finance_approvers_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.finance_approvers_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: finance_approvers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.finance_approvers_id_seq OWNED BY public.finance_approvers.id;
+
+
+--
+-- Name: finance_settings; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.finance_settings (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    gst_on boolean DEFAULT false NOT NULL,
+    gst_rate numeric(5,2) DEFAULT 9.0 NOT NULL,
+    gst_mode character varying DEFAULT 'excl'::character varying NOT NULL,
+    gst_reg_no character varying,
+    approval character varying DEFAULT 'single'::character varying NOT NULL,
+    brand_name character varying,
+    brand_uen character varying,
+    brand_address text,
+    brand_phone character varying,
+    brand_email character varying,
+    brand_note character varying DEFAULT 'Thank you for riding with us.'::character varying,
+    bank_id bigint,
+    account_number character varying,
+    account_name character varying,
+    paynow character varying,
+    payment_note character varying DEFAULT 'Please pay by the due date and quote the invoice number.'::character varying,
+    prefix_inv character varying DEFAULT 'INV'::character varying NOT NULL,
+    prefix_cn character varying DEFAULT 'CN'::character varying NOT NULL,
+    prefix_dn character varying DEFAULT 'DN'::character varying NOT NULL,
+    prefix_rcp character varying DEFAULT 'RCP'::character varying NOT NULL,
+    prefix_pv character varying DEFAULT 'PV'::character varying NOT NULL,
+    prefix_pn character varying DEFAULT 'PN'::character varying NOT NULL,
+    prefix_pb character varying DEFAULT 'PB'::character varying NOT NULL,
+    locked_at timestamp(6) without time zone,
+    locked_by_id bigint,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT finance_settings_approval CHECK (((approval)::text = ANY ((ARRAY['single'::character varying, 'maker'::character varying])::text[]))),
+    CONSTRAINT finance_settings_gst_mode CHECK (((gst_mode)::text = ANY ((ARRAY['excl'::character varying, 'incl'::character varying])::text[])))
+);
+
+
+--
+-- Name: finance_settings_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.finance_settings_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: finance_settings_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.finance_settings_id_seq OWNED BY public.finance_settings.id;
 
 
 --
@@ -2660,6 +2969,41 @@ ALTER SEQUENCE public.occurrence_trip_summaries_id_seq OWNED BY public.occurrenc
 
 
 --
+-- Name: operator_cost_overrides; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.operator_cost_overrides (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    occurrence_id bigint NOT NULL,
+    occurrence_date date NOT NULL,
+    amount numeric(12,2) NOT NULL,
+    set_by_id bigint,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: operator_cost_overrides_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.operator_cost_overrides_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: operator_cost_overrides_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.operator_cost_overrides_id_seq OWNED BY public.operator_cost_overrides.id;
+
+
+--
 -- Name: operator_drivers; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -2703,6 +3047,191 @@ CREATE SEQUENCE public.operator_drivers_id_seq
 --
 
 ALTER SEQUENCE public.operator_drivers_id_seq OWNED BY public.operator_drivers.id;
+
+
+--
+-- Name: operator_pay_batch_lines; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.operator_pay_batch_lines (
+    id bigint NOT NULL,
+    operator_pay_batch_operator_id bigint NOT NULL,
+    ref character varying NOT NULL,
+    source character varying NOT NULL,
+    description character varying NOT NULL,
+    details character varying,
+    item_on date,
+    amount numeric(12,2) NOT NULL,
+    approved_by_id bigint,
+    approved_at timestamp(6) without time zone,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: operator_pay_batch_lines_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.operator_pay_batch_lines_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: operator_pay_batch_lines_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.operator_pay_batch_lines_id_seq OWNED BY public.operator_pay_batch_lines.id;
+
+
+--
+-- Name: operator_pay_batch_operators; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.operator_pay_batch_operators (
+    id bigint NOT NULL,
+    operator_pay_batch_id bigint NOT NULL,
+    operator_id bigint NOT NULL,
+    notice_number character varying,
+    pay_method character varying,
+    pay_to character varying,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: operator_pay_batch_operators_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.operator_pay_batch_operators_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: operator_pay_batch_operators_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.operator_pay_batch_operators_id_seq OWNED BY public.operator_pay_batch_operators.id;
+
+
+--
+-- Name: operator_pay_batches; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.operator_pay_batches (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    number character varying NOT NULL,
+    kind character varying DEFAULT 'batch'::character varying NOT NULL,
+    pay_date date NOT NULL,
+    transfer_type character varying,
+    bank_file_at timestamp(6) without time zone,
+    bank_file_by_id bigint,
+    created_by_id bigint,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT operator_pay_batches_kind CHECK (((kind)::text = ANY ((ARRAY['batch'::character varying, 'adhoc'::character varying])::text[])))
+);
+
+
+--
+-- Name: operator_pay_batches_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.operator_pay_batches_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: operator_pay_batches_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.operator_pay_batches_id_seq OWNED BY public.operator_pay_batches.id;
+
+
+--
+-- Name: operator_pay_items; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.operator_pay_items (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    operator_id bigint NOT NULL,
+    description character varying NOT NULL,
+    item_on date NOT NULL,
+    amount numeric(12,2) NOT NULL,
+    created_by_id bigint,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: operator_pay_items_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.operator_pay_items_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: operator_pay_items_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.operator_pay_items_id_seq OWNED BY public.operator_pay_items.id;
+
+
+--
+-- Name: operator_pay_payments; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.operator_pay_payments (
+    id bigint NOT NULL,
+    operator_pay_batch_operator_id bigint NOT NULL,
+    paid_on date NOT NULL,
+    amount numeric(12,2) NOT NULL,
+    method character varying NOT NULL,
+    reference character varying,
+    recorded_by_id bigint,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: operator_pay_payments_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.operator_pay_payments_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: operator_pay_payments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.operator_pay_payments_id_seq OWNED BY public.operator_pay_payments.id;
 
 
 --
@@ -5688,6 +6217,41 @@ ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
 
 
 --
+-- Name: vehicle_cost_spike_acks; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.vehicle_cost_spike_acks (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    vehicle_id bigint NOT NULL,
+    category character varying NOT NULL,
+    month date NOT NULL,
+    checked_by_id bigint,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: vehicle_cost_spike_acks_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.vehicle_cost_spike_acks_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: vehicle_cost_spike_acks_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.vehicle_cost_spike_acks_id_seq OWNED BY public.vehicle_cost_spike_acks.id;
+
+
+--
 -- Name: vehicle_driver_schedules; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -5720,6 +6284,97 @@ CREATE SEQUENCE public.vehicle_driver_schedules_id_seq
 --
 
 ALTER SEQUENCE public.vehicle_driver_schedules_id_seq OWNED BY public.vehicle_driver_schedules.id;
+
+
+--
+-- Name: vehicle_finance_entries; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.vehicle_finance_entries (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    vehicle_id bigint NOT NULL,
+    kind character varying NOT NULL,
+    category character varying NOT NULL,
+    entry_on date NOT NULL,
+    amount numeric(12,2) NOT NULL,
+    repeats_monthly boolean DEFAULT false NOT NULL,
+    repeat_until date,
+    note text,
+    created_by_id bigint,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT vehicle_finance_entries_kind CHECK (((kind)::text = ANY ((ARRAY['revenue'::character varying, 'cost'::character varying])::text[])))
+);
+
+
+--
+-- Name: vehicle_finance_entries_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.vehicle_finance_entries_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: vehicle_finance_entries_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.vehicle_finance_entries_id_seq OWNED BY public.vehicle_finance_entries.id;
+
+
+--
+-- Name: vehicle_financials; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.vehicle_financials (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    vehicle_id bigint NOT NULL,
+    funding character varying DEFAULT 'loan'::character varying NOT NULL,
+    purchase_price numeric(12,2),
+    down_payment numeric(12,2),
+    bought_on date,
+    lender character varying,
+    account_number character varying,
+    loan_amount numeric(12,2),
+    rate numeric(6,3),
+    tenure_months integer,
+    term_charge numeric(12,2),
+    first_instalment numeric(12,2),
+    monthly_instalment numeric(12,2),
+    last_instalment numeric(12,2),
+    first_due_on date,
+    schedule_file character varying,
+    document_read_id bigint,
+    updated_by_id bigint,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT vehicle_financials_funding CHECK (((funding)::text = ANY ((ARRAY['loan'::character varying, 'cash'::character varying])::text[])))
+);
+
+
+--
+-- Name: vehicle_financials_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.vehicle_financials_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: vehicle_financials_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.vehicle_financials_id_seq OWNED BY public.vehicle_financials.id;
 
 
 --
@@ -5806,6 +6461,40 @@ CREATE SEQUENCE public.vehicle_insurance_policies_id_seq
 --
 
 ALTER SEQUENCE public.vehicle_insurance_policies_id_seq OWNED BY public.vehicle_insurance_policies.id;
+
+
+--
+-- Name: vehicle_loan_payments; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.vehicle_loan_payments (
+    id bigint NOT NULL,
+    vehicle_financial_id bigint NOT NULL,
+    instalment_no integer NOT NULL,
+    paid_on date NOT NULL,
+    recorded_by_id bigint,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: vehicle_loan_payments_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.vehicle_loan_payments_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: vehicle_loan_payments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.vehicle_loan_payments_id_seq OWNED BY public.vehicle_loan_payments.id;
 
 
 --
@@ -6277,6 +6966,41 @@ ALTER TABLE ONLY public.client_end_customers ALTER COLUMN id SET DEFAULT nextval
 
 
 --
+-- Name: client_invoice_line_runs id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_invoice_line_runs ALTER COLUMN id SET DEFAULT nextval('public.client_invoice_line_runs_id_seq'::regclass);
+
+
+--
+-- Name: client_invoice_lines id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_invoice_lines ALTER COLUMN id SET DEFAULT nextval('public.client_invoice_lines_id_seq'::regclass);
+
+
+--
+-- Name: client_invoice_payments id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_invoice_payments ALTER COLUMN id SET DEFAULT nextval('public.client_invoice_payments_id_seq'::regclass);
+
+
+--
+-- Name: client_invoice_sends id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_invoice_sends ALTER COLUMN id SET DEFAULT nextval('public.client_invoice_sends_id_seq'::regclass);
+
+
+--
+-- Name: client_invoices id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_invoices ALTER COLUMN id SET DEFAULT nextval('public.client_invoices_id_seq'::regclass);
+
+
+--
 -- Name: client_pickup_points id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -6438,6 +7162,20 @@ ALTER TABLE ONLY public.external_vehicle_submissions ALTER COLUMN id SET DEFAULT
 
 
 --
+-- Name: finance_approvers id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.finance_approvers ALTER COLUMN id SET DEFAULT nextval('public.finance_approvers_id_seq'::regclass);
+
+
+--
+-- Name: finance_settings id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.finance_settings ALTER COLUMN id SET DEFAULT nextval('public.finance_settings_id_seq'::regclass);
+
+
+--
 -- Name: fuel_alerts id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -6585,10 +7323,52 @@ ALTER TABLE ONLY public.occurrence_trip_summaries ALTER COLUMN id SET DEFAULT ne
 
 
 --
+-- Name: operator_cost_overrides id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.operator_cost_overrides ALTER COLUMN id SET DEFAULT nextval('public.operator_cost_overrides_id_seq'::regclass);
+
+
+--
 -- Name: operator_drivers id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.operator_drivers ALTER COLUMN id SET DEFAULT nextval('public.operator_drivers_id_seq'::regclass);
+
+
+--
+-- Name: operator_pay_batch_lines id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.operator_pay_batch_lines ALTER COLUMN id SET DEFAULT nextval('public.operator_pay_batch_lines_id_seq'::regclass);
+
+
+--
+-- Name: operator_pay_batch_operators id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.operator_pay_batch_operators ALTER COLUMN id SET DEFAULT nextval('public.operator_pay_batch_operators_id_seq'::regclass);
+
+
+--
+-- Name: operator_pay_batches id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.operator_pay_batches ALTER COLUMN id SET DEFAULT nextval('public.operator_pay_batches_id_seq'::regclass);
+
+
+--
+-- Name: operator_pay_items id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.operator_pay_items ALTER COLUMN id SET DEFAULT nextval('public.operator_pay_items_id_seq'::regclass);
+
+
+--
+-- Name: operator_pay_payments id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.operator_pay_payments ALTER COLUMN id SET DEFAULT nextval('public.operator_pay_payments_id_seq'::regclass);
 
 
 --
@@ -7040,10 +7820,31 @@ ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_
 
 
 --
+-- Name: vehicle_cost_spike_acks id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vehicle_cost_spike_acks ALTER COLUMN id SET DEFAULT nextval('public.vehicle_cost_spike_acks_id_seq'::regclass);
+
+
+--
 -- Name: vehicle_driver_schedules id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.vehicle_driver_schedules ALTER COLUMN id SET DEFAULT nextval('public.vehicle_driver_schedules_id_seq'::regclass);
+
+
+--
+-- Name: vehicle_finance_entries id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vehicle_finance_entries ALTER COLUMN id SET DEFAULT nextval('public.vehicle_finance_entries_id_seq'::regclass);
+
+
+--
+-- Name: vehicle_financials id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vehicle_financials ALTER COLUMN id SET DEFAULT nextval('public.vehicle_financials_id_seq'::regclass);
 
 
 --
@@ -7058,6 +7859,13 @@ ALTER TABLE ONLY public.vehicle_insurance_documents ALTER COLUMN id SET DEFAULT 
 --
 
 ALTER TABLE ONLY public.vehicle_insurance_policies ALTER COLUMN id SET DEFAULT nextval('public.vehicle_insurance_policies_id_seq'::regclass);
+
+
+--
+-- Name: vehicle_loan_payments id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vehicle_loan_payments ALTER COLUMN id SET DEFAULT nextval('public.vehicle_loan_payments_id_seq'::regclass);
 
 
 --
@@ -7271,6 +8079,46 @@ ALTER TABLE ONLY public.client_end_customers
 
 
 --
+-- Name: client_invoice_line_runs client_invoice_line_runs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_invoice_line_runs
+    ADD CONSTRAINT client_invoice_line_runs_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: client_invoice_lines client_invoice_lines_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_invoice_lines
+    ADD CONSTRAINT client_invoice_lines_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: client_invoice_payments client_invoice_payments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_invoice_payments
+    ADD CONSTRAINT client_invoice_payments_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: client_invoice_sends client_invoice_sends_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_invoice_sends
+    ADD CONSTRAINT client_invoice_sends_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: client_invoices client_invoices_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_invoices
+    ADD CONSTRAINT client_invoices_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: client_pickup_points client_pickup_points_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -7452,6 +8300,22 @@ ALTER TABLE ONLY public.external_vehicle_share_links
 
 ALTER TABLE ONLY public.external_vehicle_submissions
     ADD CONSTRAINT external_vehicle_submissions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: finance_approvers finance_approvers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.finance_approvers
+    ADD CONSTRAINT finance_approvers_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: finance_settings finance_settings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.finance_settings
+    ADD CONSTRAINT finance_settings_pkey PRIMARY KEY (id);
 
 
 --
@@ -7687,11 +8551,59 @@ ALTER TABLE ONLY public.occurrence_trip_summaries
 
 
 --
+-- Name: operator_cost_overrides operator_cost_overrides_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.operator_cost_overrides
+    ADD CONSTRAINT operator_cost_overrides_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: operator_drivers operator_drivers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.operator_drivers
     ADD CONSTRAINT operator_drivers_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: operator_pay_batch_lines operator_pay_batch_lines_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.operator_pay_batch_lines
+    ADD CONSTRAINT operator_pay_batch_lines_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: operator_pay_batch_operators operator_pay_batch_operators_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.operator_pay_batch_operators
+    ADD CONSTRAINT operator_pay_batch_operators_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: operator_pay_batches operator_pay_batches_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.operator_pay_batches
+    ADD CONSTRAINT operator_pay_batches_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: operator_pay_items operator_pay_items_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.operator_pay_items
+    ADD CONSTRAINT operator_pay_items_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: operator_pay_payments operator_pay_payments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.operator_pay_payments
+    ADD CONSTRAINT operator_pay_payments_pkey PRIMARY KEY (id);
 
 
 --
@@ -8311,11 +9223,35 @@ ALTER TABLE ONLY public.users
 
 
 --
+-- Name: vehicle_cost_spike_acks vehicle_cost_spike_acks_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vehicle_cost_spike_acks
+    ADD CONSTRAINT vehicle_cost_spike_acks_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: vehicle_driver_schedules vehicle_driver_schedules_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.vehicle_driver_schedules
     ADD CONSTRAINT vehicle_driver_schedules_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: vehicle_finance_entries vehicle_finance_entries_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vehicle_finance_entries
+    ADD CONSTRAINT vehicle_finance_entries_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: vehicle_financials vehicle_financials_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vehicle_financials
+    ADD CONSTRAINT vehicle_financials_pkey PRIMARY KEY (id);
 
 
 --
@@ -8332,6 +9268,14 @@ ALTER TABLE ONLY public.vehicle_insurance_documents
 
 ALTER TABLE ONLY public.vehicle_insurance_policies
     ADD CONSTRAINT vehicle_insurance_policies_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: vehicle_loan_payments vehicle_loan_payments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vehicle_loan_payments
+    ADD CONSTRAINT vehicle_loan_payments_pkey PRIMARY KEY (id);
 
 
 --
@@ -8467,10 +9411,24 @@ CREATE INDEX idx_on_occurrence_id_occurrence_date_c0b0455ad1 ON public.driver_pa
 
 
 --
+-- Name: idx_on_occurrence_id_occurrence_date_f3ece8f775; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_on_occurrence_id_occurrence_date_f3ece8f775 ON public.operator_cost_overrides USING btree (occurrence_id, occurrence_date);
+
+
+--
 -- Name: idx_on_occurrence_id_occurrence_date_position_02f6e5902d; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE UNIQUE INDEX idx_on_occurrence_id_occurrence_date_position_02f6e5902d ON public.occurrence_stop_events USING btree (occurrence_id, occurrence_date, "position");
+
+
+--
+-- Name: idx_on_operator_pay_batch_operator_id_f3447135c0; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_on_operator_pay_batch_operator_id_f3447135c0 ON public.operator_pay_batch_lines USING btree (operator_pay_batch_operator_id);
 
 
 --
@@ -8926,6 +9884,125 @@ CREATE UNIQUE INDEX index_client_end_customers_on_client_id_and_name ON public.c
 --
 
 CREATE INDEX index_client_end_customers_on_company_id ON public.client_end_customers USING btree (company_id);
+
+
+--
+-- Name: index_client_invoice_line_runs_billed_once; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_client_invoice_line_runs_billed_once ON public.client_invoice_line_runs USING btree (occurrence_id, occurrence_date) WHERE active;
+
+
+--
+-- Name: index_client_invoice_line_runs_on_client_invoice_line_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_invoice_line_runs_on_client_invoice_line_id ON public.client_invoice_line_runs USING btree (client_invoice_line_id);
+
+
+--
+-- Name: index_client_invoice_lines_on_client_invoice_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_invoice_lines_on_client_invoice_id ON public.client_invoice_lines USING btree (client_invoice_id);
+
+
+--
+-- Name: index_client_invoice_lines_on_trip_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_invoice_lines_on_trip_id ON public.client_invoice_lines USING btree (trip_id);
+
+
+--
+-- Name: index_client_invoice_payments_on_client_invoice_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_invoice_payments_on_client_invoice_id ON public.client_invoice_payments USING btree (client_invoice_id);
+
+
+--
+-- Name: index_client_invoice_payments_on_recorded_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_invoice_payments_on_recorded_by_id ON public.client_invoice_payments USING btree (recorded_by_id);
+
+
+--
+-- Name: index_client_invoice_sends_on_client_invoice_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_invoice_sends_on_client_invoice_id ON public.client_invoice_sends USING btree (client_invoice_id);
+
+
+--
+-- Name: index_client_invoice_sends_on_sent_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_invoice_sends_on_sent_by_id ON public.client_invoice_sends USING btree (sent_by_id);
+
+
+--
+-- Name: index_client_invoices_on_client_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_invoices_on_client_id ON public.client_invoices USING btree (client_id);
+
+
+--
+-- Name: index_client_invoices_on_client_site_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_invoices_on_client_site_id ON public.client_invoices USING btree (client_site_id);
+
+
+--
+-- Name: index_client_invoices_on_company_id_and_kind_and_status; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_invoices_on_company_id_and_kind_and_status ON public.client_invoices USING btree (company_id, kind, status);
+
+
+--
+-- Name: index_client_invoices_on_company_id_and_number; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_client_invoices_on_company_id_and_number ON public.client_invoices USING btree (company_id, number) WHERE (number IS NOT NULL);
+
+
+--
+-- Name: index_client_invoices_on_created_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_invoices_on_created_by_id ON public.client_invoices USING btree (created_by_id);
+
+
+--
+-- Name: index_client_invoices_on_invoice_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_invoices_on_invoice_id ON public.client_invoices USING btree (invoice_id);
+
+
+--
+-- Name: index_client_invoices_on_issued_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_invoices_on_issued_by_id ON public.client_invoices USING btree (issued_by_id);
+
+
+--
+-- Name: index_client_invoices_on_trip_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_invoices_on_trip_id ON public.client_invoices USING btree (trip_id);
+
+
+--
+-- Name: index_client_invoices_on_voided_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_invoices_on_voided_by_id ON public.client_invoices USING btree (voided_by_id);
 
 
 --
@@ -9447,6 +10524,41 @@ CREATE INDEX index_external_vehicle_submissions_on_vehicle_id ON public.external
 
 
 --
+-- Name: index_finance_approvers_on_company_id_and_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_finance_approvers_on_company_id_and_user_id ON public.finance_approvers USING btree (company_id, user_id);
+
+
+--
+-- Name: index_finance_approvers_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_finance_approvers_on_user_id ON public.finance_approvers USING btree (user_id);
+
+
+--
+-- Name: index_finance_settings_on_bank_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_finance_settings_on_bank_id ON public.finance_settings USING btree (bank_id);
+
+
+--
+-- Name: index_finance_settings_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_finance_settings_on_company_id ON public.finance_settings USING btree (company_id);
+
+
+--
+-- Name: index_finance_settings_on_locked_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_finance_settings_on_locked_by_id ON public.finance_settings USING btree (locked_by_id);
+
+
+--
 -- Name: index_fuel_alerts_on_checked_by_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -9888,6 +11000,20 @@ CREATE INDEX index_occurrence_trip_summaries_on_company_id ON public.occurrence_
 
 
 --
+-- Name: index_operator_cost_overrides_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_operator_cost_overrides_on_company_id ON public.operator_cost_overrides USING btree (company_id);
+
+
+--
+-- Name: index_operator_cost_overrides_on_set_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_operator_cost_overrides_on_set_by_id ON public.operator_cost_overrides USING btree (set_by_id);
+
+
+--
 -- Name: index_operator_drivers_on_company_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -9941,6 +11067,90 @@ CREATE INDEX index_operator_drivers_on_vehicle_id ON public.operator_drivers USI
 --
 
 CREATE UNIQUE INDEX index_operator_drivers_one_per_vehicle ON public.operator_drivers USING btree (vehicle_id) WHERE (vehicle_id IS NOT NULL);
+
+
+--
+-- Name: index_operator_pay_batch_lines_on_approved_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_operator_pay_batch_lines_on_approved_by_id ON public.operator_pay_batch_lines USING btree (approved_by_id);
+
+
+--
+-- Name: index_operator_pay_batch_lines_on_ref; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_operator_pay_batch_lines_on_ref ON public.operator_pay_batch_lines USING btree (ref);
+
+
+--
+-- Name: index_operator_pay_batch_operators_on_operator_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_operator_pay_batch_operators_on_operator_id ON public.operator_pay_batch_operators USING btree (operator_id);
+
+
+--
+-- Name: index_operator_pay_batch_operators_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_operator_pay_batch_operators_unique ON public.operator_pay_batch_operators USING btree (operator_pay_batch_id, operator_id);
+
+
+--
+-- Name: index_operator_pay_batches_on_bank_file_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_operator_pay_batches_on_bank_file_by_id ON public.operator_pay_batches USING btree (bank_file_by_id);
+
+
+--
+-- Name: index_operator_pay_batches_on_company_id_and_pay_date; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_operator_pay_batches_on_company_id_and_pay_date ON public.operator_pay_batches USING btree (company_id, pay_date);
+
+
+--
+-- Name: index_operator_pay_batches_on_created_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_operator_pay_batches_on_created_by_id ON public.operator_pay_batches USING btree (created_by_id);
+
+
+--
+-- Name: index_operator_pay_items_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_operator_pay_items_on_company_id ON public.operator_pay_items USING btree (company_id);
+
+
+--
+-- Name: index_operator_pay_items_on_created_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_operator_pay_items_on_created_by_id ON public.operator_pay_items USING btree (created_by_id);
+
+
+--
+-- Name: index_operator_pay_items_on_operator_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_operator_pay_items_on_operator_id ON public.operator_pay_items USING btree (operator_id);
+
+
+--
+-- Name: index_operator_pay_payments_on_operator_pay_batch_operator_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_operator_pay_payments_on_operator_pay_batch_operator_id ON public.operator_pay_payments USING btree (operator_pay_batch_operator_id);
+
+
+--
+-- Name: index_operator_pay_payments_on_recorded_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_operator_pay_payments_on_recorded_by_id ON public.operator_pay_payments USING btree (recorded_by_id);
 
 
 --
@@ -11379,6 +12589,20 @@ CREATE UNIQUE INDEX index_users_on_reset_password_token ON public.users USING bt
 
 
 --
+-- Name: index_vehicle_cost_spike_acks_on_checked_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_vehicle_cost_spike_acks_on_checked_by_id ON public.vehicle_cost_spike_acks USING btree (checked_by_id);
+
+
+--
+-- Name: index_vehicle_cost_spike_acks_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_vehicle_cost_spike_acks_unique ON public.vehicle_cost_spike_acks USING btree (vehicle_id, category, month);
+
+
+--
 -- Name: index_vehicle_driver_schedules_on_company_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -11421,6 +12645,55 @@ CREATE UNIQUE INDEX index_vehicle_driver_schedules_on_vehicle_id_and_starts_on O
 
 
 --
+-- Name: index_vehicle_finance_entries_on_company_id_and_entry_on; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_vehicle_finance_entries_on_company_id_and_entry_on ON public.vehicle_finance_entries USING btree (company_id, entry_on);
+
+
+--
+-- Name: index_vehicle_finance_entries_on_created_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_vehicle_finance_entries_on_created_by_id ON public.vehicle_finance_entries USING btree (created_by_id);
+
+
+--
+-- Name: index_vehicle_finance_entries_on_vehicle_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_vehicle_finance_entries_on_vehicle_id ON public.vehicle_finance_entries USING btree (vehicle_id);
+
+
+--
+-- Name: index_vehicle_financials_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_vehicle_financials_on_company_id ON public.vehicle_financials USING btree (company_id);
+
+
+--
+-- Name: index_vehicle_financials_on_document_read_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_vehicle_financials_on_document_read_id ON public.vehicle_financials USING btree (document_read_id);
+
+
+--
+-- Name: index_vehicle_financials_on_updated_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_vehicle_financials_on_updated_by_id ON public.vehicle_financials USING btree (updated_by_id);
+
+
+--
+-- Name: index_vehicle_financials_on_vehicle_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_vehicle_financials_on_vehicle_id ON public.vehicle_financials USING btree (vehicle_id);
+
+
+--
 -- Name: index_vehicle_insurance_documents_on_company_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -11453,6 +12726,20 @@ CREATE INDEX index_vehicle_insurance_policies_on_vehicle_id ON public.vehicle_in
 --
 
 CREATE UNIQUE INDEX index_vehicle_insurance_policies_one_current ON public.vehicle_insurance_policies USING btree (vehicle_id) WHERE current;
+
+
+--
+-- Name: index_vehicle_loan_payments_on_recorded_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_vehicle_loan_payments_on_recorded_by_id ON public.vehicle_loan_payments USING btree (recorded_by_id);
+
+
+--
+-- Name: index_vehicle_loan_payments_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_vehicle_loan_payments_unique ON public.vehicle_loan_payments USING btree (vehicle_financial_id, instalment_no);
 
 
 --
@@ -12908,6 +14195,14 @@ ALTER TABLE ONLY public.trip_vehicle_slots
 
 
 --
+-- Name: vehicle_finance_entries fk_rails_035d7d1e35; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vehicle_finance_entries
+    ADD CONSTRAINT fk_rails_035d7d1e35 FOREIGN KEY (created_by_id) REFERENCES public.users(id);
+
+
+--
 -- Name: driver_pay_month_lines fk_rails_07029d4bd7; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -13036,6 +14331,22 @@ ALTER TABLE ONLY public.trip_run_groups
 
 
 --
+-- Name: client_invoices fk_rails_145b66b826; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_invoices
+    ADD CONSTRAINT fk_rails_145b66b826 FOREIGN KEY (client_id) REFERENCES public.clients(id);
+
+
+--
+-- Name: operator_cost_overrides fk_rails_14630333b6; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.operator_cost_overrides
+    ADD CONSTRAINT fk_rails_14630333b6 FOREIGN KEY (set_by_id) REFERENCES public.users(id);
+
+
+--
 -- Name: trip_run_slots fk_rails_15e74e00a2; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -13073,6 +14384,14 @@ ALTER TABLE ONLY public.rate_cards
 
 ALTER TABLE ONLY public.occurrence_corrections
     ADD CONSTRAINT fk_rails_16c08b2459 FOREIGN KEY (driver_id) REFERENCES public.drivers(id);
+
+
+--
+-- Name: operator_pay_items fk_rails_16d2bf16ff; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.operator_pay_items
+    ADD CONSTRAINT fk_rails_16d2bf16ff FOREIGN KEY (company_id) REFERENCES public.companies(id);
 
 
 --
@@ -13164,6 +14483,14 @@ ALTER TABLE ONLY public.replacements
 
 
 --
+-- Name: client_invoice_sends fk_rails_20f1ed100b; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_invoice_sends
+    ADD CONSTRAINT fk_rails_20f1ed100b FOREIGN KEY (sent_by_id) REFERENCES public.users(id);
+
+
+--
 -- Name: document_reads fk_rails_210a1ba5bb; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -13204,6 +14531,14 @@ ALTER TABLE ONLY public.vehicle_insurance_policies
 
 
 --
+-- Name: vehicle_cost_spike_acks fk_rails_250676ae3d; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vehicle_cost_spike_acks
+    ADD CONSTRAINT fk_rails_250676ae3d FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
 -- Name: occurrence_report_photos fk_rails_25b7d44265; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -13236,6 +14571,14 @@ ALTER TABLE ONLY public.replacements
 
 
 --
+-- Name: vehicle_financials fk_rails_27c76f39c4; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vehicle_financials
+    ADD CONSTRAINT fk_rails_27c76f39c4 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
 -- Name: notice_templates fk_rails_27db3d4c85; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -13257,6 +14600,14 @@ ALTER TABLE ONLY public.bookings
 
 ALTER TABLE ONLY public.external_vehicle_submissions
     ADD CONSTRAINT fk_rails_29f2db1b3a FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: client_invoice_payments fk_rails_29fd7196e6; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_invoice_payments
+    ADD CONSTRAINT fk_rails_29fd7196e6 FOREIGN KEY (client_invoice_id) REFERENCES public.client_invoices(id);
 
 
 --
@@ -13292,6 +14643,14 @@ ALTER TABLE ONLY public.bookings
 
 
 --
+-- Name: operator_pay_batch_operators fk_rails_2c6448497f; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.operator_pay_batch_operators
+    ADD CONSTRAINT fk_rails_2c6448497f FOREIGN KEY (operator_pay_batch_id) REFERENCES public.operator_pay_batches(id);
+
+
+--
 -- Name: driver_point_deductions fk_rails_2d9881cfe8; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -13305,6 +14664,30 @@ ALTER TABLE ONLY public.driver_point_deductions
 
 ALTER TABLE ONLY public.disabled_vehicle_types
     ADD CONSTRAINT fk_rails_30090ae9aa FOREIGN KEY (vehicle_type_id) REFERENCES public.vehicle_types(id);
+
+
+--
+-- Name: operator_pay_batch_operators fk_rails_306e85c95a; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.operator_pay_batch_operators
+    ADD CONSTRAINT fk_rails_306e85c95a FOREIGN KEY (operator_id) REFERENCES public.operators(id);
+
+
+--
+-- Name: client_invoice_lines fk_rails_306fa46511; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_invoice_lines
+    ADD CONSTRAINT fk_rails_306fa46511 FOREIGN KEY (trip_id) REFERENCES public.trips(id);
+
+
+--
+-- Name: client_invoices fk_rails_30cc8daca1; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_invoices
+    ADD CONSTRAINT fk_rails_30cc8daca1 FOREIGN KEY (issued_by_id) REFERENCES public.users(id);
 
 
 --
@@ -13337,6 +14720,14 @@ ALTER TABLE ONLY public.vehicles
 
 ALTER TABLE ONLY public.client_bookable_vehicle_types
     ADD CONSTRAINT fk_rails_315586af8c FOREIGN KEY (vehicle_type_id) REFERENCES public.vehicle_types(id);
+
+
+--
+-- Name: finance_settings fk_rails_32019f445e; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.finance_settings
+    ADD CONSTRAINT fk_rails_32019f445e FOREIGN KEY (company_id) REFERENCES public.companies(id);
 
 
 --
@@ -13444,6 +14835,14 @@ ALTER TABLE ONLY public.rate_card_ranges
 
 
 --
+-- Name: vehicle_finance_entries fk_rails_3a01e60fe6; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vehicle_finance_entries
+    ADD CONSTRAINT fk_rails_3a01e60fe6 FOREIGN KEY (vehicle_id) REFERENCES public.vehicles(id);
+
+
+--
 -- Name: occurrence_driver_reports fk_rails_3a963001f8; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -13508,6 +14907,14 @@ ALTER TABLE ONLY public.driver_pay_schemes
 
 
 --
+-- Name: operator_pay_batches fk_rails_3da0f1a924; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.operator_pay_batches
+    ADD CONSTRAINT fk_rails_3da0f1a924 FOREIGN KEY (created_by_id) REFERENCES public.users(id);
+
+
+--
 -- Name: maintenance_visits fk_rails_3f8af294e5; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -13540,6 +14947,14 @@ ALTER TABLE ONLY public.student_attendances
 
 
 --
+-- Name: finance_settings fk_rails_41d877d9bf; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.finance_settings
+    ADD CONSTRAINT fk_rails_41d877d9bf FOREIGN KEY (bank_id) REFERENCES public.banks(id);
+
+
+--
 -- Name: workshops fk_rails_42ed2095b4; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -13548,11 +14963,27 @@ ALTER TABLE ONLY public.workshops
 
 
 --
+-- Name: operator_pay_items fk_rails_432069dad3; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.operator_pay_items
+    ADD CONSTRAINT fk_rails_432069dad3 FOREIGN KEY (created_by_id) REFERENCES public.users(id);
+
+
+--
 -- Name: fuel_alerts fk_rails_442ba1cc4d; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.fuel_alerts
     ADD CONSTRAINT fk_rails_442ba1cc4d FOREIGN KEY (checked_by_id) REFERENCES public.users(id);
+
+
+--
+-- Name: client_invoice_sends fk_rails_44cb95a774; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_invoice_sends
+    ADD CONSTRAINT fk_rails_44cb95a774 FOREIGN KEY (client_invoice_id) REFERENCES public.client_invoices(id);
 
 
 --
@@ -13604,6 +15035,14 @@ ALTER TABLE ONLY public.trip_assignments
 
 
 --
+-- Name: vehicle_financials fk_rails_48a3146f75; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vehicle_financials
+    ADD CONSTRAINT fk_rails_48a3146f75 FOREIGN KEY (updated_by_id) REFERENCES public.users(id);
+
+
+--
 -- Name: occurrence_trip_summaries fk_rails_49da7d8c5a; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -13649,6 +15088,14 @@ ALTER TABLE ONLY public.maintenance_invoices
 
 ALTER TABLE ONLY public.pay_bonus_drivers
     ADD CONSTRAINT fk_rails_4d06340649 FOREIGN KEY (driver_id) REFERENCES public.drivers(id);
+
+
+--
+-- Name: client_invoices fk_rails_4dfd75ad8a; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_invoices
+    ADD CONSTRAINT fk_rails_4dfd75ad8a FOREIGN KEY (trip_id) REFERENCES public.trips(id);
 
 
 --
@@ -13756,6 +15203,14 @@ ALTER TABLE ONLY public.booking_trip_standbys
 
 
 --
+-- Name: client_invoices fk_rails_5656e3e8cb; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_invoices
+    ADD CONSTRAINT fk_rails_5656e3e8cb FOREIGN KEY (created_by_id) REFERENCES public.users(id);
+
+
+--
 -- Name: pay_rate_plans fk_rails_57a64691d8; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -13801,6 +15256,14 @@ ALTER TABLE ONLY public.trip_standby_photos
 
 ALTER TABLE ONLY public.maintenance_lines
     ADD CONSTRAINT fk_rails_5a4724ac90 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: operator_pay_batch_lines fk_rails_5a6580df3a; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.operator_pay_batch_lines
+    ADD CONSTRAINT fk_rails_5a6580df3a FOREIGN KEY (operator_pay_batch_operator_id) REFERENCES public.operator_pay_batch_operators(id);
 
 
 --
@@ -13916,6 +15379,14 @@ ALTER TABLE ONLY public.trip_vehicle_slots
 
 
 --
+-- Name: finance_approvers fk_rails_656c503d74; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.finance_approvers
+    ADD CONSTRAINT fk_rails_656c503d74 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
 -- Name: trips fk_rails_657f0f6ab4; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -13956,11 +15427,27 @@ ALTER TABLE ONLY public.vehicles
 
 
 --
+-- Name: operator_pay_items fk_rails_67abf15496; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.operator_pay_items
+    ADD CONSTRAINT fk_rails_67abf15496 FOREIGN KEY (operator_id) REFERENCES public.operators(id);
+
+
+--
 -- Name: replacement_notifications fk_rails_67e910e45e; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.replacement_notifications
     ADD CONSTRAINT fk_rails_67e910e45e FOREIGN KEY (sent_by_id) REFERENCES public.users(id);
+
+
+--
+-- Name: operator_pay_batches fk_rails_6a1c0f4d70; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.operator_pay_batches
+    ADD CONSTRAINT fk_rails_6a1c0f4d70 FOREIGN KEY (company_id) REFERENCES public.companies(id);
 
 
 --
@@ -14025,6 +15512,14 @@ ALTER TABLE ONLY public.trips
 
 ALTER TABLE ONLY public.booking_cancel_requests
     ADD CONSTRAINT fk_rails_7045621129 FOREIGN KEY (booking_id) REFERENCES public.bookings(id);
+
+
+--
+-- Name: vehicle_financials fk_rails_704e5a7d24; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vehicle_financials
+    ADD CONSTRAINT fk_rails_704e5a7d24 FOREIGN KEY (vehicle_id) REFERENCES public.vehicles(id);
 
 
 --
@@ -14244,6 +15739,14 @@ ALTER TABLE ONLY public.trip_run_groups
 
 
 --
+-- Name: operator_pay_batch_lines fk_rails_830d94e128; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.operator_pay_batch_lines
+    ADD CONSTRAINT fk_rails_830d94e128 FOREIGN KEY (approved_by_id) REFERENCES public.users(id);
+
+
+--
 -- Name: pay_rate_plan_vehicle_types fk_rails_84454fa0ca; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -14308,6 +15811,14 @@ ALTER TABLE ONLY public.rate_card_rates
 
 
 --
+-- Name: operator_pay_payments fk_rails_87d55a2039; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.operator_pay_payments
+    ADD CONSTRAINT fk_rails_87d55a2039 FOREIGN KEY (recorded_by_id) REFERENCES public.users(id);
+
+
+--
 -- Name: user_notification_preferences fk_rails_87f779f968; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -14321,6 +15832,14 @@ ALTER TABLE ONLY public.user_notification_preferences
 
 ALTER TABLE ONLY public.trip_runs
     ADD CONSTRAINT fk_rails_898fb491b0 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: client_invoices fk_rails_89c2c37d58; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_invoices
+    ADD CONSTRAINT fk_rails_89c2c37d58 FOREIGN KEY (company_id) REFERENCES public.companies(id);
 
 
 --
@@ -14580,6 +16099,14 @@ ALTER TABLE ONLY public.trip_stops
 
 
 --
+-- Name: client_invoices fk_rails_9d09f0fe78; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_invoices
+    ADD CONSTRAINT fk_rails_9d09f0fe78 FOREIGN KEY (voided_by_id) REFERENCES public.users(id);
+
+
+--
 -- Name: school_route_vehicle_changes fk_rails_9e97c8ef71; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -14601,6 +16128,14 @@ ALTER TABLE ONLY public.booking_trips
 
 ALTER TABLE ONLY public.trips
     ADD CONSTRAINT fk_rails_9fca5ad5f4 FOREIGN KEY (client_end_customer_id) REFERENCES public.client_end_customers(id);
+
+
+--
+-- Name: client_invoices fk_rails_a2bcdfa04a; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_invoices
+    ADD CONSTRAINT fk_rails_a2bcdfa04a FOREIGN KEY (invoice_id) REFERENCES public.client_invoices(id);
 
 
 --
@@ -14764,11 +16299,27 @@ ALTER TABLE ONLY public.trip_attachments
 
 
 --
+-- Name: client_invoice_payments fk_rails_af75035153; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_invoice_payments
+    ADD CONSTRAINT fk_rails_af75035153 FOREIGN KEY (recorded_by_id) REFERENCES public.users(id);
+
+
+--
 -- Name: pay_scheme_route_bands fk_rails_aff708dd9c; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.pay_scheme_route_bands
     ADD CONSTRAINT fk_rails_aff708dd9c FOREIGN KEY (pay_scheme_id) REFERENCES public.pay_schemes(id);
+
+
+--
+-- Name: operator_cost_overrides fk_rails_b01860eee3; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.operator_cost_overrides
+    ADD CONSTRAINT fk_rails_b01860eee3 FOREIGN KEY (company_id) REFERENCES public.companies(id);
 
 
 --
@@ -15076,6 +16627,30 @@ ALTER TABLE ONLY public.operators
 
 
 --
+-- Name: client_invoice_line_runs fk_rails_cc2332c40f; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_invoice_line_runs
+    ADD CONSTRAINT fk_rails_cc2332c40f FOREIGN KEY (client_invoice_line_id) REFERENCES public.client_invoice_lines(id);
+
+
+--
+-- Name: vehicle_loan_payments fk_rails_cc96c60159; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vehicle_loan_payments
+    ADD CONSTRAINT fk_rails_cc96c60159 FOREIGN KEY (recorded_by_id) REFERENCES public.users(id);
+
+
+--
+-- Name: finance_approvers fk_rails_cd2018e937; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.finance_approvers
+    ADD CONSTRAINT fk_rails_cd2018e937 FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
 -- Name: occurrence_corrections fk_rails_cfc2b2ca6a; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -15156,11 +16731,27 @@ ALTER TABLE ONLY public.pay_bonuses
 
 
 --
+-- Name: vehicle_financials fk_rails_d6cf34deec; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vehicle_financials
+    ADD CONSTRAINT fk_rails_d6cf34deec FOREIGN KEY (document_read_id) REFERENCES public.document_reads(id);
+
+
+--
 -- Name: pay_bonus_schemes fk_rails_d7a22324db; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.pay_bonus_schemes
     ADD CONSTRAINT fk_rails_d7a22324db FOREIGN KEY (pay_scheme_id) REFERENCES public.pay_schemes(id);
+
+
+--
+-- Name: client_invoice_lines fk_rails_d850b449ba; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_invoice_lines
+    ADD CONSTRAINT fk_rails_d850b449ba FOREIGN KEY (client_invoice_id) REFERENCES public.client_invoices(id);
 
 
 --
@@ -15185,6 +16776,14 @@ ALTER TABLE ONLY public.clients
 
 ALTER TABLE ONLY public.route_list_version_stops
     ADD CONSTRAINT fk_rails_db97e3e992 FOREIGN KEY (route_list_version_id) REFERENCES public.route_list_versions(id);
+
+
+--
+-- Name: vehicle_loan_payments fk_rails_dc3bc2a5c6; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vehicle_loan_payments
+    ADD CONSTRAINT fk_rails_dc3bc2a5c6 FOREIGN KEY (vehicle_financial_id) REFERENCES public.vehicle_financials(id);
 
 
 --
@@ -15252,6 +16851,14 @@ ALTER TABLE ONLY public.client_pickup_points
 
 
 --
+-- Name: operator_pay_payments fk_rails_e1eca8db0b; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.operator_pay_payments
+    ADD CONSTRAINT fk_rails_e1eca8db0b FOREIGN KEY (operator_pay_batch_operator_id) REFERENCES public.operator_pay_batch_operators(id);
+
+
+--
 -- Name: maintenance_visits fk_rails_e258c431fa; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -15260,11 +16867,27 @@ ALTER TABLE ONLY public.maintenance_visits
 
 
 --
+-- Name: finance_settings fk_rails_e2794f23ce; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.finance_settings
+    ADD CONSTRAINT fk_rails_e2794f23ce FOREIGN KEY (locked_by_id) REFERENCES public.users(id);
+
+
+--
 -- Name: trip_assignments fk_rails_e2afd36d07; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.trip_assignments
     ADD CONSTRAINT fk_rails_e2afd36d07 FOREIGN KEY (created_by_id) REFERENCES public.users(id);
+
+
+--
+-- Name: operator_pay_batches fk_rails_e42544b8c9; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.operator_pay_batches
+    ADD CONSTRAINT fk_rails_e42544b8c9 FOREIGN KEY (bank_file_by_id) REFERENCES public.users(id);
 
 
 --
@@ -15348,6 +16971,14 @@ ALTER TABLE ONLY public.driver_point_allocations
 
 
 --
+-- Name: vehicle_cost_spike_acks fk_rails_e9725459a8; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vehicle_cost_spike_acks
+    ADD CONSTRAINT fk_rails_e9725459a8 FOREIGN KEY (checked_by_id) REFERENCES public.users(id);
+
+
+--
 -- Name: vehicle_log_cards fk_rails_ea1e6bdc96; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -15420,6 +17051,14 @@ ALTER TABLE ONLY public.driver_vehicle_types
 
 
 --
+-- Name: vehicle_cost_spike_acks fk_rails_f03f046cfe; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vehicle_cost_spike_acks
+    ADD CONSTRAINT fk_rails_f03f046cfe FOREIGN KEY (vehicle_id) REFERENCES public.vehicles(id);
+
+
+--
 -- Name: public_holidays fk_rails_f0671ffc35; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -15476,6 +17115,14 @@ ALTER TABLE ONLY public.external_vehicle_share_links
 
 
 --
+-- Name: vehicle_finance_entries fk_rails_f3368bb705; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vehicle_finance_entries
+    ADD CONSTRAINT fk_rails_f3368bb705 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
 -- Name: route_list_version_students fk_rails_f382665b51; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -15497,6 +17144,14 @@ ALTER TABLE ONLY public.vehicle_driver_schedules
 
 ALTER TABLE ONLY public.driver_pay_months
     ADD CONSTRAINT fk_rails_f46ae7821f FOREIGN KEY (driver_id) REFERENCES public.drivers(id);
+
+
+--
+-- Name: client_invoices fk_rails_f51154a7fe; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_invoices
+    ADD CONSTRAINT fk_rails_f51154a7fe FOREIGN KEY (client_site_id) REFERENCES public.client_sites(id);
 
 
 --
@@ -15738,6 +17393,11 @@ ALTER TABLE public.trip_occurrences
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261102163000'),
+('20261102162000'),
+('20261102161100'),
+('20261102161000'),
+('20261102160000'),
 ('20261102156000'),
 ('20261102155000'),
 ('20261102154000'),

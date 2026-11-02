@@ -41,7 +41,8 @@ class DocumentRead < ApplicationRecord
     "trip_message" => "Ai::Readers::TripMessage",
     "maintenance_invoice" => "Ai::Readers::MaintenanceInvoice",
     "route_list" => "Ai::Readers::RouteList",
-    "fuel_receipt" => "Ai::Readers::FuelReceipt"
+    "fuel_receipt" => "Ai::Readers::FuelReceipt",
+    "vehicle_loan_schedule" => "Ai::Readers::VehicleLoanSchedule"
   }.freeze
 
   mount_uploader :file, DocumentUploader

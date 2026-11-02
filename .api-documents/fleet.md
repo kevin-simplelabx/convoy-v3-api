@@ -47,7 +47,8 @@ The same list on two pages:
 
 Each row has `plate, seats, make, model, tags, ownership, size_name, default_picture, photo, driver { id, kind, name, phone },
 operator, vehicle_team { id, name, color }, insurance { insurer, ends_on, status }`.
-The insurance text of a row: `status` `expired` → "Insurance expired", `due_soon` → "Insurance ends <ends_on>", `valid` → "Insured to <ends_on>".
+The insurance text of a row: `status` `expired` → "Insurance expired", `due_soon` → "Insurance ends <ends_on>", `valid` → "Insured to <ends_on>",
+`none` → no insurance line. `insurance` is always an object: with no current policy it is `{ "insurer": null, "ends_on": null, "status": "none" }`.
 
 `meta.facets.teams` gives the team chips for the `ownership[]` picked (the team filter is not applied to it):
 
@@ -84,7 +85,7 @@ The row fields plus:
 | `registered_on`, `chassis_number`, `engine_number`, `coe_expires_on`, `road_tax_expires_on` | Log card details (editable on the vehicle form, [scheduler.md § 14.1](scheduler.md#141-vehicle)) |
 | `upcoming_drivers` | Default driver changes still to come (own buses): `[{ starts_on, driver: { id, name } \| null }]`. "Starts on" text |
 | `fuel` | Fuel & Energy summary (section 8.5) |
-| `financials` | Always `null` for now (Vehicle Financials belongs to the Finance menu, not built). Hide the Financials section |
+| `financials` | Vehicle Financials summary for users with `vehicle financials` (`vehfin`) permission, else `null` (hide the section). See [finance § 6](finance.md#6-vehicle-financials-purchase-and-loan) |
 
 Record sections and their calls:
 
@@ -682,7 +683,7 @@ What is checked (fills of the last 90 days; the list is refreshed after every sa
 | Screen / action | Why |
 | --- | --- |
 | Connected Operators | "Coming Soon" in the design. Keep the placeholder page |
-| Vehicle Financials (the Financials section of the vehicle record, Add Financials, Open Vehicle Financials) | Belongs to the Finance menu. `financials` is always null: hide the section |
+| Vehicle Financials (the Financials section of the vehicle record, Add Financials, Open Vehicle Financials) | Built in the Finance menu: [finance § 6](finance.md#6-vehicle-financials-purchase-and-loan) |
 | Log card "Get from Corppass" | "Coming soon" in the design |
 | Invite SMS really sent; drivers answering and sharing details in the Convoy Driver app | No SMS sender / Driver app yet. Invites are recorded; Mark Accepted / Mark Declined stand in |
 | How It Works (Fuel, Maintenance) | Static text on the front end |

@@ -21,6 +21,7 @@ The API docs in this folder are the source of truth. Do not invent endpoints, pa
 | `settings.md` | Company Settings, Users, Calendars, the Profile dialog | When `screen-map.md` links to it |
 | `clients.md` | Managed Clients (record page, sites, Client Users) and the Client Portal sign-in | When `screen-map.md` links to it |
 | `hr.md` | HR: driver pay (rate plans, pay schemes, drivers, earnings, bonuses, points, rewards, simulator, audit log) | When `screen-map.md` links to it |
+| `finance.md` | Finance: client invoices, documents, operator payments, vehicle financials, finance settings | When `screen-map.md` links to it |
 | `convoy-v3-api.openapi.json` | OpenAPI 3.0 of every endpoint with request / response examples recorded from real calls (2.4 MB) | For the exact shape of a request / response (section 1.1) |
 
 UI reference: the prototype `Convoy OS.dc.html` (and its `logic/*.js`). Use it for **layout, labels, flows and behaviour
@@ -161,7 +162,8 @@ The prototype's page ids (in `logic/mixins/admin.js`, rail and sub-menus) and wh
 | `phol` | Calendars | `/calendars`, `/public_holidays` | [screen-map](screen-map.md#calendars) |
 | Account menu → Profile | Profile dialog | `/profile` | [screen-map](screen-map.md#sign-in-and-app-shell) |
 | `paydrv`, `payearn`, `payschemes`, `payrates`, `paybon`, `paypts`, `payrew`, `paysim`, `paylog` | HR pages | `/pay/...` | [screen-map](screen-map.md#hr) |
-| `opconn`, `clconn`, and every other page | Connected Operators / Clients, Dashboard, Ops Control, Live Map, School Bus, Reports, Finance... | **No API yet** | [screen-map](screen-map.md#not-built-yet) |
+| `cinv`, `cfdocs`, `cfpay`, `vehfin`, `finset` | Finance pages | `/finance/...` | [screen-map](screen-map.md#finance) |
+| `cfcol`, `opconn`, `clconn`, and every other page | School Bus Collections, Connected Operators / Clients, Dashboard, Ops Control, Live Map, School Bus, Reports | **No API yet** | [screen-map](screen-map.md#not-built-yet) |
 
 ### 5.3 Value formats
 

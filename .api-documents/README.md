@@ -10,6 +10,7 @@ One document per menu of Convoy OS. Each document lists the screen actions and t
 | Settings (rail footer icon `settings`): Company Settings, Users, Calendars, and the Profile dialog | [settings.md](settings.md) |
 | Clients (rail icon `corporate_fare`): Managed Clients, Client Users, and the Client Portal sign-in | [clients.md](clients.md) |
 | HR (rail icon `badge`): Drivers, Earnings, Pay Schemes, Rate Plans, Bonuses, Points, Rewards, Salary Simulator, Audit Log | [hr.md](hr.md) |
+| Finance (rail icon `account_balance`): Client Invoices, Documents, Operator Payments, Vehicle Financials, Finance Settings | [finance.md](finance.md) |
 
 **Integrating the API (or asking an AI assistant to)?** Start with [integration.md](integration.md): it is the one
 file to read first, and it points to everything else.

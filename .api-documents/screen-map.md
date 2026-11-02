@@ -17,6 +17,7 @@ A reverse index for front-end developers: find the screen and the button you are
 - [Fleet](#fleet): Vehicles · Drivers · Bus Attendants · External Vehicles · Fuel & Energy · Maintenance · Vehicle Types
 - [Transport Operators](#transport-operators): Managed Operators · Operator Vehicles · Operator Drivers
 - [Clients](#clients): Managed Clients · client record · Client Users
+- [Finance](#finance): Client Invoices · Documents · Operator Payments · Vehicle Financials · Finance Settings
 - [HR](#hr): Drivers · Earnings · Pay Schemes · Rate Plans · Bonuses · Points · Rewards · Salary Simulator · Audit Log
 - [Settings](#settings): Company Settings · Users · Calendars
 - [Shared dialogs](#shared-dialogs)
@@ -291,6 +292,29 @@ Rail icon `corporate_fare`. The trip form also uses `/clients` (Client picker, A
 
 ---
 
+## Finance
+
+Rail icon `account_balance`. Needs `finance` or `finview`; Finance Settings `finset`; Vehicle Financials `vehfin`.
+
+| Screen / element | API | Doc |
+| --- | --- | --- |
+| Client Invoices: KPIs, Aging | `GET /finance/invoices/summary` | [finance § 3](finance.md#3-client-invoices-payments-credit-notes-reports) |
+| Client Invoices: Ready to Invoice, Create Draft | `GET /finance/invoices/ready`, `POST /finance/invoices` | [finance § 2](finance.md#2-client-invoices) |
+| Client Invoices: Ad Hoc Trips, Invoice Now | `GET /finance/invoices/ad_hoc`, `POST /finance/invoices { trip_id }` | [finance § 2](finance.md#2-client-invoices) |
+| Client Invoices: tabs, invoice dialog, Save Draft / Issue / Void / Delete | `/finance/invoices` | [finance § 2.2](finance.md#22-the-invoice) |
+| Client Invoices: Record Payment, Credit Note, Email | `POST /finance/invoices/:id/payments`, `/credit_note`, `/send` | [finance § 3](finance.md#3-client-invoices-payments-credit-notes-reports) |
+| Client Invoices: Clients card, Statement, Billing Details | `GET /finance/invoices/clients`, `/statement`, `/finance/billing/:client_id` | [finance § 3](finance.md#3-client-invoices-payments-credit-notes-reports) |
+| Client Invoices: Invoice Settings | Finance Settings > Payment Details, Document Numbers | [finance § 1](finance.md#1-finance-settings) |
+| Documents | `GET /finance/documents`, `/finance/documents/brand`, `/finance/documents/payment_notices/:id` | [finance § 5](finance.md#5-documents) |
+| Operator Payments: requests, costs, items, approve, ad hoc | `/finance/operator_pay/...` | [finance § 4.1](finance.md#41-requests) |
+| Operator Payments: batches, pay date, cancel, pay, bank file | `/finance/operator_pay/batches/...` | [finance § 4.2](finance.md#42-batches) |
+| Vehicle Financials: list, vehicle, edit form, schedule, instalments | `/finance/vehicles`, `/finance/vehicles/:vehicle_id` | [finance § 6](finance.md#6-vehicle-financials-purchase-and-loan) |
+| Vehicle Financials: P&L, charts, break-even, cost per km, spikes, due, manual entries | `/finance/vehicles/pl`, `/finance/vehicles/:vehicle_id/pl`, … | [finance § 7](finance.md#7-vehicle-financials-profit-and-loss) |
+| Finance Settings | `/finance/settings` | [finance § 1](finance.md#1-finance-settings) |
+| School Bus Collections | Comes with the School Bus menu | [finance § 8](finance.md#8-not-built-yet) |
+
+---
+
 ## HR
 
 Rail icon `badge`. Needs the `finance` or `finview` permission.
@@ -428,7 +452,7 @@ Rail footer icon `settings`.
 
 ## Not built yet
 
-These rail menus of Convoy OS have **no API yet**: Dashboard, Ops Control, Live Map, School Bus, Clients > Connected
-Clients, Reports, Finance (including Vehicle Financials), and the Convoy Admin menus (Discover, Company Leads, Transport Companies).
+These rail menus of Convoy OS have **no API yet**: Dashboard, Ops Control, Live Map, School Bus (and Finance > School Bus
+Collections), Clients > Connected Clients, Reports, and the Convoy Admin menus (Discover, Company Leads, Transport Companies).
 Smaller gaps inside built menus are listed in [trips § 6](trips.md#6-not-built-yet) and
-[fleet § 10](fleet.md#10-not-built-yet), [settings § 5](settings.md#5-not-built-yet), [clients § 7](clients.md#7-not-built-yet) and [hr § 10](hr.md#10-not-built-yet).
+[fleet § 10](fleet.md#10-not-built-yet), [settings § 5](settings.md#5-not-built-yet), [clients § 7](clients.md#7-not-built-yet), [hr § 10](hr.md#10-not-built-yet) and [finance § 8](finance.md#8-not-built-yet).

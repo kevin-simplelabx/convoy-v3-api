@@ -60,6 +60,8 @@ class Vehicle < ApplicationRecord
   tag_list :tags
 
   belongs_to :operator, optional: true
+  has_one :financial, class_name: "VehicleFinancial", dependent: :destroy
+  has_many :finance_entries, class_name: "VehicleFinanceEntry", dependent: :destroy
   belongs_to :vehicle_team, optional: true
   has_many :driver_schedules, -> { order(:starts_on) }, class_name: "VehicleDriverSchedule", dependent: :destroy
   has_one :operator_driver, dependent: :nullify

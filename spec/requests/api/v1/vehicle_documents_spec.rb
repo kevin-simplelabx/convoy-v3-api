@@ -111,6 +111,13 @@ RSpec.describe "Vehicle documents (Edit Vehicle)" do
       get api_v1_vehicles_path
       expect(json[:data].first[:insurance]).to include(insurer: "Income", status: "due_soon")
     end
+
+    it "sends status none when the vehicle has no current policy" do
+      get api_v1_vehicles_path
+      expect(json[:data].first[:insurance]).to eq(insurer: nil, ends_on: nil, status: "none")
+      get api_v1_vehicle_path(vehicle)
+      expect(json.dig(:data, :insurance)).to eq(insurer: nil, ends_on: nil, status: "none")
+    end
   end
 end
 

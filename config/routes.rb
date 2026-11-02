@@ -19,6 +19,63 @@ Rails.application.routes.draw do
       end
       resources :companies, only: %i[index show create update]
 
+      # Finance
+      scope "finance", as: "finance" do
+        resource :settings, controller: :finance_settings, only: %i[show update] do
+          post :lock
+          post :unlock
+        end
+        resources :invoices, controller: :client_invoices do
+          collection do
+            get :ready
+            get :ad_hoc
+            get :summary
+            get :clients
+            get :statement
+          end
+          member do
+            post :issue
+            post :void
+            post :payments, action: :pay
+            post :credit_note, action: :credit
+            post :send, action: :send_invoice
+          end
+        end
+        scope "operator_pay", controller: :operator_payments, as: :operator_pay do
+          get :requests
+          put :costs, action: :set_cost
+          post :items, action: :create_item
+          delete "items/:id", action: :destroy_item, as: :item
+          post :approve
+          post :ad_hoc
+          get :batches
+          get "batches/:id", action: :batch, as: :batch
+          patch "batches/:id", action: :update_batch
+          delete "batches/:id", action: :cancel_batch
+          post "batches/:id/payments", action: :pay, as: :batch_payments
+          post "batches/:id/mark_paid", action: :mark_paid, as: :batch_mark_paid
+          post "batches/:id/bank_file", action: :bank_file, as: :batch_bank_file
+          get "batches/:id/bank_file.csv", action: :download_bank_file, as: :batch_bank_file_csv, format: false, defaults: { format: :csv }
+        end
+        get "vehicles/pl", to: "vehicle_pl#fleet", as: :vehicles_pl
+        get "vehicles/spikes", to: "vehicle_pl#spikes", as: :vehicles_spikes
+        post "vehicles/spikes/ack", to: "vehicle_pl#ack_spike", as: :vehicles_spikes_ack
+        get "vehicles/due", to: "vehicle_pl#due", as: :vehicles_due
+        get "vehicles/:vehicle_id/pl", to: "vehicle_pl#vehicle", as: :vehicle_pl
+        post "vehicles/:vehicle_id/entries", to: "vehicle_pl#create_entry", as: :vehicle_entries
+        patch "vehicles/:vehicle_id/entries/:id", to: "vehicle_pl#update_entry", as: :vehicle_entry
+        delete "vehicles/:vehicle_id/entries/:id", to: "vehicle_pl#destroy_entry"
+        get "vehicles", to: "vehicle_financials#index"
+        get "vehicles/:vehicle_id", to: "vehicle_financials#show", as: :vehicle
+        patch "vehicles/:vehicle_id", to: "vehicle_financials#update"
+        post "vehicles/:vehicle_id/instalments", to: "vehicle_financials#instalments", as: :vehicle_instalments
+        get "documents", to: "finance_documents#index"
+        get "documents/brand", to: "finance_documents#brand_info", as: :documents_brand
+        get "documents/payment_notices/:id", to: "finance_documents#payment_notice", as: :payment_notice
+        get "billing/:client_id", to: "client_billing#show", as: :billing
+        patch "billing/:client_id", to: "client_billing#update"
+      end
+
       # HR (driver pay)
       scope "pay", as: "pay" do
         resources :rate_plans, controller: :pay_rate_plans do

@@ -47,7 +47,10 @@ The **Start From a Role** pills, the permission switches and the **View Role Per
 | `q[name_or_email_i_cont]` | Search by name or email |
 | `page`, `limit` | Paging |
 
-Deleted users are never listed. `meta.counts` = `{ all, active, suspended }`. Each row:
+Deleted users are never listed. `meta.counts` = `{ all, active, suspended }`. `meta.maker_checker_warning` = Maker-checker
+is on for operator pay runs but fewer than two users are active: show "Maker-checker is on for operator pay runs, but only 1
+active user is left. No one can approve. Change Pay Run Approval to One Person in Finance Settings, or add another user"
+with a **Finance Settings** button. Each row:
 
 | Field | Description |
 | --- | --- |
@@ -236,7 +239,6 @@ Card title "Trips Using This Calendar | <count>"; each row: title, "kind | repea
 
 - Change password, forgot password, signed-in devices, refresh tokens: the prototype has no screen for them.
 - On Time and Speed Limit settings (Trip History uses the defaults: 5 minutes, 80 km/h).
-- The maker-checker warning on the Users page (needs Finance Settings).
 - School access (`all_schools`, `schools`) is saved and returned, but School Bus pages do not limit by it yet.
 
 ## 6. Changes to existing endpoints (02/11/2026)

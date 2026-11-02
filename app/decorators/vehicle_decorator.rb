@@ -12,9 +12,12 @@ class VehicleDecorator < ApplicationDecorator
   end
 
   # Current policy in one line for the list: { insurer, ends_on, status expired | due_soon | valid | none }.
+  # Always an object: no current policy gives { insurer: nil, ends_on: nil, status: "none" }.
   def insurance_summary
     p = current_insurance_policy
-    p && { insurer: p.insurer, ends_on: p.ends_on, status: p.expiry_status }
+    return { insurer: nil, ends_on: nil, status: "none" } unless p
+
+    { insurer: p.insurer, ends_on: p.ends_on, status: p.expiry_status }
   end
 
   def size_name = Vehicle::SIZE_NAMES[size]

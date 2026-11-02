@@ -1,0 +1,21 @@
+class OperatorPayBatchBlueprint < ApplicationBlueprint
+  fields :number, :kind, :pay_date, :transfer_type, :bank_file_at, :created_at
+
+  field(:status) { |b| b.status }
+  field(:open) { |b| b.open? }
+  field(:total) { |b| b.total }
+  field(:paid) { |b| b.paid }
+  field(:operators_count) { |b| b.batch_operators.size }
+
+  view :detail do
+    field(:operators) do |b|
+      b.batch_operators.sort_by { |x| x.operator.name }.map do |bo|
+        pays = bo.notice_number ? { method: bo.pay_method, to: bo.pay_to, warn: false } : bo.operator.decorate.pays_by
+        { id: bo.id, operator: { id: bo.operator.id, name: bo.operator.name }, pays_by: pays, notice_number: bo.notice_number,
+          total: bo.total, paid: bo.paid, left: bo.left, status: bo.left <= 0 ? "paid" : (bo.paid.positive? ? "part_paid" : "to_pay"),
+          lines: bo.lines.map { |l| l.slice(:id, :ref, :source, :description, :details, :item_on, :amount) },
+          payments: bo.payments.map { |p| { id: p.id, paid_on: p.paid_on, amount: p.amount, method: p.method, reference: p.reference } } }
+      end
+    end
+  end
+end

@@ -9,6 +9,7 @@
 | Settings (Company Settings, Users, Calendars, Profile) | ✅ Phase 0–5 xong (02/11/2026), 240 specs | `menus/settings/` | `../.api-documents/settings.md` |
 | Clients (Managed Clients, Client Portal sign-in) | ✅ Phase 0–5 xong (02/11/2026), 252 specs | `menus/clients/` | `../.api-documents/clients.md` |
 | HR (driver pay) | ✅ Phase 0–9 xong (02/11/2026), 273 specs | `menus/hr/` | `../.api-documents/hr.md` |
+| Finance | ✅ Phase 0–8 xong (02/11/2026), 288 specs (School Bus Collections để School Bus) | `menus/finance/` | `../.api-documents/finance.md` |
 
 ## Đọc gì cho việc gì
 | Việc | Đọc |
@@ -26,7 +27,7 @@ README.md            trạng thái + chỉ đường (file này)
 decisions.md         mọi quyết định: ngày · menu · quyết định (chỉ thêm, không xoá)
 backlog.md           việc đã hoãn
 data-ownership.md    bảng → domain → ai ghi → menu sẽ làm màn sửa
-domains/             TÀI LIỆU SỐNG theo nghiệp vụ: platform, occurrences, trips, fleet, clients, pay, school, replacements, calendars, operations
+domains/             TÀI LIỆU SỐNG theo nghiệp vụ: platform, occurrences, trips, fleet, clients, pay, finance, school, replacements, calendars, operations
 menus/<menu>/        scope.md, plan.md, log/NN-phase-*.md (NHẬT KÝ: ghi lúc xong phase, không sửa lại)
 ```
 

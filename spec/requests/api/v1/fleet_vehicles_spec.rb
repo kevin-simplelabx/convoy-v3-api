@@ -83,10 +83,10 @@ RSpec.describe "Fleet vehicles" do
   end
 
   describe "record" do
-    it "shows upcoming driver changes, and no financials yet" do
+    it "shows upcoming driver changes and the financials summary" do
       within_tenant(company) { f[:van].driver_schedules.create!(driver: create(:driver, name: "Tan"), starts_on: Date.current + 5) }
       get api_v1_vehicle_path(f[:van])
-      expect(json[:data]).to include(financials: nil)
+      expect(json[:data]).to include(financials: { status: "no_details" }) # the signed-in admin has vehfin
       expect(json.dig(:data, :fuel)).to include(entries: 0, last: nil)
       expect(json.dig(:data, :upcoming_drivers)).to eq([ { starts_on: (Date.current + 5).iso8601, driver: { id: Driver.unscoped.last.id, name: "Tan" } } ])
     end

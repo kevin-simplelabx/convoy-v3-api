@@ -24,13 +24,11 @@ Việc biết là cần nhưng chưa làm. Ghi: ngày · menu phát hiện · vi
 | 31/10/2026 | trips | Passenger list của run School Bus trong Trip History (rider hiện chỉ là riders_count) | Rider theo tên thuộc menu School |
 | 31/10/2026 | trips | Tên đường cho replay (map matching / reverse geocode) | Cần dịch vụ bản đồ |
 | 30/10/2026 | trips | Chạy `bin/rails occurrences:sync` sau deploy để các trip cũ có row skipped quá khứ (backfill 400 ngày) | Việc vận hành khi lên production |
-| 31/10/2026 | fleet | **Vehicle Financials** (menu Finance, mở từ record xe): mua xe + khoản vay, lịch trả góp (`logic/vehicle-loan.js`), đọc PDF lịch trả góp bằng Claude + dialog plate không khớp, trạng thái (No Details / Paid in Full / Incomplete / Overdue / Loan Paid Off / Loan Active), P&L tháng (doanh thu run + School Bus route, chi phí tay, lương driver theo pay scheme, khấu hao, lãi, trả góp; basis profit / cash), biểu đồ P&L, break-even, khoản đến hạn 90 ngày (trả góp, renew insurance, road tax, COE), cost/km theo size, lợi nhuận theo xe, cost spikes, đoạn tóm tắt; tóm tắt `vfMini` trên record xe. Nguồn: `fleet.js` vf* (dòng 56–1410), HTML `sa.isVehFin` ~12163. Dữ liệu chi phí có sẵn để dùng: fuel_entries, maintenance_visits, insurance premium | Thuộc Finance, cần HR pay |
 | 31/10/2026 | fleet | Gửi SMS invite driver thật; Driver app nhận invite / accept / decline / chia sẻ KYC | Chưa có SMS / Driver app |
 | 31/10/2026 | fleet | Connected Operators (công ty có tài khoản Convoy riêng, nhận trip) | HTML Coming Soon |
 | 31/10/2026 | fleet | Log card "Get from Corppass" | HTML Coming Soon |
 | 02/11/2026 | platform | Refresh token / gia hạn JWT; màn "thiết bị đang đăng nhập" + đăng xuất từ xa / tất cả (đọc `allowlisted_jwts`); xoá token khi đổi mật khẩu. | HTML không có màn (user chốt 02/11/2026 khi làm Settings); 30 ngày đủ cho giai đoạn test |
 | 02/11/2026 | settings | Card On Time / Speed Limit trong Company Settings (cột đã có) | HTML không có, user chốt để sau |
-| 02/11/2026 | settings | Cảnh báo maker-checker khi chỉ còn 1 user active (trang Users) | Cần Finance Settings |
 | 02/11/2026 | settings | Áp `user_schools` vào dữ liệu School Bus | Làm cùng menu School Bus |
 | 02/11/2026 | clients | Connected Clients | HTML Coming Soon |
 | 02/11/2026 | clients | Client Portal API sau đăng nhập (booking, approval, invoice, live map, quản lý người từ Portal theo `userCan` / `rolesToGive`) | Làm cùng Client Portal |
@@ -41,3 +39,6 @@ Việc biết là cần nhưng chưa làm. Ghi: ngày · menu phát hiện · vi
 | 02/11/2026 | hr | Payroll: payslip, CPF, allowances / deductions, export ngân hàng, maker-checker lương driver | HTML không có trong HR |
 | 02/11/2026 | hr | Shift qua nửa đêm; tuần lẻ đầu / cuối tháng cho weekly target (giữ như HTML) | Cần quyết định nghiệp vụ |
 | 02/11/2026 | hr | Version scheme / rate plan (đổi rate ảnh hưởng tháng chưa confirm) | HTML không có |
+| 02/11/2026 | finance | School Bus Collections (bill, receipt, DN / CN, waiver, policy), chứng từ trường trong Documents, pay run trường + maker-checker + PV, doanh thu "School Bus (auto)" của xe | Cần dữ liệu School Bus |
+| 02/11/2026 | finance | Debit note / receipt cho client invoice; format file ngân hàng riêng (DBS IDEAL, UOB…); PDF server-side | Prototype không có / chưa cần |
+| 02/11/2026 | finance | Lương driver trong P&L xe dùng số HR đã confirm thay cho ước tính scheme | User chọn giữ như prototype |

@@ -14,7 +14,7 @@ module Api
       def show
         vehicle = authorize kept.find(params[:id])
         fuel = vehicle.own? ? FuelStatsPresenter.summary(FuelVehicleStats.new.call([ vehicle.id ])[vehicle.id]) : nil
-        render_data vehicle, VehicleBlueprint, view: :record, fuel:
+        render_data vehicle, VehicleBlueprint, view: :record, vehfin: current_user.can?(:vehfin), fuel:
       end
 
       def create
