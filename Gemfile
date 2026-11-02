@@ -23,7 +23,7 @@ gem "blueprinter"
 gem "carrierwave", "~> 3.1"
 
 # Pagination and filtering
-gem "pagy", "~> 9.3"
+gem "pagy", "~> 43.8"
 gem "ransack"
 
 # Change history (Changes to This Trip, who changed what)
