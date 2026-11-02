@@ -8,6 +8,9 @@ One document per menu of Convoy OS. Each document lists the screen actions and t
 | Trips (rail icon `assignment`): Trips, Trip History, Notices, Bookings, Rate Cards | [trips.md](trips.md) |
 | Fleet (rail icon `directions_bus`): Vehicles, Drivers, Bus Attendants, External Vehicles, Fuel & Energy, Maintenance, Vehicle Types, and Transport Operators (Managed Operators, Operator Vehicles, Operator Drivers) | [fleet.md](fleet.md) |
 
+**Integrating the API (or asking an AI assistant to)?** Start with [integration.md](integration.md): it is the one
+file to read first, and it points to everything else.
+
 **Building a screen?** [screen-map.md](screen-map.md) maps every screen and button of the Convoy OS prototype to its
 API call and the section that explains it.
 
