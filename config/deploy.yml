@@ -1,6 +1,6 @@
 # Staging deploy with Kamal 2 (https://kamal-deploy.org). Guide: .notes/deploy.md
 service: convoy_v3
-image: convoy_v3
+image: kevin-simplelabx/convoy-v3-api
 
 servers:
   web:
@@ -22,9 +22,13 @@ proxy:
   healthcheck:
     path: /up
 
-# Local registry: Kamal pushes the image to the server through an SSH tunnel.
+# GitHub Container Registry (private package ghcr.io/kevin-simplelabx/convoy-v3-api): the Mac pushes, the server pulls
+# straight from GitHub. Token: classic PAT with write:packages in .kamal/registry_token.
 registry:
-  server: localhost:5555
+  server: ghcr.io
+  username: kevin-simplelabx
+  password:
+    - KAMAL_REGISTRY_PASSWORD
 
 builder:
   arch: amd64

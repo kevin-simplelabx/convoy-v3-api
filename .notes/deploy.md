@@ -12,10 +12,10 @@
 | Postgres 17 | accessory `convoy_v3-db`, data ở `~/convoy_v3-db/data` trên server, chỉ mở `127.0.0.1:5432` |
 | 4 DB | `convoy_v3_production` (+ `_cache`, `_queue`, `_cable`), `db:prepare` tự tạo lúc container khởi động |
 | File upload (CarrierWave) | volume docker `convoy_v3_storage` → `/rails/storage` |
-| Image registry | `localhost:5555` — Kamal đẩy image qua SSH tunnel, không cần Docker Hub |
+| Image registry | GHCR `ghcr.io/kevin-simplelabx/convoy-v3-api` (private). Mac push, server pull thẳng từ GitHub. Bỏ `localhost:5555` (SSH tunnel) vì mạng reset luồng lớn → `IOError: closed stream` |
 
 ## Secrets (không commit)
-`.kamal/secrets` chỉ tham chiếu: `config/master.key`, `.kamal/db_password` (mật khẩu Postgres, sinh 1 lần bằng `openssl rand -hex 24`, gitignored).
+`.kamal/secrets` chỉ tham chiếu: `config/master.key`, `.kamal/registry_token` (GitHub token classic `write:packages`), `.kamal/db_password` (mật khẩu Postgres, sinh 1 lần bằng `openssl rand -hex 24`, gitignored).
 Mất `.kamal/db_password` thì lấy lại: `ssh convoy-v3-stg 'docker exec convoy_v3-db env | grep POSTGRES_PASSWORD'`.
 
 ## ENV staging (`config/deploy.yml` → `env.clear`)
@@ -42,3 +42,5 @@ Chạy trong `convoy-v3-api/` (`source ~/.rvm/scripts/rvm && rvm use 3.4.2`). Ka
 ## Lưu ý
 - Seed tạo tài khoản mẫu mật khẩu công khai (`CLAUDE.md`) trên server public → đổi mật khẩu khi có người ngoài dùng.
 - Thêm Redis / Sidekiq sau: Redis = `accessories`, Sidekiq = role mới trong `servers` (`cmd: bundle exec sidekiq`).
+- SSH từ Mac bị reset lúc bắt tay với KEX `mlkem768` (gói lớn, do mạng giữa đường): thêm `KexAlgorithms curve25519-sha256` vào `~/.ssh/config` của host.
+- Code: GitHub `kevin-simplelabx/convoy-v3-api` (private).

@@ -34,3 +34,4 @@
 
 # Kamal staging DB password
 /.kamal/db_password
+/.kamal/registry_token
