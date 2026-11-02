@@ -10,6 +10,7 @@ Bắt đầu menu mới: lọc theo cột **Màn sửa sẽ ở**, những dòng
 | --- | --- | --- | --- | --- |
 | platform | companies | một phần | session (chọn company) | Settings, Transport Companies |
 | platform | users | seed | — | Settings |
+| platform | allowlisted_jwts | ghi | session (đăng nhập / đăng xuất, Convoy Admin chọn company) | Settings (thiết bị đang đăng nhập, đăng xuất từ xa) |
 | platform | vehicle_types, disabled_vehicle_types | ghi | Convoy Admin CRUD, company toggle, Fleet > Vehicle Types | — |
 | platform | vehicle_type_requests | ghi | Fleet > Vehicle Types (company gửi, Convoy Admin duyệt) | — |
 | platform | message_terms | seed | — | Convoy Admin |

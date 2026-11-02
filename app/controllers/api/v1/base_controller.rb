@@ -1,4 +1,4 @@
-# Base for every API endpoint: signed-in user, company (tenant) scoping, company timezone, Pundit, JSON errors.
+# Base for every API endpoint: signed-in user (Authorization: Bearer <JWT>), company (tenant) scoping, company timezone, Pundit, JSON errors.
 module Api
   module V1
     class BaseController < ApplicationController
@@ -19,13 +19,22 @@ module Api
         raise Unauthenticated unless current_user&.active_for_authentication?
       end
 
-      # A company user works in their own company; a Convoy Admin in the company picked for the session.
+      # The sign-in (allowlist row) of the request's Bearer token.
+      def current_jwt
+        return @current_jwt if defined?(@current_jwt)
+
+        @current_jwt = Auth::FindToken.call(token: request.authorization.to_s[/\ABearer\s+(\S+)\z/i, 1])
+      end
+
+      def current_user = current_jwt&.user
+
+      # A company user works in their own company; a Convoy Admin in the company picked for this sign-in.
       def current_company
         return @current_company if defined?(@current_company)
 
         @current_company =
           if current_user.nil? then nil
-          elsif current_user.convoy_admin? then session[:company_id] && Company.find_by(id: session[:company_id])
+          elsif current_user.convoy_admin? then current_jwt.company
           else current_user.company
           end
       end

@@ -29,3 +29,4 @@ Việc biết là cần nhưng chưa làm. Ghi: ngày · menu phát hiện · vi
 | 31/10/2026 | fleet | Gửi SMS invite driver thật; Driver app nhận invite / accept / decline / chia sẻ KYC | Chưa có SMS / Driver app |
 | 31/10/2026 | fleet | Connected Operators (công ty có tài khoản Convoy riêng, nhận trip) | HTML Coming Soon |
 | 31/10/2026 | fleet | Log card "Get from Corppass" | HTML Coming Soon |
+| 02/11/2026 | platform | Refresh token / gia hạn JWT; màn "thiết bị đang đăng nhập" + đăng xuất từ xa / tất cả (đọc `allowlisted_jwts`); xoá token khi đổi mật khẩu. | Chưa có màn Settings / đổi mật khẩu; 30 ngày đủ cho giai đoạn test |

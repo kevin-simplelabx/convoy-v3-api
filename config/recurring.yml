@@ -19,6 +19,9 @@ production:
   occurrences_complete:
     class: OccurrenceCompleteJob
     schedule: every 5 minutes
+  clear_expired_sign_ins:
+    command: "AllowlistedJwt.expired.delete_all"
+    schedule: every day at 3:00am
   clear_solid_queue_finished_jobs:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12

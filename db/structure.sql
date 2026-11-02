@@ -15,6 +15,43 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
+-- Name: allowlisted_jwts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.allowlisted_jwts (
+    id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    company_id bigint,
+    jti character varying NOT NULL,
+    aud character varying,
+    exp timestamp(6) without time zone NOT NULL,
+    name character varying,
+    last_used_at timestamp(6) without time zone,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: allowlisted_jwts_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.allowlisted_jwts_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: allowlisted_jwts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.allowlisted_jwts_id_seq OWNED BY public.allowlisted_jwts.id;
+
+
+--
 -- Name: ar_internal_metadata; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1192,8 +1229,8 @@ CREATE TABLE public.fuel_alerts (
     checked_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT fuel_alerts_kind CHECK (((kind)::text = ANY ((ARRAY['eff'::character varying, 'odo'::character varying, 'dbl'::character varying, 'big'::character varying, 'price'::character varying, 'trend'::character varying])::text[]))),
-    CONSTRAINT fuel_alerts_status CHECK (((status)::text = ANY ((ARRAY['open'::character varying, 'checked'::character varying])::text[])))
+    CONSTRAINT fuel_alerts_kind CHECK (((kind)::text = ANY (ARRAY[('eff'::character varying)::text, ('odo'::character varying)::text, ('dbl'::character varying)::text, ('big'::character varying)::text, ('price'::character varying)::text, ('trend'::character varying)::text]))),
+    CONSTRAINT fuel_alerts_status CHECK (((status)::text = ANY (ARRAY[('open'::character varying)::text, ('checked'::character varying)::text])))
 );
 
 
@@ -4508,6 +4545,13 @@ ALTER TABLE ONLY public.trip_occurrences ATTACH PARTITION public.trip_occurrence
 
 
 --
+-- Name: allowlisted_jwts id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.allowlisted_jwts ALTER COLUMN id SET DEFAULT nextval('public.allowlisted_jwts_id_seq'::regclass);
+
+
+--
 -- Name: attendants id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -5226,6 +5270,14 @@ ALTER TABLE ONLY public.vehicles ALTER COLUMN id SET DEFAULT nextval('public.veh
 --
 
 ALTER TABLE ONLY public.workshops ALTER COLUMN id SET DEFAULT nextval('public.workshops_id_seq'::regclass);
+
+
+--
+-- Name: allowlisted_jwts allowlisted_jwts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.allowlisted_jwts
+    ADD CONSTRAINT allowlisted_jwts_pkey PRIMARY KEY (id);
 
 
 --
@@ -6259,6 +6311,34 @@ CREATE INDEX idx_on_route_list_version_stop_id_a1ccadebd0 ON public.route_list_v
 --
 
 CREATE INDEX idx_on_vehicle_insurance_policy_id_83c63fa225 ON public.vehicle_insurance_documents USING btree (vehicle_insurance_policy_id);
+
+
+--
+-- Name: index_allowlisted_jwts_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_allowlisted_jwts_on_company_id ON public.allowlisted_jwts USING btree (company_id);
+
+
+--
+-- Name: index_allowlisted_jwts_on_exp; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_allowlisted_jwts_on_exp ON public.allowlisted_jwts USING btree (exp);
+
+
+--
+-- Name: index_allowlisted_jwts_on_jti; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_allowlisted_jwts_on_jti ON public.allowlisted_jwts USING btree (jti);
+
+
+--
+-- Name: index_allowlisted_jwts_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_allowlisted_jwts_on_user_id ON public.allowlisted_jwts USING btree (user_id);
 
 
 --
@@ -9983,6 +10063,14 @@ ALTER TABLE ONLY public.trip_stops
 
 
 --
+-- Name: allowlisted_jwts fk_rails_3d594c2c7d; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.allowlisted_jwts
+    ADD CONSTRAINT fk_rails_3d594c2c7d FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
 -- Name: vehicle_log_cards fk_rails_3d7d7f8b86; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -10500,6 +10588,14 @@ ALTER TABLE ONLY public.users
 
 ALTER TABLE ONLY public.school_routes
     ADD CONSTRAINT fk_rails_768b97a056 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: allowlisted_jwts fk_rails_77afa78cd5; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.allowlisted_jwts
+    ADD CONSTRAINT fk_rails_77afa78cd5 FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
 --
@@ -11757,6 +11853,7 @@ ALTER TABLE public.trip_occurrences
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261102100000'),
 ('20261031170000'),
 ('20261031160000'),
 ('20261031150000'),

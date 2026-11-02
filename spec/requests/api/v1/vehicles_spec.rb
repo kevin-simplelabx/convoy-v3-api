@@ -62,9 +62,16 @@ RSpec.describe "Vehicles" do
     patch api_v1_vehicle_path(fleet[:van]), params: { vehicle: { photo: } }
     expect(json.dig(:data, :photo, :thumb_url)).to start_with("/api/v1/downloads/")
 
-    get json.dig(:data, :photo, :url)
+    url = json.dig(:data, :photo, :url)
+    get url
     expect(response).to have_http_status(:ok)
     expect(response.media_type).to eq("image/png")
+
+    # the signed link alone opens the file (<img src> sends no Bearer header); a tampered one does not
+    get url, headers: { "Authorization" => "" }
+    expect(response).to have_http_status(:ok)
+    get "#{url}x", headers: { "Authorization" => "" }
+    expect(response).to have_http_status(:not_found)
   end
 
   describe "external vehicle" do

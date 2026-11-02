@@ -10,6 +10,12 @@ One document per menu of Convoy OS. Each document lists the screen actions and t
 
 Read the conventions below first; the menu documents do not repeat them.
 
+**Apidog / OpenAPI:** [`convoy-v3-api.openapi.json`](convoy-v3-api.openapi.json) lists every endpoint (OpenAPI 3.0), one
+folder per resource inside its menu, with the description of the section here that names it and request / response
+examples recorded from the specs and the seed data. Import it in Apidog (Import → OpenAPI). It is generated, do not edit
+it by hand: after an API change run `bin/rails api_docs:all` (specs + seed probe + build), or `bin/rails api_docs:openapi`
+to rebuild from the last recorded examples.
+
 ---
 
 ## Base URL and format
@@ -24,17 +30,33 @@ Read the conventions below first; the menu documents do not repeat them.
 - Display formats (company Date Format / Time Format) are the front end's job. The only server-formatted text is human
   sentences such as warnings and summaries, which already follow the company's formats.
 
-## Signing in (cookie session)
+## Signing in (Bearer token)
 
-The API uses a session cookie (`_convoy_session`, `SameSite=Lax`, `HttpOnly`). Send requests with credentials
-(`fetch(url, { credentials: "include" })`). Same origin is simplest; cross-origin hosts must be listed in `CORS_ORIGINS`.
+`POST /session` returns a token (JWT). Send it on **every** other request:
+
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
+```
+
+- The token lasts **30 days** (`expires_at`); after that, or after sign-out, calls answer `401` and the app signs in again.
+- Each sign-in is its own token (one per device or browser). Signing out ends only that token.
+- No cookies are used. Web apps keep the token in memory or `localStorage` (never put user-typed HTML in the page);
+  mobile apps keep it in the Keychain / Keystore.
+- Cross-origin web front ends must be allowed by the server (`CORS_ORIGINS`; staging accepts any `localhost` port).
 
 | Action | Call |
 | --- | --- |
-| Sign in | `POST /session` `{ "email": "...", "password": "..." }` |
+| Sign in | `POST /session` `{ "email": "...", "password": "...", "device_name": "iPhone 16" }` (`device_name` optional) |
 | Who am I (on page load) | `GET /session` |
-| Sign out | `DELETE /session` → `204` |
-| Convoy Admin picks the company to view | `PATCH /session` `{ "company_id": 1 }` |
+| Sign out (this token) | `DELETE /session` → `204` |
+| Convoy Admin picks the company to view (for this token) | `PATCH /session` `{ "company_id": 1 }` |
+
+`POST /session` response = the `GET /session` response below plus the token:
+
+```json
+{ "data": { "token": "eyJhbGciOiJIUzI1NiJ9...", "token_type": "Bearer", "expires_at": "2026-12-02T09:00:00+08:00",
+            "user": { "...": "..." }, "company": { "...": "..." } } }
+```
 
 `GET /session` response:
 
@@ -51,7 +73,8 @@ The API uses a session cookie (`_convoy_session`, `SameSite=Lax`, `HttpOnly`). S
 ```
 
 - `role`: `convoy_admin` (Convoy staff, **view only**: every write returns `403`), `admin` (every permission), `member` (only `permissions`).
-- `company` is `null` for a Convoy Admin until `PATCH /session` picks one; company data then answers `422 "Pick a company first"`.
+- `company` is `null` for a Convoy Admin until `PATCH /session` picks one (per token: a new sign-in starts with none);
+  company data then answers `422 "Pick a company first"`.
 - Sample accounts (seed): `ops@simpledrive.sg` / `Simple123!` (Admin), `dispatch@simpledrive.sg` / `Simple123!` (Member, vehicles),
   `admin@convoy.sg` / `Convoy123!` (Convoy Admin).
 
@@ -83,7 +106,7 @@ Lists are paged:
 | Status | `code` | When |
 | --- | --- | --- |
 | 400 | `bad_request` | A required parameter is missing (`message` names it) |
-| 401 | `unauthorized` | Not signed in, or wrong email / password |
+| 401 | `unauthorized` | No / bad / expired / signed-out token (`"Sign in to continue"`), or wrong email / password |
 | 403 | `forbidden` | Not allowed. Convoy Admin gets `"View only. Convoy Admin cannot change company data"` |
 | 404 | `not_found` | The record does not exist or belongs to another company |
 | 409 | `conflict` | Someone else changed the record (see `lock_version`) |
@@ -107,8 +130,9 @@ if someone else saved in between, the API answers `409` and the screen should re
 { "url": "/api/v1/downloads/eyJfcmFpbHMi...", "thumb_url": "/api/v1/downloads/...", "name": "hiace.png", "size": 9273, "content_type": "image/png" }
 ```
 
-- `url` / `thumb_url` are signed links valid for **1 hour** and need the session cookie; use them directly in `<img src>` or
-  open them in a new tab. Reload the record to get fresh links.
+- `url` / `thumb_url` are signed links valid for **1 hour** that open the file on their own (no `Authorization` header,
+  like a pre-signed URL); use them directly in `<img src>` or open them in a new tab. They are paths: put the API host
+  in front (`https://convoy-api-staging.convoy.sg` + `url`). Reload the record to get fresh links. Do not share them.
 - Images are resized to 1280 px; `thumb_url` is a 320 px square. Documents accept PDF, images, xlsx / xls, csv, doc / docx, txt (10 MB max).
 
 ## Reading documents with Claude (background reads)

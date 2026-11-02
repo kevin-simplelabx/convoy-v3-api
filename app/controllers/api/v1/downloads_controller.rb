@@ -1,7 +1,8 @@
-# Serves private CarrierWave files behind a signed, expiring token (see Download).
+# Serves private CarrierWave files behind a signed, expiring token (see Download); the link needs no Bearer header.
 module Api
   module V1
     class DownloadsController < BaseController
+      skip_before_action :authenticate!
       skip_after_action :verify_authorized
 
       def show

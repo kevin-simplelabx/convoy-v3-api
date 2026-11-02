@@ -41,11 +41,7 @@ module ConvoyV3
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
 
-    # Re-add session/cookie middleware (needed for Devise cookie sessions).
-    # SESSION_SAME_SITE=none lets a FE on another site (e.g. localhost against staging) keep the session.
-    config.middleware.use ActionDispatch::Cookies
-    config.middleware.use ActionDispatch::Session::CookieStore, key: "_convoy_session",
-      same_site: ENV.fetch("SESSION_SAME_SITE", "lax").to_sym, secure: Rails.env.production?
+    # No cookies or session: the API signs in with Bearer tokens (devise-jwt, see Auth::IssueToken).
 
     config.generators do |g|
       g.test_framework :rspec, fixture: false

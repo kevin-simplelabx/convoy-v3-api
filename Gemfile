@@ -8,6 +8,8 @@ gem "pg", "~> 1.1"
 gem "puma", ">= 5.0"
 # Auth
 gem "devise"
+# JWT Bearer tokens for the API, Allowlist revocation (one row per sign-in) [https://github.com/waiting-for-dev/devise-jwt]
+gem "devise-jwt"
 
 # Multi-tenancy (scope every query by company) and authorization
 gem "acts_as_tenant"

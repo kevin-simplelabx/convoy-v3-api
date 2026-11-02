@@ -35,9 +35,12 @@
 # A person who signs in to Convoy OS. Convoy Admins belong to no company and see every company read-only;
 # company Admins (and owners) have every permission; members have the permissions they were given.
 class User < ApplicationRecord
+  include Devise::JWT::RevocationStrategies::Allowlist
+
   PERMISSIONS = %w[users schools plans planview library vehicles finance finview finset vehfin].freeze
 
-  devise :database_authenticatable, :recoverable, :rememberable, :validatable
+  devise :database_authenticatable, :recoverable, :rememberable, :validatable,
+         :jwt_authenticatable, jwt_revocation_strategy: self
 
   mount_uploader :avatar, ImageUploader
 

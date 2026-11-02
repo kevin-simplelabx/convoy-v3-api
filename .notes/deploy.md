@@ -20,8 +20,7 @@ Mất `.kamal/db_password` thì lấy lại: `ssh convoy-v3-stg 'docker exec con
 
 ## ENV staging (`config/deploy.yml` → `env.clear`)
 - `CORS_ALLOW_LOCALHOST=true` — chấp nhận origin `localhost` / `127.0.0.1` mọi port (`config/initializers/cors.rb`).
-- `SESSION_SAME_SITE=none` — cookie session gửi được khi FE chạy ở site khác (`config/application.rb`).
-  Safari chặn cookie bên thứ ba → FE web nên dùng proxy của dev server (vd. Vite `server.proxy['/api']`). Mobile app native không bị ảnh hưởng.
+- Đăng nhập bằng Bearer token (JWT) nên không có vấn đề cookie / Safari. Secret JWT = `secret_key_base` (đặt `DEVISE_JWT_SECRET_KEY` nếu muốn tách).
 - `ANTHROPIC_API_KEY` chưa đặt (tính năng AI chưa test). Khi cần: thêm vào `env.secret` + `.kamal/secrets`.
 - `SOLVER_URL`, `OSRM_URL`, `DEMO_LOGIN`, `DEVISE_SECRET_KEY` trong `.env` không được Rails dùng (sót từ prototype).
 

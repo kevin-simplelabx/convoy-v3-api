@@ -6,7 +6,10 @@
 - Bảng platform (không company): `vehicle_types`, `message_terms`, `public_holidays` preset (yml trong `config/presets/`).
 - Roles: `convoy_admin` (không company, chọn company qua `PATCH /session`, **chỉ xem** → 403), `admin`, `member` (`permissions[]`), cờ `owner`.
   Permission đang dùng: `vehicles` (ghi fleet), `finance`... Pundit: `authorize` mọi action, `policy_scope`, `permitted_attributes`.
-- Auth: Devise + cookie session (`_convoy_session`). Driver app (mobile) sẽ cần token — chưa quyết.
+- Auth: Devise (mật khẩu) + **devise-jwt Bearer**, không cookie / session. `POST /session` → `Auth::IssueToken` trả JWT 30 ngày
+  và ghi 1 row `allowlisted_jwts` (jti, exp, `name` thiết bị, `last_used_at`, `company_id` = company Convoy Admin chọn cho lần đăng nhập đó).
+  `BaseController#current_jwt` → `Auth::FindToken` (chữ ký + exp + còn row). Sign out = xoá row (chỉ thiết bị đó); suspended → 401.
+  Không tự gia hạn; job `clear_expired_sign_ins` xoá row hết hạn hằng ngày.
 
 ## API
 - `/api/v1`, snake_case; `{ data }`, `{ data, meta }` (pagy 9), lỗi `{ error: { code, message, details } }`.
@@ -15,7 +18,7 @@
 
 ## File
 - CarrierWave, private `storage/<model>/<mount>/<id>`. `ImageUploader` (1280 px + thumb 320), `DocumentUploader` (10 MB).
-- Tải: link ký `GET /api/v1/downloads/:token` (1 giờ, cần đăng nhập), `file_info` trong ApplicationDecorator.
+- Tải: link ký `GET /api/v1/downloads/:token` (1 giờ, **không cần header** vì `<img src>`; token mang company để tra trong đúng tenant), `file_info` trong ApplicationDecorator.
 
 ## Audit
 - `audited` (jsonb), mỗi model tự khai; con của trip `associated_with: :trip` → "Changes to This Trip" / lịch sử run.
