@@ -75,7 +75,7 @@ gem "kamal", require: false
 gem "thruster", require: false
 
 # Image resizing for CarrierWave versions
-gem "image_processing", "~> 1.2"
+gem "image_processing", "~> 2.2"
 
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
 gem "rack-cors"
