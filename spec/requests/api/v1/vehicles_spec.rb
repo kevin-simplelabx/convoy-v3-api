@@ -57,6 +57,27 @@ RSpec.describe "Vehicles" do
     expect(Vehicle.unscoped.find_by(plate: "PE1290S").discarded_at).to be_present
   end
 
+  it "creates and edits the log card details" do
+    post api_v1_vehicles_path, params: { vehicle: { plate: "PE7001K", seats: 23, registered_on: "2023-03-14",
+                                                    chassis_number: "trh223-0012345", engine_number: " 1tr-7712345 ",
+                                                    coe_expires_on: "2033-03-13", road_tax_expires_on: "2026-12-31" } }, as: :json
+    expect(response).to have_http_status(:created)
+    expect(json[:data]).to include(registered_on: "2023-03-14", chassis_number: "TRH223-0012345", engine_number: "1TR-7712345",
+                                   coe_expires_on: "2033-03-13", road_tax_expires_on: "2026-12-31")
+
+    patch api_v1_vehicle_path(json.dig(:data, :id)), params: { vehicle: { registered_on: "2023-03-15", chassis_number: "TRH223-0012346",
+                                                                          engine_number: "", coe_expires_on: "2033-03-14",
+                                                                          road_tax_expires_on: "2027-06-30" } }, as: :json
+    expect(json[:data]).to include(registered_on: "2023-03-15", chassis_number: "TRH223-0012346", engine_number: nil,
+                                   coe_expires_on: "2033-03-14", road_tax_expires_on: "2027-06-30")
+  end
+
+  it "refuses a log card date that isn't a date" do
+    patch api_v1_vehicle_path(fleet[:van]), params: { vehicle: { coe_expires_on: "next year" } }, as: :json
+    expect(response).to have_http_status(:unprocessable_content)
+    expect(json.dig(:error, :details)).to include(:coe_expires_on)
+  end
+
   it "uploads a photo through CarrierWave" do
     photo = fixture_file_upload(Rails.root.join("db/seeds/files/fleet/van.png"), "image/png")
     patch api_v1_vehicle_path(fleet[:van]), params: { vehicle: { photo: } }

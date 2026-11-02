@@ -756,10 +756,22 @@ Edit Vehicle (vehicle panel) opens the vehicle form.
 | Action | Call |
 | --- | --- |
 | Open | `GET /vehicles/:id` |
-| Save | `PATCH /vehicles/:id` `{ "vehicle": { plate, seats, make, model, year_made, tags (list or "Coach, VIP"), notes, photo (file), remove_photo, operator_id, vehicle_team_id, driver_name, driver_phone } }` |
+| Save | `PATCH /vehicles/:id` `{ "vehicle": { plate, seats, make, model, year_made, registered_on, chassis_number, engine_number, coe_expires_on, road_tax_expires_on, tags (list or "Coach, VIP"), notes, photo (file), remove_photo, operator_id, vehicle_team_id, driver_name, driver_phone } }` |
 | Add | `POST /vehicles` (same body) |
 | Remove | `DELETE /vehicles/:id` |
 | Vehicles page list | `GET /vehicles` with the filters of section 1 and `meta.facets` |
+
+Log card details on the form (all optional, send `""` or `null` to clear):
+
+| Field | Form label | Format |
+| --- | --- | --- |
+| `registered_on` | Registration Date | `YYYY-MM-DD` |
+| `chassis_number` | Chassis Number | text, saved trimmed and upper case |
+| `engine_number` | Engine Number | text, saved trimmed and upper case |
+| `coe_expires_on` | COE Expiry | `YYYY-MM-DD` |
+| `road_tax_expires_on` | Road Tax Expiry | `YYYY-MM-DD` |
+
+The same fields come back on `GET /vehicles/:id`. A date that can't be read → 422 `{ details: { coe_expires_on: ["is not a valid date"] } }`.
 
 While `plate_conflict` is true (the log card shows another plate), saving is refused until the plate is picked (14.3).
 

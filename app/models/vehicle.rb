@@ -70,11 +70,13 @@ class Vehicle < ApplicationRecord
   has_many :maintenance_visits, dependent: :restrict_with_error
 
   normalizes :plate, with: ->(v) { v.to_s.gsub(/\s+/, "").upcase }
+  normalizes :chassis_number, :engine_number, with: ->(v) { v.to_s.strip.upcase.presence }
 
   validates :plate, presence: true, uniqueness: { scope: :company_id, conditions: -> { kept } }
   validates :seats, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validates :year_made, numericality: { only_integer: true, in: 1980..2100 }, allow_nil: true
   validate :operator_same_company
+  validate :dates_readable
   validate :plate_picked, on: :update
 
   OWNERSHIP_SQL = {
@@ -175,6 +177,13 @@ class Vehicle < ApplicationRecord
     return unless plate_conflict? && changed?
 
     errors.add(:plate, "differs from the log card (#{current_log_card.plate_on_card}). Pick which plate is right first")
+  end
+
+  # Log card dates typed in the form: text that isn't a date is refused, not silently dropped.
+  def dates_readable
+    %i[registered_on coe_expires_on road_tax_expires_on].each do |attr|
+      errors.add(attr, "is not a valid date") if self[attr].nil? && read_attribute_before_type_cast(attr).present?
+    end
   end
 
   def operator_same_company

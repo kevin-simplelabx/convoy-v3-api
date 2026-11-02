@@ -81,6 +81,7 @@ The row fields plus:
 
 | Field | Description |
 | --- | --- |
+| `registered_on`, `chassis_number`, `engine_number`, `coe_expires_on`, `road_tax_expires_on` | Log card details (editable on the vehicle form, [scheduler.md § 14.1](scheduler.md#141-vehicle)) |
 | `upcoming_drivers` | Default driver changes still to come (own buses): `[{ starts_on, driver: { id, name } \| null }]`. "Starts on" text |
 | `fuel` | Fuel & Energy summary (section 8.5) |
 | `financials` | Always `null` for now (Vehicle Financials belongs to the Finance menu, not built). Hide the Financials section |

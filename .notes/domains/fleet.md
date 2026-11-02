@@ -10,7 +10,7 @@
 | external_vehicle_submissions | câu trả lời của tài xế thuê (pending / added / dismissed); add → `vehicles.source = share_form` |
 | operators | managed / external, PayNow / bank (`bank_id`, branch tự tính `Banks::BranchFor`), managed bắt buộc có cách trả; external: cost per trip / day, `valid_until` (cảnh báo khi kéo thả) |
 | banks, bank_branches | platform, ngân hàng SG + branch (UOB tra theo 3 số đầu tài khoản); seed `04_banks` |
-| vehicles | ownership suy từ operator (nil = own, managed, external); `tags` varchar[] GIN; driver_name/phone chỉ cho external; photo; cột log card (chassis, engine, registered_on, COE, road tax); discard |
+| vehicles | ownership suy từ operator (nil = own, managed, external); `tags` varchar[] GIN; driver_name/phone chỉ cho external; photo; cột log card (chassis, engine, registered_on, COE, road tax: sửa tay trên form hoặc Claude điền ô trống khi upload log card; chassis / engine upcase); discard |
 | drivers | own, status pending / active / declined / past (aasm, concern `InvitedDriver`); mobile E.164 unique khi pending / active; `last_vehicle`, display (tên + ảnh cho khách), discard |
 | vehicle_driver_schedules | default driver từ ngày (`starts_on` mới nhất ≤ ngày), lên lịch trước được |
 | operator_drivers | như drivers + operator, notes; tối đa 1 bus của operator mình (unique partial), gán = swap; đổi operator → rời xe |
