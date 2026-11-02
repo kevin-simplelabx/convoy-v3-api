@@ -1,0 +1,2 @@
+class VehicleInsuranceDocumentDecorator < ApplicationDecorator
+end

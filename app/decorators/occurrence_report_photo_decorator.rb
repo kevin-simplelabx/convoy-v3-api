@@ -1,0 +1,2 @@
+class OccurrenceReportPhotoDecorator < ApplicationDecorator
+end

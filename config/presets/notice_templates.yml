@@ -1,0 +1,7 @@
+# Default notice templates (a company starts with these). {min} and {time} are filled in when sending.
+- { name: "Delay", message: "The bus is running about {min} minutes late because of heavy traffic. Please wait at the pick-up point." }
+- { name: "Breakdown", message: "The bus has broken down. A replacement bus is on its way and will arrive in about {min} minutes." }
+- { name: "Route Change", message: "The bus will take a different route today because of a road closure. Pick-up and drop-off points stay the same." }
+- { name: "Bad Weather", message: "Heavy rain in the area. The bus may arrive a few minutes late. Please wait under shelter." }
+- { name: "Cancellation", message: "This trip is cancelled today. We are sorry for the inconvenience." }
+- { name: "Early Dismissal", message: "School dismisses early today. The bus will leave the school at {time}." }

@@ -1,0 +1,2 @@
+class BookingAttachmentPolicy < ApplicationPolicy
+end

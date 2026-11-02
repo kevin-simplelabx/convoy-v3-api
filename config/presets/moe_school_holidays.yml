@@ -1,0 +1,20 @@
+# MOE school holiday preset (school calendars start from it). to empty = one day.
+moe:
+  - { from: "2026-03-14", to: "2026-03-22", label: "March Holidays" }
+  - { from: "2026-03-23", to: "2026-03-23", label: "Hari Raya Puasa Off-in-Lieu" }
+  - { from: "2026-05-30", to: "2026-06-28", label: "June Holidays" }
+  - { from: "2026-07-06", to: "2026-07-06", label: "Youth Day Holiday" }
+  - { from: "2026-09-04", to: "2026-09-04", label: "Teachers' Day" }
+  - { from: "2026-09-05", to: "2026-09-13", label: "September Holidays" }
+  - { from: "2026-10-02", to: "2026-10-02", label: "Children's Day (Primary)" }
+  - { from: "2026-11-21", to: "2026-12-31", label: "Year-End Holidays" }
+  - { from: "2027-02-09", to: "2027-02-09", label: "Chinese New Year Off-in-Lieu" }
+  - { from: "2027-03-13", to: "2027-03-21", label: "March Holidays" }
+  - { from: "2027-05-03", to: "2027-05-03", label: "Labour Day Off-in-Lieu" }
+  - { from: "2027-05-29", to: "2027-06-27", label: "June Holidays" }
+  - { from: "2027-07-05", to: "2027-07-05", label: "Youth Day Holiday" }
+  - { from: "2027-08-10", to: "2027-08-10", label: "Day After National Day" }
+  - { from: "2027-09-03", to: "2027-09-03", label: "Teachers' Day" }
+  - { from: "2027-09-04", to: "2027-09-12", label: "September Holidays" }
+  - { from: "2027-10-08", to: "2027-10-08", label: "Children's Day (Primary)" }
+  - { from: "2027-11-20", to: "2027-12-31", label: "Year-End Holidays" }

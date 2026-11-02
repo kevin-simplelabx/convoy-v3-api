@@ -1,0 +1,2 @@
+class SchedulerPolicy < ApplicationPolicy
+end

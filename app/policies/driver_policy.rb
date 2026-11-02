@@ -1,0 +1,2 @@
+class DriverPolicy < FleetPolicy
+end

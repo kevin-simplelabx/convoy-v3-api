@@ -1,0 +1,12 @@
+# Built-in Message Terms (from the Convoy OS defaults). kind: veh | svc | place | oth
+- { term: "Combi", means: "13-seater minibus (Toyota HiAce Commuter)", kind: veh }
+- { term: "HiAce, Commuter", means: "13-seater minibus", kind: veh }
+- { term: "Coaster", means: "19 to 23-seater bus", kind: veh }
+- { term: "Coach", means: "big bus, 40 seats or more", kind: veh }
+- { term: "MPV", means: "6 or 7-seater car", kind: veh }
+- { term: "Alphard, Vellfire", means: "VIP MPV, 6 seats", kind: veh }
+- { term: "Pax", means: "passengers", kind: oth }
+- { term: "Disposal, standby", means: "vehicle hired by the hour", kind: svc }
+- { term: "M&G, MNG", means: "meet and greet at the airport arrival hall with a signboard", kind: svc }
+- { term: "MBS", means: "Marina Bay Sands", kind: place }
+- { term: "RWS", means: "Resorts World Sentosa", kind: place }

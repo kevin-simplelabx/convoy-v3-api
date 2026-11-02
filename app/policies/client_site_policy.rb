@@ -1,0 +1,2 @@
+class ClientSitePolicy < ClientPolicy
+end

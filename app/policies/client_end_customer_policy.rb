@@ -1,0 +1,2 @@
+class ClientEndCustomerPolicy < ClientPolicy
+end

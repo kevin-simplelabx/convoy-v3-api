@@ -1,0 +1,2 @@
+class VehicleInsuranceDocumentPolicy < FleetPolicy
+end

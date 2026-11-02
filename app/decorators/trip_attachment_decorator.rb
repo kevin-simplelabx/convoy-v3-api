@@ -1,0 +1,2 @@
+class TripAttachmentDecorator < ApplicationDecorator
+end

@@ -26,7 +26,7 @@ development:
     url: <%= ENV.fetch("DATABASE_URL", "postgresql://localhost/convoy_v3_development") %>
   queue:
     <<: *default
-    url: <%= ENV.fetch("DATABASE_URL", "postgresql://localhost/convoy_v3_development") %>
+    url: <%= ENV.fetch("QUEUE_DATABASE_URL", "postgresql://localhost/convoy_v3_development_queue") %>
     migrations_paths: db/queue_migrate
 
 # Warning: The database defined as "test" will be erased and

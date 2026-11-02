@@ -1,15 +1,10 @@
-class CompanyBlueprint < Blueprinter::Base
-  identifier :id
+class CompanyBlueprint < ApplicationBlueprint
+  fields :name, :short_name, :display_name, :code, :country, :timezone, :theme_color,
+         :date_format, :time_format, :observed_holidays, :business_units_enabled, :status
 
-  fields :name, :logo, :created_at
+  field(:logo) { |company| company.logo_info }
 
-  view :with_stats do
-    field :users_count do |company|
-      company.users.count
-    end
-
-    field :admin_email do |company|
-      company.users.find_by(role: "admin")&.email || ""
-    end
+  view :platform do
+    fields :school_run_enabled, :route_list_import_enabled, :external_vehicle_cap, :created_at
   end
 end

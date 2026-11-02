@@ -1,46 +1,31 @@
 module Api
   module V1
     class AttendantsController < BaseController
-      before_action :require_company!
-      before_action -> { require_permission!("vehicles") }, only: [ :create, :destroy ]
-
-      # GET /api/v1/attendants
       def index
-        attendants = current_company.attendants.order(:name)
-        render json: AttendantBlueprint.render_as_hash(attendants)
+        authorize Attendant
+        render_page policy_scope(Attendant).kept.ransack(ransack_params).result.order(:name), AttendantBlueprint
       end
 
-      # POST /api/v1/attendants
       def create
-        p = attendant_params
-        if p[:id].present?
-          attendant = current_company.attendants.find_by(id: p[:id])
-          if attendant
-            attendant.update!(p.except(:id))
-          else
-            attendant = current_company.attendants.create!(p.except(:id))
-          end
-        else
-          attendant = current_company.attendants.create!(p)
-        end
-        render json: AttendantBlueprint.render_as_hash(attendant)
-      rescue ActiveRecord::RecordInvalid => e
-        render_error(e.record.errors.full_messages.first)
+        attendant = authorize Attendant.new(attendant_params)
+        attendant.save!
+        render_data attendant, AttendantBlueprint, status: :created
       end
 
-      # DELETE /api/v1/attendants/:id
+      def update
+        attendant = authorize Attendant.kept.find(params[:id])
+        attendant.update!(attendant_params)
+        render_data attendant, AttendantBlueprint
+      end
+
       def destroy
-        attendant = current_company.attendants.find_by(id: params[:id])
-        return render_error("Attendant not found", :not_found) unless attendant
-        attendant.destroy!
-        render json: { ok: true }
+        authorize(Attendant.kept.find(params[:id])).discard!
+        head :no_content
       end
 
       private
 
-      def attendant_params
-        params.permit(:id, :name, :contact, :notes)
-      end
+      def attendant_params = params.expect(attendant: %i[name phone photo remove_photo notes])
     end
   end
 end

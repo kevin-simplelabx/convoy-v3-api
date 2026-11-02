@@ -1,0 +1,2 @@
+class WorkshopPolicy < ApplicationPolicy
+end

@@ -1,0 +1,2 @@
+class TripStopPhotoDecorator < ApplicationDecorator
+end

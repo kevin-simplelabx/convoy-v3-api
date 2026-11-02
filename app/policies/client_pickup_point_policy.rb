@@ -1,0 +1,2 @@
+class ClientPickupPointPolicy < ClientPolicy
+end

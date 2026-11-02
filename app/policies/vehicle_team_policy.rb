@@ -1,0 +1,2 @@
+class VehicleTeamPolicy < FleetPolicy
+end

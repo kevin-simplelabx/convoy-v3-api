@@ -1,0 +1,2 @@
+class DocumentReadDecorator < ApplicationDecorator
+end

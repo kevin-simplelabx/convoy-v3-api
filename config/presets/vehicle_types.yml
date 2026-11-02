@@ -1,0 +1,12 @@
+# Platform vehicle types (Convoy adds or removes them; companies only turn them on or off).
+# tyres: tyres per side on each axle, front first (1-1 single, 1-2 rear dual, 1-1-2, 1-2-2).
+- { key: car,  name: Car,           seats: 4,  tyres: "1-1" }
+- { key: mpv,  name: MPV,           seats: 6,  tyres: "1-1" }
+- { key: van,  name: Minibus,       seats: 13, tyres: "1-1" }
+- { key: mb19, name: Medium Bus,    seats: 19, tyres: "1-2" }
+- { key: mb23, name: Medium Bus,    seats: 23, tyres: "1-2" }
+- { key: mc29, name: Mini Coach,    seats: 29, tyres: "1-2" }
+- { key: c40,  name: Coach,         seats: 40, tyres: "1-2" }
+- { key: c45,  name: Coach,         seats: 45, tyres: "1-2" }
+- { key: c49,  name: Coach,         seats: 49, tyres: "1-2" }
+- { key: dd,   name: Double Decker, seats: 89, tyres: "1-2-2" }

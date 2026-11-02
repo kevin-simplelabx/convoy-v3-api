@@ -1,0 +1,2 @@
+class VehicleLogCardDecorator < ApplicationDecorator
+end

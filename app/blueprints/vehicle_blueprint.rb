@@ -1,21 +1,22 @@
-class VehicleBlueprint < Blueprinter::Base
-  identifier :id do |v| v.id.to_s end
+class VehicleBlueprint < ApplicationBlueprint
+  fields :plate, :seats, :make, :year_made, :tags, :notes, :ownership, :size, :size_name,
+         :default_picture, :driver_name, :driver_phone, :chassis_number, :engine_number, :registered_on,
+         :coe_expires_on, :road_tax_expires_on, :source
+  # The record's own model (Draper's `model` is the wrapped record, so it is read from the object).
+  field(:model) { |v| v.object.model }
+  field(:vip) { |v| v.vip? }
+  field(:photo) { |v| v.photo_info }
+  field(:driver) { |v| v.driver_today }
+  field(:plate_conflict) { |v| v.plate_conflict? }
+  field(:insurance) { |v| v.insurance_summary }
+  association :operator, blueprint: OperatorBlueprint, view: :default
+  association :vehicle_team, blueprint: VehicleTeamBlueprint
 
-  field(:plate)       { |v| v.plate.to_s }
-  field(:vehicleType) { |v| v.vehicle_type.to_s }
-  field(:seats)       { |v| v.seats }
-  field(:driverName)  { |v| v.driver_name.to_s }
-  field(:driverContact) { |v| v.driver_contact.to_s }
-  field(:driverPhoto) { |v| v.driver_photo.to_s }
-  field(:operatorId)  { |v| v.operator_id.to_s }
-  field(:operatorName) { |v| v.operator_name.to_s }
-  field(:operatorContact) { |v| v.operator_contact.to_s }
-  field(:operatorPhone)   { |v| v.operator_phone.to_s }
-  field(:tags)  { |v| v.tags.is_a?(Array) ? v.tags : [] }
-  field(:photo) { |v| v.photo.to_s }
-  field(:notes) { |v| v.notes.to_s }
-  field(:sample) { |v| !!v.sample }
-  field(:coeExp) { |v| v.respond_to?(:coe_exp) ? v.coe_exp.to_s : '' }
-  field(:taxExp) { |v| v.respond_to?(:tax_exp) ? v.tax_exp.to_s : '' }
-  field(:insTo)  { |v| v.respond_to?(:ins_to) ? v.ins_to.to_s : '' }
+  # The vehicle record dialog. fuel: Fuel & Energy summary (own buses); financials stay null until the Finance menu
+  # builds Vehicle Financials.
+  view :record do
+    field(:upcoming_drivers) { |v| v.upcoming_drivers }
+    field(:fuel) { |_v, options| options[:fuel] }
+    field(:financials) { nil }
+  end
 end

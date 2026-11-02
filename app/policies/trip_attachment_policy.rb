@@ -1,0 +1,2 @@
+class TripAttachmentPolicy < TripPolicy
+end

@@ -1,0 +1,2 @@
+class FuelCompanyPolicy < FleetPolicy
+end

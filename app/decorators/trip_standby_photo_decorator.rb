@@ -1,0 +1,2 @@
+class TripStandbyPhotoDecorator < ApplicationDecorator
+end

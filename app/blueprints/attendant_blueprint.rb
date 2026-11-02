@@ -1,5 +1,4 @@
-class AttendantBlueprint < Blueprinter::Base
-  identifier :id
-
-  fields :name, :contact, :notes, :created_at, :updated_at
+class AttendantBlueprint < ApplicationBlueprint
+  fields :name, :phone, :notes
+  field(:photo) { |a| a.photo_info }
 end

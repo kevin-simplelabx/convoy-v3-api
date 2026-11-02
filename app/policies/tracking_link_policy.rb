@@ -1,0 +1,2 @@
+class TrackingLinkPolicy < ApplicationPolicy
+end

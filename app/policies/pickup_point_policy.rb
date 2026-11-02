@@ -1,0 +1,2 @@
+class PickupPointPolicy < ApplicationPolicy
+end

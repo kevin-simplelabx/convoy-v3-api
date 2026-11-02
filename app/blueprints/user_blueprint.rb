@@ -1,9 +1,6 @@
-class UserBlueprint < Blueprinter::Base
-  identifier :id
+class UserBlueprint < ApplicationBlueprint
+  fields :name, :email, :mobile, :role, :owner, :status, :company_id, :initials
 
-  fields :name, :email, :role, :company_id, :created_at
-
-  field :permissions do |user|
-    user.effective_permissions
-  end
+  field(:avatar) { |user| user.avatar_info }
+  field(:permissions) { |user| user.effective_permissions }
 end

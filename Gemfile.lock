@@ -1,6 +1,8 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    aasm (6.0.0)
+      concurrent-ruby (~> 1.0)
     action_text-trix (2.1.19)
       railties
     actioncable (8.1.4)
@@ -52,6 +54,10 @@ GEM
       globalid (>= 0.3.6)
     activemodel (8.1.4)
       activesupport (= 8.1.4)
+    activemodel-serializers-xml (1.0.3)
+      activemodel (>= 5.0.0.a)
+      activesupport (>= 5.0.0.a)
+      builder (~> 3.1)
     activerecord (8.1.4)
       activemodel (= 8.1.4)
       activesupport (= 8.1.4)
@@ -75,7 +81,22 @@ GEM
       securerandom (>= 0.3)
       tzinfo (~> 2.0, >= 2.0.5)
       uri (>= 0.13.1)
+    acts_as_tenant (2.2.2)
+      rails (>= 6.0)
+    addressable (2.9.0)
+      public_suffix (>= 2.0.2, < 8.0)
+    annotaterb (4.26.0)
+      activerecord (>= 6.0.0)
+      activesupport (>= 6.0.0)
+    anthropic (2.3.0)
+      base64 (~> 0.1)
+      connection_pool (>= 2, < 4)
+      opentelemetry-api (>= 1.2.4, < 2)
+      standardwebhooks (~> 1.0)
     ast (2.4.3)
+    audited (5.8.0)
+      activerecord (>= 5.2, < 8.2)
+      activesupport (>= 5.2, < 8.2)
     base64 (0.3.0)
     bcrypt (3.1.22)
     bcrypt_pbkdf (1.1.2)
@@ -86,12 +107,23 @@ GEM
     brakeman (8.1.0)
       racc
     builder (3.3.0)
+    bullet (8.3.1)
+      activesupport (>= 3.0.0)
+      uniform_notifier (~> 1.11)
     bundler-audit (0.9.3)
       bundler (>= 1.2.0)
       thor (~> 1.0)
+    carrierwave (3.1.4)
+      activemodel (>= 6.0.0)
+      activesupport (>= 6.0.0)
+      addressable (~> 2.6)
+      image_processing (>= 1.1, < 3)
+      marcel (>= 1.0.0, < 3)
+      ssrf_filter (~> 1.0)
     concurrent-ruby (1.3.8)
     connection_pool (3.0.2)
     crass (1.0.7)
+    csv (3.3.7)
     date (3.6.0)
     debug (1.11.1)
       irb (~> 1.10)
@@ -102,16 +134,33 @@ GEM
       railties (>= 7.0)
       responders
       warden (~> 1.2.3)
+    diff-lcs (1.6.2)
+    discard (2.0.0)
+      activerecord (>= 7.0, < 9.0)
     dotenv (3.2.0)
     dotenv-rails (3.2.0)
       dotenv (= 3.2.0)
       railties (>= 6.1)
+    draper (4.0.6)
+      actionpack (>= 5.0)
+      activemodel (>= 5.0)
+      activemodel-serializers-xml (>= 1.0)
+      activesupport (>= 5.0)
+      request_store (>= 1.0)
+      ruby2_keywords
     drb (2.2.3)
     ed25519 (1.4.0)
     erb (6.0.7)
     erubi (1.13.1)
     et-orbi (1.4.2)
       tzinfo
+    factory_bot (6.6.0)
+      activesupport (>= 6.1.0)
+    factory_bot_rails (6.5.1)
+      factory_bot (~> 6.5)
+      railties (>= 6.1.0)
+    faker (3.8.0)
+      i18n (>= 1.8.11, < 2)
     faraday (2.14.4)
       faraday-net_http (>= 2.0, < 3.5)
       json
@@ -126,6 +175,8 @@ GEM
       raabro (~> 1.4)
     globalid (1.4.0)
       activesupport (>= 6.1)
+    groupdate (6.8.0)
+      activesupport (>= 7.2)
     i18n (1.15.2)
       concurrent-ruby (~> 1.0)
     image_processing (1.14.0)
@@ -195,8 +246,14 @@ GEM
       racc (~> 1.4)
     nokogiri (1.19.4-x86_64-linux-gnu)
       racc (~> 1.4)
+    oj (3.17.7)
+      bigdecimal (>= 3.0)
+      ostruct (>= 0.2)
+    opentelemetry-api (1.11.1)
+      logger
     orm_adapter (0.5.0)
     ostruct (0.6.3)
+    pagy (9.4.0)
     parallel (2.3.0)
     parser (3.3.12.0)
       ast (~> 2.4.1)
@@ -204,12 +261,16 @@ GEM
     pg (1.7.0)
     pg (1.7.0-aarch64-linux)
     pg (1.7.0-x86_64-linux)
+    phonelib (0.10.28)
     pp (0.6.4)
       prettyprint
     prettyprint (0.2.1)
     prism (1.9.0)
+    public_suffix (7.0.5)
     puma (8.0.2)
       nio4r (~> 2.0)
+    pundit (2.5.2)
+      activesupport (>= 3.0.0)
     raabro (1.5.0)
     racc (1.8.1)
     rack (3.2.7)
@@ -257,6 +318,10 @@ GEM
       zeitwerk (~> 2.6)
     rainbow (3.1.1)
     rake (13.4.2)
+    ransack (6.0.1)
+      activerecord (>= 7.2)
+      activesupport (>= 7.2)
+      i18n
     rbs (4.2.0)
       logger
       prism (>= 1.6.0)
@@ -269,9 +334,34 @@ GEM
     regexp_parser (2.13.1)
     reline (0.7.0)
       io-console (~> 0.5)
+    request_store (1.7.0)
+      rack (>= 1.4)
     responders (3.2.1)
       actionpack (>= 7.0)
       railties (>= 7.0)
+    roo (4.0.0)
+      base64 (~> 0.2)
+      csv (~> 3)
+      logger (~> 1)
+      nokogiri (~> 1)
+      rubyzip (>= 3.0.0, < 4.0.0)
+    rspec-core (3.13.6)
+      rspec-support (~> 3.13.0)
+    rspec-expectations (3.13.5)
+      diff-lcs (>= 1.2.0, < 2.0)
+      rspec-support (~> 3.13.0)
+    rspec-mocks (3.13.8)
+      diff-lcs (>= 1.2.0, < 2.0)
+      rspec-support (~> 3.13.0)
+    rspec-rails (8.0.4)
+      actionpack (>= 7.2)
+      activesupport (>= 7.2)
+      railties (>= 7.2)
+      rspec-core (>= 3.13.0, < 5.0.0)
+      rspec-expectations (>= 3.13.0, < 5.0.0)
+      rspec-mocks (>= 3.13.0, < 5.0.0)
+      rspec-support (>= 3.13.0, < 5.0.0)
+    rspec-support (3.13.7)
     rubocop (1.92.0)
       json (>= 2.3)
       language_server-protocol (~> 3.17.0.2)
@@ -304,7 +394,11 @@ GEM
     ruby-vips (2.3.0)
       ffi (~> 1.12)
       logger
+    ruby2_keywords (0.0.5)
+    rubyzip (3.7.0)
     securerandom (0.4.1)
+    shoulda-matchers (8.0.1)
+      activesupport (>= 7.2)
     solid_cable (4.1.0)
       actioncable (>= 7.2)
       activejob (>= 7.2)
@@ -328,6 +422,10 @@ GEM
       net-sftp (>= 2.1.2)
       net-ssh (>= 2.8.0)
       ostruct
+    ssrf_filter (1.6.0)
+    standardwebhooks (1.1.0)
+    strong_migrations (2.8.0)
+      activerecord (>= 7.2)
     thor (1.5.0)
     thruster (0.1.27)
     thruster (0.1.27-aarch64-linux)
@@ -339,6 +437,7 @@ GEM
     unicode-display_width (3.3.0)
       unicode-emoji (~> 4.3)
     unicode-emoji (4.3.0)
+    uniform_notifier (1.18.1)
     uri (1.1.2)
     useragent (0.16.11)
     warden (1.2.9)
@@ -355,25 +454,46 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
+  aasm
+  acts_as_tenant
+  annotaterb
+  anthropic
+  audited
   blueprinter
   bootsnap
   brakeman
+  bullet
   bundler-audit
+  carrierwave (~> 3.1)
   debug
   devise
+  discard
   dotenv-rails
+  draper
+  factory_bot_rails
+  faker
   faraday
+  groupdate
   image_processing (~> 1.2)
   kamal
+  oj
+  pagy (~> 9.3)
   pg (~> 1.1)
+  phonelib
   puma (>= 5.0)
+  pundit
   rack-attack
   rack-cors
   rails (~> 8.1.3)
+  ransack
+  roo
+  rspec-rails
   rubocop-rails-omakase
+  shoulda-matchers
   solid_cable
   solid_cache
   solid_queue
+  strong_migrations
   thruster
   tzinfo-data
 

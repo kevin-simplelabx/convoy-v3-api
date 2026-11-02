@@ -1,0 +1,2 @@
+class NoticeTemplatePolicy < ApplicationPolicy
+end

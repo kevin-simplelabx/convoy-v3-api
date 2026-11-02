@@ -1,0 +1,2 @@
+class BookingAttachmentDecorator < ApplicationDecorator
+end

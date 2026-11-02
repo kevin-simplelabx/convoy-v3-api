@@ -1,0 +1,2 @@
+class OperatorPolicy < FleetPolicy
+end

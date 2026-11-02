@@ -6,17 +6,51 @@ gem "rails", "~> 8.1.3"
 gem "pg", "~> 1.1"
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
-# Build JSON APIs with ease [https://github.com/rails/jbuilder]
-# gem "jbuilder"
-
 # Auth
 gem "devise"
 
-# JSON serialization
+# Multi-tenancy (scope every query by company) and authorization
+gem "acts_as_tenant"
+gem "pundit"
+
+# Presentation: decorators and JSON views
+gem "draper"
 gem "blueprinter"
 
-# HTTP client (OSRM proxy)
+# File uploads (every upload goes through CarrierWave)
+gem "carrierwave", "~> 3.1"
+
+# Pagination and filtering
+gem "pagy", "~> 9.3"
+gem "ransack"
+
+# Change history (Changes to This Trip, who changed what)
+gem "audited"
+
+# Soft delete (trips, vehicles, drivers stay readable for past occurrences)
+gem "discard"
+
+# Safe migrations on large tables (trip_occurrences)
+gem "strong_migrations"
+
+# Fast JSON for large responses (Scheduler grid)
+gem "oj"
+
+# HTTP client (OSRM proxy, external APIs)
 gem "faraday"
+
+# Claude API (reads log cards, insurance papers, invoices, route lists, trip requests)
+gem "anthropic"
+
+# Excel / CSV reading (Import Route List)
+gem "roo"
+
+# State machines (booking trip: pending, awaiting acknowledgement, approved, rejected...)
+gem "aasm"
+# Group by day / week / month in the company time zone (Fuel usage, Maintenance spend) [https://github.com/ankane/groupdate]
+gem "groupdate"
+# Phone numbers: normalise to E.164 and validate (driver invites) [https://github.com/daddyz/phonelib]
+gem "phonelib"
 
 # Rate limiting
 gem "rack-attack"
@@ -38,7 +72,7 @@ gem "kamal", require: false
 # Add HTTP asset caching/compression and X-Sendfile acceleration to Puma [https://github.com/basecamp/thruster/]
 gem "thruster", require: false
 
-# Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
+# Image resizing for CarrierWave versions
 gem "image_processing", "~> 1.2"
 
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
@@ -46,9 +80,21 @@ gem "rack-cors"
 
 group :development do
   gem "dotenv-rails"
+  gem "annotaterb"
 end
 
 group :development, :test do
+  gem "bullet"
+end
+
+group :test do
+  gem "shoulda-matchers"
+end
+
+group :development, :test do
+  gem "rspec-rails"
+  gem "factory_bot_rails"
+  gem "faker"
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
 

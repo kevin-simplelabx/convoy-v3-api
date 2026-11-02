@@ -5,11 +5,8 @@ require "rails"
 require "active_model/railtie"
 require "active_job/railtie"
 require "active_record/railtie"
-require "active_storage/engine"
 require "action_controller/railtie"
 require "action_mailer/railtie"
-require "action_mailbox/engine"
-require "action_text/engine"
 require "action_view/railtie"
 require "action_cable/engine"
 # require "rails/test_unit/railtie"
@@ -33,8 +30,11 @@ module ConvoyV3
     # These settings can be overridden in specific environments using the files
     # in config/environments, which are processed later.
     #
-    # config.time_zone = "Central Time (US & Canada)"
-    # config.eager_load_paths << Rails.root.join("extras")
+    # Default zone for display; each request runs in its company's timezone (Company#timezone).
+    config.time_zone = "Singapore"
+    config.active_record.default_timezone = :utc
+    # structure.sql: trip_occurrences is a partitioned table, which schema.rb cannot describe
+    config.active_record.schema_format = :sql
 
     # Only loads a smaller set of middleware suitable for API only apps.
     # Middleware like session, flash, cookies can be added back manually.
@@ -44,6 +44,12 @@ module ConvoyV3
     # Re-add session/cookie middleware (needed for Devise cookie sessions)
     config.middleware.use ActionDispatch::Cookies
     config.middleware.use ActionDispatch::Session::CookieStore, key: "_convoy_session", same_site: :lax, secure: Rails.env.production?
+
+    config.generators do |g|
+      g.test_framework :rspec, fixture: false
+      g.fixture_replacement :factory_bot, dir: "spec/factories"
+      g.orm :active_record, primary_key_type: :bigint
+    end
 
     # In-process cache for OSRM proxy responses (survives between requests, resets on restart)
     config.cache_store = :memory_store, { size: 64.megabytes }

@@ -1,0 +1,2 @@
+class BookingCancelRequestPolicy < ApplicationPolicy
+end

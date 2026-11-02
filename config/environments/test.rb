@@ -29,7 +29,6 @@ Rails.application.configure do
   config.action_controller.allow_forgery_protection = false
 
   # Store uploaded files on the local file system in a temporary directory.
-  config.active_storage.service = :test
 
   # Tell Action Mailer not to deliver emails to the real world.
   # The :test delivery method accumulates sent emails in the
@@ -50,4 +49,12 @@ Rails.application.configure do
 
   # Raise error when a before_action's only/except options reference missing actions.
   config.action_controller.raise_on_missing_callback_actions = true
+
+  # N+1 query detection
+  config.after_initialize do
+    Bullet.enable = true
+    Bullet.raise = true
+    # N+1 only: unused eager loading depends on the data in each example.
+    Bullet.unused_eager_loading_enable = false
+  end
 end

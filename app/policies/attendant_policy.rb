@@ -1,0 +1,2 @@
+class AttendantPolicy < FleetPolicy
+end

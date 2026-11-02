@@ -1,0 +1,2 @@
+class TripStopPhotoPolicy < ApplicationPolicy
+end

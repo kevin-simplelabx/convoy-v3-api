@@ -1,0 +1,2 @@
+class FuelAlertPolicy < FleetPolicy
+end

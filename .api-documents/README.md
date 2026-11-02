@@ -1,0 +1,149 @@
+# Convoy OS API — Front-end Guide
+
+One document per menu of Convoy OS. Each document lists the screen actions and the API call behind each one.
+
+| Menu | Document |
+| --- | --- |
+| Scheduler (rail icon `calendar_view_week`) and everything it opens | [scheduler.md](scheduler.md) |
+| Trips (rail icon `assignment`): Trips, Trip History, Notices, Bookings, Rate Cards | [trips.md](trips.md) |
+| Fleet (rail icon `directions_bus`): Vehicles, Drivers, Bus Attendants, External Vehicles, Fuel & Energy, Maintenance, Vehicle Types, and Transport Operators (Managed Operators, Operator Vehicles, Operator Drivers) | [fleet.md](fleet.md) |
+
+Read the conventions below first; the menu documents do not repeat them.
+
+---
+
+## Base URL and format
+
+- All endpoints live under `/api/v1`, for example `GET /api/v1/scheduler`.
+- Request and response bodies are JSON (`Content-Type: application/json`), except file uploads (multipart, see below).
+- Keys are **snake_case**: `start_time`, `vehicle_id`, `trip_label`.
+- Dates are ISO `YYYY-MM-DD`. Times of day are `"HH:MM"` (24-hour) in requests and responses. A trip that ends after
+  midnight still returns its end as `"HH:MM"` and sets `ends_next_day: true`.
+- Timestamps (`starts_at`, `created_at`...) are ISO 8601 with the company's offset, for example `2026-11-02T07:45:00+08:00`.
+- **Money, decimals and coordinates come back as strings**: `"price": "76.19"`, `"lat": "1.2722"`. Send them as numbers or strings.
+- Display formats (company Date Format / Time Format) are the front end's job. The only server-formatted text is human
+  sentences such as warnings and summaries, which already follow the company's formats.
+
+## Signing in (cookie session)
+
+The API uses a session cookie (`_convoy_session`, `SameSite=Lax`, `HttpOnly`). Send requests with credentials
+(`fetch(url, { credentials: "include" })`). Same origin is simplest; cross-origin hosts must be listed in `CORS_ORIGINS`.
+
+| Action | Call |
+| --- | --- |
+| Sign in | `POST /session` `{ "email": "...", "password": "..." }` |
+| Who am I (on page load) | `GET /session` |
+| Sign out | `DELETE /session` → `204` |
+| Convoy Admin picks the company to view | `PATCH /session` `{ "company_id": 1 }` |
+
+`GET /session` response:
+
+```json
+{
+  "data": {
+    "user": { "id": 2, "name": "SimpleDrive Ops", "email": "ops@simpledrive.sg", "role": "admin", "owner": true,
+              "permissions": ["users", "vehicles", "finance", "..."], "initials": "SO", "avatar": null, "status": "active", "company_id": 1 },
+    "company": { "id": 1, "name": "SimpleDrive", "display_name": "SimpleDrive", "code": "SD", "country": "SG", "timezone": "Asia/Singapore",
+                 "date_format": "dmy", "time_format": "24", "theme_color": "#0B6E6E", "logo": null, "observed_holidays": "off",
+                 "business_units_enabled": false, "status": "active" }
+  }
+}
+```
+
+- `role`: `convoy_admin` (Convoy staff, **view only**: every write returns `403`), `admin` (every permission), `member` (only `permissions`).
+- `company` is `null` for a Convoy Admin until `PATCH /session` picks one; company data then answers `422 "Pick a company first"`.
+- Sample accounts (seed): `ops@simpledrive.sg` / `Simple123!` (Admin), `dispatch@simpledrive.sg` / `Simple123!` (Member, vehicles),
+  `admin@convoy.sg` / `Convoy123!` (Convoy Admin).
+
+## Responses
+
+Success:
+
+```json
+{ "data": { "...": "..." } }
+```
+
+Lists are paged:
+
+```json
+{ "data": [ "..." ], "meta": { "page": 1, "limit": 50, "count": 132, "pages": 3 } }
+```
+
+- Paging: `?page=2&limit=100` (default limit 50, max 500).
+- Some lists add more to `meta` (counts for filter chips and so on); each endpoint says so.
+- Small lists (vehicle types, teams, holidays...) return every row without paging: `{ "data": [...], "meta": {} }`.
+- Text filters on lists use ransack keys: `?q[name_i_cont]=goo` (case-insensitive "contains"). Each endpoint lists its filters.
+
+## Errors
+
+```json
+{ "error": { "code": "invalid", "message": "Enter the drop-off point", "details": { "base": ["Enter the drop-off point"] } } }
+```
+
+| Status | `code` | When |
+| --- | --- | --- |
+| 400 | `bad_request` | A required parameter is missing (`message` names it) |
+| 401 | `unauthorized` | Not signed in, or wrong email / password |
+| 403 | `forbidden` | Not allowed. Convoy Admin gets `"View only. Convoy Admin cannot change company data"` |
+| 404 | `not_found` | The record does not exist or belongs to another company |
+| 409 | `conflict` | Someone else changed the record (see `lock_version`) |
+| 410 | `gone` | A public tracking link has closed |
+| 422 | `invalid` / `unprocessable_content` | Validation failed or a business rule was broken; `message` is a sentence to show the user as is; `details` lists field errors |
+
+Show `error.message` in the toast. It is written for end users and matches the wording of the Convoy OS prototype.
+
+## Optimistic locking (`lock_version`)
+
+Trips and runs carry `lock_version`. Send back the value you loaded when saving (`PATCH /trips/:id`, run actions);
+if someone else saved in between, the API answers `409` and the screen should reload. Leaving it out skips the check.
+
+## Files (uploads and downloads)
+
+- Upload with `multipart/form-data`. Nested fields use bracket names, for example `vehicle[photo]`,
+  `trip[stops_attributes][0][photos_attributes][0][photo]`.
+- Files are private. Any file in a response looks like:
+
+```json
+{ "url": "/api/v1/downloads/eyJfcmFpbHMi...", "thumb_url": "/api/v1/downloads/...", "name": "hiace.png", "size": 9273, "content_type": "image/png" }
+```
+
+- `url` / `thumb_url` are signed links valid for **1 hour** and need the session cookie; use them directly in `<img src>` or
+  open them in a new tab. Reload the record to get fresh links.
+- Images are resized to 1280 px; `thumb_url` is a 320 px square. Documents accept PDF, images, xlsx / xls, csv, doc / docx, txt (10 MB max).
+
+## Reading documents with Claude (background reads)
+
+Log cards, insurance papers, workshop invoices, route lists and pasted trip messages are read by Claude in the background:
+
+1. `POST /document_reads` with `kind` and a `file` (multipart) or `input_text` → **202** `{ "data": { "id": 7, "status": "pending", ... } }`.
+2. Poll `GET /document_reads/:id` every 2–3 s until `status` is `done` (use `result`) or `failed` (show `error`).
+3. When saving the form, send `document_read_id` so the server attaches the same file; there is no second upload.
+
+| `kind` | Used by |
+| --- | --- |
+| `log_card` | Edit Vehicle > Log Card |
+| `insurance` | Edit Vehicle > Insurance |
+| `maintenance_invoice` | Maintenance > Record the Work |
+| `route_list` | Trip form (School Run) > Import Route List |
+| `trip_message` | Trip form > Fill from Message (`input_text`) |
+
+```json
+{ "data": { "id": 7, "kind": "log_card", "status": "done", "error": null, "result": { "plate": "PD3318K", "make": "Toyota" },
+            "file": { "url": "...", "name": "card.pdf" }, "created_at": "...", "finished_at": "..." } }
+```
+
+Only the user who started a read can see it. Without an Anthropic key on the server, reads end `failed` with
+`"Reading with Claude is not set up (API key missing or not allowed)"`.
+
+## Runs ("occurrences")
+
+The Scheduler works on **runs**: one row per trip (or School Bus route) per date, per shuttle timing, per vehicle slot.
+They are already resolved (times, bus, driver, price), so the screens only display them.
+
+- Runs exist up to **`meta.horizon` = today + 120 days**. Later dates have no runs yet: the server adds one date each night.
+  Do not let users browse or act past the horizon (grey out those days, stop the › button there).
+- Changes made for the future are rules, not runs, so they reach later dates on their own as the horizon moves:
+  an assignment From This Date On, Driver Away / Vehicle Down on a date range, Every Run From Today, Change a Day,
+  public holidays, default driver changes, trip edits. Their date pickers may go past the horizon.
+- `id` identifies a run; `key` is a stable name for the same run across re-syncs:
+  `t<trip_id>|<date>|<trip_run_id or 0>|<slot_no>|<part>` or `r<school_route_id>|<date>|0|1|1`.

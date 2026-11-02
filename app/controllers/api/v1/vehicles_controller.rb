@@ -1,50 +1,64 @@
+# Vehicles, with the Scheduler's filters: ownership[] (own managed external), size[] (sedan mpv small medium large),
+# tags[], vip, team_id, q (plate, make, model, driver, operator), sort (type | smallest | largest).
+# meta.facets gives the counts for the filter chips (teams: chips of the Vehicles pages, by the ownership picked).
 module Api
   module V1
     class VehiclesController < BaseController
-      before_action :require_company!
-      before_action -> { require_permission!("vehicles") }, only: [ :create, :destroy ]
-
-      # GET /api/v1/vehicles
       def index
-        vehicles = current_company.vehicles.order(:plate)
-        render json: VehicleBlueprint.render_as_hash(vehicles)
+        authorize Vehicle
+        search = VehicleSearch.new(kept, params)
+        render_page search.call, VehicleBlueprint, meta: { facets: search.facets, external_cap: }
       end
 
-      # POST /api/v1/vehicles
+      # The vehicle record (list row fields plus upcoming driver changes, fuel and financials summaries).
+      def show
+        vehicle = authorize kept.find(params[:id])
+        fuel = vehicle.own? ? FuelStatsPresenter.summary(FuelVehicleStats.new.call([ vehicle.id ])[vehicle.id]) : nil
+        render_data vehicle, VehicleBlueprint, view: :record, fuel:
+      end
+
       def create
-        p = vehicle_params
-        if p[:id].present?
-          vehicle = current_company.vehicles.find_by(id: p[:id])
-          if vehicle
-            vehicle.update!(p.except(:id))
-          else
-            vehicle = current_company.vehicles.create!(p.except(:id))
-          end
-        else
-          vehicle = current_company.vehicles.create!(p)
-        end
-        render json: VehicleBlueprint.render_as_hash(vehicle)
-      rescue ActiveRecord::RecordInvalid => e
-        render_error(e.record.errors.full_messages.first)
+        vehicle = authorize Vehicle.new(vehicle_params)
+        vehicle.save!
+        render_data vehicle, VehicleBlueprint, status: :created
       end
 
-      # DELETE /api/v1/vehicles/:id
+      def update
+        vehicle = authorize kept.find(params[:id])
+        vehicle.update!(vehicle_params)
+        render_data vehicle, VehicleBlueprint
+      end
+
+      # Delete Vehicle: refused while the bus still has runs or workshop visits from now on.
       def destroy
-        vehicle = current_company.vehicles.find_by(id: params[:id])
-        return render_error("Vehicle not found", :not_found) unless vehicle
-        vehicle.destroy!
-        render json: { ok: true }
+        Vehicles::Remove.call(vehicle: authorize(kept.find(params[:id])))
+        head :no_content
+      end
+
+      # POST /vehicles/external { plate, seats, driver_name, driver_phone, company: {name, phone, paynow_uen} }
+      # New External Vehicle from the Scheduler: the hiring company is matched by name or created.
+      def create_external
+        authorize Vehicle, :create_external?
+        vehicle = ExternalVehicles::Create.call(params: external_params, company: current_company, user: current_user)
+        render_data vehicle, VehicleBlueprint, status: :created
       end
 
       private
 
-      def vehicle_params
-        params.permit(
-          :id, :plate, :vehicle_type, :seats,
-          :driver_name, :driver_contact, :notes,
-          :operator_id, :operator_name, :operator_contact, :operator_phone,
-          :tags, :photo, :driver_photo, :sample
-        )
+      def kept = policy_scope(Vehicle).kept
+
+      # External Vehicles: slots used against the company's cap.
+      def external_cap
+        used = Vehicle.external.kept.count
+        limit = current_company.external_vehicle_cap
+        { used:, limit:, left: [ limit - used, 0 ].max }
+      end
+
+      def vehicle_params = params.expect(vehicle: policy(Vehicle).permitted_attributes)
+
+      def external_params
+        params.permit(:plate, :seats, :driver_name, :driver_phone, :vehicle_id, :submission_id,
+                      company: %i[name phone paynow_uen cost_per_trip cost_per_day valid_until])
       end
     end
   end

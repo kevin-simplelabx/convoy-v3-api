@@ -1,0 +1,2 @@
+class MaintenanceInvoiceDecorator < ApplicationDecorator
+end

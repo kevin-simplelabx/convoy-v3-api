@@ -1,0 +1,2 @@
+class ExternalVehicleSubmissionPolicy < FleetPolicy
+end

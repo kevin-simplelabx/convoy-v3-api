@@ -1,81 +1,57 @@
+# Sign in, sign out, who am I, and (Convoy Admin) which company to look at.
 module Api
   module V1
     class SessionsController < BaseController
-      skip_before_action :authenticate_user!, only: [ :create, :demo ]
+      skip_before_action :authenticate!, only: :create
+      skip_after_action :verify_authorized
 
       # GET /api/v1/session
       def show
-        Rails.logger.info "[SESSION] current_user=#{current_user&.id} session_keys=#{session.keys}"
-        cid = current_user.super_admin? ? session[:convoy_company_id] : current_user.company_id
-        render json: {
-          user: {
-            id:        current_user.id,
-            name:      current_user.name,
-            email:     current_user.email,
-            role:      current_user.role,
-            companyId: cid,
-            perms:     current_user.effective_permissions
-          },
-          companyId: cid,
-          schoolId:  current_school_id,
-          date:      current_date,
-          company:   current_company ? CompanyBlueprint.render_as_hash(current_company) : nil
-        }
+        render_session
       end
 
-      # POST /api/v1/login
+      # POST /api/v1/session { email, password }
       def create
-        user = User.find_by(email: params[:email]&.downcase&.strip)
-        if user&.valid_password?(params[:password])
-          sign_in(user)
-          render json: { ok: true }
-        else
-          render json: { error: "Email or password is incorrect" }, status: :unauthorized
+        user = User.find_for_authentication(email: params.require(:email))
+        unless user&.valid_password?(params.require(:password)) && user.active_for_authentication?
+          return render_error(:unauthorized, "Email or password is incorrect")
         end
-      end
 
-      # POST /api/v1/login-as (demo mode only)
-      def demo
-        unless ENV["DEMO_LOGIN"] == "true" || Rails.env.development?
-          return render json: { error: "Quick sign-in is off. Set DEMO_LOGIN=true for prototypes" }, status: :forbidden
-        end
-        user = params[:kind] == "super" ? User.find_by(role: "super") : User.find_by(role: "admin")
-        return render json: { error: "No such account" }, status: :not_found unless user
         sign_in(user)
-        render json: { ok: true }
+        user.update_column(:last_seen_at, Time.current)
+        reset_company
+        render_session
       end
 
-      # DELETE /api/v1/logout
+      # PATCH /api/v1/session { company_id } — Convoy Admin picks the company to view.
+      def update
+        return render_error(:forbidden, "Only Convoy Admin can switch company") unless current_user.convoy_admin?
+
+        session[:company_id] = Company.find(params.require(:company_id)).id
+        reset_company
+        render_session
+      end
+
+      # DELETE /api/v1/session
       def destroy
-        Rails.logger.info "[LOGOUT] current_user=#{current_user&.id} session_keys=#{session.keys}"
         sign_out(current_user)
-        reset_session
-        Rails.logger.info "[LOGOUT] after sign_out+reset session_keys=#{session.keys}"
-        render json: { ok: true }
+        session.delete(:company_id)
+        head :no_content
       end
 
-      # POST /api/v1/context
-      def update_context
-        body = params.permit(:companyId, :schoolId, :date)
+      private
 
-        if body[:companyId].present?
-          if !current_user.super_admin? && body[:companyId] != current_user.company_id.to_s
-            return render json: { error: "Not allowed" }, status: :forbidden
-          end
-          session[:convoy_company_id] = body[:companyId].to_i
-          session[:convoy_school_id] = nil
-        end
+      def reset_company
+        remove_instance_variable(:@current_company) if defined?(@current_company)
+      end
 
-        if body[:schoolId].present?
-          cid = current_user.super_admin? ? session[:convoy_company_id] : current_user.company_id
-          unless School.exists?(id: body[:schoolId], company_id: cid)
-            return render json: { error: "School not found" }, status: :not_found
-          end
-          session[:convoy_school_id] = body[:schoolId]
-        end
-
-        session[:convoy_date] = body[:date].to_s[0, 10] if body[:date].present?
-        render json: { ok: true }
+      def render_session
+        render json: {
+          data: {
+            user: UserBlueprint.render_as_hash(current_user.decorate),
+            company: current_company && CompanyBlueprint.render_as_hash(current_company.decorate)
+          }
+        }
       end
     end
   end

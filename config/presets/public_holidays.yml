@@ -1,0 +1,28 @@
+# Gazetted Singapore public holidays (MOM). observed: the Monday (or day) given in place of a holiday on a Sunday.
+sg:
+  - { date: "2026-01-01", name: "New Year's Day", observed: false }
+  - { date: "2026-02-17", name: "Chinese New Year", observed: false }
+  - { date: "2026-02-18", name: "Chinese New Year", observed: false }
+  - { date: "2026-03-21", name: "Hari Raya Puasa", observed: false }
+  - { date: "2026-04-03", name: "Good Friday", observed: false }
+  - { date: "2026-05-01", name: "Labour Day", observed: false }
+  - { date: "2026-05-27", name: "Hari Raya Haji", observed: false }
+  - { date: "2026-05-31", name: "Vesak Day", observed: false }
+  - { date: "2026-06-01", name: "Vesak Day Holiday", observed: true }
+  - { date: "2026-08-09", name: "National Day", observed: false }
+  - { date: "2026-08-10", name: "National Day Holiday", observed: true }
+  - { date: "2026-11-08", name: "Deepavali", observed: false }
+  - { date: "2026-11-09", name: "Deepavali Holiday", observed: true }
+  - { date: "2026-12-25", name: "Christmas Day", observed: false }
+  - { date: "2027-01-01", name: "New Year's Day", observed: false }
+  - { date: "2027-02-06", name: "Chinese New Year", observed: false }
+  - { date: "2027-02-07", name: "Chinese New Year", observed: false }
+  - { date: "2027-02-08", name: "Chinese New Year Holiday", observed: true }
+  - { date: "2027-03-10", name: "Hari Raya Puasa", observed: false }
+  - { date: "2027-03-26", name: "Good Friday", observed: false }
+  - { date: "2027-05-01", name: "Labour Day", observed: false }
+  - { date: "2027-05-17", name: "Hari Raya Haji", observed: false }
+  - { date: "2027-05-20", name: "Vesak Day", observed: false }
+  - { date: "2027-08-09", name: "National Day", observed: false }
+  - { date: "2027-10-28", name: "Deepavali", observed: false }
+  - { date: "2027-12-25", name: "Christmas Day", observed: false }
