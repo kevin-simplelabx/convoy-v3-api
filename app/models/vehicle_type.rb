@@ -57,6 +57,13 @@ class VehicleType < ApplicationRecord
     key
   end
 
+  # The type of a bus by its seats among types (enabled ones): the same seats, else the smallest with more.
+  def self.for_seats(types, seats)
+    return nil if seats.nil?
+
+    types.find { |t| t.seats == seats } || types.select { |t| t.seats >= seats }.min_by(&:seats)
+  end
+
   def enabled_for?(company)
     !disabled_vehicle_types.exists?(company:)
   end

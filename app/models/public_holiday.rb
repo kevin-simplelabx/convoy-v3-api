@@ -35,7 +35,7 @@ class PublicHoliday < ApplicationRecord
 
   PRESETS = YAML.load_file(Rails.root.join("config/presets/public_holidays.yml")).freeze
 
-  validates :date, presence: true, uniqueness: { scope: :company_id }
+  validates :date, presence: true, uniqueness: { scope: :company_id, message: "is already a public holiday" }
   validates :name, presence: true
 
   scope :between, ->(from, to) { where(date: from..to) }
@@ -58,4 +58,14 @@ class PublicHoliday < ApplicationRecord
   end
 
   def saturday? = date.saturday?
+
+  # Add a Holiday on a Sunday: the Monday after becomes the observed holiday (unless it is one already).
+  def add_observed_monday!
+    return unless date.sunday? && !observed?
+
+    monday = date + 1
+    return if PublicHoliday.exists?(company_id:, date: monday)
+
+    PublicHoliday.create!(company_id:, date: monday, name: "#{name} Holiday", observed: true)
+  end
 end

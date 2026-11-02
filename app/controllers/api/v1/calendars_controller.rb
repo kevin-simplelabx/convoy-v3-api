@@ -3,13 +3,25 @@
 module Api
   module V1
     class CalendarsController < BaseController
+      # Tabs of Settings > Calendars, with how many trips use each calendar.
       def index
         authorize Calendar
-        render_list policy_scope(Calendar).kept.order(:name), CalendarBlueprint
+        calendars = policy_scope(Calendar).kept.order(:name)
+        trips = Trip.kept.recurring.where(calendar_id: calendars.select(:id)).group(:calendar_id).count
+        render_list calendars, CalendarBlueprint, trips_count: trips
       end
 
+      # GET /calendars/:id?year=2026 — the days touching that year (every day without year).
       def show
-        render_data authorize(find_calendar), CalendarBlueprint, view: :with_days
+        calendar = authorize(find_calendar)
+        render_data calendar, CalendarBlueprint, view: :with_days, year: params[:year].presence&.to_i
+      end
+
+      # GET /calendars/:id/trips?year=2026 — Trips Using This Calendar, with the runs skipped that year.
+      def trips
+        calendar = authorize(find_calendar, :show?)
+        year = (params[:year].presence || Date.current.year).to_i
+        render_list Calendars::TripsUsing.call(calendar:, year:), CalendarTripBlueprint, meta: { year: }
       end
 
       # POST /calendars { calendar: {name, kind, observed_holidays}, start_from: moe | blank | <calendar id> }

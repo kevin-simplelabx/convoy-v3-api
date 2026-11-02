@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe "Trips" do
   let(:company) { create(:company) }
-  let(:user) { create(:user, company:) }
+  let(:user) { create(:user, company:, permissions: %w[vehicles]) }
   let!(:setup) do
     within_tenant(company) do
       { client: create(:client, name: "Google"), type: create(:vehicle_type, seats: 23), bus: create(:vehicle, plate: "PC8841T", seats: 23) }

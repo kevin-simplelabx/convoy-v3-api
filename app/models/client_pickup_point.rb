@@ -3,28 +3,31 @@
 # Table name: client_pickup_points
 # Database name: primary
 #
-#  id          :bigint           not null, primary key
-#  address     :text
-#  lat         :decimal(10, 7)
-#  lng         :decimal(10, 7)
-#  name        :string           not null
-#  note        :text
-#  postal_code :string
-#  created_at  :datetime         not null
-#  updated_at  :datetime         not null
-#  client_id   :bigint           not null
-#  company_id  :bigint           not null
+#  id            :bigint           not null, primary key
+#  address       :text
+#  lat           :decimal(10, 7)
+#  lng           :decimal(10, 7)
+#  name          :string           not null
+#  note          :text
+#  postal_code   :string
+#  created_at    :datetime         not null
+#  updated_at    :datetime         not null
+#  client_id     :bigint           not null
+#  company_id    :bigint           not null
+#  created_by_id :bigint
 #
 # Indexes
 #
 #  index_client_pickup_points_on_client_id           (client_id)
 #  index_client_pickup_points_on_client_id_and_name  (client_id,name) UNIQUE
 #  index_client_pickup_points_on_company_id          (company_id)
+#  index_client_pickup_points_on_created_by_id       (created_by_id)
 #
 # Foreign Keys
 #
 #  fk_rails_...  (client_id => clients.id)
 #  fk_rails_...  (company_id => companies.id)
+#  fk_rails_...  (created_by_id => users.id)
 #
 # A client's saved pick-up point (gate, bus bay) with a note for the driver.
 class ClientPickupPoint < ApplicationRecord
@@ -32,6 +35,7 @@ class ClientPickupPoint < ApplicationRecord
   audited associated_with: :client
 
   belongs_to :client, inverse_of: :pickup_points
+  belongs_to :created_by, class_name: "User", optional: true
 
   validates :name, presence: true, uniqueness: { scope: :client_id }
   validates :lat, numericality: { in: -90..90 }, allow_nil: true

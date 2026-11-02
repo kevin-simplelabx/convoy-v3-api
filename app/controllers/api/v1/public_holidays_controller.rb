@@ -2,17 +2,29 @@
 module Api
   module V1
     class PublicHolidaysController < BaseController
+      # GET /public_holidays?year=2026 — with year: meta for the card title and the Add MOM [year] Dates button.
       def index
         authorize PublicHoliday
         scope = policy_scope(PublicHoliday).order(:date)
-        scope = scope.in_year(params[:year].to_i) if params[:year].present?
-        render_list scope, PublicHolidayBlueprint
+        return render_list(scope, PublicHolidayBlueprint) if params[:year].blank?
+
+        year = params[:year].to_i
+        holidays = scope.in_year(year).to_a
+        missing = PublicHoliday.preset(current_company.country, year).count { |h| holidays.none? { |x| x.date.iso8601 == h["date"] } }
+        render_list holidays, PublicHolidayBlueprint,
+                    meta: { year:, count: holidays.size, weekdays: holidays.count { |h| !h.date.on_weekend? },
+                            preset_available: PublicHoliday.preset(current_company.country, year).any?, preset_missing: missing }
       end
 
+      # POST /public_holidays — a holiday on a Sunday also adds the Monday after as the observed holiday (meta.observed).
       def create
         holiday = authorize PublicHoliday.new(holiday_params)
-        holiday.save!
-        render_data holiday, PublicHolidayBlueprint, status: :created
+        observed = PublicHoliday.transaction do
+          holiday.save!
+          holiday.add_observed_monday!
+        end
+        render json: { data: PublicHolidayBlueprint.render_as_hash(holiday),
+                       meta: { observed: observed && PublicHolidayBlueprint.render_as_hash(observed) } }, status: :created
       end
 
       def update

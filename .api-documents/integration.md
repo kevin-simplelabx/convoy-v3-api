@@ -18,6 +18,9 @@ The API docs in this folder are the source of truth. Do not invent endpoints, pa
 | `scheduler.md` | Scheduler and everything it opens (drawer, trip form, Edit Vehicle, Replace, Maintenance, Notice, calendars) | When `screen-map.md` links to it |
 | `trips.md` | Trips, Trip History, Notices, Bookings, Rate Cards | When `screen-map.md` links to it |
 | `fleet.md` | Vehicles, Drivers, Bus Attendants, External Vehicles, Fuel & Energy, Maintenance, Vehicle Types, Transport Operators | When `screen-map.md` links to it |
+| `settings.md` | Company Settings, Users, Calendars, the Profile dialog | When `screen-map.md` links to it |
+| `clients.md` | Managed Clients (record page, sites, Client Users) and the Client Portal sign-in | When `screen-map.md` links to it |
+| `hr.md` | HR: driver pay (rate plans, pay schemes, drivers, earnings, bonuses, points, rewards, simulator, audit log) | When `screen-map.md` links to it |
 | `convoy-v3-api.openapi.json` | OpenAPI 3.0 of every endpoint with request / response examples recorded from real calls (2.4 MB) | For the exact shape of a request / response (section 1.1) |
 
 UI reference: the prototype `Convoy OS.dc.html` (and its `logic/*.js`). Use it for **layout, labels, flows and behaviour
@@ -60,7 +63,9 @@ Put the base URL in environment config, never hard-code it. Staging accepts brow
 | --- | --- | --- |
 | `ops@simpledrive.sg` | `Simple123!` | Admin (every permission, company owner) |
 | `dispatch@simpledrive.sg` | `Simple123!` | Member (only some permissions: test hidden / disabled actions with it) |
+| `finance@simpledrive.sg` | `Simple123!` | Member with finance (HR, but can't Unlock / Reopen Month) |
 | `admin@convoy.sg` | `Convoy123!` | Convoy Admin (Convoy staff: picks a company, **view only**, every write is `403`) |
+| `priya.raman@google.com` | `Portal123!` | **Client Portal** only (`/portal/session`): user of two clients (account picker) |
 
 ---
 
@@ -150,9 +155,13 @@ The prototype's page ids (in `logic/mixins/admin.js`, rail and sub-menus) and wh
 | `subcons` | Managed Operators | `/operators`, `/banks` | [screen-map](screen-map.md#transport-operators) |
 | `opveh` | Operator Vehicles | `/vehicles?ownership[]=managed`, `/operator_drivers/assign_preview` | [screen-map](screen-map.md#transport-operators) |
 | `opdrv` | Operator Drivers | `/operator_drivers` | [screen-map](screen-map.md#transport-operators) |
-| `clients` | Managed Clients | Page not built; pickers use `/clients` | [screen-map](screen-map.md#clients-and-settings-pickers-only) |
-| `phol` | Settings > Calendars | Page not built; Change a Day uses `/calendars`, `/public_holidays` | [screen-map](screen-map.md#change-a-day-calendars) |
-| `opconn`, `clconn`, and every other page | Connected Operators / Clients, Dashboard, Ops Control, Live Map, School Bus, Reports, Finance, HR, Settings... | **No API yet** | [screen-map](screen-map.md#not-built-yet) |
+| `clients` | Managed Clients | `/clients`, `/clients/:client_id/sites`, `/clients/:client_id/users`, `/client_users/roles` | [screen-map](screen-map.md#clients) |
+| `coset` | Company Settings | `/companies/:id`, `/countries`, `/country_requests` | [screen-map](screen-map.md#company-settings) |
+| `users` | Users | `/users` | [screen-map](screen-map.md#users) |
+| `phol` | Calendars | `/calendars`, `/public_holidays` | [screen-map](screen-map.md#calendars) |
+| Account menu → Profile | Profile dialog | `/profile` | [screen-map](screen-map.md#sign-in-and-app-shell) |
+| `paydrv`, `payearn`, `payschemes`, `payrates`, `paybon`, `paypts`, `payrew`, `paysim`, `paylog` | HR pages | `/pay/...` | [screen-map](screen-map.md#hr) |
+| `opconn`, `clconn`, and every other page | Connected Operators / Clients, Dashboard, Ops Control, Live Map, School Bus, Reports, Finance... | **No API yet** | [screen-map](screen-map.md#not-built-yet) |
 
 ### 5.3 Value formats
 

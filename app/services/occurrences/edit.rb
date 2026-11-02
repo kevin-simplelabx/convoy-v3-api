@@ -25,6 +25,7 @@ module Occurrences
 
     # Raise an Issue: only on a run that is done; holds the driver's pay for it until cleared.
     def raise_issue!(reason)
+      pay_confirmed!
       raise ApplicationService::Error, "Say what the issue is" if reason.blank?
       raise ApplicationService::Error, "An issue can be raised on a completed run only" unless done?
 
@@ -32,6 +33,7 @@ module Occurrences
     end
 
     def clear_issue!
+      pay_confirmed!
       save!(issue_reason: nil, issue_raised_at: nil, issue_raised_by: nil)
     end
 
@@ -83,6 +85,13 @@ module Occurrences
     end
 
     private
+
+    # A driver's pay for a confirmed month is frozen: its runs' issues can't change until it is reopened.
+    def pay_confirmed!
+      return unless DriverPayMonth.confirmed_for?(@occ.driver_id, @occ.date)
+
+      raise ApplicationService::Error, "Driver pay for #{@occ.date.strftime('%B %Y')} is confirmed. Reopen it in HR, Earnings first"
+    end
 
     def done? = @occ.completed? || @occ.ended_at.present? || @occ.ends_at <= Time.current
 

@@ -233,6 +233,8 @@ class Trip < ApplicationRecord
   before_update :assign_trip_numbers, if: :numbers_outgrown?
 
   scope :recurring, -> { where.not(days: []) }
+  # Trips with runs on or after the date (never-ending, or last date not passed).
+  scope :running_on, ->(date) { where("trips.end_mode = 'never' OR COALESCE(trips.ends_on, trips.starts_on) >= ?", date) }
   # Trips that may run between two dates.
   scope :active_between, lambda { |from, to|
     where(starts_on: ..to).where("trips.end_mode = 'never' OR COALESCE(trips.ends_on, trips.starts_on) >= ?", from)

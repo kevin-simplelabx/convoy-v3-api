@@ -1,0 +1,2 @@
+class PayRatePlanPolicy < PayPolicy
+end

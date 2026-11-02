@@ -1,3 +1,3 @@
-class PublicHolidayPolicy < ApplicationPolicy
+class PublicHolidayPolicy < CalendarPolicy
   def import? = write?
 end

@@ -1,0 +1,12 @@
+# Countries a transport company can run in (from Convoy Project/logic/country.js). Picked once, then changed only with
+# Convoy's approval. Only live countries can be picked; the rest are planned ("Coming soon").
+- { code: SG, name: Singapore, live: true,  timezone: Asia/Singapore,   currency: SGD, phone_prefix: "+65",  map: OneMap,
+    weather: "NEA via data.gov.sg (2-hour forecast, air temperature, rainfall)", traffic: "LTA DataMall (speed bands, incidents)" }
+- { code: TW, name: Taiwan,    live: false, timezone: Asia/Taipei,      currency: TWD, phone_prefix: "+886", map: OpenStreetMap,
+    weather: "Central Weather Administration Open Data (forecasts, observations)", traffic: "TDX Transport Data eXchange (road section speeds, incidents)" }
+- { code: MY, name: Malaysia,  live: false, timezone: Asia/Kuala_Lumpur, currency: MYR, phone_prefix: "+60", map: OpenStreetMap,
+    weather: "MET Malaysia via the data.gov.my API (forecasts, warnings)", traffic: "No free national feed: a paid traffic tile service (TomTom or HERE)" }
+- { code: TH, name: Thailand,  live: false, timezone: Asia/Bangkok,     currency: THB, phone_prefix: "+66",  map: OpenStreetMap,
+    weather: "Thai Meteorological Department open data API", traffic: "Longdo Traffic (iTIC), or a paid traffic tile service" }
+- { code: HK, name: Hong Kong, live: false, timezone: Asia/Hong_Kong,   currency: HKD, phone_prefix: "+852", map: OpenStreetMap,
+    weather: "Hong Kong Observatory Open Data (forecasts, warnings)", traffic: "Transport Department via data.gov.hk (traffic speed map, special traffic news)" }

@@ -7,6 +7,7 @@
 #  business_units_enabled    :boolean          default(FALSE), not null
 #  code                      :string(6)        not null
 #  country                   :string           default("SG"), not null
+#  country_set_at            :datetime
 #  date_format               :string           default("dmy"), not null
 #  external_vehicle_cap      :integer          default(10), not null
 #  logo                      :string
@@ -23,22 +24,31 @@
 #  timezone                  :string           default("Asia/Singapore"), not null
 #  created_at                :datetime         not null
 #  updated_at                :datetime         not null
+#  country_set_by_id         :bigint
 #
 # Indexes
 #
-#  index_companies_on_code  (code) UNIQUE
+#  index_companies_on_code               (code) UNIQUE
+#  index_companies_on_country_set_by_id  (country_set_by_id)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (country_set_by_id => users.id)
 #
 # A transport company: the tenant. Every company-owned record belongs to one.
 class Company < ApplicationRecord
   DATE_FORMATS = %w[dmy mdy ymd dmon].freeze
   TIME_FORMATS = %w[24 12].freeze
-  COUNTRIES = %w[SG TW MY TH HK].freeze
+  COUNTRIES = Country.codes.freeze
 
   mount_uploader :logo, ImageUploader
 
   include SyncsOccurrences
 
   has_many :users, dependent: :restrict_with_error
+  has_many :country_requests, class_name: "CompanyCountryRequest", dependent: :restrict_with_error
+  has_one :pending_country_request, -> { pending }, class_name: "CompanyCountryRequest", inverse_of: :company
+  belongs_to :country_set_by, class_name: "User", optional: true
 
   # Observed Holidays Day Off / Working Day for trips without a calendar.
   after_update_commit if: :saved_change_to_observed_holidays? do
@@ -54,11 +64,15 @@ class Company < ApplicationRecord
   validates :code, presence: true, uniqueness: true, format: { with: /\A[A-Z0-9]{2,6}\z/ }
   validates :short_name, length: { maximum: 12 }
   validates :country, inclusion: { in: COUNTRIES }
+  validates :country, inclusion: { in: ->(_) { Country.live_codes }, message: "is not open yet" }, if: :will_save_change_to_country?
   validates :date_format, inclusion: { in: DATE_FORMATS }
   validates :time_format, inclusion: { in: TIME_FORMATS }
   validates :timezone, inclusion: { in: ActiveSupport::TimeZone::MAPPING.values.uniq | TZInfo::Timezone.all_identifiers }
   validates :theme_color, format: { with: /\A#\h{6}\z/ }, allow_blank: true
   validates :external_vehicle_cap, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
+
+  # Country: picked once, then locked (a change is a CompanyCountryRequest Convoy approves).
+  def country_locked? = country_set_at.present?
 
   def self.ransackable_attributes(_auth = nil) = %w[name code country status]
 

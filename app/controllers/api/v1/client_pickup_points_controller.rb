@@ -6,11 +6,11 @@ module Api
 
       def index
         authorize ClientPickupPoint
-        render_list @client.pickup_points.order(:name), ClientPickupPointBlueprint
+        render_list @client.pickup_points.includes(:created_by).order(:name), ClientPickupPointBlueprint
       end
 
       def create
-        record = authorize @client.pickup_points.new(record_params)
+        record = authorize @client.pickup_points.new(record_params.merge(created_by: current_user))
         record.save!
         render_data record, ClientPickupPointBlueprint, status: :created
       end

@@ -20,7 +20,6 @@ Việc biết là cần nhưng chưa làm. Ghi: ngày · menu phát hiện · vi
 | 30/10/2026 | trips | Endpoint Client Portal / Convoy App cho booking (đặt, duyệt, xác nhận, xin huỷ) | Làm cùng Portal |
 | 30/10/2026 | trips | Gửi email thật cho thông báo booking | Chưa cấu hình mail |
 | 30/10/2026 | trips | Client approval nhiều bước (approvers theo site, steps) của Client Portal; hiện chỉ ghi kết quả done / declined | Thuộc Client Portal |
-| 30/10/2026 | trips | Màn sửa `companies.on_time_minutes` (luật On Time) và `speed_limit_kmh` (31/10) | Thuộc Settings (Company Settings) |
 | 31/10/2026 | trips | Giữ GPS bao lâu (xoá / gộp partition `occurrence_positions` cũ) | Chưa có số liệu thật |
 | 31/10/2026 | trips | Passenger list của run School Bus trong Trip History (rider hiện chỉ là riders_count) | Rider theo tên thuộc menu School |
 | 31/10/2026 | trips | Tên đường cho replay (map matching / reverse geocode) | Cần dịch vụ bản đồ |
@@ -29,4 +28,16 @@ Việc biết là cần nhưng chưa làm. Ghi: ngày · menu phát hiện · vi
 | 31/10/2026 | fleet | Gửi SMS invite driver thật; Driver app nhận invite / accept / decline / chia sẻ KYC | Chưa có SMS / Driver app |
 | 31/10/2026 | fleet | Connected Operators (công ty có tài khoản Convoy riêng, nhận trip) | HTML Coming Soon |
 | 31/10/2026 | fleet | Log card "Get from Corppass" | HTML Coming Soon |
-| 02/11/2026 | platform | Refresh token / gia hạn JWT; màn "thiết bị đang đăng nhập" + đăng xuất từ xa / tất cả (đọc `allowlisted_jwts`); xoá token khi đổi mật khẩu. | Chưa có màn Settings / đổi mật khẩu; 30 ngày đủ cho giai đoạn test |
+| 02/11/2026 | platform | Refresh token / gia hạn JWT; màn "thiết bị đang đăng nhập" + đăng xuất từ xa / tất cả (đọc `allowlisted_jwts`); xoá token khi đổi mật khẩu. | HTML không có màn (user chốt 02/11/2026 khi làm Settings); 30 ngày đủ cho giai đoạn test |
+| 02/11/2026 | settings | Card On Time / Speed Limit trong Company Settings (cột đã có) | HTML không có, user chốt để sau |
+| 02/11/2026 | settings | Cảnh báo maker-checker khi chỉ còn 1 user active (trang Users) | Cần Finance Settings |
+| 02/11/2026 | settings | Áp `user_schools` vào dữ liệu School Bus | Làm cùng menu School Bus |
+| 02/11/2026 | clients | Connected Clients | HTML Coming Soon |
+| 02/11/2026 | clients | Client Portal API sau đăng nhập (booking, approval, invoice, live map, quản lý người từ Portal theo `userCan` / `rolesToGive`) | Làm cùng Client Portal |
+| 02/11/2026 | clients | Cấu hình SMTP thật cho `PortalMailer` (bỏ `PORTAL_SHOW_CODE` ở staging) | Chưa có dịch vụ mail |
+| 02/11/2026 | hr | Rejection count, OTP %, attendance % thật → rejection penalty và bonus OTP / Attendance trong Earnings | Cần driver app / dữ liệu |
+| 02/11/2026 | hr | Bonus quarterly / half-yearly / yearly, trả trễ X tháng, chia đợt; Excluded Days | Chưa có kỳ lương nhiều tháng |
+| 02/11/2026 | hr | Driver app: sign-up bonus, đổi reward (redemption trừ điểm), xem statement | Chưa có driver app |
+| 02/11/2026 | hr | Payroll: payslip, CPF, allowances / deductions, export ngân hàng, maker-checker lương driver | HTML không có trong HR |
+| 02/11/2026 | hr | Shift qua nửa đêm; tuần lẻ đầu / cuối tháng cho weekly target (giữ như HTML) | Cần quyết định nghiệp vụ |
+| 02/11/2026 | hr | Version scheme / rate plan (đổi rate ảnh hưởng tháng chưa confirm) | HTML không có |

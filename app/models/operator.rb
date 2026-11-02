@@ -45,8 +45,8 @@ class Operator < ApplicationRecord
   audited
   include Discard::Model
 
-  UEN = /\A(\d{8}[A-Z]|\d{9}[A-Z]|[TSR]\d{2}[A-Z]{2}\d{4}[A-Z])\z/
-  UEN_HINT = "Examples: 53012345A, 201912345K, T09LL1234A".freeze
+  UEN = Uen::FORMAT
+  UEN_HINT = Uen::HINT
 
   has_many :vehicles, dependent: :restrict_with_error
   has_many :drivers, class_name: "OperatorDriver", dependent: :restrict_with_error

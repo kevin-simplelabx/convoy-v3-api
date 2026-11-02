@@ -2,11 +2,85 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
   devise_for :users, skip: :all
+  devise_for :portal_accounts, skip: :all
 
   namespace :api, defaults: { format: :json } do
     namespace :v1 do
       resource :session, only: %i[show create update destroy]
+
+      # Client Portal sign-in (people at Managed Clients)
+      namespace :portal do
+        resource :session, only: %i[show create update destroy] do
+          post :lookup
+          post :code
+          post :verify
+        end
+        resource :password, only: :create
+      end
       resources :companies, only: %i[index show create update]
+
+      # HR (driver pay)
+      scope "pay", as: "pay" do
+        resources :rate_plans, controller: :pay_rate_plans do
+          member do
+            post :lock
+            post :unlock
+            get :coverage
+          end
+        end
+        resources :schemes, controller: :pay_schemes do
+          member do
+            post :lock
+            post :unlock
+          end
+        end
+        get "earnings", to: "pay_earnings#index"
+        get "earnings/:driver_id", to: "pay_earnings#show", as: :earning
+        post "earnings/:driver_id/confirm", to: "pay_earnings#confirm", as: :earning_confirm
+        delete "earnings/:driver_id/confirm", to: "pay_earnings#reopen"
+        post "simulate", to: "pay_simulator#simulate"
+        get "simulate/sample", to: "pay_simulator#sample", as: :simulate_sample
+        get "simulator_templates", to: "pay_simulator#templates"
+        put "simulator_templates/:slot", to: "pay_simulator#save_template", as: :simulator_template
+        delete "simulator_templates/:slot", to: "pay_simulator#delete_template"
+        resources :bonuses, controller: :pay_bonuses do
+          get :periods, on: :collection
+          member do
+            post :lock
+            post :unlock
+          end
+        end
+        get "audit_log", to: "pay_audit_log#index"
+        resources :rewards, controller: :pay_rewards
+        get "points", to: "pay_points#index"
+        get "points/:driver_id", to: "pay_points#show", as: :points_driver
+        post "points/:driver_id", to: "pay_points#create"
+        resources :drivers, controller: :pay_drivers, only: %i[index show] do
+          member do
+            post ":kind", action: :create_assignment, as: :assignments, constraints: { kind: /schemes|vehicle_types/ }
+            patch ":kind/:assignment_id", action: :update_assignment, as: :assignment, constraints: { kind: /schemes|vehicle_types/ }
+            delete ":kind/:assignment_id", action: :destroy_assignment, constraints: { kind: /schemes|vehicle_types/ }
+          end
+        end
+      end
+
+      # Settings
+      resource :profile, only: %i[show update]
+      resources :countries, only: :index
+      resources :country_requests, only: %i[index create] do
+        member do
+          post :withdraw
+          post :approve
+          post :decline
+        end
+      end
+      resources :users, only: %i[index show create update destroy] do
+        get :roles, on: :collection
+        member do
+          post :suspend
+          post :activate
+        end
+      end
       get "downloads/:token", to: "downloads#show", as: :download
       resources :document_reads, only: %i[create show]
 
@@ -15,11 +89,15 @@ Rails.application.routes.draw do
         post :import, on: :collection
       end
       resources :calendars do
+        get :trips, on: :member
         resources :days, controller: :calendar_days, only: %i[create update destroy]
       end
 
       # Clients
+      get "client_users/roles", to: "client_users#roles", as: :client_user_roles
       resources :clients do
+        put :bookable_vehicle_types, on: :member
+        resources :users, controller: :client_users, only: %i[index create update destroy]
         resources :sites, controller: :client_sites, only: %i[index create update destroy]
         resources :end_customers, controller: :client_end_customers, only: %i[index create update destroy]
         resources :pickup_points, controller: :client_pickup_points, only: %i[index create update destroy]

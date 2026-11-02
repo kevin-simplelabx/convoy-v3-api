@@ -1,2 +1,2 @@
-class CalendarDayPolicy < ApplicationPolicy
+class CalendarDayPolicy < CalendarPolicy
 end

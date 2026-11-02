@@ -43,6 +43,11 @@ class Client < ApplicationRecord
   has_many :end_customers, class_name: "ClientEndCustomer", dependent: :destroy, inverse_of: :client
   has_many :pickup_points, class_name: "ClientPickupPoint", dependent: :destroy, inverse_of: :client
   has_many :bookings, dependent: :restrict_with_error
+  has_many :trips, dependent: :restrict_with_error
+  has_one :school, dependent: :nullify
+  has_many :billing_contacts, -> { order(:position, :id) }, class_name: "ClientBillingContact", as: :billable, dependent: :delete_all
+  has_many :bookable_vehicle_types, class_name: "ClientBookableVehicleType", dependent: :delete_all
+  has_many :users, class_name: "ClientUser", dependent: :restrict_with_error
   belongs_to :rate_card, optional: true
 
   enum :kind, { company: "company", individual: "individual", transport_company: "transport_company" }, validate: true
@@ -51,10 +56,13 @@ class Client < ApplicationRecord
 
   before_validation :assign_code, on: :create
   normalizes :email, with: ->(v) { v.to_s.strip.downcase.presence }
+  normalizes :uen, with: ->(v) { Uen.normalize(v) }
+  normalizes :name, with: ->(v) { v.to_s.squish }
 
   validates :name, presence: true, uniqueness: { scope: :company_id, conditions: -> { kept } }
   validates :code, presence: true, uniqueness: { scope: :company_id }
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
+  validates :uen, format: { with: Uen::FORMAT, message: Uen::MESSAGE }, allow_nil: true
   validates :on_time_allowance, numericality: { only_integer: true, in: 0..15 }
   validate :individual_reachable
 
@@ -62,6 +70,14 @@ class Client < ApplicationRecord
 
   # Main contractor: the trips we run for them are sub-contracted.
   def main_contractor? = transport_company?
+
+  # What stops Delete Client: trips still running (not deleted, not ended) and bookings still open (waiting or approved).
+  def delete_blockers(today = Date.current)
+    trips_left = trips.kept.running_on(today).count
+    bookings_left = bookings.in_tab("pending", today).count + bookings.in_tab("approved", today).count
+    [ (trips_left.positive? ? "#{trips_left} #{'trip'.pluralize(trips_left)} still running" : nil),
+      (bookings_left.positive? ? "#{bookings_left} open #{'booking'.pluralize(bookings_left)}" : nil) ].compact
+  end
 
   private
 

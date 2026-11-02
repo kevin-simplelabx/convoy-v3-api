@@ -43,7 +43,12 @@ class Calendar < ApplicationRecord
   accepts_nested_attributes_for :days, allow_destroy: true
   minute_time :morning_time, :afternoon_time
 
-  validates :name, presence: true, uniqueness: { scope: :company_id, conditions: -> { kept } }
+  normalizes :name, with: ->(v) { v.to_s.squish }
+
+  validates :name, presence: true, uniqueness: { scope: :company_id, case_sensitive: false, conditions: -> { kept },
+                                                 message: "is already used by another calendar" }
+  validate { errors.add(:name, "is the built-in calendar's name") if name.to_s.casecmp?("Public Holidays") }
+  validate(on: :update) { errors.add(:kind, "can't be changed") if kind_changed? }
 
   def self.ransackable_attributes(_auth = nil) = %w[name kind]
 

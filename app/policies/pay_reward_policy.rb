@@ -1,0 +1,2 @@
+class PayRewardPolicy < PayPolicy
+end

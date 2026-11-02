@@ -8,16 +8,19 @@ Bắt đầu menu mới: lọc theo cột **Màn sửa sẽ ở**, những dòng
 
 | Domain | Bảng | Hiện tại | Ghi từ (đã có) | Màn sửa sẽ ở |
 | --- | --- | --- | --- | --- |
-| platform | companies | một phần | session (chọn company) | Settings, Transport Companies |
-| platform | users | seed | — | Settings |
+| platform | companies | ghi (settings) | Settings > Company Settings (quyền `users`), session (chọn company) | Transport Companies (Convoy Admin: platform fields) |
+| platform | company_country_requests | ghi | Company Settings (gửi / rút), Convoy Admin (duyệt / từ chối) | — |
+| platform | users, user_schools | ghi | Settings > Users | — |
 | platform | allowlisted_jwts | ghi | session (đăng nhập / đăng xuất, Convoy Admin chọn company) | Settings (thiết bị đang đăng nhập, đăng xuất từ xa) |
 | platform | vehicle_types, disabled_vehicle_types | ghi | Convoy Admin CRUD, company toggle, Fleet > Vehicle Types | — |
 | platform | vehicle_type_requests | ghi | Fleet > Vehicle Types (company gửi, Convoy Admin duyệt) | — |
 | platform | message_terms | seed | — | Convoy Admin |
 | platform | banks, bank_branches | seed (tham chiếu ACH) | — | — |
 | platform | document_reads | ghi | mọi form có Claude | — |
-| calendars | public_holidays, calendars, calendar_days | ghi | Change a Day | Settings (lịch) |
-| clients | clients, client_sites, client_end_customers, client_pickup_points | một phần (CRUD cơ bản) | trip form (Add New Client / Customer) | Clients |
+| calendars | public_holidays, calendars, calendar_days | ghi | Change a Day, Settings > Calendars | — |
+| clients | clients, client_sites, client_end_customers, client_pickup_points, client_billing_contacts, client_bookable_vehicle_types | ghi | Clients > Managed Clients, trip form (Add New Client / Customer) | Finance (billing của client) |
+| clients | client_users, client_user_sites, portal_accounts | ghi | Clients > Client Users | Client Portal (quản lý người từ Portal) |
+| platform | portal_jwts, portal_sign_in_codes | ghi | Client Portal sign-in | — |
 | clients | rate_cards (+ vehicle_types, periods, ranges, rates, distance_bands, amounts) | ghi | Trips > Rate Cards | — |
 | fleet | vehicles, vehicle_teams, operators, drivers, operator_drivers, attendants, vehicle_driver_schedules | ghi | Edit Vehicle, External Vehicle, Fleet (mọi trang) | — |
 | fleet | fuel_companies, fuel_entries, fuel_alerts | ghi | Fleet > Fuel & Energy | Finance (Vehicle Financials đọc chi phí) |
@@ -36,7 +39,7 @@ Bắt đầu menu mới: lọc theo cột **Màn sửa sẽ ở**, những dòng
 | occurrences | trip_occurrences | ghi (chỉ qua service) | grid, drawer | Ops Control, Live Map, Reports, Finance, HR đọc |
 | replacements | replacements, replacement_notifications | ghi | Replace dialog | — |
 | school | trip_stop_students, route_list_versions, student_attendances, pickup_points | ghi | trip form School Run, Passenger List | School Bus |
-| school | schools, school_plans, school_routes, school_route_stops | seed | — | **School Bus** |
+| school | schools, school_plans, school_routes, school_route_stops | seed (`schools.client_id` / `calendar_id` ghi từ Managed Clients) | — | **School Bus** |
 | school | school_route_vehicle_changes, school_route_replacements | ghi | kéo thả route | School Bus |
 | operations | workshops, maintenance_visits, maintenance_lines, maintenance_invoices | ghi | Maintenance dialog, Fleet > Maintenance | Finance (Vehicle Financials đọc chi phí) |
 | operations | notice_templates | ghi | Trips > Notices (Templates) | — |
@@ -45,4 +48,9 @@ Bắt đầu menu mới: lọc theo cột **Màn sửa sẽ ở**, những dòng
 | platform | user_notification_preferences, notification_emails | ghi | chuông Bookings | Settings (thông báo khác sau) |
 
 Người dùng của dữ liệu `trip_occurrences` (đọc): Ops Control, Live Map, Reports, Finance (invoice), HR (driver pay), driver app.
+| pay | pay_rate_plans (+ con), pay_schemes (+ con), pay_bonuses (+ con), pay_rewards, pay_simulator_templates | ghi | HR | — |
+| pay | driver_pay_schemes, driver_vehicle_types | ghi | HR > Drivers | — |
+| pay | driver_pay_months (+ lines, runs) | ghi | HR > Earnings (Confirm / Reopen) | Finance (payroll sau) |
+| pay | driver_point_lots, driver_point_deductions, driver_point_allocations | ghi | HR > Points, Confirm Month (bonus) | Driver app (đổi reward) |
+
 Thêm bảng mới → thêm 1 dòng ở đây.

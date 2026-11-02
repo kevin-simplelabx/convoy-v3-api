@@ -19,3 +19,8 @@ ActiveSupport::Inflector.inflections(:en) do |inflect|
   inflect.irregular "standby", "standbys"
   inflect.irregular "via", "vias"
 end
+
+# HR > Bonuses: pay_bonus / pay_bonuses (Rails would keep "bonus" as its own plural).
+ActiveSupport::Inflector.inflections(:en) do |inflect|
+  inflect.irregular "bonus", "bonuses"
+end

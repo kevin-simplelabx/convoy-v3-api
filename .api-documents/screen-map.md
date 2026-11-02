@@ -16,7 +16,9 @@ A reverse index for front-end developers: find the screen and the button you are
 - [Trips](#trips): Trips · Trip History · Notices · Bookings · Rate Cards
 - [Fleet](#fleet): Vehicles · Drivers · Bus Attendants · External Vehicles · Fuel & Energy · Maintenance · Vehicle Types
 - [Transport Operators](#transport-operators): Managed Operators · Operator Vehicles · Operator Drivers
-- [Clients and Settings (pickers only)](#clients-and-settings-pickers-only)
+- [Clients](#clients): Managed Clients · client record · Client Users
+- [HR](#hr): Drivers · Earnings · Pay Schemes · Rate Plans · Bonuses · Points · Rewards · Salary Simulator · Audit Log
+- [Settings](#settings): Company Settings · Users · Calendars
 - [Shared dialogs](#shared-dialogs)
 - [Public pages (no sign-in)](#public-pages-no-sign-in)
 - [Not built yet](#not-built-yet)
@@ -29,6 +31,8 @@ A reverse index for front-end developers: find the screen and the button you are
 | --- | --- | --- |
 | Sign-in page: Sign In | `POST /session` → `data.token`, then `Authorization: Bearer <token>` on every call | [README](README.md#signing-in-bearer-token) |
 | Page load: who am I, company name / logo / theme colour, date and time formats, rail items by permission | `GET /session` | [README](README.md#signing-in-bearer-token) |
+| Account menu: Profile (picture, Display Name, Mobile) | `GET` / `PATCH /profile` | [settings § 2](settings.md#2-profile) |
+| Account menu: Company Settings | Opens Settings > Company Settings | [Settings](#settings) |
 | Sign Out | `DELETE /session` | [README](README.md#signing-in-bearer-token) |
 | Convoy Admin: pick the company to view | `PATCH /session` `{ company_id }` (company list: `GET /companies`) | [README](README.md#signing-in-bearer-token) |
 | Any image or file (`<img src>`, open in a new tab) | The `url` / `thumb_url` already in the record (`GET /downloads/:token`, no header) | [README](README.md#files-uploads-and-downloads) |
@@ -266,16 +270,83 @@ In the Fleet menu, group Transport Operators.
 
 ---
 
-## Clients and Settings (pickers only)
+## Clients
 
-The Clients and Settings pages are not built yet, but the trip form and the Scheduler already use these APIs.
+Rail icon `corporate_fare`. The trip form also uses `/clients` (Client picker, Add New Client, Add New Customer): [Trip form](#trip-form).
 
 | Screen / element | API | Doc |
 | --- | --- | --- |
-| Client picker, Add New Client, Add New Customer (Service For) | `GET` / `POST /clients`, `GET /clients/:id`, `POST /clients/:client_id/end_customers` | [Trip form](#trip-form) |
-| Client sites, saved pick-up points | `GET /clients/:client_id/sites`, `GET /clients/:client_id/pickup_points` | [scheduler § 15](scheduler.md#15-lists-the-forms-pick-from) |
-| Settings > Calendars (used by Change a Day) | `/calendars`, `/calendars/:id/days`, `/public_holidays` | [Change a Day](#change-a-day-calendars) |
+| Managed Clients list, search | `GET /clients` | [clients § 1.1](clients.md#11-list-get-clients) |
+| Add Managed Client / Edit Details (school, school calendar) | `POST /clients` / `PATCH /clients/:id` | [clients § 1.2](clients.md#12-add--edit-details) |
+| Client record page, On-Time Allowance | `GET /clients/:id`, `PATCH /clients/:id` | [clients § 1.3](clients.md#13-record-page-get-clientsid) |
+| Delete Client | `DELETE /clients/:id` | [clients § 1.4](clients.md#14-delete-client-delete-clientsid) |
+| Sites: Add Site, Edit Site (school, own billing, Send Invoices To), remove | `/clients/:client_id/sites` | [clients § 2.1](clients.md#21-sites) |
+| Their Customers | `/clients/:client_id/end_customers` | [clients § 2.2](clients.md#22-their-customers-main-contractor) |
+| Bookable Vehicles | `PUT /clients/:id/bookable_vehicle_types` | [clients § 2.3](clients.md#23-bookable-vehicles-put-clientsidbookable_vehicle_types) |
+| Saved Pick-up Points | `/clients/:client_id/pickup_points` | [clients § 2.4](clients.md#24-saved-pick-up-points) |
+| Client Users: Add User, Edit, Remove | `/clients/:client_id/users` | [clients § 3](clients.md#3-client-users) |
+| Role Permissions window, role select | `GET /client_users/roles` | [clients § 4](clients.md#4-values-reference) |
+| Connected Clients | Coming Soon, no API | [clients § 7](clients.md#7-not-built-yet) |
 | Lists other forms pick from (vehicle types, teams, operators, drivers, attendants...) | See the doc | [scheduler § 15](scheduler.md#15-lists-the-forms-pick-from) |
+
+---
+
+## HR
+
+Rail icon `badge`. Needs the `finance` or `finview` permission.
+
+| Screen / element | API | Doc |
+| --- | --- | --- |
+| Drivers: list, search, Pay Scheme Today | `GET /pay/drivers` | [hr § 3](hr.md#3-drivers) |
+| Drivers: Assign Scheme / Vehicle Type, dates, remove | `/pay/drivers/:id/schemes`, `/pay/drivers/:id/vehicle_types` | [hr § 3](hr.md#3-drivers) |
+| Earnings: month, list, totals | `GET /pay/earnings?month=` | [hr § 5](hr.md#5-earnings) |
+| Earnings: a driver (runs, breakdown, chart, bonuses) | `GET /pay/earnings/:driver_id?month=` | [hr § 5](hr.md#5-earnings) |
+| Earnings: Raise an Issue / Clear Issue | `POST` / `DELETE /occurrences/:id/issue` | [hr § 5](hr.md#5-earnings) |
+| Earnings: Confirm Month / Reopen Month | `POST` / `DELETE /pay/earnings/:driver_id/confirm` | [hr § 5](hr.md#5-earnings) |
+| Earnings: Export Statement | FE only (print from the driver's month) | [hr § 5](hr.md#5-earnings) |
+| Pay Schemes: list, editor, Save / Save and Lock, Lock / Unlock, Delete | `/pay/schemes` | [hr § 2](hr.md#2-pay-schemes) |
+| Rate Plans: list, editor, Save / Save and Lock, Lock / Unlock, Delete | `/pay/rate_plans` | [hr § 1](hr.md#1-rate-plans) |
+| Rate Plans: Coverage | `GET /pay/rate_plans/:id/coverage` | [hr § 1.2](hr.md#12-coverage) |
+| Bonuses: list, editor, period options, Lock / Unlock, Delete | `/pay/bonuses`, `GET /pay/bonuses/periods` | [hr § 6](hr.md#6-bonuses) |
+| Points: drivers, balance, history, Award / Deduct | `/pay/points`, `/pay/points/:driver_id` | [hr § 7.1](hr.md#71-points) |
+| Rewards: list, editor, photo, Delete | `/pay/rewards` | [hr § 7.2](hr.md#72-rewards) |
+| Salary Simulator: month, Fill Sample Month, Templates | `POST /pay/simulate`, `GET /pay/simulate/sample`, `/pay/simulator_templates` | [hr § 4](hr.md#4-salary-simulator) |
+| Audit Log | `GET /pay/audit_log` | [hr § 8](hr.md#8-audit-log) |
+| How It Works, ⓘ explainers | FE only | — |
+
+---
+
+## Settings
+
+Rail footer icon `settings`.
+
+### Company Settings
+
+| Screen / element | API | Doc |
+| --- | --- | --- |
+| Open the page, View only banner (`can_edit`) | `GET /companies/:id` (id from `GET /session`) | [settings § 3.1](settings.md#31-open-and-save) |
+| Save Changes (logo, Short Name, Theme Colour, Timezone, Date / Time Format, Business Units) | `PATCH /companies/:id` | [settings § 3.1](settings.md#31-open-and-save) |
+| Country cards | `GET /countries`; pick once: `PATCH /companies/:id { company: { country } }` | [settings § 3.2](settings.md#32-countries-get-countries) |
+| Request a Change, Withdraw | `POST /country_requests`, `POST /country_requests/:id/withdraw` | [settings § 3.3](settings.md#33-request-a-country-change) |
+| Convoy Admin: Approve / Decline | `POST /country_requests/:id/approve` / `decline` | [settings § 3.3](settings.md#33-request-a-country-change) |
+
+### Users
+
+| Screen / element | API | Doc |
+| --- | --- | --- |
+| The list, Show Permissions | `GET /users` | [settings § 1.2](settings.md#12-list-get-users) |
+| View Role Permissions, Start From a Role | `GET /users/roles` | [settings § 1.1](settings.md#11-roles-and-permissions-get-usersroles) |
+| Add User / Edit (Save User) | `POST /users` / `PATCH /users/:id` | [settings § 1.3](settings.md#13-add-user--edit) |
+| Suspend / Turn back on / Delete | `POST /users/:id/suspend` / `activate`, `DELETE /users/:id` | [settings § 1.4](settings.md#14-row-buttons) |
+
+### Calendars
+
+| Screen / element | API | Doc |
+| --- | --- | --- |
+| Tabs, Add Calendar, rename, delete, Observed Holidays, Regular Sessions | `/calendars` | [settings § 4.1](settings.md#41-tabs-get-calendars) |
+| Public Holidays tab: year list, Add a Holiday, Add MOM Dates, remove | `/public_holidays` | [settings § 4.2](settings.md#42-public-holidays-tab-get-public_holidaysyear2026) |
+| A calendar's days, Add a Day, remove | `GET /calendars/:id?year=`, `/calendars/:calendar_id/days` | [settings § 4.3](settings.md#43-a-calendars-days-get-calendarsidyear2026), [Change a Day](#change-a-day-calendars) |
+| Trips Using This Calendar | `GET /calendars/:id/trips?year=` | [settings § 4.4](settings.md#44-trips-using-this-calendar-get-calendarsidtripsyear2026) |
 
 ---
 
@@ -351,13 +422,13 @@ The Clients and Settings pages are not built yet, but the trip form and the Sche
 | --- | --- | --- |
 | Trip Tracking page (link shared from the drawer) | `GET /public/tracking/:token` | [scheduler § 16](scheduler.md#16-public-trip-tracking-page) |
 | External Vehicle Share Form: open / send | `GET` / `POST /public/share_forms/:token` | [fleet § 4.4](fleet.md#44-the-public-share-form-page-no-sign-in) |
+| Client Portal sign-in (email, password, one-time code, set password, account picker, sign out) | `/portal/session`, `/portal/password` (own Portal token) | [clients § 5](clients.md#5-client-portal-sign-in) |
 
 ---
 
 ## Not built yet
 
-These rail menus of Convoy OS have **no API yet**: Dashboard, Ops Control, Live Map, School Bus, Clients (the Managed
-Clients and Connected Clients pages), Reports, Finance (including Vehicle Financials), HR, Settings (Company Settings,
-Users, the Calendars page itself), and the Convoy Admin menus (Discover, Company Leads, Transport Companies).
+These rail menus of Convoy OS have **no API yet**: Dashboard, Ops Control, Live Map, School Bus, Clients > Connected
+Clients, Reports, Finance (including Vehicle Financials), and the Convoy Admin menus (Discover, Company Leads, Transport Companies).
 Smaller gaps inside built menus are listed in [trips § 6](trips.md#6-not-built-yet) and
-[fleet § 10](fleet.md#10-not-built-yet).
+[fleet § 10](fleet.md#10-not-built-yet), [settings § 5](settings.md#5-not-built-yet), [clients § 7](clients.md#7-not-built-yet) and [hr § 10](hr.md#10-not-built-yet).

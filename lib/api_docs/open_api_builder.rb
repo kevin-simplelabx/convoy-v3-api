@@ -7,10 +7,11 @@
 module ApiDocs
   class OpenApiBuilder
     DOCS = Rails.root.join(".api-documents")
-    MENUS = { "scheduler.md" => "Scheduler", "trips.md" => "Trips", "fleet.md" => "Fleet", "README.md" => "Common" }.freeze
+    MENUS = { "scheduler.md" => "Scheduler", "trips.md" => "Trips", "fleet.md" => "Fleet", "settings.md" => "Settings", "clients.md" => "Clients", "hr.md" => "HR",
+              "README.md" => "Common" }.freeze
     # Folder = the Convoy OS menu that owns the resource (.notes/data-ownership.md), not the doc that first names it.
     FOLDERS = {
-      "Common" => %w[sessions companies downloads document_reads banks],
+      "Common" => %w[sessions downloads document_reads banks],
       "Scheduler" => %w[scheduler occurrences replacements trip_assignments public/tracking],
       "Trips" => %w[trips trip_attachments trip_run_groups trip_stop_photos route_lists trip_history notices notice_templates
                     bookings booking_trips booking_attachments booking_cancel_requests booking_notifications
@@ -19,12 +20,15 @@ module ApiDocs
                     vehicle_driver_schedules vehicle_types vehicle_type_requests drivers operator_drivers operators attendants
                     fuel fuel_entries fuel_alerts fuel_companies maintenance_visits workshops
                     external_share_links external_vehicle_submissions public/share_forms],
-      "Clients" => %w[clients client_sites client_end_customers client_pickup_points pickup_points],
-      "Settings" => %w[calendars calendar_days public_holidays]
+      "Clients" => %w[clients client_sites client_end_customers client_pickup_points client_users pickup_points],
+      "HR" => %w[pay_rate_plans pay_schemes pay_drivers pay_earnings pay_simulator pay_bonuses pay_points pay_rewards pay_audit_log],
+      "Client Portal" => %w[portal/sessions portal/passwords],
+      "Settings" => %w[users profiles companies countries country_requests calendars calendar_days public_holidays]
     }.flat_map { |folder, names| names.map { [ "api/v1/#{it}", folder ] } }.to_h.freeze
-    ORDER = %w[Common Scheduler Trips Fleet Clients Settings Other].freeze
+    ORDER = %w[Common Scheduler Trips Fleet Clients HR Settings Client\ Portal Other].freeze
     MENTION = %r{`(GET|POST|PATCH|PUT|DELETE) (/[^`\s?]*)}
-    PUBLIC = %w[api/v1/sessions#create api/v1/downloads#show].freeze
+    PUBLIC = %w[api/v1/sessions#create api/v1/downloads#show api/v1/portal/sessions#lookup api/v1/portal/sessions#code
+                api/v1/portal/sessions#verify api/v1/portal/sessions#create api/v1/portal/passwords#create].freeze
     CRUD = { "index" => "List %s", "show" => "Get %s", "create" => "Create %s", "update" => "Update %s",
              "destroy" => "Delete %s" }.freeze
     DESCRIPTION_LIMIT = 8_000

@@ -258,7 +258,7 @@ Drawer response = the run row plus:
 | --- | --- | --- |
 | Cancel | `PATCH /occurrences/:id/cancel` `{ lock_version, by_client }` | `by_client: true` = cancelled at the client's request (Trip History: Cancelled by Client); default by us |
 | Restore | `PATCH /occurrences/:id/restore` `{ lock_version }` | |
-| Raise an Issue | `POST /occurrences/:id/issue` `{ reason }` | Only on a run that is done; holds the driver's pay |
+| Raise an Issue | `POST /occurrences/:id/issue` `{ reason }` | Only on a run that is done; holds the driver's pay. `422` once the driver's pay for that month is confirmed (HR, Earnings) |
 | Clear Issue | `DELETE /occurrences/:id/issue` | |
 | Change the pick-up time: Today Only | `PATCH /occurrences/:id/time` `{ scope: "today", start_time: "08:20" }` | Every stop moves by the same amount |
 | Change the pick-up time: Every Run From Today | `PATCH /occurrences/:id/time` `{ scope: "from_here", start_time: "07:45" }` | Recurring trips; shuttles: this timing only |
@@ -664,6 +664,8 @@ A handover adds a second run (`part: 2`) on the new bus from the handover time.
 Day `kind`: school calendars `hol` School Holiday, `ns` No School, `early` Early Dismissal, `late` Late Arrival
 (`usual_time` + `new_time`); general calendars `off` Day Off, `shift` Changed Times (`shift_minutes` ±), `oil` Off in Lieu
 (`in_place_of`), `work` Working Holiday. Runs re-sync in the background after a change: reload the grid after a few seconds.
+Changing calendars needs the `vehicles` or `finance` permission. The full Calendars page (year view, trips using a calendar,
+observed Monday for a Sunday holiday) is in [settings.md § 4](settings.md#4-calendars).
 
 ---
 

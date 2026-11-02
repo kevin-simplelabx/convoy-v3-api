@@ -7,6 +7,7 @@
 #  business_units_enabled    :boolean          default(FALSE), not null
 #  code                      :string(6)        not null
 #  country                   :string           default("SG"), not null
+#  country_set_at            :datetime
 #  date_format               :string           default("dmy"), not null
 #  external_vehicle_cap      :integer          default(10), not null
 #  logo                      :string
@@ -23,10 +24,16 @@
 #  timezone                  :string           default("Asia/Singapore"), not null
 #  created_at                :datetime         not null
 #  updated_at                :datetime         not null
+#  country_set_by_id         :bigint
 #
 # Indexes
 #
-#  index_companies_on_code  (code) UNIQUE
+#  index_companies_on_code               (code) UNIQUE
+#  index_companies_on_country_set_by_id  (country_set_by_id)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (country_set_by_id => users.id)
 #
 FactoryBot.define do
   factory :company do

@@ -189,7 +189,7 @@ CREATE TABLE public.banks (
     "position" integer DEFAULT 0 NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT banks_branch_rule CHECK (((branch_rule)::text = ANY (ARRAY[('pre3'::character varying)::text, ('pre3drop'::character varying)::text, ('posb'::character varying)::text, ('sc'::character varying)::text, ('uob'::character varying)::text, ('list'::character varying)::text])))
+    CONSTRAINT banks_branch_rule CHECK (((branch_rule)::text = ANY ((ARRAY['pre3'::character varying, 'pre3drop'::character varying, 'posb'::character varying, 'sc'::character varying, 'uob'::character varying, 'list'::character varying])::text[])))
 );
 
 
@@ -702,6 +702,78 @@ ALTER SEQUENCE public.calendars_id_seq OWNED BY public.calendars.id;
 
 
 --
+-- Name: client_billing_contacts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.client_billing_contacts (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    billable_type character varying NOT NULL,
+    billable_id bigint NOT NULL,
+    name character varying,
+    email character varying,
+    send_as character varying DEFAULT 'to'::character varying NOT NULL,
+    attention boolean DEFAULT false NOT NULL,
+    "position" integer DEFAULT 0 NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT client_billing_contacts_send_as CHECK (((send_as)::text = ANY ((ARRAY['to'::character varying, 'cc'::character varying])::text[])))
+);
+
+
+--
+-- Name: client_billing_contacts_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.client_billing_contacts_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: client_billing_contacts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.client_billing_contacts_id_seq OWNED BY public.client_billing_contacts.id;
+
+
+--
+-- Name: client_bookable_vehicle_types; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.client_bookable_vehicle_types (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    client_id bigint NOT NULL,
+    vehicle_type_id bigint NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: client_bookable_vehicle_types_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.client_bookable_vehicle_types_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: client_bookable_vehicle_types_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.client_bookable_vehicle_types_id_seq OWNED BY public.client_bookable_vehicle_types.id;
+
+
+--
 -- Name: client_end_customers; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -749,7 +821,8 @@ CREATE TABLE public.client_pickup_points (
     lng numeric(10,7),
     note text,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    created_by_id bigint
 );
 
 
@@ -785,7 +858,13 @@ CREATE TABLE public.client_sites (
     lat numeric(10,7),
     lng numeric(10,7),
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    school_id bigint,
+    own_billing boolean DEFAULT false NOT NULL,
+    billing_name character varying,
+    billing_uen character varying,
+    billing_address text,
+    created_by_id bigint
 );
 
 
@@ -806,6 +885,78 @@ CREATE SEQUENCE public.client_sites_id_seq
 --
 
 ALTER SEQUENCE public.client_sites_id_seq OWNED BY public.client_sites.id;
+
+
+--
+-- Name: client_user_sites; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.client_user_sites (
+    id bigint NOT NULL,
+    client_user_id bigint NOT NULL,
+    client_site_id bigint NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: client_user_sites_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.client_user_sites_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: client_user_sites_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.client_user_sites_id_seq OWNED BY public.client_user_sites.id;
+
+
+--
+-- Name: client_users; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.client_users (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    client_id bigint NOT NULL,
+    portal_account_id bigint NOT NULL,
+    name character varying NOT NULL,
+    title character varying,
+    email character varying NOT NULL,
+    role character varying DEFAULT 'member'::character varying NOT NULL,
+    created_by_id bigint,
+    discarded_at timestamp(6) without time zone,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT client_users_role CHECK (((role)::text = ANY ((ARRAY['super'::character varying, 'adm'::character varying, 'fin'::character varying, 'ssa'::character varying, 'sa'::character varying, 'sfin'::character varying, 'member'::character varying])::text[])))
+);
+
+
+--
+-- Name: client_users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.client_users_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: client_users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.client_users_id_seq OWNED BY public.client_users.id;
 
 
 --
@@ -874,7 +1025,9 @@ CREATE TABLE public.companies (
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
     on_time_minutes integer DEFAULT 5 NOT NULL,
-    speed_limit_kmh integer DEFAULT 80 NOT NULL
+    speed_limit_kmh integer DEFAULT 80 NOT NULL,
+    country_set_at timestamp(6) without time zone,
+    country_set_by_id bigint
 );
 
 
@@ -895,6 +1048,45 @@ CREATE SEQUENCE public.companies_id_seq
 --
 
 ALTER SEQUENCE public.companies_id_seq OWNED BY public.companies.id;
+
+
+--
+-- Name: company_country_requests; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.company_country_requests (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    from_country character varying NOT NULL,
+    to_country character varying NOT NULL,
+    reason text NOT NULL,
+    status character varying DEFAULT 'pending'::character varying NOT NULL,
+    requested_by_id bigint,
+    decided_by_id bigint,
+    decided_at timestamp(6) without time zone,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT company_country_requests_status CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'approved'::character varying, 'declined'::character varying, 'withdrawn'::character varying])::text[])))
+);
+
+
+--
+-- Name: company_country_requests_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.company_country_requests_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: company_country_requests_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.company_country_requests_id_seq OWNED BY public.company_country_requests.id;
 
 
 --
@@ -1019,7 +1211,7 @@ CREATE TABLE public.driver_invites (
     delivery character varying DEFAULT 'recorded'::character varying NOT NULL,
     sent_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT driver_invites_kind CHECK (((kind)::text = ANY (ARRAY[('invite'::character varying)::text, ('resend'::character varying)::text])))
+    CONSTRAINT driver_invites_kind CHECK (((kind)::text = ANY ((ARRAY['invite'::character varying, 'resend'::character varying])::text[])))
 );
 
 
@@ -1085,6 +1277,302 @@ CREATE SEQUENCE public.driver_kyc_profiles_id_seq
 --
 
 ALTER SEQUENCE public.driver_kyc_profiles_id_seq OWNED BY public.driver_kyc_profiles.id;
+
+
+--
+-- Name: driver_pay_month_lines; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.driver_pay_month_lines (
+    id bigint NOT NULL,
+    driver_pay_month_id bigint NOT NULL,
+    "position" integer DEFAULT 0 NOT NULL,
+    part_from date,
+    part_to date,
+    scheme_name character varying,
+    label character varying NOT NULL,
+    amount numeric(12,2),
+    text character varying,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: driver_pay_month_lines_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.driver_pay_month_lines_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: driver_pay_month_lines_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.driver_pay_month_lines_id_seq OWNED BY public.driver_pay_month_lines.id;
+
+
+--
+-- Name: driver_pay_month_runs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.driver_pay_month_runs (
+    id bigint NOT NULL,
+    driver_pay_month_id bigint NOT NULL,
+    occurrence_id bigint NOT NULL,
+    occurrence_date date NOT NULL,
+    trip_label character varying,
+    trip_value numeric(10,2),
+    hours numeric(6,2),
+    amount numeric(12,2) NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: driver_pay_month_runs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.driver_pay_month_runs_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: driver_pay_month_runs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.driver_pay_month_runs_id_seq OWNED BY public.driver_pay_month_runs.id;
+
+
+--
+-- Name: driver_pay_months; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.driver_pay_months (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    driver_id bigint NOT NULL,
+    month date NOT NULL,
+    total numeric(12,2) NOT NULL,
+    trips numeric(10,2) DEFAULT 0.0 NOT NULL,
+    runs_count integer DEFAULT 0 NOT NULL,
+    confirmed_by_id bigint,
+    confirmed_at timestamp(6) without time zone NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: driver_pay_months_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.driver_pay_months_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: driver_pay_months_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.driver_pay_months_id_seq OWNED BY public.driver_pay_months.id;
+
+
+--
+-- Name: driver_pay_schemes; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.driver_pay_schemes (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    driver_id bigint NOT NULL,
+    pay_scheme_id bigint NOT NULL,
+    starts_on date NOT NULL,
+    ends_on date,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: driver_pay_schemes_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.driver_pay_schemes_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: driver_pay_schemes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.driver_pay_schemes_id_seq OWNED BY public.driver_pay_schemes.id;
+
+
+--
+-- Name: driver_point_allocations; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.driver_point_allocations (
+    id bigint NOT NULL,
+    driver_point_deduction_id bigint NOT NULL,
+    driver_point_lot_id bigint NOT NULL,
+    points integer NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: driver_point_allocations_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.driver_point_allocations_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: driver_point_allocations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.driver_point_allocations_id_seq OWNED BY public.driver_point_allocations.id;
+
+
+--
+-- Name: driver_point_deductions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.driver_point_deductions (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    driver_id bigint NOT NULL,
+    points integer NOT NULL,
+    reason character varying NOT NULL,
+    deducted_on date NOT NULL,
+    deducted_by_id bigint,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT driver_point_deductions_points CHECK ((points > 0))
+);
+
+
+--
+-- Name: driver_point_deductions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.driver_point_deductions_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: driver_point_deductions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.driver_point_deductions_id_seq OWNED BY public.driver_point_deductions.id;
+
+
+--
+-- Name: driver_point_lots; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.driver_point_lots (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    driver_id bigint NOT NULL,
+    points integer NOT NULL,
+    remaining integer NOT NULL,
+    source character varying DEFAULT 'manual'::character varying NOT NULL,
+    reason character varying NOT NULL,
+    awarded_on date NOT NULL,
+    expires_on date NOT NULL,
+    awarded_by_id bigint,
+    pay_bonus_id bigint,
+    driver_pay_month_id bigint,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT driver_point_lots_points CHECK (((points > 0) AND ((remaining >= 0) AND (remaining <= points)))),
+    CONSTRAINT driver_point_lots_source CHECK (((source)::text = ANY ((ARRAY['manual'::character varying, 'bonus'::character varying])::text[])))
+);
+
+
+--
+-- Name: driver_point_lots_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.driver_point_lots_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: driver_point_lots_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.driver_point_lots_id_seq OWNED BY public.driver_point_lots.id;
+
+
+--
+-- Name: driver_vehicle_types; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.driver_vehicle_types (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    driver_id bigint NOT NULL,
+    vehicle_type_id bigint NOT NULL,
+    starts_on date NOT NULL,
+    ends_on date,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: driver_vehicle_types_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.driver_vehicle_types_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: driver_vehicle_types_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.driver_vehicle_types_id_seq OWNED BY public.driver_vehicle_types.id;
 
 
 --
@@ -1186,7 +1674,7 @@ CREATE TABLE public.external_vehicle_submissions (
     submitted_ip character varying,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT external_vehicle_submissions_status CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('added'::character varying)::text, ('dismissed'::character varying)::text])))
+    CONSTRAINT external_vehicle_submissions_status CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'added'::character varying, 'dismissed'::character varying])::text[])))
 );
 
 
@@ -1229,8 +1717,8 @@ CREATE TABLE public.fuel_alerts (
     checked_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT fuel_alerts_kind CHECK (((kind)::text = ANY (ARRAY[('eff'::character varying)::text, ('odo'::character varying)::text, ('dbl'::character varying)::text, ('big'::character varying)::text, ('price'::character varying)::text, ('trend'::character varying)::text]))),
-    CONSTRAINT fuel_alerts_status CHECK (((status)::text = ANY (ARRAY[('open'::character varying)::text, ('checked'::character varying)::text])))
+    CONSTRAINT fuel_alerts_kind CHECK (((kind)::text = ANY ((ARRAY['eff'::character varying, 'odo'::character varying, 'dbl'::character varying, 'big'::character varying, 'price'::character varying, 'trend'::character varying])::text[]))),
+    CONSTRAINT fuel_alerts_status CHECK (((status)::text = ANY ((ARRAY['open'::character varying, 'checked'::character varying])::text[])))
 );
 
 
@@ -1265,7 +1753,7 @@ CREATE TABLE public.fuel_companies (
     "position" integer DEFAULT 0 NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT fuel_companies_kind CHECK (((kind)::text = ANY (ARRAY[('fuel'::character varying)::text, ('elec'::character varying)::text, ('both'::character varying)::text])))
+    CONSTRAINT fuel_companies_kind CHECK (((kind)::text = ANY ((ARRAY['fuel'::character varying, 'elec'::character varying, 'both'::character varying])::text[])))
 );
 
 
@@ -1317,7 +1805,7 @@ CREATE TABLE public.fuel_entries (
     updated_at timestamp(6) without time zone NOT NULL,
     energy_km integer,
     CONSTRAINT fuel_entries_amounts CHECK (((quantity > (0)::numeric) AND (cost >= (0)::numeric))),
-    CONSTRAINT fuel_entries_kind CHECK (((kind)::text = ANY (ARRAY[('diesel'::character varying)::text, ('petrol'::character varying)::text, ('def'::character varying)::text, ('elec'::character varying)::text])))
+    CONSTRAINT fuel_entries_kind CHECK (((kind)::text = ANY ((ARRAY['diesel'::character varying, 'petrol'::character varying, 'def'::character varying, 'elec'::character varying])::text[])))
 );
 
 
@@ -1803,7 +2291,7 @@ CREATE TABLE public.occurrence_corrections (
     lock_version integer DEFAULT 0 NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT occurrence_corrections_outcome CHECK (((outcome)::text = ANY (ARRAY[('completed'::character varying)::text, ('incomplete'::character varying)::text])))
+    CONSTRAINT occurrence_corrections_outcome CHECK (((outcome)::text = ANY ((ARRAY['completed'::character varying, 'incomplete'::character varying])::text[])))
 );
 
 
@@ -1926,6 +2414,125 @@ ALTER TABLE public.occurrence_positions ALTER COLUMN id ADD GENERATED BY DEFAULT
     NO MINVALUE
     NO MAXVALUE
     CACHE 1
+);
+
+
+--
+-- Name: occurrence_positions_y2026m09; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.occurrence_positions_y2026m09 (
+    id bigint NOT NULL,
+    occurrence_date date NOT NULL,
+    occurrence_id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    recorded_at timestamp with time zone NOT NULL,
+    lat double precision NOT NULL,
+    lng double precision NOT NULL,
+    speed_kmh real,
+    heading smallint
+);
+
+
+--
+-- Name: occurrence_positions_y2026m10; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.occurrence_positions_y2026m10 (
+    id bigint NOT NULL,
+    occurrence_date date NOT NULL,
+    occurrence_id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    recorded_at timestamp with time zone NOT NULL,
+    lat double precision NOT NULL,
+    lng double precision NOT NULL,
+    speed_kmh real,
+    heading smallint
+);
+
+
+--
+-- Name: occurrence_positions_y2026m11; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.occurrence_positions_y2026m11 (
+    id bigint NOT NULL,
+    occurrence_date date NOT NULL,
+    occurrence_id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    recorded_at timestamp with time zone NOT NULL,
+    lat double precision NOT NULL,
+    lng double precision NOT NULL,
+    speed_kmh real,
+    heading smallint
+);
+
+
+--
+-- Name: occurrence_positions_y2026m12; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.occurrence_positions_y2026m12 (
+    id bigint NOT NULL,
+    occurrence_date date NOT NULL,
+    occurrence_id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    recorded_at timestamp with time zone NOT NULL,
+    lat double precision NOT NULL,
+    lng double precision NOT NULL,
+    speed_kmh real,
+    heading smallint
+);
+
+
+--
+-- Name: occurrence_positions_y2027m01; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.occurrence_positions_y2027m01 (
+    id bigint NOT NULL,
+    occurrence_date date NOT NULL,
+    occurrence_id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    recorded_at timestamp with time zone NOT NULL,
+    lat double precision NOT NULL,
+    lng double precision NOT NULL,
+    speed_kmh real,
+    heading smallint
+);
+
+
+--
+-- Name: occurrence_positions_y2027m02; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.occurrence_positions_y2027m02 (
+    id bigint NOT NULL,
+    occurrence_date date NOT NULL,
+    occurrence_id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    recorded_at timestamp with time zone NOT NULL,
+    lat double precision NOT NULL,
+    lng double precision NOT NULL,
+    speed_kmh real,
+    heading smallint
+);
+
+
+--
+-- Name: occurrence_positions_y2027m03; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.occurrence_positions_y2027m03 (
+    id bigint NOT NULL,
+    occurrence_date date NOT NULL,
+    occurrence_id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    recorded_at timestamp with time zone NOT NULL,
+    lat double precision NOT NULL,
+    lng double precision NOT NULL,
+    speed_kmh real,
+    heading smallint
 );
 
 
@@ -2147,6 +2754,672 @@ ALTER SEQUENCE public.operators_id_seq OWNED BY public.operators.id;
 
 
 --
+-- Name: pay_bonus_drivers; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.pay_bonus_drivers (
+    id bigint NOT NULL,
+    pay_bonus_id bigint NOT NULL,
+    driver_id bigint NOT NULL,
+    role character varying NOT NULL,
+    signed_up_at timestamp(6) without time zone,
+    signed_up_by_id bigint,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT pay_bonus_drivers_role CHECK (((role)::text = ANY ((ARRAY['eligible'::character varying, 'signed_up'::character varying])::text[])))
+);
+
+
+--
+-- Name: pay_bonus_drivers_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.pay_bonus_drivers_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: pay_bonus_drivers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.pay_bonus_drivers_id_seq OWNED BY public.pay_bonus_drivers.id;
+
+
+--
+-- Name: pay_bonus_excluded_periods; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.pay_bonus_excluded_periods (
+    id bigint NOT NULL,
+    pay_bonus_id bigint NOT NULL,
+    name character varying,
+    starts_on date NOT NULL,
+    ends_on date NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: pay_bonus_excluded_periods_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.pay_bonus_excluded_periods_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: pay_bonus_excluded_periods_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.pay_bonus_excluded_periods_id_seq OWNED BY public.pay_bonus_excluded_periods.id;
+
+
+--
+-- Name: pay_bonus_payments; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.pay_bonus_payments (
+    id bigint NOT NULL,
+    pay_bonus_id bigint NOT NULL,
+    percentage integer NOT NULL,
+    months_after integer DEFAULT 1 NOT NULL,
+    "position" integer DEFAULT 0 NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: pay_bonus_payments_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.pay_bonus_payments_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: pay_bonus_payments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.pay_bonus_payments_id_seq OWNED BY public.pay_bonus_payments.id;
+
+
+--
+-- Name: pay_bonus_schemes; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.pay_bonus_schemes (
+    id bigint NOT NULL,
+    pay_bonus_id bigint NOT NULL,
+    pay_scheme_id bigint NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: pay_bonus_schemes_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.pay_bonus_schemes_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: pay_bonus_schemes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.pay_bonus_schemes_id_seq OWNED BY public.pay_bonus_schemes.id;
+
+
+--
+-- Name: pay_bonus_tiers; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.pay_bonus_tiers (
+    id bigint NOT NULL,
+    pay_bonus_id bigint NOT NULL,
+    target_trips integer,
+    metric_min numeric(5,2),
+    metric_max numeric(5,2),
+    pay_as character varying DEFAULT 'lump_sum'::character varying NOT NULL,
+    amount numeric(12,2) DEFAULT 0.0 NOT NULL,
+    points integer,
+    "position" integer DEFAULT 0 NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: pay_bonus_tiers_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.pay_bonus_tiers_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: pay_bonus_tiers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.pay_bonus_tiers_id_seq OWNED BY public.pay_bonus_tiers.id;
+
+
+--
+-- Name: pay_bonuses; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.pay_bonuses (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    name character varying NOT NULL,
+    description character varying,
+    plan_type character varying DEFAULT 'trip_target'::character varying NOT NULL,
+    frequency character varying DEFAULT 'monthly'::character varying NOT NULL,
+    starts_on date NOT NULL,
+    last_period_on date,
+    payout_type character varying DEFAULT 'end_of_period'::character varying NOT NULL,
+    payout_delay_months integer DEFAULT 1 NOT NULL,
+    all_schemes boolean DEFAULT true NOT NULL,
+    requires_sign_up boolean DEFAULT false NOT NULL,
+    sign_up_from date,
+    sign_up_to date,
+    terms text,
+    overlap_daily character varying DEFAULT 'additive'::character varying NOT NULL,
+    overlap_weekly character varying DEFAULT 'additive'::character varying NOT NULL,
+    overlap_monthly character varying DEFAULT 'additive'::character varying NOT NULL,
+    locked_at timestamp(6) without time zone,
+    locked_by_id bigint,
+    discarded_at timestamp(6) without time zone,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT pay_bonuses_frequency CHECK (((frequency)::text = ANY ((ARRAY['daily'::character varying, 'weekly'::character varying, 'monthly'::character varying, 'quarterly'::character varying, 'half_yearly'::character varying, 'yearly'::character varying])::text[]))),
+    CONSTRAINT pay_bonuses_plan_type CHECK (((plan_type)::text = ANY ((ARRAY['trip_target'::character varying, 'reliability_otp'::character varying, 'reliability_attendance'::character varying])::text[])))
+);
+
+
+--
+-- Name: pay_bonuses_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.pay_bonuses_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: pay_bonuses_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.pay_bonuses_id_seq OWNED BY public.pay_bonuses.id;
+
+
+--
+-- Name: pay_rate_period_ranges; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.pay_rate_period_ranges (
+    id bigint NOT NULL,
+    pay_rate_period_id bigint NOT NULL,
+    start_time integer NOT NULL,
+    end_time integer NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: pay_rate_period_ranges_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.pay_rate_period_ranges_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: pay_rate_period_ranges_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.pay_rate_period_ranges_id_seq OWNED BY public.pay_rate_period_ranges.id;
+
+
+--
+-- Name: pay_rate_periods; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.pay_rate_periods (
+    id bigint NOT NULL,
+    pay_rate_plan_id bigint NOT NULL,
+    name character varying NOT NULL,
+    days character varying[] DEFAULT '{}'::character varying[] NOT NULL,
+    takes_priority boolean DEFAULT false NOT NULL,
+    "position" integer DEFAULT 0 NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: pay_rate_periods_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.pay_rate_periods_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: pay_rate_periods_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.pay_rate_periods_id_seq OWNED BY public.pay_rate_periods.id;
+
+
+--
+-- Name: pay_rate_plan_vehicle_types; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.pay_rate_plan_vehicle_types (
+    id bigint NOT NULL,
+    pay_rate_plan_id bigint NOT NULL,
+    vehicle_type_id bigint NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: pay_rate_plan_vehicle_types_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.pay_rate_plan_vehicle_types_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: pay_rate_plan_vehicle_types_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.pay_rate_plan_vehicle_types_id_seq OWNED BY public.pay_rate_plan_vehicle_types.id;
+
+
+--
+-- Name: pay_rate_plans; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.pay_rate_plans (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    name character varying NOT NULL,
+    description character varying,
+    locked_at timestamp(6) without time zone,
+    locked_by_id bigint,
+    discarded_at timestamp(6) without time zone,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: pay_rate_plans_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.pay_rate_plans_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: pay_rate_plans_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.pay_rate_plans_id_seq OWNED BY public.pay_rate_plans.id;
+
+
+--
+-- Name: pay_rates; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.pay_rates (
+    id bigint NOT NULL,
+    pay_rate_period_id bigint NOT NULL,
+    vehicle_type_id bigint NOT NULL,
+    per_trip numeric(12,2),
+    per_hour numeric(12,2),
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: pay_rates_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.pay_rates_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: pay_rates_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.pay_rates_id_seq OWNED BY public.pay_rates.id;
+
+
+--
+-- Name: pay_rewards; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.pay_rewards (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    title character varying NOT NULL,
+    description text,
+    photo character varying,
+    points_required integer NOT NULL,
+    status character varying DEFAULT 'inactive'::character varying NOT NULL,
+    discarded_at timestamp(6) without time zone,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT pay_rewards_status CHECK (((status)::text = ANY ((ARRAY['active'::character varying, 'inactive'::character varying])::text[])))
+);
+
+
+--
+-- Name: pay_rewards_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.pay_rewards_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: pay_rewards_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.pay_rewards_id_seq OWNED BY public.pay_rewards.id;
+
+
+--
+-- Name: pay_scheme_route_bands; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.pay_scheme_route_bands (
+    id bigint NOT NULL,
+    pay_scheme_id bigint NOT NULL,
+    up_to_minutes integer,
+    monthly_amount numeric(12,2) NOT NULL,
+    "position" integer DEFAULT 0 NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: pay_scheme_route_bands_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.pay_scheme_route_bands_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: pay_scheme_route_bands_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.pay_scheme_route_bands_id_seq OWNED BY public.pay_scheme_route_bands.id;
+
+
+--
+-- Name: pay_scheme_target_tiers; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.pay_scheme_target_tiers (
+    id bigint NOT NULL,
+    pay_scheme_id bigint NOT NULL,
+    period character varying NOT NULL,
+    target_trips integer NOT NULL,
+    pay_as character varying DEFAULT 'lump_sum'::character varying NOT NULL,
+    amount numeric(12,2) DEFAULT 0.0 NOT NULL,
+    "position" integer DEFAULT 0 NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT pay_scheme_target_tiers_period CHECK (((period)::text = ANY ((ARRAY['weekly'::character varying, 'monthly'::character varying])::text[])))
+);
+
+
+--
+-- Name: pay_scheme_target_tiers_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.pay_scheme_target_tiers_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: pay_scheme_target_tiers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.pay_scheme_target_tiers_id_seq OWNED BY public.pay_scheme_target_tiers.id;
+
+
+--
+-- Name: pay_scheme_volume_tiers; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.pay_scheme_volume_tiers (
+    id bigint NOT NULL,
+    pay_scheme_id bigint NOT NULL,
+    from_trip integer NOT NULL,
+    to_trip integer,
+    boost_type character varying DEFAULT 'flat'::character varying NOT NULL,
+    boost_value numeric(12,2) DEFAULT 0.0 NOT NULL,
+    "position" integer DEFAULT 0 NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: pay_scheme_volume_tiers_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.pay_scheme_volume_tiers_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: pay_scheme_volume_tiers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.pay_scheme_volume_tiers_id_seq OWNED BY public.pay_scheme_volume_tiers.id;
+
+
+--
+-- Name: pay_schemes; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.pay_schemes (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    name character varying NOT NULL,
+    description character varying,
+    is_default boolean DEFAULT false NOT NULL,
+    scheme_type character varying DEFAULT 'basic_plus_trips'::character varying NOT NULL,
+    pay_rate_plan_id bigint,
+    basic_salary numeric(12,2) DEFAULT 0.0 NOT NULL,
+    basic_covers_daily_trips boolean DEFAULT false NOT NULL,
+    basic_covered_daily_trips integer DEFAULT 1 NOT NULL,
+    basic_covered_schedule character varying DEFAULT 'mon-fri'::character varying NOT NULL,
+    basic_cover_ph boolean DEFAULT false NOT NULL,
+    disposal_counts_as_trips boolean DEFAULT false NOT NULL,
+    has_guarantee boolean DEFAULT false NOT NULL,
+    guaranteed_amount numeric(12,2) DEFAULT 2200.0 NOT NULL,
+    on_top_ph boolean DEFAULT false NOT NULL,
+    on_top_sat boolean DEFAULT false NOT NULL,
+    on_top_sun boolean DEFAULT false NOT NULL,
+    has_post_guarantee_boost boolean DEFAULT false NOT NULL,
+    post_guarantee_boost_type character varying DEFAULT 'percentage'::character varying NOT NULL,
+    post_guarantee_boost_value numeric(12,2) DEFAULT 50.0 NOT NULL,
+    has_rejection_penalty boolean DEFAULT false NOT NULL,
+    rejection_allowed_jobs integer DEFAULT 0 NOT NULL,
+    rejection_fallback_basic numeric(12,2) DEFAULT 0.0 NOT NULL,
+    rejection_keeps_incentives boolean DEFAULT true NOT NULL,
+    monthly_pay_amount numeric(12,2) DEFAULT 2200.0 NOT NULL,
+    monthly_minimum_type character varying DEFAULT 'daily'::character varying NOT NULL,
+    monthly_daily_trips integer DEFAULT 6 NOT NULL,
+    monthly_trips integer DEFAULT 150 NOT NULL,
+    monthly_schedule character varying DEFAULT 'mon-fri'::character varying NOT NULL,
+    monthly_cover_ph boolean DEFAULT false NOT NULL,
+    shift_salary numeric(12,2) DEFAULT 0.0 NOT NULL,
+    shift_start_time integer DEFAULT 480 NOT NULL,
+    shift_end_time integer DEFAULT 1080 NOT NULL,
+    shift_working_days character varying[] DEFAULT '{mon,tue,wed,thu,fri}'::character varying[] NOT NULL,
+    shift_overtime_pay_type character varying DEFAULT 'trip_rates'::character varying NOT NULL,
+    shift_overtime_hourly_rate numeric(12,2) DEFAULT 0.0 NOT NULL,
+    school_routes_pay boolean DEFAULT false NOT NULL,
+    school_routes_count boolean DEFAULT false NOT NULL,
+    school_routes_in_guarantee boolean DEFAULT true NOT NULL,
+    has_daily_volume_incentive boolean DEFAULT false NOT NULL,
+    daily_volume_in_guarantee boolean DEFAULT false NOT NULL,
+    has_weekly_target_incentive boolean DEFAULT false NOT NULL,
+    weekly_target_in_guarantee boolean DEFAULT false NOT NULL,
+    has_monthly_target_incentive boolean DEFAULT false NOT NULL,
+    monthly_target_in_guarantee boolean DEFAULT false NOT NULL,
+    locked_at timestamp(6) without time zone,
+    locked_by_id bigint,
+    discarded_at timestamp(6) without time zone,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT pay_schemes_type CHECK (((scheme_type)::text = ANY ((ARRAY['basic_plus_trips'::character varying, 'monthly_with_minimum'::character varying, 'shift_based'::character varying])::text[])))
+);
+
+
+--
+-- Name: pay_schemes_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.pay_schemes_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: pay_schemes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.pay_schemes_id_seq OWNED BY public.pay_schemes.id;
+
+
+--
+-- Name: pay_simulator_templates; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.pay_simulator_templates (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    slot integer NOT NULL,
+    name character varying NOT NULL,
+    description text,
+    month date NOT NULL,
+    pay_scheme_id bigint,
+    vehicle_type_id bigint,
+    rejected integer DEFAULT 0 NOT NULL,
+    on_time_percent integer,
+    attendance_percent integer,
+    school_holidays_from date,
+    school_holidays_to date,
+    routes jsonb DEFAULT '[]'::jsonb NOT NULL,
+    jobs jsonb DEFAULT '{}'::jsonb NOT NULL,
+    saved_by_id bigint,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT pay_simulator_templates_slot CHECK (((slot >= 1) AND (slot <= 5)))
+);
+
+
+--
+-- Name: pay_simulator_templates_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.pay_simulator_templates_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: pay_simulator_templates_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.pay_simulator_templates_id_seq OWNED BY public.pay_simulator_templates.id;
+
+
+--
 -- Name: pickup_points; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -2180,6 +3453,116 @@ CREATE SEQUENCE public.pickup_points_id_seq
 --
 
 ALTER SEQUENCE public.pickup_points_id_seq OWNED BY public.pickup_points.id;
+
+
+--
+-- Name: portal_accounts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.portal_accounts (
+    id bigint NOT NULL,
+    email character varying NOT NULL,
+    name character varying,
+    encrypted_password character varying DEFAULT ''::character varying NOT NULL,
+    password_set_at timestamp(6) without time zone,
+    last_sign_in_at timestamp(6) without time zone,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: portal_accounts_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.portal_accounts_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: portal_accounts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.portal_accounts_id_seq OWNED BY public.portal_accounts.id;
+
+
+--
+-- Name: portal_jwts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.portal_jwts (
+    id bigint NOT NULL,
+    portal_account_id bigint NOT NULL,
+    client_user_id bigint,
+    jti character varying NOT NULL,
+    aud character varying,
+    exp timestamp(6) without time zone NOT NULL,
+    name character varying,
+    last_used_at timestamp(6) without time zone,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: portal_jwts_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.portal_jwts_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: portal_jwts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.portal_jwts_id_seq OWNED BY public.portal_jwts.id;
+
+
+--
+-- Name: portal_sign_in_codes; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.portal_sign_in_codes (
+    id bigint NOT NULL,
+    portal_account_id bigint NOT NULL,
+    purpose character varying NOT NULL,
+    code_digest character varying NOT NULL,
+    expires_at timestamp(6) without time zone NOT NULL,
+    attempts integer DEFAULT 0 NOT NULL,
+    used_at timestamp(6) without time zone,
+    ip character varying,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT portal_sign_in_codes_purpose CHECK (((purpose)::text = ANY ((ARRAY['first'::character varying, 'reset'::character varying])::text[])))
+);
+
+
+--
+-- Name: portal_sign_in_codes_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.portal_sign_in_codes_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: portal_sign_in_codes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.portal_sign_in_codes_id_seq OWNED BY public.portal_sign_in_codes.id;
 
 
 --
@@ -2542,8 +3925,8 @@ CREATE TABLE public.replacements (
     updated_at timestamp(6) without time zone NOT NULL,
     school_route_id bigint,
     CONSTRAINT replacements_dates CHECK ((ends_on >= starts_on)),
-    CONSTRAINT replacements_kind CHECK (((kind)::text = ANY (ARRAY[('drv'::character varying)::text, ('veh'::character varying)::text, ('crew'::character varying)::text, ('hand'::character varying)::text]))),
-    CONSTRAINT replacements_range_kinds CHECK ((((scope)::text = 'run'::text) OR ((kind)::text = ANY (ARRAY[('drv'::character varying)::text, ('veh'::character varying)::text])))),
+    CONSTRAINT replacements_kind CHECK (((kind)::text = ANY ((ARRAY['drv'::character varying, 'veh'::character varying, 'crew'::character varying, 'hand'::character varying])::text[]))),
+    CONSTRAINT replacements_range_kinds CHECK ((((scope)::text = 'run'::text) OR ((kind)::text = ANY ((ARRAY['drv'::character varying, 'veh'::character varying])::text[])))),
     CONSTRAINT replacements_run_source CHECK ((((scope)::text = 'range'::text) OR (num_nonnulls(trip_id, school_route_id) = 1)))
 );
 
@@ -3152,7 +4535,7 @@ CREATE TABLE public.trip_occurrences (
     cancelled_by_client boolean DEFAULT false NOT NULL,
     max_delay_minutes integer,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
-    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
+    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 )
 PARTITION BY RANGE (date);
 
@@ -3222,7 +4605,7 @@ CREATE TABLE public.trip_occurrences_y2026m09 (
     cancelled_by_client boolean DEFAULT false NOT NULL,
     max_delay_minutes integer,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
-    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
+    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 );
 
 
@@ -3277,7 +4660,7 @@ CREATE TABLE public.trip_occurrences_y2026m10 (
     cancelled_by_client boolean DEFAULT false NOT NULL,
     max_delay_minutes integer,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
-    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
+    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 );
 
 
@@ -3332,7 +4715,7 @@ CREATE TABLE public.trip_occurrences_y2026m11 (
     cancelled_by_client boolean DEFAULT false NOT NULL,
     max_delay_minutes integer,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
-    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
+    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 );
 
 
@@ -3387,7 +4770,7 @@ CREATE TABLE public.trip_occurrences_y2026m12 (
     cancelled_by_client boolean DEFAULT false NOT NULL,
     max_delay_minutes integer,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
-    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
+    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 );
 
 
@@ -3442,7 +4825,117 @@ CREATE TABLE public.trip_occurrences_y2027m01 (
     cancelled_by_client boolean DEFAULT false NOT NULL,
     max_delay_minutes integer,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
-    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
+    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
+);
+
+
+--
+-- Name: trip_occurrences_y2027m02; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.trip_occurrences_y2027m02 (
+    id bigint NOT NULL,
+    date date NOT NULL,
+    company_id bigint NOT NULL,
+    trip_id bigint,
+    trip_run_id bigint,
+    run_key character varying,
+    slot_no integer DEFAULT 1 NOT NULL,
+    part integer DEFAULT 1 NOT NULL,
+    client_id bigint,
+    kind character varying NOT NULL,
+    trip_label character varying NOT NULL,
+    start_time integer NOT NULL,
+    end_time integer NOT NULL,
+    starts_at timestamp with time zone NOT NULL,
+    ends_at timestamp with time zone NOT NULL,
+    shift_minutes integer DEFAULT 0 NOT NULL,
+    pax integer DEFAULT 0 NOT NULL,
+    vehicle_id bigint,
+    driver_id bigint,
+    operator_driver_id bigint,
+    operator_id bigint,
+    original_vehicle_id bigint,
+    status character varying DEFAULT 'scheduled'::character varying NOT NULL,
+    cancelled_at timestamp with time zone,
+    cancelled_by_id bigint,
+    ended_at timestamp with time zone,
+    issue_reason text,
+    issue_raised_at timestamp with time zone,
+    issue_raised_by_id bigint,
+    price numeric(12,2) DEFAULT 0 NOT NULL,
+    trip_value numeric(10,2) DEFAULT 0 NOT NULL,
+    operator_cost numeric(12,2),
+    overridden_fields character varying[] DEFAULT '{}'::character varying[] NOT NULL,
+    source_digest character varying,
+    lock_version integer DEFAULT 0 NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    trip_assignment_id bigint,
+    replacement_id bigint,
+    driver_name character varying,
+    driver_phone character varying,
+    school_route_id bigint,
+    skip_reason character varying,
+    cancelled_by_client boolean DEFAULT false NOT NULL,
+    max_delay_minutes integer,
+    CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
+    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
+);
+
+
+--
+-- Name: trip_occurrences_y2027m03; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.trip_occurrences_y2027m03 (
+    id bigint NOT NULL,
+    date date NOT NULL,
+    company_id bigint NOT NULL,
+    trip_id bigint,
+    trip_run_id bigint,
+    run_key character varying,
+    slot_no integer DEFAULT 1 NOT NULL,
+    part integer DEFAULT 1 NOT NULL,
+    client_id bigint,
+    kind character varying NOT NULL,
+    trip_label character varying NOT NULL,
+    start_time integer NOT NULL,
+    end_time integer NOT NULL,
+    starts_at timestamp with time zone NOT NULL,
+    ends_at timestamp with time zone NOT NULL,
+    shift_minutes integer DEFAULT 0 NOT NULL,
+    pax integer DEFAULT 0 NOT NULL,
+    vehicle_id bigint,
+    driver_id bigint,
+    operator_driver_id bigint,
+    operator_id bigint,
+    original_vehicle_id bigint,
+    status character varying DEFAULT 'scheduled'::character varying NOT NULL,
+    cancelled_at timestamp with time zone,
+    cancelled_by_id bigint,
+    ended_at timestamp with time zone,
+    issue_reason text,
+    issue_raised_at timestamp with time zone,
+    issue_raised_by_id bigint,
+    price numeric(12,2) DEFAULT 0 NOT NULL,
+    trip_value numeric(10,2) DEFAULT 0 NOT NULL,
+    operator_cost numeric(12,2),
+    overridden_fields character varying[] DEFAULT '{}'::character varying[] NOT NULL,
+    source_digest character varying,
+    lock_version integer DEFAULT 0 NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    trip_assignment_id bigint,
+    replacement_id bigint,
+    driver_name character varying,
+    driver_phone character varying,
+    school_route_id bigint,
+    skip_reason character varying,
+    cancelled_by_client boolean DEFAULT false NOT NULL,
+    max_delay_minutes integer,
+    CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
+    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 );
 
 
@@ -4051,8 +5544,8 @@ CREATE TABLE public.trips (
     route_list_imported_at timestamp(6) without time zone,
     students_purged_at timestamp(6) without time zone,
     booking_trip_id bigint,
-    CONSTRAINT trips_end_mode CHECK (((end_mode)::text = ANY (ARRAY[('none'::character varying)::text, ('never'::character varying)::text, ('date'::character varying)::text, ('count'::character varying)::text]))),
-    CONSTRAINT trips_kind CHECK (((kind)::text = ANY (ARRAY[('ad_hoc'::character varying)::text, ('corporate_shuttle'::character varying)::text, ('airport_transfer'::character varying)::text, ('disposal'::character varying)::text, ('school_run'::character varying)::text])))
+    CONSTRAINT trips_end_mode CHECK (((end_mode)::text = ANY ((ARRAY['none'::character varying, 'never'::character varying, 'date'::character varying, 'count'::character varying])::text[]))),
+    CONSTRAINT trips_kind CHECK (((kind)::text = ANY ((ARRAY['ad_hoc'::character varying, 'corporate_shuttle'::character varying, 'airport_transfer'::character varying, 'disposal'::character varying, 'school_run'::character varying])::text[])))
 );
 
 
@@ -4115,6 +5608,38 @@ ALTER SEQUENCE public.user_notification_preferences_id_seq OWNED BY public.user_
 
 
 --
+-- Name: user_schools; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.user_schools (
+    id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    school_id bigint NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: user_schools_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.user_schools_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: user_schools_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.user_schools_id_seq OWNED BY public.user_schools.id;
+
+
+--
 -- Name: users; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -4135,7 +5660,11 @@ CREATE TABLE public.users (
     status character varying DEFAULT 'active'::character varying NOT NULL,
     last_seen_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    discarded_at timestamp(6) without time zone,
+    all_schools boolean DEFAULT true NOT NULL,
+    display_name character varying,
+    created_by_id bigint
 );
 
 
@@ -4366,7 +5895,7 @@ CREATE TABLE public.vehicle_type_requests (
     vehicle_type_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT vehicle_type_requests_status CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('added'::character varying)::text, ('declined'::character varying)::text])))
+    CONSTRAINT vehicle_type_requests_status CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'added'::character varying, 'declined'::character varying])::text[])))
 );
 
 
@@ -4510,6 +6039,55 @@ ALTER SEQUENCE public.workshops_id_seq OWNED BY public.workshops.id;
 
 
 --
+-- Name: occurrence_positions_y2026m09; Type: TABLE ATTACH; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.occurrence_positions ATTACH PARTITION public.occurrence_positions_y2026m09 FOR VALUES FROM ('2026-09-01') TO ('2026-10-01');
+
+
+--
+-- Name: occurrence_positions_y2026m10; Type: TABLE ATTACH; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.occurrence_positions ATTACH PARTITION public.occurrence_positions_y2026m10 FOR VALUES FROM ('2026-10-01') TO ('2026-11-01');
+
+
+--
+-- Name: occurrence_positions_y2026m11; Type: TABLE ATTACH; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.occurrence_positions ATTACH PARTITION public.occurrence_positions_y2026m11 FOR VALUES FROM ('2026-11-01') TO ('2026-12-01');
+
+
+--
+-- Name: occurrence_positions_y2026m12; Type: TABLE ATTACH; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.occurrence_positions ATTACH PARTITION public.occurrence_positions_y2026m12 FOR VALUES FROM ('2026-12-01') TO ('2027-01-01');
+
+
+--
+-- Name: occurrence_positions_y2027m01; Type: TABLE ATTACH; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.occurrence_positions ATTACH PARTITION public.occurrence_positions_y2027m01 FOR VALUES FROM ('2027-01-01') TO ('2027-02-01');
+
+
+--
+-- Name: occurrence_positions_y2027m02; Type: TABLE ATTACH; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.occurrence_positions ATTACH PARTITION public.occurrence_positions_y2027m02 FOR VALUES FROM ('2027-02-01') TO ('2027-03-01');
+
+
+--
+-- Name: occurrence_positions_y2027m03; Type: TABLE ATTACH; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.occurrence_positions ATTACH PARTITION public.occurrence_positions_y2027m03 FOR VALUES FROM ('2027-03-01') TO ('2027-04-01');
+
+
+--
 -- Name: trip_occurrences_y2026m09; Type: TABLE ATTACH; Schema: public; Owner: -
 --
 
@@ -4542,6 +6120,20 @@ ALTER TABLE ONLY public.trip_occurrences ATTACH PARTITION public.trip_occurrence
 --
 
 ALTER TABLE ONLY public.trip_occurrences ATTACH PARTITION public.trip_occurrences_y2027m01 FOR VALUES FROM ('2027-01-01') TO ('2027-02-01');
+
+
+--
+-- Name: trip_occurrences_y2027m02; Type: TABLE ATTACH; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.trip_occurrences ATTACH PARTITION public.trip_occurrences_y2027m02 FOR VALUES FROM ('2027-02-01') TO ('2027-03-01');
+
+
+--
+-- Name: trip_occurrences_y2027m03; Type: TABLE ATTACH; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.trip_occurrences ATTACH PARTITION public.trip_occurrences_y2027m03 FOR VALUES FROM ('2027-03-01') TO ('2027-04-01');
 
 
 --
@@ -4664,6 +6256,20 @@ ALTER TABLE ONLY public.calendars ALTER COLUMN id SET DEFAULT nextval('public.ca
 
 
 --
+-- Name: client_billing_contacts id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_billing_contacts ALTER COLUMN id SET DEFAULT nextval('public.client_billing_contacts_id_seq'::regclass);
+
+
+--
+-- Name: client_bookable_vehicle_types id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_bookable_vehicle_types ALTER COLUMN id SET DEFAULT nextval('public.client_bookable_vehicle_types_id_seq'::regclass);
+
+
+--
 -- Name: client_end_customers id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -4685,6 +6291,20 @@ ALTER TABLE ONLY public.client_sites ALTER COLUMN id SET DEFAULT nextval('public
 
 
 --
+-- Name: client_user_sites id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_user_sites ALTER COLUMN id SET DEFAULT nextval('public.client_user_sites_id_seq'::regclass);
+
+
+--
+-- Name: client_users id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_users ALTER COLUMN id SET DEFAULT nextval('public.client_users_id_seq'::regclass);
+
+
+--
 -- Name: clients id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -4696,6 +6316,13 @@ ALTER TABLE ONLY public.clients ALTER COLUMN id SET DEFAULT nextval('public.clie
 --
 
 ALTER TABLE ONLY public.companies ALTER COLUMN id SET DEFAULT nextval('public.companies_id_seq'::regclass);
+
+
+--
+-- Name: company_country_requests id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.company_country_requests ALTER COLUMN id SET DEFAULT nextval('public.company_country_requests_id_seq'::regclass);
 
 
 --
@@ -4731,6 +6358,62 @@ ALTER TABLE ONLY public.driver_invites ALTER COLUMN id SET DEFAULT nextval('publ
 --
 
 ALTER TABLE ONLY public.driver_kyc_profiles ALTER COLUMN id SET DEFAULT nextval('public.driver_kyc_profiles_id_seq'::regclass);
+
+
+--
+-- Name: driver_pay_month_lines id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_pay_month_lines ALTER COLUMN id SET DEFAULT nextval('public.driver_pay_month_lines_id_seq'::regclass);
+
+
+--
+-- Name: driver_pay_month_runs id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_pay_month_runs ALTER COLUMN id SET DEFAULT nextval('public.driver_pay_month_runs_id_seq'::regclass);
+
+
+--
+-- Name: driver_pay_months id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_pay_months ALTER COLUMN id SET DEFAULT nextval('public.driver_pay_months_id_seq'::regclass);
+
+
+--
+-- Name: driver_pay_schemes id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_pay_schemes ALTER COLUMN id SET DEFAULT nextval('public.driver_pay_schemes_id_seq'::regclass);
+
+
+--
+-- Name: driver_point_allocations id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_point_allocations ALTER COLUMN id SET DEFAULT nextval('public.driver_point_allocations_id_seq'::regclass);
+
+
+--
+-- Name: driver_point_deductions id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_point_deductions ALTER COLUMN id SET DEFAULT nextval('public.driver_point_deductions_id_seq'::regclass);
+
+
+--
+-- Name: driver_point_lots id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_point_lots ALTER COLUMN id SET DEFAULT nextval('public.driver_point_lots_id_seq'::regclass);
+
+
+--
+-- Name: driver_vehicle_types id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_vehicle_types ALTER COLUMN id SET DEFAULT nextval('public.driver_vehicle_types_id_seq'::regclass);
 
 
 --
@@ -4916,10 +6599,150 @@ ALTER TABLE ONLY public.operators ALTER COLUMN id SET DEFAULT nextval('public.op
 
 
 --
+-- Name: pay_bonus_drivers id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_bonus_drivers ALTER COLUMN id SET DEFAULT nextval('public.pay_bonus_drivers_id_seq'::regclass);
+
+
+--
+-- Name: pay_bonus_excluded_periods id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_bonus_excluded_periods ALTER COLUMN id SET DEFAULT nextval('public.pay_bonus_excluded_periods_id_seq'::regclass);
+
+
+--
+-- Name: pay_bonus_payments id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_bonus_payments ALTER COLUMN id SET DEFAULT nextval('public.pay_bonus_payments_id_seq'::regclass);
+
+
+--
+-- Name: pay_bonus_schemes id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_bonus_schemes ALTER COLUMN id SET DEFAULT nextval('public.pay_bonus_schemes_id_seq'::regclass);
+
+
+--
+-- Name: pay_bonus_tiers id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_bonus_tiers ALTER COLUMN id SET DEFAULT nextval('public.pay_bonus_tiers_id_seq'::regclass);
+
+
+--
+-- Name: pay_bonuses id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_bonuses ALTER COLUMN id SET DEFAULT nextval('public.pay_bonuses_id_seq'::regclass);
+
+
+--
+-- Name: pay_rate_period_ranges id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_rate_period_ranges ALTER COLUMN id SET DEFAULT nextval('public.pay_rate_period_ranges_id_seq'::regclass);
+
+
+--
+-- Name: pay_rate_periods id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_rate_periods ALTER COLUMN id SET DEFAULT nextval('public.pay_rate_periods_id_seq'::regclass);
+
+
+--
+-- Name: pay_rate_plan_vehicle_types id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_rate_plan_vehicle_types ALTER COLUMN id SET DEFAULT nextval('public.pay_rate_plan_vehicle_types_id_seq'::regclass);
+
+
+--
+-- Name: pay_rate_plans id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_rate_plans ALTER COLUMN id SET DEFAULT nextval('public.pay_rate_plans_id_seq'::regclass);
+
+
+--
+-- Name: pay_rates id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_rates ALTER COLUMN id SET DEFAULT nextval('public.pay_rates_id_seq'::regclass);
+
+
+--
+-- Name: pay_rewards id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_rewards ALTER COLUMN id SET DEFAULT nextval('public.pay_rewards_id_seq'::regclass);
+
+
+--
+-- Name: pay_scheme_route_bands id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_scheme_route_bands ALTER COLUMN id SET DEFAULT nextval('public.pay_scheme_route_bands_id_seq'::regclass);
+
+
+--
+-- Name: pay_scheme_target_tiers id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_scheme_target_tiers ALTER COLUMN id SET DEFAULT nextval('public.pay_scheme_target_tiers_id_seq'::regclass);
+
+
+--
+-- Name: pay_scheme_volume_tiers id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_scheme_volume_tiers ALTER COLUMN id SET DEFAULT nextval('public.pay_scheme_volume_tiers_id_seq'::regclass);
+
+
+--
+-- Name: pay_schemes id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_schemes ALTER COLUMN id SET DEFAULT nextval('public.pay_schemes_id_seq'::regclass);
+
+
+--
+-- Name: pay_simulator_templates id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_simulator_templates ALTER COLUMN id SET DEFAULT nextval('public.pay_simulator_templates_id_seq'::regclass);
+
+
+--
 -- Name: pickup_points id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.pickup_points ALTER COLUMN id SET DEFAULT nextval('public.pickup_points_id_seq'::regclass);
+
+
+--
+-- Name: portal_accounts id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.portal_accounts ALTER COLUMN id SET DEFAULT nextval('public.portal_accounts_id_seq'::regclass);
+
+
+--
+-- Name: portal_jwts id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.portal_jwts ALTER COLUMN id SET DEFAULT nextval('public.portal_jwts_id_seq'::regclass);
+
+
+--
+-- Name: portal_sign_in_codes id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.portal_sign_in_codes ALTER COLUMN id SET DEFAULT nextval('public.portal_sign_in_codes_id_seq'::regclass);
 
 
 --
@@ -5203,6 +7026,13 @@ ALTER TABLE ONLY public.user_notification_preferences ALTER COLUMN id SET DEFAUL
 
 
 --
+-- Name: user_schools id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.user_schools ALTER COLUMN id SET DEFAULT nextval('public.user_schools_id_seq'::regclass);
+
+
+--
 -- Name: users id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -5417,6 +7247,22 @@ ALTER TABLE ONLY public.calendars
 
 
 --
+-- Name: client_billing_contacts client_billing_contacts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_billing_contacts
+    ADD CONSTRAINT client_billing_contacts_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: client_bookable_vehicle_types client_bookable_vehicle_types_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_bookable_vehicle_types
+    ADD CONSTRAINT client_bookable_vehicle_types_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: client_end_customers client_end_customers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5441,6 +7287,22 @@ ALTER TABLE ONLY public.client_sites
 
 
 --
+-- Name: client_user_sites client_user_sites_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_user_sites
+    ADD CONSTRAINT client_user_sites_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: client_users client_users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_users
+    ADD CONSTRAINT client_users_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: clients clients_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5454,6 +7316,14 @@ ALTER TABLE ONLY public.clients
 
 ALTER TABLE ONLY public.companies
     ADD CONSTRAINT companies_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: company_country_requests company_country_requests_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.company_country_requests
+    ADD CONSTRAINT company_country_requests_pkey PRIMARY KEY (id);
 
 
 --
@@ -5494,6 +7364,70 @@ ALTER TABLE ONLY public.driver_invites
 
 ALTER TABLE ONLY public.driver_kyc_profiles
     ADD CONSTRAINT driver_kyc_profiles_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: driver_pay_month_lines driver_pay_month_lines_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_pay_month_lines
+    ADD CONSTRAINT driver_pay_month_lines_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: driver_pay_month_runs driver_pay_month_runs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_pay_month_runs
+    ADD CONSTRAINT driver_pay_month_runs_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: driver_pay_months driver_pay_months_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_pay_months
+    ADD CONSTRAINT driver_pay_months_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: driver_pay_schemes driver_pay_schemes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_pay_schemes
+    ADD CONSTRAINT driver_pay_schemes_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: driver_point_allocations driver_point_allocations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_point_allocations
+    ADD CONSTRAINT driver_point_allocations_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: driver_point_deductions driver_point_deductions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_point_deductions
+    ADD CONSTRAINT driver_point_deductions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: driver_point_lots driver_point_lots_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_point_lots
+    ADD CONSTRAINT driver_point_lots_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: driver_vehicle_types driver_vehicle_types_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_vehicle_types
+    ADD CONSTRAINT driver_vehicle_types_pkey PRIMARY KEY (id);
 
 
 --
@@ -5673,6 +7607,62 @@ ALTER TABLE ONLY public.occurrence_positions
 
 
 --
+-- Name: occurrence_positions_y2026m09 occurrence_positions_y2026m09_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.occurrence_positions_y2026m09
+    ADD CONSTRAINT occurrence_positions_y2026m09_pkey PRIMARY KEY (id, occurrence_date);
+
+
+--
+-- Name: occurrence_positions_y2026m10 occurrence_positions_y2026m10_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.occurrence_positions_y2026m10
+    ADD CONSTRAINT occurrence_positions_y2026m10_pkey PRIMARY KEY (id, occurrence_date);
+
+
+--
+-- Name: occurrence_positions_y2026m11 occurrence_positions_y2026m11_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.occurrence_positions_y2026m11
+    ADD CONSTRAINT occurrence_positions_y2026m11_pkey PRIMARY KEY (id, occurrence_date);
+
+
+--
+-- Name: occurrence_positions_y2026m12 occurrence_positions_y2026m12_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.occurrence_positions_y2026m12
+    ADD CONSTRAINT occurrence_positions_y2026m12_pkey PRIMARY KEY (id, occurrence_date);
+
+
+--
+-- Name: occurrence_positions_y2027m01 occurrence_positions_y2027m01_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.occurrence_positions_y2027m01
+    ADD CONSTRAINT occurrence_positions_y2027m01_pkey PRIMARY KEY (id, occurrence_date);
+
+
+--
+-- Name: occurrence_positions_y2027m02 occurrence_positions_y2027m02_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.occurrence_positions_y2027m02
+    ADD CONSTRAINT occurrence_positions_y2027m02_pkey PRIMARY KEY (id, occurrence_date);
+
+
+--
+-- Name: occurrence_positions_y2027m03 occurrence_positions_y2027m03_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.occurrence_positions_y2027m03
+    ADD CONSTRAINT occurrence_positions_y2027m03_pkey PRIMARY KEY (id, occurrence_date);
+
+
+--
 -- Name: occurrence_report_photos occurrence_report_photos_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5713,11 +7703,171 @@ ALTER TABLE ONLY public.operators
 
 
 --
+-- Name: pay_bonus_drivers pay_bonus_drivers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_bonus_drivers
+    ADD CONSTRAINT pay_bonus_drivers_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: pay_bonus_excluded_periods pay_bonus_excluded_periods_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_bonus_excluded_periods
+    ADD CONSTRAINT pay_bonus_excluded_periods_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: pay_bonus_payments pay_bonus_payments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_bonus_payments
+    ADD CONSTRAINT pay_bonus_payments_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: pay_bonus_schemes pay_bonus_schemes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_bonus_schemes
+    ADD CONSTRAINT pay_bonus_schemes_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: pay_bonus_tiers pay_bonus_tiers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_bonus_tiers
+    ADD CONSTRAINT pay_bonus_tiers_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: pay_bonuses pay_bonuses_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_bonuses
+    ADD CONSTRAINT pay_bonuses_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: pay_rate_period_ranges pay_rate_period_ranges_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_rate_period_ranges
+    ADD CONSTRAINT pay_rate_period_ranges_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: pay_rate_periods pay_rate_periods_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_rate_periods
+    ADD CONSTRAINT pay_rate_periods_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: pay_rate_plan_vehicle_types pay_rate_plan_vehicle_types_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_rate_plan_vehicle_types
+    ADD CONSTRAINT pay_rate_plan_vehicle_types_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: pay_rate_plans pay_rate_plans_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_rate_plans
+    ADD CONSTRAINT pay_rate_plans_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: pay_rates pay_rates_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_rates
+    ADD CONSTRAINT pay_rates_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: pay_rewards pay_rewards_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_rewards
+    ADD CONSTRAINT pay_rewards_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: pay_scheme_route_bands pay_scheme_route_bands_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_scheme_route_bands
+    ADD CONSTRAINT pay_scheme_route_bands_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: pay_scheme_target_tiers pay_scheme_target_tiers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_scheme_target_tiers
+    ADD CONSTRAINT pay_scheme_target_tiers_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: pay_scheme_volume_tiers pay_scheme_volume_tiers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_scheme_volume_tiers
+    ADD CONSTRAINT pay_scheme_volume_tiers_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: pay_schemes pay_schemes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_schemes
+    ADD CONSTRAINT pay_schemes_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: pay_simulator_templates pay_simulator_templates_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_simulator_templates
+    ADD CONSTRAINT pay_simulator_templates_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: pickup_points pickup_points_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.pickup_points
     ADD CONSTRAINT pickup_points_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: portal_accounts portal_accounts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.portal_accounts
+    ADD CONSTRAINT portal_accounts_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: portal_jwts portal_jwts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.portal_jwts
+    ADD CONSTRAINT portal_jwts_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: portal_sign_in_codes portal_sign_in_codes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.portal_sign_in_codes
+    ADD CONSTRAINT portal_sign_in_codes_pkey PRIMARY KEY (id);
 
 
 --
@@ -5969,6 +8119,22 @@ ALTER TABLE ONLY public.trip_occurrences_y2027m01
 
 
 --
+-- Name: trip_occurrences_y2027m02 trip_occurrences_y2027m02_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.trip_occurrences_y2027m02
+    ADD CONSTRAINT trip_occurrences_y2027m02_pkey PRIMARY KEY (id, date);
+
+
+--
+-- Name: trip_occurrences_y2027m03 trip_occurrences_y2027m03_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.trip_occurrences_y2027m03
+    ADD CONSTRAINT trip_occurrences_y2027m03_pkey PRIMARY KEY (id, date);
+
+
+--
 -- Name: trip_price_cells trip_price_cells_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6129,6 +8295,14 @@ ALTER TABLE ONLY public.user_notification_preferences
 
 
 --
+-- Name: user_schools user_schools_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.user_schools
+    ADD CONSTRAINT user_schools_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6237,6 +8411,13 @@ CREATE UNIQUE INDEX idx_on_booking_trip_id_vehicle_type_id_ca7b84be82 ON public.
 
 
 --
+-- Name: idx_on_client_id_vehicle_type_id_9602a14b65; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_on_client_id_vehicle_type_id_9602a14b65 ON public.client_bookable_vehicle_types USING btree (client_id, vehicle_type_id);
+
+
+--
 -- Name: idx_on_company_id_status_created_at_f335c61b86; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -6276,6 +8457,13 @@ CREATE UNIQUE INDEX idx_on_occurrence_id_occurrence_date_777d975dcf ON public.oc
 --
 
 CREATE UNIQUE INDEX idx_on_occurrence_id_occurrence_date_817e8d9e46 ON public.occurrence_trip_summaries USING btree (occurrence_id, occurrence_date);
+
+
+--
+-- Name: idx_on_occurrence_id_occurrence_date_c0b0455ad1; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_on_occurrence_id_occurrence_date_c0b0455ad1 ON public.driver_pay_month_runs USING btree (occurrence_id, occurrence_date);
 
 
 --
@@ -6685,6 +8873,41 @@ CREATE INDEX index_calendars_on_discarded_at ON public.calendars USING btree (di
 
 
 --
+-- Name: index_client_billing_contacts_on_billable; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_billing_contacts_on_billable ON public.client_billing_contacts USING btree (billable_type, billable_id);
+
+
+--
+-- Name: index_client_billing_contacts_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_billing_contacts_on_company_id ON public.client_billing_contacts USING btree (company_id);
+
+
+--
+-- Name: index_client_billing_contacts_unique_email; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_client_billing_contacts_unique_email ON public.client_billing_contacts USING btree (billable_type, billable_id, email) WHERE (email IS NOT NULL);
+
+
+--
+-- Name: index_client_bookable_vehicle_types_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_bookable_vehicle_types_on_company_id ON public.client_bookable_vehicle_types USING btree (company_id);
+
+
+--
+-- Name: index_client_bookable_vehicle_types_on_vehicle_type_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_bookable_vehicle_types_on_vehicle_type_id ON public.client_bookable_vehicle_types USING btree (vehicle_type_id);
+
+
+--
 -- Name: index_client_end_customers_on_client_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -6727,6 +8950,13 @@ CREATE INDEX index_client_pickup_points_on_company_id ON public.client_pickup_po
 
 
 --
+-- Name: index_client_pickup_points_on_created_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_pickup_points_on_created_by_id ON public.client_pickup_points USING btree (created_by_id);
+
+
+--
 -- Name: index_client_sites_on_client_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -6745,6 +8975,69 @@ CREATE UNIQUE INDEX index_client_sites_on_client_id_and_name ON public.client_si
 --
 
 CREATE INDEX index_client_sites_on_company_id ON public.client_sites USING btree (company_id);
+
+
+--
+-- Name: index_client_sites_on_created_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_sites_on_created_by_id ON public.client_sites USING btree (created_by_id);
+
+
+--
+-- Name: index_client_sites_on_school_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_client_sites_on_school_id ON public.client_sites USING btree (school_id) WHERE (school_id IS NOT NULL);
+
+
+--
+-- Name: index_client_user_sites_on_client_site_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_user_sites_on_client_site_id ON public.client_user_sites USING btree (client_site_id);
+
+
+--
+-- Name: index_client_user_sites_on_client_user_id_and_client_site_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_client_user_sites_on_client_user_id_and_client_site_id ON public.client_user_sites USING btree (client_user_id, client_site_id);
+
+
+--
+-- Name: index_client_users_on_client_id_and_email; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_client_users_on_client_id_and_email ON public.client_users USING btree (client_id, email) WHERE (discarded_at IS NULL);
+
+
+--
+-- Name: index_client_users_on_company_id_and_client_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_users_on_company_id_and_client_id ON public.client_users USING btree (company_id, client_id);
+
+
+--
+-- Name: index_client_users_on_created_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_users_on_created_by_id ON public.client_users USING btree (created_by_id);
+
+
+--
+-- Name: index_client_users_on_email; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_users_on_email ON public.client_users USING btree (email);
+
+
+--
+-- Name: index_client_users_on_portal_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_users_on_portal_account_id ON public.client_users USING btree (portal_account_id);
 
 
 --
@@ -6787,6 +9080,48 @@ CREATE INDEX index_clients_on_rate_card_id ON public.clients USING btree (rate_c
 --
 
 CREATE UNIQUE INDEX index_companies_on_code ON public.companies USING btree (code);
+
+
+--
+-- Name: index_companies_on_country_set_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_companies_on_country_set_by_id ON public.companies USING btree (country_set_by_id);
+
+
+--
+-- Name: index_company_country_requests_on_company_id_and_created_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_company_country_requests_on_company_id_and_created_at ON public.company_country_requests USING btree (company_id, created_at);
+
+
+--
+-- Name: index_company_country_requests_on_decided_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_company_country_requests_on_decided_by_id ON public.company_country_requests USING btree (decided_by_id);
+
+
+--
+-- Name: index_company_country_requests_on_requested_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_company_country_requests_on_requested_by_id ON public.company_country_requests USING btree (requested_by_id);
+
+
+--
+-- Name: index_company_country_requests_on_status_and_created_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_company_country_requests_on_status_and_created_at ON public.company_country_requests USING btree (status, created_at);
+
+
+--
+-- Name: index_company_country_requests_one_pending; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_company_country_requests_one_pending ON public.company_country_requests USING btree (company_id) WHERE ((status)::text = 'pending'::text);
 
 
 --
@@ -6881,6 +9216,153 @@ CREATE UNIQUE INDEX index_driver_kyc_profiles_on_driver ON public.driver_kyc_pro
 
 
 --
+-- Name: index_driver_pay_month_lines_on_driver_pay_month_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_driver_pay_month_lines_on_driver_pay_month_id ON public.driver_pay_month_lines USING btree (driver_pay_month_id);
+
+
+--
+-- Name: index_driver_pay_month_runs_on_driver_pay_month_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_driver_pay_month_runs_on_driver_pay_month_id ON public.driver_pay_month_runs USING btree (driver_pay_month_id);
+
+
+--
+-- Name: index_driver_pay_months_on_company_id_and_month; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_driver_pay_months_on_company_id_and_month ON public.driver_pay_months USING btree (company_id, month);
+
+
+--
+-- Name: index_driver_pay_months_on_confirmed_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_driver_pay_months_on_confirmed_by_id ON public.driver_pay_months USING btree (confirmed_by_id);
+
+
+--
+-- Name: index_driver_pay_months_on_driver_id_and_month; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_driver_pay_months_on_driver_id_and_month ON public.driver_pay_months USING btree (driver_id, month);
+
+
+--
+-- Name: index_driver_pay_schemes_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_driver_pay_schemes_on_company_id ON public.driver_pay_schemes USING btree (company_id);
+
+
+--
+-- Name: index_driver_pay_schemes_on_driver_id_and_starts_on; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_driver_pay_schemes_on_driver_id_and_starts_on ON public.driver_pay_schemes USING btree (driver_id, starts_on);
+
+
+--
+-- Name: index_driver_pay_schemes_on_pay_scheme_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_driver_pay_schemes_on_pay_scheme_id ON public.driver_pay_schemes USING btree (pay_scheme_id);
+
+
+--
+-- Name: index_driver_point_allocations_on_driver_point_deduction_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_driver_point_allocations_on_driver_point_deduction_id ON public.driver_point_allocations USING btree (driver_point_deduction_id);
+
+
+--
+-- Name: index_driver_point_allocations_on_driver_point_lot_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_driver_point_allocations_on_driver_point_lot_id ON public.driver_point_allocations USING btree (driver_point_lot_id);
+
+
+--
+-- Name: index_driver_point_deductions_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_driver_point_deductions_on_company_id ON public.driver_point_deductions USING btree (company_id);
+
+
+--
+-- Name: index_driver_point_deductions_on_deducted_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_driver_point_deductions_on_deducted_by_id ON public.driver_point_deductions USING btree (deducted_by_id);
+
+
+--
+-- Name: index_driver_point_deductions_on_driver_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_driver_point_deductions_on_driver_id ON public.driver_point_deductions USING btree (driver_id);
+
+
+--
+-- Name: index_driver_point_lots_on_awarded_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_driver_point_lots_on_awarded_by_id ON public.driver_point_lots USING btree (awarded_by_id);
+
+
+--
+-- Name: index_driver_point_lots_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_driver_point_lots_on_company_id ON public.driver_point_lots USING btree (company_id);
+
+
+--
+-- Name: index_driver_point_lots_on_driver_id_and_expires_on; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_driver_point_lots_on_driver_id_and_expires_on ON public.driver_point_lots USING btree (driver_id, expires_on);
+
+
+--
+-- Name: index_driver_point_lots_on_driver_pay_month_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_driver_point_lots_on_driver_pay_month_id ON public.driver_point_lots USING btree (driver_pay_month_id);
+
+
+--
+-- Name: index_driver_point_lots_on_pay_bonus_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_driver_point_lots_on_pay_bonus_id ON public.driver_point_lots USING btree (pay_bonus_id);
+
+
+--
+-- Name: index_driver_vehicle_types_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_driver_vehicle_types_on_company_id ON public.driver_vehicle_types USING btree (company_id);
+
+
+--
+-- Name: index_driver_vehicle_types_on_driver_id_and_starts_on; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_driver_vehicle_types_on_driver_id_and_starts_on ON public.driver_vehicle_types USING btree (driver_id, starts_on);
+
+
+--
+-- Name: index_driver_vehicle_types_on_vehicle_type_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_driver_vehicle_types_on_vehicle_type_id ON public.driver_vehicle_types USING btree (vehicle_type_id);
+
+
+--
 -- Name: index_drivers_on_company_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -6912,7 +9394,7 @@ CREATE INDEX index_drivers_on_last_vehicle_id ON public.drivers USING btree (las
 -- Name: index_drivers_on_live_phone; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX index_drivers_on_live_phone ON public.drivers USING btree (company_id, phone) WHERE (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('active'::character varying)::text])) AND (discarded_at IS NULL));
+CREATE UNIQUE INDEX index_drivers_on_live_phone ON public.drivers USING btree (company_id, phone) WHERE (((status)::text = ANY ((ARRAY['pending'::character varying, 'active'::character varying])::text[])) AND (discarded_at IS NULL));
 
 
 --
@@ -7437,7 +9919,7 @@ CREATE INDEX index_operator_drivers_on_last_vehicle_id ON public.operator_driver
 -- Name: index_operator_drivers_on_live_phone; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX index_operator_drivers_on_live_phone ON public.operator_drivers USING btree (company_id, phone) WHERE (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('active'::character varying)::text])) AND (discarded_at IS NULL));
+CREATE UNIQUE INDEX index_operator_drivers_on_live_phone ON public.operator_drivers USING btree (company_id, phone) WHERE (((status)::text = ANY ((ARRAY['pending'::character varying, 'active'::character varying])::text[])) AND (discarded_at IS NULL));
 
 
 --
@@ -7490,6 +9972,216 @@ CREATE INDEX index_operators_on_discarded_at ON public.operators USING btree (di
 
 
 --
+-- Name: index_pay_bonus_drivers_on_driver_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_pay_bonus_drivers_on_driver_id ON public.pay_bonus_drivers USING btree (driver_id);
+
+
+--
+-- Name: index_pay_bonus_drivers_on_pay_bonus_id_and_role_and_driver_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_pay_bonus_drivers_on_pay_bonus_id_and_role_and_driver_id ON public.pay_bonus_drivers USING btree (pay_bonus_id, role, driver_id);
+
+
+--
+-- Name: index_pay_bonus_drivers_on_signed_up_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_pay_bonus_drivers_on_signed_up_by_id ON public.pay_bonus_drivers USING btree (signed_up_by_id);
+
+
+--
+-- Name: index_pay_bonus_excluded_periods_on_pay_bonus_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_pay_bonus_excluded_periods_on_pay_bonus_id ON public.pay_bonus_excluded_periods USING btree (pay_bonus_id);
+
+
+--
+-- Name: index_pay_bonus_payments_on_pay_bonus_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_pay_bonus_payments_on_pay_bonus_id ON public.pay_bonus_payments USING btree (pay_bonus_id);
+
+
+--
+-- Name: index_pay_bonus_schemes_on_pay_bonus_id_and_pay_scheme_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_pay_bonus_schemes_on_pay_bonus_id_and_pay_scheme_id ON public.pay_bonus_schemes USING btree (pay_bonus_id, pay_scheme_id);
+
+
+--
+-- Name: index_pay_bonus_schemes_on_pay_scheme_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_pay_bonus_schemes_on_pay_scheme_id ON public.pay_bonus_schemes USING btree (pay_scheme_id);
+
+
+--
+-- Name: index_pay_bonus_tiers_on_pay_bonus_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_pay_bonus_tiers_on_pay_bonus_id ON public.pay_bonus_tiers USING btree (pay_bonus_id);
+
+
+--
+-- Name: index_pay_bonuses_on_company_id_and_starts_on; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_pay_bonuses_on_company_id_and_starts_on ON public.pay_bonuses USING btree (company_id, starts_on);
+
+
+--
+-- Name: index_pay_bonuses_on_locked_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_pay_bonuses_on_locked_by_id ON public.pay_bonuses USING btree (locked_by_id);
+
+
+--
+-- Name: index_pay_rate_period_ranges_on_pay_rate_period_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_pay_rate_period_ranges_on_pay_rate_period_id ON public.pay_rate_period_ranges USING btree (pay_rate_period_id);
+
+
+--
+-- Name: index_pay_rate_periods_on_pay_rate_plan_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_pay_rate_periods_on_pay_rate_plan_id ON public.pay_rate_periods USING btree (pay_rate_plan_id);
+
+
+--
+-- Name: index_pay_rate_plan_vehicle_types_on_vehicle_type_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_pay_rate_plan_vehicle_types_on_vehicle_type_id ON public.pay_rate_plan_vehicle_types USING btree (vehicle_type_id);
+
+
+--
+-- Name: index_pay_rate_plan_vehicle_types_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_pay_rate_plan_vehicle_types_unique ON public.pay_rate_plan_vehicle_types USING btree (pay_rate_plan_id, vehicle_type_id);
+
+
+--
+-- Name: index_pay_rate_plans_on_company_id_and_name; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_pay_rate_plans_on_company_id_and_name ON public.pay_rate_plans USING btree (company_id, name) WHERE (discarded_at IS NULL);
+
+
+--
+-- Name: index_pay_rate_plans_on_locked_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_pay_rate_plans_on_locked_by_id ON public.pay_rate_plans USING btree (locked_by_id);
+
+
+--
+-- Name: index_pay_rates_on_pay_rate_period_id_and_vehicle_type_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_pay_rates_on_pay_rate_period_id_and_vehicle_type_id ON public.pay_rates USING btree (pay_rate_period_id, vehicle_type_id);
+
+
+--
+-- Name: index_pay_rates_on_vehicle_type_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_pay_rates_on_vehicle_type_id ON public.pay_rates USING btree (vehicle_type_id);
+
+
+--
+-- Name: index_pay_rewards_on_company_id_and_status; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_pay_rewards_on_company_id_and_status ON public.pay_rewards USING btree (company_id, status);
+
+
+--
+-- Name: index_pay_scheme_route_bands_on_pay_scheme_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_pay_scheme_route_bands_on_pay_scheme_id ON public.pay_scheme_route_bands USING btree (pay_scheme_id);
+
+
+--
+-- Name: index_pay_scheme_target_tiers_on_pay_scheme_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_pay_scheme_target_tiers_on_pay_scheme_id ON public.pay_scheme_target_tiers USING btree (pay_scheme_id);
+
+
+--
+-- Name: index_pay_scheme_volume_tiers_on_pay_scheme_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_pay_scheme_volume_tiers_on_pay_scheme_id ON public.pay_scheme_volume_tiers USING btree (pay_scheme_id);
+
+
+--
+-- Name: index_pay_schemes_on_company_id_and_name; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_pay_schemes_on_company_id_and_name ON public.pay_schemes USING btree (company_id, name) WHERE (discarded_at IS NULL);
+
+
+--
+-- Name: index_pay_schemes_on_locked_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_pay_schemes_on_locked_by_id ON public.pay_schemes USING btree (locked_by_id);
+
+
+--
+-- Name: index_pay_schemes_on_pay_rate_plan_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_pay_schemes_on_pay_rate_plan_id ON public.pay_schemes USING btree (pay_rate_plan_id);
+
+
+--
+-- Name: index_pay_schemes_one_default; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_pay_schemes_one_default ON public.pay_schemes USING btree (company_id) WHERE (is_default AND (discarded_at IS NULL));
+
+
+--
+-- Name: index_pay_simulator_templates_on_company_id_and_slot; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_pay_simulator_templates_on_company_id_and_slot ON public.pay_simulator_templates USING btree (company_id, slot);
+
+
+--
+-- Name: index_pay_simulator_templates_on_pay_scheme_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_pay_simulator_templates_on_pay_scheme_id ON public.pay_simulator_templates USING btree (pay_scheme_id);
+
+
+--
+-- Name: index_pay_simulator_templates_on_saved_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_pay_simulator_templates_on_saved_by_id ON public.pay_simulator_templates USING btree (saved_by_id);
+
+
+--
+-- Name: index_pay_simulator_templates_on_vehicle_type_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_pay_simulator_templates_on_vehicle_type_id ON public.pay_simulator_templates USING btree (vehicle_type_id);
+
+
+--
 -- Name: index_pickup_points_on_company_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -7501,6 +10193,48 @@ CREATE INDEX index_pickup_points_on_company_id ON public.pickup_points USING btr
 --
 
 CREATE INDEX index_pickup_points_on_postal_codes ON public.pickup_points USING gin (postal_codes);
+
+
+--
+-- Name: index_portal_accounts_on_email; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_portal_accounts_on_email ON public.portal_accounts USING btree (email);
+
+
+--
+-- Name: index_portal_jwts_on_client_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_portal_jwts_on_client_user_id ON public.portal_jwts USING btree (client_user_id);
+
+
+--
+-- Name: index_portal_jwts_on_exp; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_portal_jwts_on_exp ON public.portal_jwts USING btree (exp);
+
+
+--
+-- Name: index_portal_jwts_on_jti; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_portal_jwts_on_jti ON public.portal_jwts USING btree (jti);
+
+
+--
+-- Name: index_portal_jwts_on_portal_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_portal_jwts_on_portal_account_id ON public.portal_jwts USING btree (portal_account_id);
+
+
+--
+-- Name: index_portal_sign_in_codes_on_portal_account_id_and_created_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_portal_sign_in_codes_on_portal_account_id_and_created_at ON public.portal_sign_in_codes USING btree (portal_account_id, created_at);
 
 
 --
@@ -7920,7 +10654,7 @@ CREATE INDEX index_schools_on_calendar_id ON public.schools USING btree (calenda
 -- Name: index_schools_on_client_id; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX index_schools_on_client_id ON public.schools USING btree (client_id);
+CREATE UNIQUE INDEX index_schools_on_client_id ON public.schools USING btree (client_id) WHERE (client_id IS NOT NULL);
 
 
 --
@@ -8589,6 +11323,20 @@ CREATE UNIQUE INDEX index_user_notification_preferences_on_user_id ON public.use
 
 
 --
+-- Name: index_user_schools_on_school_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_user_schools_on_school_id ON public.user_schools USING btree (school_id);
+
+
+--
+-- Name: index_user_schools_on_user_id_and_school_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_user_schools_on_user_id_and_school_id ON public.user_schools USING btree (user_id, school_id);
+
+
+--
 -- Name: index_users_on_company_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -8596,10 +11344,24 @@ CREATE INDEX index_users_on_company_id ON public.users USING btree (company_id);
 
 
 --
--- Name: index_users_on_email; Type: INDEX; Schema: public; Owner: -
+-- Name: index_users_on_company_id_and_discarded_at; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX index_users_on_email ON public.users USING btree (email);
+CREATE INDEX index_users_on_company_id_and_discarded_at ON public.users USING btree (company_id, discarded_at);
+
+
+--
+-- Name: index_users_on_created_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_users_on_created_by_id ON public.users USING btree (created_by_id);
+
+
+--
+-- Name: index_users_on_live_email; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_users_on_live_email ON public.users USING btree (email) WHERE (discarded_at IS NULL);
 
 
 --
@@ -8838,6 +11600,104 @@ CREATE INDEX index_workshops_on_company_id ON public.workshops USING btree (comp
 --
 
 CREATE UNIQUE INDEX index_workshops_on_company_id_and_name ON public.workshops USING btree (company_id, name);
+
+
+--
+-- Name: occurrence_positions_y2026m09_occurrence_id_occurrence_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX occurrence_positions_y2026m09_occurrence_id_occurrence_date_idx ON public.occurrence_positions_y2026m09 USING btree (occurrence_id, occurrence_date, recorded_at);
+
+
+--
+-- Name: occurrence_positions_y2026m09_recorded_at_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX occurrence_positions_y2026m09_recorded_at_idx ON public.occurrence_positions_y2026m09 USING brin (recorded_at);
+
+
+--
+-- Name: occurrence_positions_y2026m10_occurrence_id_occurrence_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX occurrence_positions_y2026m10_occurrence_id_occurrence_date_idx ON public.occurrence_positions_y2026m10 USING btree (occurrence_id, occurrence_date, recorded_at);
+
+
+--
+-- Name: occurrence_positions_y2026m10_recorded_at_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX occurrence_positions_y2026m10_recorded_at_idx ON public.occurrence_positions_y2026m10 USING brin (recorded_at);
+
+
+--
+-- Name: occurrence_positions_y2026m11_occurrence_id_occurrence_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX occurrence_positions_y2026m11_occurrence_id_occurrence_date_idx ON public.occurrence_positions_y2026m11 USING btree (occurrence_id, occurrence_date, recorded_at);
+
+
+--
+-- Name: occurrence_positions_y2026m11_recorded_at_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX occurrence_positions_y2026m11_recorded_at_idx ON public.occurrence_positions_y2026m11 USING brin (recorded_at);
+
+
+--
+-- Name: occurrence_positions_y2026m12_occurrence_id_occurrence_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX occurrence_positions_y2026m12_occurrence_id_occurrence_date_idx ON public.occurrence_positions_y2026m12 USING btree (occurrence_id, occurrence_date, recorded_at);
+
+
+--
+-- Name: occurrence_positions_y2026m12_recorded_at_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX occurrence_positions_y2026m12_recorded_at_idx ON public.occurrence_positions_y2026m12 USING brin (recorded_at);
+
+
+--
+-- Name: occurrence_positions_y2027m01_occurrence_id_occurrence_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX occurrence_positions_y2027m01_occurrence_id_occurrence_date_idx ON public.occurrence_positions_y2027m01 USING btree (occurrence_id, occurrence_date, recorded_at);
+
+
+--
+-- Name: occurrence_positions_y2027m01_recorded_at_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX occurrence_positions_y2027m01_recorded_at_idx ON public.occurrence_positions_y2027m01 USING brin (recorded_at);
+
+
+--
+-- Name: occurrence_positions_y2027m02_occurrence_id_occurrence_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX occurrence_positions_y2027m02_occurrence_id_occurrence_date_idx ON public.occurrence_positions_y2027m02 USING btree (occurrence_id, occurrence_date, recorded_at);
+
+
+--
+-- Name: occurrence_positions_y2027m02_recorded_at_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX occurrence_positions_y2027m02_recorded_at_idx ON public.occurrence_positions_y2027m02 USING brin (recorded_at);
+
+
+--
+-- Name: occurrence_positions_y2027m03_occurrence_id_occurrence_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX occurrence_positions_y2027m03_occurrence_id_occurrence_date_idx ON public.occurrence_positions_y2027m03 USING btree (occurrence_id, occurrence_date, recorded_at);
+
+
+--
+-- Name: occurrence_positions_y2027m03_recorded_at_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX occurrence_positions_y2027m03_recorded_at_idx ON public.occurrence_positions_y2027m03 USING brin (recorded_at);
 
 
 --
@@ -9191,10 +12051,297 @@ CREATE INDEX trip_occurrences_y2027m01_vehicle_id_date_idx ON public.trip_occurr
 
 
 --
+-- Name: trip_occurrences_y2027m02_coalesce_coalesce1_date_coalesce2_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX trip_occurrences_y2027m02_coalesce_coalesce1_date_coalesce2_idx ON public.trip_occurrences_y2027m02 USING btree (COALESCE(trip_id, (0)::bigint), COALESCE(school_route_id, (0)::bigint), date, COALESCE(trip_run_id, (0)::bigint), slot_no, part);
+
+
+--
+-- Name: trip_occurrences_y2027m02_company_id_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX trip_occurrences_y2027m02_company_id_date_idx ON public.trip_occurrences_y2027m02 USING btree (company_id, date);
+
+
+--
+-- Name: trip_occurrences_y2027m02_company_id_date_idx1; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX trip_occurrences_y2027m02_company_id_date_idx1 ON public.trip_occurrences_y2027m02 USING btree (company_id, date) WHERE ((vehicle_id IS NULL) AND ((status)::text = 'scheduled'::text));
+
+
+--
+-- Name: trip_occurrences_y2027m02_company_id_starts_at_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX trip_occurrences_y2027m02_company_id_starts_at_idx ON public.trip_occurrences_y2027m02 USING btree (company_id, starts_at);
+
+
+--
+-- Name: trip_occurrences_y2027m02_driver_id_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX trip_occurrences_y2027m02_driver_id_date_idx ON public.trip_occurrences_y2027m02 USING btree (driver_id, date) WHERE (driver_id IS NOT NULL);
+
+
+--
+-- Name: trip_occurrences_y2027m02_id_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX trip_occurrences_y2027m02_id_idx ON public.trip_occurrences_y2027m02 USING btree (id);
+
+
+--
+-- Name: trip_occurrences_y2027m02_operator_driver_id_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX trip_occurrences_y2027m02_operator_driver_id_date_idx ON public.trip_occurrences_y2027m02 USING btree (operator_driver_id, date) WHERE (operator_driver_id IS NOT NULL);
+
+
+--
+-- Name: trip_occurrences_y2027m02_school_route_id_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX trip_occurrences_y2027m02_school_route_id_date_idx ON public.trip_occurrences_y2027m02 USING btree (school_route_id, date) WHERE (school_route_id IS NOT NULL);
+
+
+--
+-- Name: trip_occurrences_y2027m02_trip_id_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX trip_occurrences_y2027m02_trip_id_date_idx ON public.trip_occurrences_y2027m02 USING btree (trip_id, date);
+
+
+--
+-- Name: trip_occurrences_y2027m02_vehicle_id_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX trip_occurrences_y2027m02_vehicle_id_date_idx ON public.trip_occurrences_y2027m02 USING btree (vehicle_id, date);
+
+
+--
+-- Name: trip_occurrences_y2027m03_coalesce_coalesce1_date_coalesce2_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX trip_occurrences_y2027m03_coalesce_coalesce1_date_coalesce2_idx ON public.trip_occurrences_y2027m03 USING btree (COALESCE(trip_id, (0)::bigint), COALESCE(school_route_id, (0)::bigint), date, COALESCE(trip_run_id, (0)::bigint), slot_no, part);
+
+
+--
+-- Name: trip_occurrences_y2027m03_company_id_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX trip_occurrences_y2027m03_company_id_date_idx ON public.trip_occurrences_y2027m03 USING btree (company_id, date);
+
+
+--
+-- Name: trip_occurrences_y2027m03_company_id_date_idx1; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX trip_occurrences_y2027m03_company_id_date_idx1 ON public.trip_occurrences_y2027m03 USING btree (company_id, date) WHERE ((vehicle_id IS NULL) AND ((status)::text = 'scheduled'::text));
+
+
+--
+-- Name: trip_occurrences_y2027m03_company_id_starts_at_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX trip_occurrences_y2027m03_company_id_starts_at_idx ON public.trip_occurrences_y2027m03 USING btree (company_id, starts_at);
+
+
+--
+-- Name: trip_occurrences_y2027m03_driver_id_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX trip_occurrences_y2027m03_driver_id_date_idx ON public.trip_occurrences_y2027m03 USING btree (driver_id, date) WHERE (driver_id IS NOT NULL);
+
+
+--
+-- Name: trip_occurrences_y2027m03_id_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX trip_occurrences_y2027m03_id_idx ON public.trip_occurrences_y2027m03 USING btree (id);
+
+
+--
+-- Name: trip_occurrences_y2027m03_operator_driver_id_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX trip_occurrences_y2027m03_operator_driver_id_date_idx ON public.trip_occurrences_y2027m03 USING btree (operator_driver_id, date) WHERE (operator_driver_id IS NOT NULL);
+
+
+--
+-- Name: trip_occurrences_y2027m03_school_route_id_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX trip_occurrences_y2027m03_school_route_id_date_idx ON public.trip_occurrences_y2027m03 USING btree (school_route_id, date) WHERE (school_route_id IS NOT NULL);
+
+
+--
+-- Name: trip_occurrences_y2027m03_trip_id_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX trip_occurrences_y2027m03_trip_id_date_idx ON public.trip_occurrences_y2027m03 USING btree (trip_id, date);
+
+
+--
+-- Name: trip_occurrences_y2027m03_vehicle_id_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX trip_occurrences_y2027m03_vehicle_id_date_idx ON public.trip_occurrences_y2027m03 USING btree (vehicle_id, date);
+
+
+--
 -- Name: user_index; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX user_index ON public.audits USING btree (user_id, user_type);
+
+
+--
+-- Name: occurrence_positions_y2026m09_occurrence_id_occurrence_date_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_occurrence_positions_on_run ATTACH PARTITION public.occurrence_positions_y2026m09_occurrence_id_occurrence_date_idx;
+
+
+--
+-- Name: occurrence_positions_y2026m09_pkey; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.occurrence_positions_pkey ATTACH PARTITION public.occurrence_positions_y2026m09_pkey;
+
+
+--
+-- Name: occurrence_positions_y2026m09_recorded_at_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_occurrence_positions_on_recorded_at ATTACH PARTITION public.occurrence_positions_y2026m09_recorded_at_idx;
+
+
+--
+-- Name: occurrence_positions_y2026m10_occurrence_id_occurrence_date_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_occurrence_positions_on_run ATTACH PARTITION public.occurrence_positions_y2026m10_occurrence_id_occurrence_date_idx;
+
+
+--
+-- Name: occurrence_positions_y2026m10_pkey; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.occurrence_positions_pkey ATTACH PARTITION public.occurrence_positions_y2026m10_pkey;
+
+
+--
+-- Name: occurrence_positions_y2026m10_recorded_at_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_occurrence_positions_on_recorded_at ATTACH PARTITION public.occurrence_positions_y2026m10_recorded_at_idx;
+
+
+--
+-- Name: occurrence_positions_y2026m11_occurrence_id_occurrence_date_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_occurrence_positions_on_run ATTACH PARTITION public.occurrence_positions_y2026m11_occurrence_id_occurrence_date_idx;
+
+
+--
+-- Name: occurrence_positions_y2026m11_pkey; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.occurrence_positions_pkey ATTACH PARTITION public.occurrence_positions_y2026m11_pkey;
+
+
+--
+-- Name: occurrence_positions_y2026m11_recorded_at_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_occurrence_positions_on_recorded_at ATTACH PARTITION public.occurrence_positions_y2026m11_recorded_at_idx;
+
+
+--
+-- Name: occurrence_positions_y2026m12_occurrence_id_occurrence_date_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_occurrence_positions_on_run ATTACH PARTITION public.occurrence_positions_y2026m12_occurrence_id_occurrence_date_idx;
+
+
+--
+-- Name: occurrence_positions_y2026m12_pkey; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.occurrence_positions_pkey ATTACH PARTITION public.occurrence_positions_y2026m12_pkey;
+
+
+--
+-- Name: occurrence_positions_y2026m12_recorded_at_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_occurrence_positions_on_recorded_at ATTACH PARTITION public.occurrence_positions_y2026m12_recorded_at_idx;
+
+
+--
+-- Name: occurrence_positions_y2027m01_occurrence_id_occurrence_date_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_occurrence_positions_on_run ATTACH PARTITION public.occurrence_positions_y2027m01_occurrence_id_occurrence_date_idx;
+
+
+--
+-- Name: occurrence_positions_y2027m01_pkey; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.occurrence_positions_pkey ATTACH PARTITION public.occurrence_positions_y2027m01_pkey;
+
+
+--
+-- Name: occurrence_positions_y2027m01_recorded_at_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_occurrence_positions_on_recorded_at ATTACH PARTITION public.occurrence_positions_y2027m01_recorded_at_idx;
+
+
+--
+-- Name: occurrence_positions_y2027m02_occurrence_id_occurrence_date_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_occurrence_positions_on_run ATTACH PARTITION public.occurrence_positions_y2027m02_occurrence_id_occurrence_date_idx;
+
+
+--
+-- Name: occurrence_positions_y2027m02_pkey; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.occurrence_positions_pkey ATTACH PARTITION public.occurrence_positions_y2027m02_pkey;
+
+
+--
+-- Name: occurrence_positions_y2027m02_recorded_at_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_occurrence_positions_on_recorded_at ATTACH PARTITION public.occurrence_positions_y2027m02_recorded_at_idx;
+
+
+--
+-- Name: occurrence_positions_y2027m03_occurrence_id_occurrence_date_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_occurrence_positions_on_run ATTACH PARTITION public.occurrence_positions_y2027m03_occurrence_id_occurrence_date_idx;
+
+
+--
+-- Name: occurrence_positions_y2027m03_pkey; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.occurrence_positions_pkey ATTACH PARTITION public.occurrence_positions_y2027m03_pkey;
+
+
+--
+-- Name: occurrence_positions_y2027m03_recorded_at_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_occurrence_positions_on_recorded_at ATTACH PARTITION public.occurrence_positions_y2027m03_recorded_at_idx;
 
 
 --
@@ -9583,6 +12730,160 @@ ALTER INDEX public.index_trip_occurrences_on_vehicle_date ATTACH PARTITION publi
 
 
 --
+-- Name: trip_occurrences_y2027m02_coalesce_coalesce1_date_coalesce2_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_trip_occurrences_identity ATTACH PARTITION public.trip_occurrences_y2027m02_coalesce_coalesce1_date_coalesce2_idx;
+
+
+--
+-- Name: trip_occurrences_y2027m02_company_id_date_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_trip_occurrences_on_company_date ATTACH PARTITION public.trip_occurrences_y2027m02_company_id_date_idx;
+
+
+--
+-- Name: trip_occurrences_y2027m02_company_id_date_idx1; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_trip_occurrences_unassigned ATTACH PARTITION public.trip_occurrences_y2027m02_company_id_date_idx1;
+
+
+--
+-- Name: trip_occurrences_y2027m02_company_id_starts_at_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_trip_occurrences_on_starts_at ATTACH PARTITION public.trip_occurrences_y2027m02_company_id_starts_at_idx;
+
+
+--
+-- Name: trip_occurrences_y2027m02_driver_id_date_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_trip_occurrences_on_driver_date ATTACH PARTITION public.trip_occurrences_y2027m02_driver_id_date_idx;
+
+
+--
+-- Name: trip_occurrences_y2027m02_id_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_trip_occurrences_on_id ATTACH PARTITION public.trip_occurrences_y2027m02_id_idx;
+
+
+--
+-- Name: trip_occurrences_y2027m02_operator_driver_id_date_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_trip_occurrences_on_operator_driver_date ATTACH PARTITION public.trip_occurrences_y2027m02_operator_driver_id_date_idx;
+
+
+--
+-- Name: trip_occurrences_y2027m02_pkey; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.trip_occurrences_pkey ATTACH PARTITION public.trip_occurrences_y2027m02_pkey;
+
+
+--
+-- Name: trip_occurrences_y2027m02_school_route_id_date_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_trip_occurrences_on_route_date ATTACH PARTITION public.trip_occurrences_y2027m02_school_route_id_date_idx;
+
+
+--
+-- Name: trip_occurrences_y2027m02_trip_id_date_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_trip_occurrences_on_trip_date ATTACH PARTITION public.trip_occurrences_y2027m02_trip_id_date_idx;
+
+
+--
+-- Name: trip_occurrences_y2027m02_vehicle_id_date_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_trip_occurrences_on_vehicle_date ATTACH PARTITION public.trip_occurrences_y2027m02_vehicle_id_date_idx;
+
+
+--
+-- Name: trip_occurrences_y2027m03_coalesce_coalesce1_date_coalesce2_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_trip_occurrences_identity ATTACH PARTITION public.trip_occurrences_y2027m03_coalesce_coalesce1_date_coalesce2_idx;
+
+
+--
+-- Name: trip_occurrences_y2027m03_company_id_date_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_trip_occurrences_on_company_date ATTACH PARTITION public.trip_occurrences_y2027m03_company_id_date_idx;
+
+
+--
+-- Name: trip_occurrences_y2027m03_company_id_date_idx1; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_trip_occurrences_unassigned ATTACH PARTITION public.trip_occurrences_y2027m03_company_id_date_idx1;
+
+
+--
+-- Name: trip_occurrences_y2027m03_company_id_starts_at_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_trip_occurrences_on_starts_at ATTACH PARTITION public.trip_occurrences_y2027m03_company_id_starts_at_idx;
+
+
+--
+-- Name: trip_occurrences_y2027m03_driver_id_date_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_trip_occurrences_on_driver_date ATTACH PARTITION public.trip_occurrences_y2027m03_driver_id_date_idx;
+
+
+--
+-- Name: trip_occurrences_y2027m03_id_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_trip_occurrences_on_id ATTACH PARTITION public.trip_occurrences_y2027m03_id_idx;
+
+
+--
+-- Name: trip_occurrences_y2027m03_operator_driver_id_date_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_trip_occurrences_on_operator_driver_date ATTACH PARTITION public.trip_occurrences_y2027m03_operator_driver_id_date_idx;
+
+
+--
+-- Name: trip_occurrences_y2027m03_pkey; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.trip_occurrences_pkey ATTACH PARTITION public.trip_occurrences_y2027m03_pkey;
+
+
+--
+-- Name: trip_occurrences_y2027m03_school_route_id_date_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_trip_occurrences_on_route_date ATTACH PARTITION public.trip_occurrences_y2027m03_school_route_id_date_idx;
+
+
+--
+-- Name: trip_occurrences_y2027m03_trip_id_date_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_trip_occurrences_on_trip_date ATTACH PARTITION public.trip_occurrences_y2027m03_trip_id_date_idx;
+
+
+--
+-- Name: trip_occurrences_y2027m03_vehicle_id_date_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_trip_occurrences_on_vehicle_date ATTACH PARTITION public.trip_occurrences_y2027m03_vehicle_id_date_idx;
+
+
+--
 -- Name: document_reads fk_rails_02d9fe65e2; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -9604,6 +12905,22 @@ ALTER TABLE ONLY public.maintenance_visits
 
 ALTER TABLE ONLY public.trip_vehicle_slots
     ADD CONSTRAINT fk_rails_03257fa7c3 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: driver_pay_month_lines fk_rails_07029d4bd7; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_pay_month_lines
+    ADD CONSTRAINT fk_rails_07029d4bd7 FOREIGN KEY (driver_pay_month_id) REFERENCES public.driver_pay_months(id);
+
+
+--
+-- Name: pay_scheme_volume_tiers fk_rails_0706a8a3e8; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_scheme_volume_tiers
+    ADD CONSTRAINT fk_rails_0706a8a3e8 FOREIGN KEY (pay_scheme_id) REFERENCES public.pay_schemes(id);
 
 
 --
@@ -9652,6 +12969,14 @@ ALTER TABLE ONLY public.occurrence_correction_stops
 
 ALTER TABLE ONLY public.booking_trip_vehicles
     ADD CONSTRAINT fk_rails_0e030c70e0 FOREIGN KEY (booking_trip_id) REFERENCES public.booking_trips(id);
+
+
+--
+-- Name: company_country_requests fk_rails_0eb7327bb9; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.company_country_requests
+    ADD CONSTRAINT fk_rails_0eb7327bb9 FOREIGN KEY (decided_by_id) REFERENCES public.users(id);
 
 
 --
@@ -9756,6 +13081,14 @@ ALTER TABLE ONLY public.occurrence_corrections
 
 ALTER TABLE ONLY public.replacements
     ADD CONSTRAINT fk_rails_1732b8abb6 FOREIGN KEY (trip_run_id) REFERENCES public.trip_runs(id);
+
+
+--
+-- Name: user_schools fk_rails_176db57c4b; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.user_schools
+    ADD CONSTRAINT fk_rails_176db57c4b FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
 --
@@ -9927,6 +13260,14 @@ ALTER TABLE ONLY public.external_vehicle_submissions
 
 
 --
+-- Name: user_schools fk_rails_2a059e4b44; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.user_schools
+    ADD CONSTRAINT fk_rails_2a059e4b44 FOREIGN KEY (school_id) REFERENCES public.schools(id);
+
+
+--
 -- Name: vehicle_insurance_documents fk_rails_2a52534714; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -9951,11 +13292,27 @@ ALTER TABLE ONLY public.bookings
 
 
 --
+-- Name: driver_point_deductions fk_rails_2d9881cfe8; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_point_deductions
+    ADD CONSTRAINT fk_rails_2d9881cfe8 FOREIGN KEY (driver_id) REFERENCES public.drivers(id);
+
+
+--
 -- Name: disabled_vehicle_types fk_rails_30090ae9aa; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.disabled_vehicle_types
     ADD CONSTRAINT fk_rails_30090ae9aa FOREIGN KEY (vehicle_type_id) REFERENCES public.vehicle_types(id);
+
+
+--
+-- Name: pay_rate_plans fk_rails_3120067d0c; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_rate_plans
+    ADD CONSTRAINT fk_rails_3120067d0c FOREIGN KEY (locked_by_id) REFERENCES public.users(id);
 
 
 --
@@ -9972,6 +13329,30 @@ ALTER TABLE ONLY public.trip_assignment_slots
 
 ALTER TABLE ONLY public.vehicles
     ADD CONSTRAINT fk_rails_314b522c0a FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: client_bookable_vehicle_types fk_rails_315586af8c; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_bookable_vehicle_types
+    ADD CONSTRAINT fk_rails_315586af8c FOREIGN KEY (vehicle_type_id) REFERENCES public.vehicle_types(id);
+
+
+--
+-- Name: driver_point_allocations fk_rails_3336a5f9a3; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_point_allocations
+    ADD CONSTRAINT fk_rails_3336a5f9a3 FOREIGN KEY (driver_point_deduction_id) REFERENCES public.driver_point_deductions(id);
+
+
+--
+-- Name: pay_bonus_tiers fk_rails_336d373138; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_bonus_tiers
+    ADD CONSTRAINT fk_rails_336d373138 FOREIGN KEY (pay_bonus_id) REFERENCES public.pay_bonuses(id);
 
 
 --
@@ -10007,6 +13388,14 @@ ALTER TABLE ONLY public.trip_standbys
 
 
 --
+-- Name: pay_rewards fk_rails_35c40ffc56; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_rewards
+    ADD CONSTRAINT fk_rails_35c40ffc56 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
 -- Name: calendar_days fk_rails_363537453d; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -10020,6 +13409,14 @@ ALTER TABLE ONLY public.calendar_days
 
 ALTER TABLE ONLY public.schools
     ADD CONSTRAINT fk_rails_379253fa8b FOREIGN KEY (calendar_id) REFERENCES public.calendars(id);
+
+
+--
+-- Name: company_country_requests fk_rails_382fbe2df2; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.company_country_requests
+    ADD CONSTRAINT fk_rails_382fbe2df2 FOREIGN KEY (company_id) REFERENCES public.companies(id);
 
 
 --
@@ -10055,11 +13452,35 @@ ALTER TABLE ONLY public.occurrence_driver_reports
 
 
 --
+-- Name: client_users fk_rails_3b88600172; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_users
+    ADD CONSTRAINT fk_rails_3b88600172 FOREIGN KEY (created_by_id) REFERENCES public.users(id);
+
+
+--
+-- Name: client_sites fk_rails_3b956d0844; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_sites
+    ADD CONSTRAINT fk_rails_3b956d0844 FOREIGN KEY (created_by_id) REFERENCES public.users(id);
+
+
+--
 -- Name: trip_stops fk_rails_3c5be21545; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.trip_stops
     ADD CONSTRAINT fk_rails_3c5be21545 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: driver_point_deductions fk_rails_3d387a27be; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_point_deductions
+    ADD CONSTRAINT fk_rails_3d387a27be FOREIGN KEY (deducted_by_id) REFERENCES public.users(id);
 
 
 --
@@ -10076,6 +13497,14 @@ ALTER TABLE ONLY public.allowlisted_jwts
 
 ALTER TABLE ONLY public.vehicle_log_cards
     ADD CONSTRAINT fk_rails_3d7d7f8b86 FOREIGN KEY (uploaded_by_id) REFERENCES public.users(id);
+
+
+--
+-- Name: driver_pay_schemes fk_rails_3d8de34246; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_pay_schemes
+    ADD CONSTRAINT fk_rails_3d8de34246 FOREIGN KEY (pay_scheme_id) REFERENCES public.pay_schemes(id);
 
 
 --
@@ -10124,6 +13553,14 @@ ALTER TABLE ONLY public.workshops
 
 ALTER TABLE ONLY public.fuel_alerts
     ADD CONSTRAINT fk_rails_442ba1cc4d FOREIGN KEY (checked_by_id) REFERENCES public.users(id);
+
+
+--
+-- Name: users fk_rails_45307c95a3; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT fk_rails_45307c95a3 FOREIGN KEY (created_by_id) REFERENCES public.users(id);
 
 
 --
@@ -10207,6 +13644,14 @@ ALTER TABLE ONLY public.maintenance_invoices
 
 
 --
+-- Name: pay_bonus_drivers fk_rails_4d06340649; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_bonus_drivers
+    ADD CONSTRAINT fk_rails_4d06340649 FOREIGN KEY (driver_id) REFERENCES public.drivers(id);
+
+
+--
 -- Name: replacements fk_rails_4e1f22325d; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -10255,6 +13700,22 @@ ALTER TABLE ONLY public.trip_run_times
 
 
 --
+-- Name: driver_point_lots fk_rails_5338c4769c; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_point_lots
+    ADD CONSTRAINT fk_rails_5338c4769c FOREIGN KEY (driver_id) REFERENCES public.drivers(id);
+
+
+--
+-- Name: driver_pay_months fk_rails_544d3f5bca; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_pay_months
+    ADD CONSTRAINT fk_rails_544d3f5bca FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
 -- Name: booking_attachments fk_rails_54e3badbf9; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -10292,6 +13753,14 @@ ALTER TABLE ONLY public.rate_card_amounts
 
 ALTER TABLE ONLY public.booking_trip_standbys
     ADD CONSTRAINT fk_rails_55e97f3236 FOREIGN KEY (booking_trip_id) REFERENCES public.booking_trips(id);
+
+
+--
+-- Name: pay_rate_plans fk_rails_57a64691d8; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_rate_plans
+    ADD CONSTRAINT fk_rails_57a64691d8 FOREIGN KEY (company_id) REFERENCES public.companies(id);
 
 
 --
@@ -10335,6 +13804,14 @@ ALTER TABLE ONLY public.maintenance_lines
 
 
 --
+-- Name: client_user_sites fk_rails_5b94d5bb39; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_user_sites
+    ADD CONSTRAINT fk_rails_5b94d5bb39 FOREIGN KEY (client_site_id) REFERENCES public.client_sites(id);
+
+
+--
 -- Name: schools fk_rails_5c21ed42ac; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -10348,6 +13825,14 @@ ALTER TABLE ONLY public.schools
 
 ALTER TABLE ONLY public.vehicle_driver_schedules
     ADD CONSTRAINT fk_rails_5d7d8402cd FOREIGN KEY (vehicle_id) REFERENCES public.vehicles(id);
+
+
+--
+-- Name: driver_point_lots fk_rails_5e53cb2a93; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_point_lots
+    ADD CONSTRAINT fk_rails_5e53cb2a93 FOREIGN KEY (driver_pay_month_id) REFERENCES public.driver_pay_months(id);
 
 
 --
@@ -10399,6 +13884,14 @@ ALTER TABLE ONLY public.vehicle_teams
 
 
 --
+-- Name: pay_bonus_drivers fk_rails_6370488d2c; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_bonus_drivers
+    ADD CONSTRAINT fk_rails_6370488d2c FOREIGN KEY (signed_up_by_id) REFERENCES public.users(id);
+
+
+--
 -- Name: trip_stop_photos fk_rails_6457b1f23d; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -10436,6 +13929,22 @@ ALTER TABLE ONLY public.trips
 
 ALTER TABLE ONLY public.fuel_entries
     ADD CONSTRAINT fk_rails_65f83d796e FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: pay_bonus_excluded_periods fk_rails_66ae344984; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_bonus_excluded_periods
+    ADD CONSTRAINT fk_rails_66ae344984 FOREIGN KEY (pay_bonus_id) REFERENCES public.pay_bonuses(id);
+
+
+--
+-- Name: portal_sign_in_codes fk_rails_6774558f0a; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.portal_sign_in_codes
+    ADD CONSTRAINT fk_rails_6774558f0a FOREIGN KEY (portal_account_id) REFERENCES public.portal_accounts(id);
 
 
 --
@@ -10495,6 +14004,14 @@ ALTER TABLE ONLY public.trip_run_slots
 
 
 --
+-- Name: pay_simulator_templates fk_rails_6db026d8ba; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_simulator_templates
+    ADD CONSTRAINT fk_rails_6db026d8ba FOREIGN KEY (vehicle_type_id) REFERENCES public.vehicle_types(id);
+
+
+--
 -- Name: trips fk_rails_6df0f7663f; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -10516,6 +14033,14 @@ ALTER TABLE ONLY public.booking_cancel_requests
 
 ALTER TABLE ONLY public.vehicle_insurance_documents
     ADD CONSTRAINT fk_rails_715b535d8e FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: pay_simulator_templates fk_rails_716eb53881; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_simulator_templates
+    ADD CONSTRAINT fk_rails_716eb53881 FOREIGN KEY (saved_by_id) REFERENCES public.users(id);
 
 
 --
@@ -10615,6 +14140,14 @@ ALTER TABLE ONLY public.trip_assignments
 
 
 --
+-- Name: pay_bonus_payments fk_rails_7b8fed7102; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_bonus_payments
+    ADD CONSTRAINT fk_rails_7b8fed7102 FOREIGN KEY (pay_bonus_id) REFERENCES public.pay_bonuses(id);
+
+
+--
 -- Name: booking_days fk_rails_7cbe55c381; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -10631,6 +14164,14 @@ ALTER TABLE ONLY public.notices
 
 
 --
+-- Name: pay_rates fk_rails_7e44714815; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_rates
+    ADD CONSTRAINT fk_rails_7e44714815 FOREIGN KEY (pay_rate_period_id) REFERENCES public.pay_rate_periods(id);
+
+
+--
 -- Name: vehicle_type_requests fk_rails_7e6b1ee420; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -10639,11 +14180,27 @@ ALTER TABLE ONLY public.vehicle_type_requests
 
 
 --
+-- Name: pay_scheme_target_tiers fk_rails_7eab46fd97; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_scheme_target_tiers
+    ADD CONSTRAINT fk_rails_7eab46fd97 FOREIGN KEY (pay_scheme_id) REFERENCES public.pay_schemes(id);
+
+
+--
 -- Name: replacements fk_rails_7fd7950604; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.replacements
     ADD CONSTRAINT fk_rails_7fd7950604 FOREIGN KEY (trip_id) REFERENCES public.trips(id);
+
+
+--
+-- Name: company_country_requests fk_rails_7ffe4ed24b; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.company_country_requests
+    ADD CONSTRAINT fk_rails_7ffe4ed24b FOREIGN KEY (requested_by_id) REFERENCES public.users(id);
 
 
 --
@@ -10687,11 +14244,35 @@ ALTER TABLE ONLY public.trip_run_groups
 
 
 --
+-- Name: pay_rate_plan_vehicle_types fk_rails_84454fa0ca; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_rate_plan_vehicle_types
+    ADD CONSTRAINT fk_rails_84454fa0ca FOREIGN KEY (vehicle_type_id) REFERENCES public.vehicle_types(id);
+
+
+--
+-- Name: client_bookable_vehicle_types fk_rails_84858ddac7; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_bookable_vehicle_types
+    ADD CONSTRAINT fk_rails_84858ddac7 FOREIGN KEY (client_id) REFERENCES public.clients(id);
+
+
+--
 -- Name: bookings fk_rails_84f4389273; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.bookings
     ADD CONSTRAINT fk_rails_84f4389273 FOREIGN KEY (client_site_id) REFERENCES public.client_sites(id);
+
+
+--
+-- Name: driver_pay_month_runs fk_rails_8533cafd57; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_pay_month_runs
+    ADD CONSTRAINT fk_rails_8533cafd57 FOREIGN KEY (driver_pay_month_id) REFERENCES public.driver_pay_months(id);
 
 
 --
@@ -10743,6 +14324,14 @@ ALTER TABLE ONLY public.trip_runs
 
 
 --
+-- Name: client_billing_contacts fk_rails_89d66f4405; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_billing_contacts
+    ADD CONSTRAINT fk_rails_89d66f4405 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
 -- Name: fuel_entries fk_rails_8a734d88b7; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -10764,6 +14353,14 @@ ALTER TABLE ONLY public.drivers
 
 ALTER TABLE ONLY public.driver_kyc_profiles
     ADD CONSTRAINT fk_rails_8b0f8e0f1e FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: pay_rate_periods fk_rails_8b62945b80; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_rate_periods
+    ADD CONSTRAINT fk_rails_8b62945b80 FOREIGN KEY (pay_rate_plan_id) REFERENCES public.pay_rate_plans(id);
 
 
 --
@@ -10807,11 +14404,35 @@ ALTER TABLE ONLY public.tracking_links
 
 
 --
+-- Name: portal_jwts fk_rails_8ce90c0d23; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.portal_jwts
+    ADD CONSTRAINT fk_rails_8ce90c0d23 FOREIGN KEY (client_user_id) REFERENCES public.client_users(id);
+
+
+--
 -- Name: rate_card_periods fk_rails_8e1854beb1; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.rate_card_periods
     ADD CONSTRAINT fk_rails_8e1854beb1 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: client_users fk_rails_91818ac2d3; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_users
+    ADD CONSTRAINT fk_rails_91818ac2d3 FOREIGN KEY (client_id) REFERENCES public.clients(id);
+
+
+--
+-- Name: pay_schemes fk_rails_9259e89e54; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_schemes
+    ADD CONSTRAINT fk_rails_9259e89e54 FOREIGN KEY (company_id) REFERENCES public.companies(id);
 
 
 --
@@ -10823,6 +14444,14 @@ ALTER TABLE ONLY public.tracking_links
 
 
 --
+-- Name: driver_pay_schemes fk_rails_92d083cfce; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_pay_schemes
+    ADD CONSTRAINT fk_rails_92d083cfce FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
 -- Name: fuel_alerts fk_rails_92f9647b19; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -10831,11 +14460,27 @@ ALTER TABLE ONLY public.fuel_alerts
 
 
 --
+-- Name: client_users fk_rails_95ee319de8; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_users
+    ADD CONSTRAINT fk_rails_95ee319de8 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
 -- Name: booking_trip_standbys fk_rails_9626e45e94; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.booking_trip_standbys
     ADD CONSTRAINT fk_rails_9626e45e94 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: pay_simulator_templates fk_rails_967b54c2cc; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_simulator_templates
+    ADD CONSTRAINT fk_rails_967b54c2cc FOREIGN KEY (pay_scheme_id) REFERENCES public.pay_schemes(id);
 
 
 --
@@ -10852,6 +14497,22 @@ ALTER TABLE ONLY public.school_route_stops
 
 ALTER TABLE ONLY public.trip_run_slots
     ADD CONSTRAINT fk_rails_97628a907d FOREIGN KEY (vehicle_id) REFERENCES public.vehicles(id);
+
+
+--
+-- Name: client_users fk_rails_980789d192; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_users
+    ADD CONSTRAINT fk_rails_980789d192 FOREIGN KEY (portal_account_id) REFERENCES public.portal_accounts(id);
+
+
+--
+-- Name: driver_vehicle_types fk_rails_985765b1a5; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_vehicle_types
+    ADD CONSTRAINT fk_rails_985765b1a5 FOREIGN KEY (vehicle_type_id) REFERENCES public.vehicle_types(id);
 
 
 --
@@ -10876,6 +14537,14 @@ ALTER TABLE ONLY public.booking_trips
 
 ALTER TABLE ONLY public.booking_cancel_requests
     ADD CONSTRAINT fk_rails_9a3da2831f FOREIGN KEY (booking_trip_id) REFERENCES public.booking_trips(id);
+
+
+--
+-- Name: portal_jwts fk_rails_9a7d4e6084; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.portal_jwts
+    ADD CONSTRAINT fk_rails_9a7d4e6084 FOREIGN KEY (portal_account_id) REFERENCES public.portal_accounts(id);
 
 
 --
@@ -10959,6 +14628,14 @@ ALTER TABLE ONLY public.rate_card_vehicle_types
 
 
 --
+-- Name: pay_bonus_schemes fk_rails_a46a0c4cdb; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_bonus_schemes
+    ADD CONSTRAINT fk_rails_a46a0c4cdb FOREIGN KEY (pay_bonus_id) REFERENCES public.pay_bonuses(id);
+
+
+--
 -- Name: booking_trip_changes fk_rails_a4a866a13f; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -11023,6 +14700,14 @@ ALTER TABLE ONLY public.bookings
 
 
 --
+-- Name: driver_point_lots fk_rails_a96e912ebb; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_point_lots
+    ADD CONSTRAINT fk_rails_a96e912ebb FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
 -- Name: trips fk_rails_aa53ce8922; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -11076,6 +14761,14 @@ ALTER TABLE ONLY public.notification_emails
 
 ALTER TABLE ONLY public.trip_attachments
     ADD CONSTRAINT fk_rails_aeee2a4ae8 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: pay_scheme_route_bands fk_rails_aff708dd9c; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_scheme_route_bands
+    ADD CONSTRAINT fk_rails_aff708dd9c FOREIGN KEY (pay_scheme_id) REFERENCES public.pay_schemes(id);
 
 
 --
@@ -11183,6 +14876,14 @@ ALTER TABLE ONLY public.replacements
 
 
 --
+-- Name: driver_point_deductions fk_rails_bce970e9a3; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_point_deductions
+    ADD CONSTRAINT fk_rails_bce970e9a3 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
 -- Name: vehicle_type_requests fk_rails_bd39c27353; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -11247,6 +14948,22 @@ ALTER TABLE ONLY public.trip_route_vias
 
 
 --
+-- Name: pay_rates fk_rails_c308d18fe8; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_rates
+    ADD CONSTRAINT fk_rails_c308d18fe8 FOREIGN KEY (vehicle_type_id) REFERENCES public.vehicle_types(id);
+
+
+--
+-- Name: pay_schemes fk_rails_c3beb01bb4; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_schemes
+    ADD CONSTRAINT fk_rails_c3beb01bb4 FOREIGN KEY (pay_rate_plan_id) REFERENCES public.pay_rate_plans(id);
+
+
+--
 -- Name: school_route_replacements fk_rails_c4ca6066b6; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -11260,6 +14977,22 @@ ALTER TABLE ONLY public.school_route_replacements
 
 ALTER TABLE ONLY public.trip_run_times
     ADD CONSTRAINT fk_rails_c5027d0a2d FOREIGN KEY (trip_stop_id) REFERENCES public.trip_stops(id);
+
+
+--
+-- Name: pay_rate_plan_vehicle_types fk_rails_c5bdf0ba03; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_rate_plan_vehicle_types
+    ADD CONSTRAINT fk_rails_c5bdf0ba03 FOREIGN KEY (pay_rate_plan_id) REFERENCES public.pay_rate_plans(id);
+
+
+--
+-- Name: pay_bonus_drivers fk_rails_c5d14816d1; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_bonus_drivers
+    ADD CONSTRAINT fk_rails_c5d14816d1 FOREIGN KEY (pay_bonus_id) REFERENCES public.pay_bonuses(id);
 
 
 --
@@ -11311,6 +15044,14 @@ ALTER TABLE ONLY public.rate_card_amounts
 
 
 --
+-- Name: driver_pay_schemes fk_rails_ca60389145; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_pay_schemes
+    ADD CONSTRAINT fk_rails_ca60389145 FOREIGN KEY (driver_id) REFERENCES public.drivers(id);
+
+
+--
 -- Name: vehicle_type_requests fk_rails_cb77354afc; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -11351,6 +15092,14 @@ ALTER TABLE ONLY public.fuel_entries
 
 
 --
+-- Name: pay_rate_period_ranges fk_rails_d27459b6a2; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_rate_period_ranges
+    ADD CONSTRAINT fk_rails_d27459b6a2 FOREIGN KEY (pay_rate_period_id) REFERENCES public.pay_rate_periods(id);
+
+
+--
 -- Name: school_plans fk_rails_d314d9ac9b; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -11375,6 +15124,14 @@ ALTER TABLE ONLY public.occurrence_correction_logs
 
 
 --
+-- Name: driver_vehicle_types fk_rails_d471a5a82f; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_vehicle_types
+    ADD CONSTRAINT fk_rails_d471a5a82f FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
 -- Name: school_route_vehicle_changes fk_rails_d4f0c07d2c; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -11388,6 +15145,30 @@ ALTER TABLE ONLY public.school_route_vehicle_changes
 
 ALTER TABLE ONLY public.external_vehicle_submissions
     ADD CONSTRAINT fk_rails_d59da55e0c FOREIGN KEY (decided_by_id) REFERENCES public.users(id);
+
+
+--
+-- Name: pay_bonuses fk_rails_d5f53ac59a; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_bonuses
+    ADD CONSTRAINT fk_rails_d5f53ac59a FOREIGN KEY (locked_by_id) REFERENCES public.users(id);
+
+
+--
+-- Name: pay_bonus_schemes fk_rails_d7a22324db; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_bonus_schemes
+    ADD CONSTRAINT fk_rails_d7a22324db FOREIGN KEY (pay_scheme_id) REFERENCES public.pay_schemes(id);
+
+
+--
+-- Name: companies fk_rails_d9035ba026; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.companies
+    ADD CONSTRAINT fk_rails_d9035ba026 FOREIGN KEY (country_set_by_id) REFERENCES public.users(id);
 
 
 --
@@ -11415,6 +15196,14 @@ ALTER TABLE ONLY public.notice_runs
 
 
 --
+-- Name: client_bookable_vehicle_types fk_rails_dd12091845; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_bookable_vehicle_types
+    ADD CONSTRAINT fk_rails_dd12091845 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
 -- Name: school_routes fk_rails_dd7b14bd9e; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -11439,11 +15228,27 @@ ALTER TABLE ONLY public.rate_card_distance_bands
 
 
 --
+-- Name: driver_point_lots fk_rails_e0316fb9f8; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_point_lots
+    ADD CONSTRAINT fk_rails_e0316fb9f8 FOREIGN KEY (pay_bonus_id) REFERENCES public.pay_bonuses(id);
+
+
+--
 -- Name: trip_route_vias fk_rails_e10b4b7e66; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.trip_route_vias
     ADD CONSTRAINT fk_rails_e10b4b7e66 FOREIGN KEY (trip_id) REFERENCES public.trips(id);
+
+
+--
+-- Name: client_pickup_points fk_rails_e18d6f67d0; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_pickup_points
+    ADD CONSTRAINT fk_rails_e18d6f67d0 FOREIGN KEY (created_by_id) REFERENCES public.users(id);
 
 
 --
@@ -11487,6 +15292,14 @@ ALTER TABLE ONLY public.booking_cancel_requests
 
 
 --
+-- Name: pay_bonuses fk_rails_e7d50d3571; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_bonuses
+    ADD CONSTRAINT fk_rails_e7d50d3571 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
 -- Name: route_list_versions fk_rails_e82636ad7e; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -11516,6 +15329,22 @@ ALTER TABLE ONLY public.operator_drivers
 
 ALTER TABLE ONLY public.operators
     ADD CONSTRAINT fk_rails_e9075effc2 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: pay_simulator_templates fk_rails_e91a2b6313; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_simulator_templates
+    ADD CONSTRAINT fk_rails_e91a2b6313 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: driver_point_allocations fk_rails_e963a81a27; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_point_allocations
+    ADD CONSTRAINT fk_rails_e963a81a27 FOREIGN KEY (driver_point_lot_id) REFERENCES public.driver_point_lots(id);
 
 
 --
@@ -11583,6 +15412,14 @@ ALTER TABLE ONLY public.driver_invites
 
 
 --
+-- Name: driver_vehicle_types fk_rails_ef5d928024; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_vehicle_types
+    ADD CONSTRAINT fk_rails_ef5d928024 FOREIGN KEY (driver_id) REFERENCES public.drivers(id);
+
+
+--
 -- Name: public_holidays fk_rails_f0671ffc35; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -11599,11 +15436,27 @@ ALTER TABLE ONLY public.external_vehicle_submissions
 
 
 --
+-- Name: client_sites fk_rails_f13e189478; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_sites
+    ADD CONSTRAINT fk_rails_f13e189478 FOREIGN KEY (school_id) REFERENCES public.schools(id);
+
+
+--
 -- Name: drivers fk_rails_f1f5419320; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.drivers
     ADD CONSTRAINT fk_rails_f1f5419320 FOREIGN KEY (display_set_by_id) REFERENCES public.users(id);
+
+
+--
+-- Name: pay_schemes fk_rails_f22e12e1ef; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.pay_schemes
+    ADD CONSTRAINT fk_rails_f22e12e1ef FOREIGN KEY (locked_by_id) REFERENCES public.users(id);
 
 
 --
@@ -11639,6 +15492,14 @@ ALTER TABLE ONLY public.vehicle_driver_schedules
 
 
 --
+-- Name: driver_pay_months fk_rails_f46ae7821f; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_pay_months
+    ADD CONSTRAINT fk_rails_f46ae7821f FOREIGN KEY (driver_id) REFERENCES public.drivers(id);
+
+
+--
 -- Name: fuel_entries fk_rails_f512993488; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -11652,6 +15513,14 @@ ALTER TABLE ONLY public.fuel_entries
 
 ALTER TABLE ONLY public.calendars
     ADD CONSTRAINT fk_rails_f6ad5c8b19 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: driver_point_lots fk_rails_f6d38722cf; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_point_lots
+    ADD CONSTRAINT fk_rails_f6d38722cf FOREIGN KEY (awarded_by_id) REFERENCES public.users(id);
 
 
 --
@@ -11724,6 +15593,22 @@ ALTER TABLE ONLY public.fuel_companies
 
 ALTER TABLE ONLY public.occurrence_correction_logs
     ADD CONSTRAINT fk_rails_fb71a38135 FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- Name: driver_pay_months fk_rails_fbbecf700c; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_pay_months
+    ADD CONSTRAINT fk_rails_fbbecf700c FOREIGN KEY (confirmed_by_id) REFERENCES public.users(id);
+
+
+--
+-- Name: client_user_sites fk_rails_fd7be929e9; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_user_sites
+    ADD CONSTRAINT fk_rails_fd7be929e9 FOREIGN KEY (client_user_id) REFERENCES public.client_users(id);
 
 
 --
@@ -11853,6 +15738,27 @@ ALTER TABLE public.trip_occurrences
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261102156000'),
+('20261102155000'),
+('20261102154000'),
+('20261102153000'),
+('20261102152000'),
+('20261102151000'),
+('20261102150000'),
+('20261102143000'),
+('20261102142000'),
+('20261102141300'),
+('20261102141200'),
+('20261102141100'),
+('20261102141000'),
+('20261102140000'),
+('20261102130300'),
+('20261102130200'),
+('20261102130100'),
+('20261102130000'),
+('20261102120200'),
+('20261102120100'),
+('20261102120000'),
 ('20261102100000'),
 ('20261031170000'),
 ('20261031160000'),

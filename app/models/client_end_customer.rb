@@ -28,5 +28,10 @@ class ClientEndCustomer < ApplicationRecord
 
   belongs_to :client, inverse_of: :end_customers
 
-  validates :name, presence: true, uniqueness: { scope: :client_id }
+  has_many :trips, dependent: :restrict_with_error
+  has_many :bookings, dependent: :restrict_with_error
+
+  normalizes :name, with: ->(v) { v.to_s.squish }
+
+  validates :name, presence: true, uniqueness: { scope: :client_id, case_sensitive: false, message: "is already on the list" }
 end

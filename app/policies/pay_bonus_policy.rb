@@ -1,0 +1,2 @@
+class PayBonusPolicy < PayPolicy
+end

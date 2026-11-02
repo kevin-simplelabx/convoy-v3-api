@@ -7,6 +7,9 @@ One document per menu of Convoy OS. Each document lists the screen actions and t
 | Scheduler (rail icon `calendar_view_week`) and everything it opens | [scheduler.md](scheduler.md) |
 | Trips (rail icon `assignment`): Trips, Trip History, Notices, Bookings, Rate Cards | [trips.md](trips.md) |
 | Fleet (rail icon `directions_bus`): Vehicles, Drivers, Bus Attendants, External Vehicles, Fuel & Energy, Maintenance, Vehicle Types, and Transport Operators (Managed Operators, Operator Vehicles, Operator Drivers) | [fleet.md](fleet.md) |
+| Settings (rail footer icon `settings`): Company Settings, Users, Calendars, and the Profile dialog | [settings.md](settings.md) |
+| Clients (rail icon `corporate_fare`): Managed Clients, Client Users, and the Client Portal sign-in | [clients.md](clients.md) |
+| HR (rail icon `badge`): Drivers, Earnings, Pay Schemes, Rate Plans, Bonuses, Points, Rewards, Salary Simulator, Audit Log | [hr.md](hr.md) |
 
 **Integrating the API (or asking an AI assistant to)?** Start with [integration.md](integration.md): it is the one
 file to read first, and it points to everything else.
@@ -69,7 +72,8 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
 ```json
 {
   "data": {
-    "user": { "id": 2, "name": "SimpleDrive Ops", "email": "ops@simpledrive.sg", "role": "admin", "owner": true,
+    "user": { "id": 2, "name": "SimpleDrive Ops", "display_name": null, "shown_name": "SimpleDrive Ops", "email": "ops@simpledrive.sg",
+              "mobile": null, "mobile_display": null, "role": "admin", "role_label": "Super Admin", "owner": true,
               "permissions": ["users", "vehicles", "finance", "..."], "initials": "SO", "avatar": null, "status": "active", "company_id": 1 },
     "company": { "id": 1, "name": "SimpleDrive", "display_name": "SimpleDrive", "code": "SD", "country": "SG", "timezone": "Asia/Singapore",
                  "date_format": "dmy", "time_format": "24", "theme_color": "#0B6E6E", "logo": null, "observed_holidays": "off",
@@ -79,6 +83,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
 ```
 
 - `role`: `convoy_admin` (Convoy staff, **view only**: every write returns `403`), `admin` (every permission), `member` (only `permissions`).
+  `owner` = Super Admin. Show `shown_name` (display name or name) in the top bar. Users and the Profile: [settings.md](settings.md).
 - `company` is `null` for a Convoy Admin until `PATCH /session` picks one (per token: a new sign-in starts with none);
   company data then answers `422 "Pick a company first"`.
 - Sample accounts (seed): `ops@simpledrive.sg` / `Simple123!` (Admin), `dispatch@simpledrive.sg` / `Simple123!` (Member, vehicles),

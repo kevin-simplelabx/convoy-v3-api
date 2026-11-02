@@ -1,4 +1,5 @@
-# A client's sites (nested under /clients/:client_id).
+# A client's sites (nested under /clients/:client_id): Add Site, Edit Site (school, own billing, Send Invoices To),
+# Remove (refused while trips use the site).
 module Api
   module V1
     class ClientSitesController < BaseController
@@ -6,19 +7,17 @@ module Api
 
       def index
         authorize ClientSite
-        render_list @client.sites.order(:name), ClientSiteBlueprint
+        render_list @client.sites.includes(:school, :billing_contacts).order(:name), ClientSiteBlueprint
       end
 
       def create
-        record = authorize @client.sites.new(record_params)
-        record.save!
-        render_data record, ClientSiteBlueprint, status: :created
+        site = authorize @client.sites.new
+        render_data ClientSites::Save.call(site:, params: record_params, user: current_user), ClientSiteBlueprint, status: :created
       end
 
       def update
-        record = authorize @client.sites.find(params[:id])
-        record.update!(record_params)
-        render_data record, ClientSiteBlueprint
+        site = authorize @client.sites.find(params[:id])
+        render_data ClientSites::Save.call(site:, params: record_params), ClientSiteBlueprint
       end
 
       def destroy
@@ -32,7 +31,10 @@ module Api
         @client = Client.kept.find(params[:client_id])
       end
 
-      def record_params = params.expect(client_site: %i[name address lat lng])
+      def record_params
+        params.expect(client_site: [ :name, :address, :lat, :lng, :school_id, :own_billing, :billing_name, :billing_uen, :billing_address,
+                                     { billing_contacts: [ %i[name email send_as attention] ] } ])
+      end
     end
   end
 end
