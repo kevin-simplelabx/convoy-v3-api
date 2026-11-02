@@ -72,7 +72,8 @@ Rails.application.routes.draw do
       resources :attendants, only: %i[index create update destroy]
 
       # Fuel & Energy
-      resources :fuel_entries do
+      # new: the blank form (API mode leaves :new out of resources unless named)
+      resources :fuel_entries, only: %i[index new show create update destroy] do
         get :vehicles, on: :collection
       end
       resources :fuel_companies, only: :index do

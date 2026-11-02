@@ -75,6 +75,15 @@ RSpec.describe "Fuel & Energy" do
     expect(json.dig(:error, :details)).to include(vehicle: [ "Vehicle must be one of your own buses" ], quantity: [ "Quantity must be greater than 0" ])
   end
 
+  it "gives a blank form with the bus's last kind and odometer" do
+    add(date: "2026-11-02", kind: "petrol", quantity: 40, cost: 100, odometer: 12_345)
+
+    get new_api_v1_fuel_entry_path, params: { vehicle_id: f[:van].id }
+    expect(response).to have_http_status(:ok)
+    expect(json[:data]).to eq(vehicle_id: f[:van].id, date: "2026-11-20", time: "09:00", kind: "petrol", full: true,
+                              last_odometer: 12_345)
+  end
+
   it "gives vehicle cards and the Fuel summary of the vehicle record" do
     add(date: "2026-10-20", quantity: 50, cost: 120, odometer: 10_000)
     add(date: "2026-11-02", quantity: 50, cost: 125, odometer: 10_500, fuel_company_id: f[:esso].id)
