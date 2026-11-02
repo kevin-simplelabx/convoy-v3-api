@@ -40,3 +40,4 @@ Mọi quyết định đã chốt với user. Thêm dòng mới ở cuối; quy�
 | 31/10/2026 | fleet | Ngân hàng SG thành bảng platform `banks` / `bank_branches` (seed từ `sg-banks.js`); operator lưu `bank_id`, branch do server tính. |
 | 31/10/2026 | fleet | Share Form public throttle bằng rack-attack có sẵn (10 / giờ / IP) thay vì `rate_limit`. |
 | 31/10/2026 | fleet | Fuel: số tính được (km, hiệu suất, driver của ngày) lưu cột trên `fuel_entries`; Needs a Look lưu bảng `fuel_alerts` (query / thống kê, giữ Checked). Thống kê theo kỳ dùng groupdate. |
+| 02/11/2026 | deploy | Staging deploy bằng Kamal 2 (sẵn trong Rails 8): 1 EC2, Postgres 17 accessory, registry local qua SSH, SSL kamal-proxy. CORS localhost + `SESSION_SAME_SITE=none` bật qua ENV cho staging. |

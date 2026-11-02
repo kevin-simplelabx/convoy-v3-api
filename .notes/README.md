@@ -13,6 +13,7 @@
 | Hiểu hệ thống đang chạy thế nào | `domains/*.md` (luôn đúng hiện trạng) |
 | Bắt đầu menu mới | `data-ownership.md` (bảng nào menu đó phải làm màn sửa) → `backlog.md` → `decisions.md` |
 | Đụng vào run / occurrence | `domains/occurrences.md` (layer model, quy tắc, trigger sync) |
+| Deploy staging (Kamal) | `deploy.md` |
 | Tại sao chốt một cách làm | `decisions.md`, rồi `menus/<menu>/log/` của phase đó |
 | Menu có những tính năng nào | `menus/<menu>/scope.md`, `plan.md` |
 

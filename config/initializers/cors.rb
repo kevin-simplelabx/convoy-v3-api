@@ -7,7 +7,10 @@
 
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
-    origins ENV.fetch("CORS_ORIGINS", "http://localhost:3000").split(",")
+    # CORS_ALLOW_LOCALHOST=true (staging) also accepts any localhost / 127.0.0.1 port.
+    allowed = ENV.fetch("CORS_ORIGINS", "http://localhost:3000").split(",")
+    allowed << %r{\Ahttps?://(localhost|127\.0\.0\.1)(:\d+)?\z} if ENV["CORS_ALLOW_LOCALHOST"] == "true"
+    origins(*allowed)
 
     resource "/api/*",
       headers: :any,

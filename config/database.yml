@@ -66,12 +66,14 @@ production:
   primary: &primary_production
     <<: *default
     database: convoy_v3_production
+    host: <%= ENV["DB_HOST"] %>
     username: convoy_v3
     password: <%= ENV["CONVOY_V3_DATABASE_PASSWORD"] %>
   cache:
     <<: *primary_production
     database: convoy_v3_production_cache
     migrations_paths: db/cache_migrate
+    schema_format: ruby
   queue:
     <<: *primary_production
     database: convoy_v3_production_queue
@@ -80,3 +82,4 @@ production:
     <<: *primary_production
     database: convoy_v3_production_cable
     migrations_paths: db/cable_migrate
+    schema_format: ruby
