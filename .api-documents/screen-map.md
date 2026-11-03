@@ -567,7 +567,7 @@ Rail icon `desktop_windows`. Needs `vehicles` or `plans`. Poll the board every 1
 | Call | `tel:` driver phone | FE only |
 | Alert Log | `GET /ops_control/log` | [ops-control § 4](ops-control.md#4-alert-log) |
 | Alarm Sound, Full Screen, How It Works, ⓘ | FE only | — |
-| Requests banner (School Bus) | **No API yet** | — |
+| Requests banner (School Bus) | `GET /bus_requests/alerts` | [parents § 6](school-bus-parents.md#6-alerts-and-the-0800-email) |
 
 ---
 
@@ -588,6 +588,6 @@ Rail icon `map`. Needs `vehicles` or `plans`. Poll the board every 10–15 s.
 
 ## Not built yet
 
-These rail menus of Convoy OS have **no API yet**: Clients > Connected Clients.
+Every rail menu of Convoy OS has its API. Connected Operators and Connected Clients are "Coming Soon" in the prototype (placeholder pages, no API).
 Smaller gaps inside built menus are listed in [trips § 6](trips.md#6-not-built-yet) and
 [fleet § 10](fleet.md#10-not-built-yet), [settings § 5](settings.md#5-not-built-yet), [clients § 7](clients.md#7-not-built-yet), [hr § 10](hr.md#10-not-built-yet) and [finance § 8](finance.md#8-not-built-yet).
