@@ -1,5 +1,5 @@
-# What a person does to one run from the Scheduler drawer: cancel and restore, raise and clear an issue, change the
-# pick-up time for this run only or for every run from this date. Each change is audited with the trip, records the
+# What a person does to one run from the Scheduler drawer: cancel and restore, force end a run on the road, raise and
+# clear an issue, change the pick-up time for this run only or for every run from this date. Each change is audited with the trip, records the
 # field as overridden (Sync keeps it), and checks lock_version (409 when someone else just changed the run).
 module Occurrences
   class Edit
@@ -21,6 +21,17 @@ module Occurrences
 
       status = @occ.ends_at <= Time.current ? "completed" : "scheduled"
       save!(status:, cancelled_at: nil, cancelled_by: nil, cancelled_by_client: false, overridden_fields: drop(:status))
+    end
+
+    # Force End Trip: a run on the road ends now (the driver did not press End). It counts as done at once (pay, invoices,
+    # Trip History); the planned end stays in ends_at. No undo.
+    def force_end!
+      raise ApplicationService::Error, "This run is #{@occ.status}" if LiveMap::NOT_DRIVEN.include?(@occ.status)
+      raise ApplicationService::Error, "This run has already ended" if done?
+      raise ApplicationService::Error, "This run has not started" if @occ.started_at.nil? && @occ.starts_at > Time.current
+      raise ApplicationService::Error, "This run has no bus" if @occ.vehicle_id.nil?
+
+      save!(status: "completed", ended_at: Time.current, ended_by: @user, overridden_fields: add(:status))
     end
 
     # Raise an Issue: only on a run that is done; holds the driver's pay for it until cleared.
@@ -64,14 +75,16 @@ module Occurrences
       move!(0)
     end
 
-    # Every Run From This Date: the trip (or this shuttle run) moves from the run's date on.
+    # Every Run From This Date: the trip (or this shuttle run) moves from the run's date on. When that is the whole trip
+    # (a one-off trip, or the first run of a recurring trip not yet changed), the trip's own times move (Trips::MoveTime);
+    # otherwise a time change splits the trip from this date.
     def change_from_here!(start_time)
       trip = @occ.trip
       raise ApplicationService::Error, "School route times are set in School Bus" if trip.nil?
-      raise ApplicationService::Error, "Only a recurring trip has later runs" unless trip.recurring?
 
       delta = Clock.minutes(start_time) - @occ.start_time
       raise ApplicationService::Error, "Pick a different time" if delta.zero?
+      return move_trip!(trip, delta) if whole_trip?(trip)
 
       TripOccurrence.transaction do
         current = trip.time_changes.select { |c| c.effective_from <= @occ.date && (c.trip_run_id.nil? || c.trip_run_id == @occ.trip_run_id) }
@@ -85,6 +98,16 @@ module Occurrences
     end
 
     private
+
+    def whole_trip?(trip) = !trip.recurring? || (@occ.date <= trip.starts_on && trip.time_changes.none?)
+
+    def move_trip!(trip, delta)
+      raise ApplicationService::Error, "This run has started" if @occ.starts_at <= Time.current
+
+      trip = Trip.includes(*Trip::FULL_INCLUDES).find(trip.id) # as the trip form saves it
+      Trips::MoveTime.call(trip:, minutes: delta + @occ.shift_minutes, user: @user, trip_run: trip.runs.find { it.id == @occ.trip_run_id })
+      @occ.reload
+    end
 
     # A driver's pay for a confirmed month is frozen: its runs' issues can't change until it is reopened.
     def pay_confirmed!

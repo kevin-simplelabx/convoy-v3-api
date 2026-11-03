@@ -45,7 +45,8 @@ module Notices
       keys.each { |k| @notice.runs.build(trip_run: by_key.fetch(k) { raise Error, "No timing #{k}" }) }
     end
 
-    # School routes: "all" or the routes picked (they must be the school's).
+    # School routes: "all" or the routes picked: the school's, of plans in use while the notice runs
+    # (GET /schools/:id/routes?date= lists them).
     def set_routes
       return if @route_ids.nil? || !@notice.for_school?
 
@@ -54,8 +55,10 @@ module Notices
       @notice.route_targets.each(&:mark_for_destruction)
       return if @notice.all_runs?
 
-      allowed = SchoolRoute.joins(:plan).where(school_plans: { school_id: @notice.school_id }).where(id: ids).pluck(:id)
-      raise Error, "Pick routes of this school" if allowed.size != ids.size
+      from = (@notice.starts_at || Time.current).to_date
+      plans = SchoolPlan.where(school_id: @notice.school_id).running_between(from, [ @notice.ends_at&.to_date, from ].compact.max)
+      allowed = SchoolRoute.where(plan: plans, id: ids).pluck(:id)
+      raise Error, "Pick routes in use at this school" if allowed.size != ids.uniq.size
 
       allowed.each { |id| @notice.route_targets.build(school_route_id: id) }
     end

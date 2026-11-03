@@ -28,6 +28,8 @@ module Api
       # PATCH { lock_version, by_client } — by_client: cancelled at the client's request.
       def cancel = act(:cancel?) { |e| e.cancel!(by_client: ActiveModel::Type::Boolean.new.cast(params[:by_client]) || false) }
       def restore = act(:restore?) { |e| e.restore! }
+      # PATCH /occurrences/:id/end { lock_version } — Force End Trip.
+      def end_run = act(:end?) { |e| e.force_end! }
 
       # POST /occurrences/:id/issue { reason } raises; DELETE clears.
       def issue = act(:issue?) { |e| e.raise_issue!(params.require(:reason)) }
@@ -97,7 +99,7 @@ module Api
       end
 
       def set_occurrence
-        @occ = policy_scope(TripOccurrence).includes(*OccurrenceWindow::INCLUDES, :cancelled_by, :issue_raised_by).find(params[:id])
+        @occ = policy_scope(TripOccurrence).includes(*OccurrenceWindow::INCLUDES, :cancelled_by, :issue_raised_by, :ended_by).find(params[:id])
       end
 
       def act(query)

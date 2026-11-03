@@ -1,4 +1,4 @@
-# Maintenance dialog (Scheduler toolbar, empty slot, Fleet > Maintenance): plan a visit, record the work, cancel.
+# Maintenance dialog (Scheduler toolbar, empty slot, Fleet > Maintenance): plan a visit, record the work, cancel, delete.
 module Api
   module V1
     class MaintenanceVisitsController < BaseController
@@ -58,6 +58,12 @@ module Api
         visit = authorize find
         visit.update!(status: "cancelled")
         render_data visit, MaintenanceVisitBlueprint, view: :full
+      end
+
+      # DELETE — any saved visit, with its lines and invoice files; a completed one's cost leaves Vehicle Financials.
+      def destroy
+        authorize(find).destroy!
+        head :no_content
       end
 
       private

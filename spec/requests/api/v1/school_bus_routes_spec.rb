@@ -116,4 +116,22 @@ RSpec.describe "School Bus routes on the Scheduler" do
     get api_v1_occurrence_path(route_runs("2026-11-02", "2026-11-02", route: f[:pm_route]).first[:id])
     expect(json.dig(:data, :notice)).to be_nil
   end
+
+  it "lists the routes in use for the notice's route picker and refuses others" do
+    draft = within_tenant(company) do
+      f[:school].plans.create!(name: "AM Plan 2", session: "am", effective_from: Date.new(2026, 11, 2), in_use: false)
+                .routes.create!(number: 1, label: "AM 1", start_time: "06:40", end_time: "07:30")
+    end
+    get api_v1_school_routes_path(f[:school]), params: { date: "2026-11-02" }
+    expect(json[:data]).to eq([ { id: f[:route].id, label: "AM 1", session: "am", plan_id: f[:route].school_plan_id, riders_count: 23,
+                                  start_time: "06:30", end_time: "07:20", vehicle_plate: "PD6604E" },
+                                { id: f[:pm_route].id, label: "PM 1", session: "pm", plan_id: f[:pm_route].school_plan_id, riders_count: 23,
+                                  start_time: "13:40", end_time: "14:30", vehicle_plate: nil } ])
+    get api_v1_school_routes_path(f[:school]), params: { date: "2026-09-30" }
+    expect(json[:data]).to eq([])
+
+    post api_v1_notices_path, params: { notice: { audience: "school", school_id: f[:school].id, to_parents: true, banner: true, message: "Late" },
+                                        period_minutes: 30, route_ids: [ draft.id ] }, as: :json
+    expect(json.dig(:error, :message)).to eq("Pick routes in use at this school")
+  end
 end

@@ -14,6 +14,17 @@ module Api
         render_list list, SchoolPlanBlueprint
       end
 
+      # GET /schools/:school_id/routes?date= — the routes of the plans in use that day (AM, PM, CCA): the route picker of
+      # School route notices.
+      def running_routes
+        school = find_school
+        authorize Stop, :index?
+        date = params[:date].present? ? Date.iso8601(params[:date]) : Date.current
+        routes = SchoolRoute.where(plan: school.plans.running_between(date, date)).includes(:plan, vehicle_changes: :vehicle)
+                            .sort_by { [ SchoolPlan::SESSIONS.keys.index(it.plan.session), it.number ] }
+        render json: { data: routes.map { running_route(it, date) } }
+      end
+
       # POST /schools/:school_id/plans { session } — Draw Routes: an empty plan to draw routes on.
       def create
         school = find_school
@@ -88,6 +99,12 @@ module Api
       end
 
       private
+
+      def running_route(route, date)
+        bus = route.vehicle_changes.select { it.effective_from <= date }.last&.vehicle
+        { id: route.id, label: route.label, session: route.plan.session, plan_id: route.school_plan_id, riders_count: route.riders_count,
+          start_time: route.start_time_hm, end_time: route.end_time_hm, vehicle_plate: bus&.plate }
+      end
 
       def find_school = policy_scope(School).find(params[:school_id])
       def find(id = params[:id]) = SchoolPlan.where(school: policy_scope(School)).includes(*INCLUDES).find(id)

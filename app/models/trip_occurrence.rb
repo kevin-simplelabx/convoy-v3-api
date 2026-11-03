@@ -39,6 +39,7 @@
 #  client_id           :bigint
 #  company_id          :bigint           not null
 #  driver_id           :bigint
+#  ended_by_id         :bigint
 #  issue_raised_by_id  :bigint
 #  operator_driver_id  :bigint
 #  operator_id         :bigint
@@ -69,6 +70,7 @@
 #  trip_occurrences_client_id_fkey            (client_id => clients.id)
 #  trip_occurrences_company_id_fkey           (company_id => companies.id)
 #  trip_occurrences_driver_id_fkey            (driver_id => drivers.id)
+#  trip_occurrences_ended_by_id_fkey          (ended_by_id => users.id) ON DELETE => nullify
 #  trip_occurrences_issue_raised_by_id_fkey   (issue_raised_by_id => users.id)
 #  trip_occurrences_operator_driver_id_fkey   (operator_driver_id => operator_drivers.id)
 #  trip_occurrences_operator_id_fkey          (operator_id => operators.id)
@@ -106,6 +108,7 @@ class TripOccurrence < ApplicationRecord
   belongs_to :replacement, optional: true
   belongs_to :cancelled_by, class_name: "User", optional: true
   belongs_to :issue_raised_by, class_name: "User", optional: true
+  belongs_to :ended_by, class_name: "User", optional: true
   # Trip History: notes and the driver's report point at the run by (occurrence_id, occurrence_date).
   has_many :history_notes, -> { order(:created_at) }, class_name: "OccurrenceNote", foreign_key: %i[occurrence_id occurrence_date],
                                                       primary_key: %i[id date], inverse_of: :occurrence, dependent: :delete_all

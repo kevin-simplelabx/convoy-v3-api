@@ -64,7 +64,7 @@ the unassigned runs (bottom or right tray) and the workshop visits (purple block
                        "vehicle_id": 14, "plate": "PC8841T", "original_vehicle_id": null, "original_plate": null,
                        "driver": { "kind": "own", "id": 10, "name": "Siti Nurhaliza", "phone": "+6590034455" },
                        "operator_id": null, "pax": 0, "price": "76.19", "trip_value": "1.0", "operator_cost": null,
-                       "status": "scheduled", "grid_status": "ok", "cancelled_at": null, "issue_reason": null, "issue_raised_at": null,
+                       "status": "scheduled", "grid_status": "ok", "cancelled_at": null, "ended_at": null, "issue_reason": null, "issue_raised_at": null,
                        "recurring": true, "color": "#3267D6", "group_key": "g1", "pair_trip_id": null, "is_return": false,
                        "replacement_id": null, "trip_assignment_id": null, "overridden_fields": [], "lock_version": 0 } ],
     "unassigned": [ "same shape as occurrences, vehicle_id null" ],
@@ -237,7 +237,7 @@ Drawer response = the run row plus:
     "replacement": null,
     "notice": { "id": 3, "message": "Running 10 minutes late", "ends_at": "2026-11-02T08:15:00+08:00" },
     "bus_pattern": { "no_fixed_bus": false, "dates": 5, "moved": 3, "suggest": true, "top_vehicle_id": 15, "top_plate": "PD4472H" },
-    "cancelled_by": null, "issue_raised_by": null,
+    "cancelled_by": null, "issue_raised_by": null, "ended_by": null,
     "changes": [ { "at": "2026-11-01T09:12:00+08:00", "by": "Rachel Tan", "action": "update",
                    "changes": { "status": ["scheduled", "cancelled"] } } ]
   }
@@ -251,6 +251,8 @@ Drawer response = the run row plus:
 - `bus_pattern` (recurring shuttle runs): `suggest: true` → show "A different bus on `moved` of its last `dates` dates" with
   "Make `top_plate` the Regular Bus" (= move with `scope: later` to `top_vehicle_id`) and "Set No Fixed Bus" (5.9).
 - `changes`: Changes to This Trip / history of this run.
+- `ended_at` (every run row) is when the run ended: the driver pressed End in the app, or someone used Force End Trip.
+  `ended_by` (drawer) is the person who forced it (null when the driver ended it). Show "Ended by <ended_by> at HH:MM".
 
 ### 5.2 Drawer actions
 
@@ -258,10 +260,11 @@ Drawer response = the run row plus:
 | --- | --- | --- |
 | Cancel | `PATCH /occurrences/:id/cancel` `{ lock_version, by_client }` | `by_client: true` = cancelled at the client's request (Trip History: Cancelled by Client); default by us |
 | Restore | `PATCH /occurrences/:id/restore` `{ lock_version }` | |
+| More › Force End Trip | `PATCH /occurrences/:id/end` `{ lock_version }` | Show it on a run on the road (`grid_status: "live"`). The run ends now: `status: "completed"`, `grid_status: "done"`, `ended_at`, `ended_by`; the planned `ends_at` / `end_time` stay. No undo. `422`: "This run has not started", "This run has already ended", "This run has no bus", "This run is cancelled" |
 | Raise an Issue | `POST /occurrences/:id/issue` `{ reason }` | Only on a run that is done; holds the driver's pay. `422` once the driver's pay for that month is confirmed (HR, Earnings) |
 | Clear Issue | `DELETE /occurrences/:id/issue` | |
-| Change the pick-up time: Today Only | `PATCH /occurrences/:id/time` `{ scope: "today", start_time: "08:20" }` | Every stop moves by the same amount |
-| Change the pick-up time: Every Run From Today | `PATCH /occurrences/:id/time` `{ scope: "from_here", start_time: "07:45" }` | Recurring trips; shuttles: this timing only |
+| Change the pick-up time: Today Only | `PATCH /occurrences/:id/time` `{ scope: "today", start_time: "08:20" }` | Recurring trips only. This run moves (`shift_minutes`, "Moved +20 min"); every stop moves by the same amount |
+| Change the pick-up time: Save (one-off trip) / Every Run From Today | `PATCH /occurrences/:id/time` `{ scope: "from_here", start_time: "07:45" }` | See "Save Time" below; shuttles: this timing only |
 | Undo time change | `PATCH /occurrences/:id/time` `{ scope: "reset" }` | Back to the planned time |
 | Change Vehicle | Same as a drop: `move_preview` then `move` (section 3) | |
 | Back to Regular Bus | `PATCH /occurrences/:id/regular_bus` | Drops a bus set by hand on this run |
@@ -275,6 +278,16 @@ Drawer response = the run row plus:
 
 All of them answer with the drawer data of 5.1 (except tracking link and delete). Time changes are refused on school route
 runs ("School route times are set in School Bus").
+
+**Save Time (`scope: "from_here"`).** A one-off trip (`recurring: false`) shows one **Save** button; a recurring trip shows
+**Today Only** and **Every Run From Today**. What `from_here` does depends on the run:
+
+| Run | Result |
+| --- | --- |
+| A one-off trip, or the first run of a recurring trip (with no earlier time change) | The trip itself moves: its start and end and every stop time (on a shuttle: this timing's times) move by the same amount. The flight time stays. Any Today Only shift on its runs is dropped, so the run shows the new time with `shift_minutes: 0` (no "Moved" label), and the trip form (`GET /trips/:id`) shows it too |
+| A later run of a recurring trip | The trip is split from this date: this run and the later ones move, earlier runs keep the old time (`GET /trips/:id` keeps the first time) |
+
+`422`: "Pick a different time", "This run has started", "Pick a time on the same day".
 
 ### 5.3 Passenger List (School Run)
 
@@ -678,7 +691,8 @@ observed Monday for a Sunday holiday) is in [settings.md § 4](settings.md#4-cal
 | Plan the Visit (save) | `POST /maintenance_visits` (or `PATCH /maintenance_visits/:id`) |
 | Record the Work | `PATCH /maintenance_visits/:id` with `status: "completed"` + odometer and lines |
 | Read the invoice | `POST /document_reads` `kind=maintenance_invoice`, then save with `document_read_id` |
-| Cancel visit | `PATCH /maintenance_visits/:id/cancel` |
+| Cancel visit | `PATCH /maintenance_visits/:id/cancel` (scheduled visits) |
+| Delete ("Delete this maintenance record?") | `DELETE /maintenance_visits/:id` → `204`. Any saved visit (scheduled, completed or cancelled); its line items and invoice files go with it. A completed visit's cost leaves Vehicle Financials, the spend tiles and the Dashboard |
 | Fleet > Maintenance tabs | `GET /maintenance_visits?tab=upcoming|to_record|completed|cancelled&from=&to=&vehicle_id=` |
 | Workshops window | `GET /workshops`, `POST /workshops` `{ workshop: { name, address, phone } }`, `PATCH`, `DELETE` (not when used) |
 
@@ -726,6 +740,12 @@ Send Notice in the drawer opens it prefilled with the trip (or the school) and t
 
 - Start: `start: "now"` (Immediate) or `start: "at"` with `notice[starts_at]`. End: `period_minutes` (5, 15, 20, 25, 30 or any) or `notice[ends_at]`.
 - Trip notices: `run_keys`: `["all"]` or the timings (`d1r0`...). School route notices: `audience: "school"`, `school_id`, `route_ids: ["all"]` or route ids.
+- **School route picker**: `GET /schools/:id/routes?date=<the notice's start day>` (default today) → the routes of the plans in
+  use that day, AM then PM then CCA, by route number:
+  `{ "data": [ { "id": 51, "label": "AM 1", "session": "am", "plan_id": 21, "riders_count": 18, "start_time": "06:35", "end_time": "07:20", "vehicle_plate": "PD6604E" } ] }`.
+  Chips = `label`; "All Routes" = `route_ids: ["all"]`; the audience line "N riders on M routes" adds up `riders_count`.
+  An empty list = "No routes in use for this school". Schools for the picker: `GET /schools`.
+- `route_ids` must be routes of plans in use while the notice runs: else `422` "Pick routes in use at this school".
 - Refused: WhatsApp (`notice[whatsapp]`) "WhatsApp is not available yet"; `{min}` / `{time}` left in the message; no audience; no channel; end before start; editing an active or ended notice.
 - Push and SMS are recorded in `sent` (sending comes with the apps).
 

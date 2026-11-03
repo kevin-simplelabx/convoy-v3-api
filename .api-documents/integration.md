@@ -98,7 +98,7 @@ Read [README.md](README.md#base-url-and-format) fully, then build one client mod
 | 1 | Sign in with `POST /session`, keep `data.token` and send `Authorization: Bearer <token>` on every request; on any `401` drop the token and go to sign-in; no cookies | [README § Signing in](README.md#signing-in-bearer-token) |
 | 2 | Load `GET /session` on start: user `role` / `permissions` (show or hide menus and buttons), company `date_format` / `time_format` / theme; Convoy Admin picks a company with `PATCH /session` | [README § Signing in](README.md#signing-in-bearer-token) |
 | 3 | Unwrap `{ data }` and lists `{ data, meta }`; page with `?page=&limit=`; pass extra `meta` (counts, facets, horizon) to the screen | [README § Responses](README.md#responses) |
-| 4 | Turn `{ error: { code, message, details } }` into one error type: show `message` as is, map `details` to form fields on `422`, reload on `409` | [README § Errors](README.md#errors) |
+| 4 | Turn `{ error: { code, message, details } }` into one error type: show `message` as is, map `details` to form fields on `422`, reload on `409`, wait `Retry-After` seconds on `429` | [README § Errors](README.md#errors), [Rate limits](README.md#rate-limits) |
 | 5 | Send back `lock_version` when saving trips and runs | [README § Optimistic locking](README.md#optimistic-locking-lock_version) |
 | 6 | Upload with `multipart/form-data`; prefix the API host to file `url` / `thumb_url` (signed, 1 hour, no auth header) | [README § Files](README.md#files-uploads-and-downloads) |
 | 7 | One helper for background reads: create, poll every 2–3 s until `done` / `failed`, save with `document_read_id` | [README § Reading documents](README.md#reading-documents-with-claude-background-reads) |

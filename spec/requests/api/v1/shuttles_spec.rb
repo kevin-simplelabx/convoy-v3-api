@@ -99,4 +99,17 @@ RSpec.describe "Corporate Shuttles" do
     expect(json.dig(:data, :runs).pluck(:id)).to eq([ runs[0][:id], runs[2][:id] ])
     expect(json.dig(:data, :price_table)).to eq([])
   end
+
+  it "saves a new time on a one-off shuttle by moving that run of the timetable" do
+    travel_to Time.zone.local(2026, 11, 2, 6, 0)
+    post api_v1_trips_path, params: { trip: shuttle.merge(starts_on: "2026-11-04", days: [], end_mode: "none") }, as: :json
+    id = json.dig(:data, :id)
+    get api_v1_occurrences_path, params: { trip_id: id, date: "2026-11-04" }
+    occ = json[:data].find { |o| o[:run_key] == "d1r1" && o[:slot_no] == 1 }
+
+    patch time_api_v1_occurrence_path(occ[:id]), params: { scope: "from_here", start_time: "08:40" }, as: :json
+    expect(json[:data]).to include(start_time: "08:40", end_time: "09:00", shift_minutes: 0)
+    get api_v1_trip_path(id)
+    expect(json.dig(:data, :runs).map { |r| r[:times] }).to eq([ %w[07:30 07:40 07:55], [ "08:40", nil, "09:00" ], %w[18:00 18:15 18:25] ])
+  end
 end

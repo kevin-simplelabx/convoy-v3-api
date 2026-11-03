@@ -65,4 +65,22 @@ RSpec.describe "Maintenance page" do
     get summary_api_v1_maintenance_visits_path, params: { vehicle_id: f[:van].id }
     expect(json.dig(:data, :spend, :total)).to eq("218.0")
   end
+
+  it "deletes a visit of any status, with its lines, and its cost leaves the spend" do
+    done = within_tenant(company) { MaintenanceVisit.find_by!(date: Date.new(2026, 11, 1)) }
+    delete api_v1_maintenance_visit_path(done)
+    expect(response).to have_http_status(:no_content)
+    expect(within_tenant(company) { MaintenanceLine.where(maintenance_visit_id: done.id).count }).to eq(0)
+    get summary_api_v1_maintenance_visits_path
+    expect(json.dig(:data, :kpis)).to include(spend_this_month: "0.0", last_12_months: "600.0")
+
+    cancelled = within_tenant(company) { MaintenanceVisit.cancelled.first! }
+    delete api_v1_maintenance_visit_path(cancelled)
+    expect(response).to have_http_status(:no_content)
+
+    sign_in_as(create(:user, :convoy_admin))
+    patch api_v1_session_path, params: { company_id: company.id }, as: :json
+    delete api_v1_maintenance_visit_path(within_tenant(company) { MaintenanceVisit.scheduled.first! })
+    expect(response).to have_http_status(:forbidden)
+  end
 end

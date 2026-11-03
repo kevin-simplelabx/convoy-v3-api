@@ -194,7 +194,10 @@ Errors (`422` unless noted):
 - "Too many codes asked for. Try again in an hour" (5 codes an hour)
 - Set password: `details.password` "Password needs at least 8 characters", `details.password_confirmation` "doesn't match Password";
   "This link has expired. Ask for a new code" (the token works once, for 15 minutes)
-- Sign in: `401` "Email or password is incorrect". Too many tries from one IP: `429`.
+- Sign in: `401` "Email or password is incorrect".
+- Too many tries: `429` `too_many_requests` with `Retry-After` and `details.retry_after` (seconds). The email step (lookup,
+  send a code) allows 30 a minute per IP; the password and code steps 10 a minute per IP and 5 a minute per email, so
+  mistyped emails do not lock the password step. See [README § Rate limits](README.md#rate-limits).
 
 ### 5.2 Session
 

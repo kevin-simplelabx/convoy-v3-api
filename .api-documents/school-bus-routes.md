@@ -87,6 +87,7 @@ run. Poll `GET /routing_runs/:id` until `status` is `done` or `failed` (it takes
 | --- | --- |
 | `GET /schools/:id/plans?session=am` | The plan list, newest first |
 | `GET /plans/:id` | One plan (fields below) |
+| `GET /schools/:id/routes?date=` | The routes of the plans in use that day (default today), AM / PM / CCA by number: `[{ id, label, session, plan_id, riders_count, start_time, end_time, vehicle_plate }]`. A light list for pickers (School route notices, [scheduler.md § 12](scheduler.md#12-notice-form)) |
 | `POST /schools/:id/plans { session }` | **Draw Routes**: an empty plan (`source: "manual"`) to draw routes on |
 | `PATCH /plans/:id { plan: { name, effective_from, effective_to } }` | Rename, or change the run dates |
 | `DELETE /plans/:id` | Delete a draft (only drafts) |

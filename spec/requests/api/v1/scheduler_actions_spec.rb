@@ -48,6 +48,33 @@ RSpec.describe "Scheduler drops and assignments" do
     expect(json.dig(:data, :vehicle_slots, 0, :plate)).to eq("PD4472H")
   end
 
+  it "saves a new time on a one-off trip by moving the trip itself" do
+    timed = [ { position: 0, name: "A", use: "pu", scheduled_time: "08:00" }, { position: 1, name: "B", use: "do", scheduled_time: "08:40" } ]
+    id = create_trip(starts_on: "2026-11-04", stops_attributes: timed)
+    occ = run(id, "2026-11-04")
+    patch time_api_v1_occurrence_path(occ[:id]), params: { scope: "today", start_time: "08:10" }, as: :json
+    expect(json[:data]).to include(shift_minutes: 10)
+
+    patch time_api_v1_occurrence_path(occ[:id]), params: { scope: "from_here", start_time: "08:30" }, as: :json
+    expect(json[:data]).to include(start_time: "08:30", end_time: "09:30", shift_minutes: 0, overridden_fields: [])
+    get api_v1_trip_path(id)
+    expect(json[:data]).to include(start_time: "08:30", end_time: "09:30")
+    expect(json.dig(:data, :stops).pluck(:scheduled_time)).to eq(%w[08:30 09:10])
+  end
+
+  it "moves a recurring trip itself from its first run, and splits it from a later run" do
+    id = create_trip(days: [ 1, 2, 3, 4, 5 ], end_mode: "never", starts_on: "2026-11-05")
+    patch time_api_v1_occurrence_path(run(id, "2026-11-05")[:id]), params: { scope: "from_here", start_time: "07:45" }, as: :json
+    get api_v1_trip_path(id)
+    expect(json[:data]).to include(start_time: "07:45", end_time: "08:45")
+
+    patch time_api_v1_occurrence_path(run(id, "2026-11-09")[:id]), params: { scope: "from_here", start_time: "07:30" }, as: :json
+    get api_v1_occurrences_path, params: { trip_id: id, from: "2026-11-05", to: "2026-11-10" }
+    expect(json[:data].pluck(:start_time)).to eq(%w[07:45 07:45 07:30 07:30])
+    get api_v1_trip_path(id)
+    expect(json.dig(:data, :start_time)).to eq("07:45")
+  end
+
   it "moves a recurring run for one date or from that date on (as an assignment)" do
     id = create_trip(days: [ 1, 2, 3, 4, 5 ], end_mode: "never")
     post move_api_v1_occurrence_path(run(id, "2026-11-03")[:id]), params: { vehicle_id: f[:own2].id, scope: "one" }, as: :json

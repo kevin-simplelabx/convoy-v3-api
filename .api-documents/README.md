@@ -135,8 +135,29 @@ Lists are paged:
 | 409 | `conflict` | Someone else changed the record (see `lock_version`) |
 | 410 | `gone` | A public tracking link has closed |
 | 422 | `invalid` / `unprocessable_content` | Validation failed or a business rule was broken; `message` is a sentence to show the user as is; `details` lists field errors |
+| 429 | `too_many_requests` | Too many requests from one IP (or for one email on sign-in). See Rate limits below |
 
 Show `error.message` in the toast. It is written for end users and matches the wording of the Convoy OS prototype.
+
+### Rate limits
+
+A refused request answers `429` with a `Retry-After` header (seconds) and the usual error object:
+
+```json
+{ "error": { "code": "too_many_requests", "message": "Too many tries. Try again in 42 seconds", "details": { "retry_after": 42 } } }
+```
+
+Show the message, and keep the button disabled for `retry_after` seconds (counting down if you like).
+
+| What | Limit |
+| --- | --- |
+| Staff sign-in `POST /session` | 10 a minute per IP, 5 a minute per email |
+| Client Portal email step: `POST /portal/session/lookup`, `POST /portal/session/code` | 30 a minute per IP (and 5 codes an hour per account, a `422`) |
+| Client Portal password step: `POST /portal/session`, `POST /portal/session/verify`, `POST /portal/password` | 10 a minute per IP, 5 a minute per email (not for `/portal/password`) |
+| Share Form answers `POST /public/share_forms/:token` | 10 an hour per IP |
+| Everything else under `/api` | 300 a minute per IP |
+
+The limits count fixed one-minute (or one-hour) windows, so the wait is at most the length of the window.
 
 ## Optimistic locking (`lock_version`)
 

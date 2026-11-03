@@ -2,7 +2,7 @@
 class TripOccurrenceBlueprint < ApplicationBlueprint
   fields :key, :date, :trip_id, :trip_run_id, :run_key, :slot_no, :part, :trip_label, :kind, :title, :route_text, :client_id,
          :pax, :status, :vehicle_id, :original_vehicle_id, :operator_id, :price, :trip_value, :operator_cost, :shift_minutes,
-         :issue_reason, :issue_raised_at, :cancelled_at, :starts_at, :ends_at, :ends_next_day, :overridden_fields, :lock_version,
+         :issue_reason, :issue_raised_at, :cancelled_at, :ended_at, :starts_at, :ends_at, :ends_next_day, :overridden_fields, :lock_version,
          :replacement_id, :trip_assignment_id
   field(:start_time) { |o| o.start_time_hm }
   field(:end_time) { |o| o.end_time_hm }
@@ -49,6 +49,8 @@ class TripOccurrenceBlueprint < ApplicationBlueprint
     field(:route) { |o| o.route_detail }
     field(:cancelled_by) { |o| o.cancelled_by&.name }
     field(:issue_raised_by) { |o| o.issue_raised_by&.name }
+    # Force End Trip: who ended it (null when the driver ended it in the app).
+    field(:ended_by) { |o| o.ended_by&.name }
     # Shuttle runs: how often this run was on another bus lately (suggest a regular bus or No Fixed Bus).
     field(:bus_pattern) { |o| Occurrences::BusPattern.call(o) }
     field(:changes) do |o|

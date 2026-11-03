@@ -355,7 +355,8 @@ Build the page link from the token (for example `Convoy OS.dc.html?xform=<token>
 - 422 with the first thing to fix as `message` and each field in `details`: "Enter the licence plate", "Enter your name",
   "Enter your mobile number", "Enter the company you drive for".
 - 404 `"This link no longer works. Ask for a new one"` (revoked or unknown token).
-- At most 10 answers per hour from one address (429 `"Too many requests"`).
+- At most 10 answers per hour from one address: `429` `too_many_requests` "Too many tries. Try again in N seconds", with
+  `Retry-After` ([README § Rate limits](README.md#rate-limits)).
 
 ### 4.5 Answers waiting
 
@@ -428,7 +429,9 @@ Columns: Name, Contact (`phone`), Notes. Routes pick an attendant in the School 
 
 Every workshop visit of own buses. The Maintenance dialog (plan a visit, record the work, invoice reading, workshops) is the
 Scheduler's: see [scheduler.md § 11](scheduler.md#11-maintenance-dialog-and-workshops). Schedule Maintenance opens it with
-`GET /maintenance_visits/new?vehicle_id=`; Workshops opens the Workshops window.
+`GET /maintenance_visits/new?vehicle_id=`; Workshops opens the Workshops window. Delete in the dialog
+("Delete this maintenance record?") is `DELETE /maintenance_visits/:id` → `204` for any saved visit (scheduled, completed or
+cancelled); a completed visit's cost leaves the spend tiles below and Vehicle Financials.
 
 ### 7.1 List: `GET /maintenance_visits?tab=upcoming`
 

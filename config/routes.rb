@@ -63,6 +63,7 @@ Rails.application.routes.draw do
         get :stop_assignment, to: "school_stops#assignment"
         post :routing_runs, to: "routing#run"
         get :route_charges, to: "route_money#charges"
+        get :routes, to: "school_plans#running_routes"
         resource :cca_rides, only: %i[show update] do
           post :not_running
         end
@@ -531,7 +532,7 @@ Rails.application.routes.draw do
 
       # Maintenance and notices
       resources :workshops, only: %i[index create update destroy]
-      resources :maintenance_visits, only: %i[index new show create update] do
+      resources :maintenance_visits, only: %i[index new show create update destroy] do
         get :summary, on: :collection
         patch :cancel, on: :member
       end
@@ -569,6 +570,7 @@ Rails.application.routes.draw do
         member do
           patch :cancel
           patch :restore
+          patch :end, action: :end_run
           post :issue
           delete :issue, action: :clear_issue
           patch :time

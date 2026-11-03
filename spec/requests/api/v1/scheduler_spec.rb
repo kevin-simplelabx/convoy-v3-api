@@ -75,6 +75,24 @@ RSpec.describe "Scheduler and runs" do
       expect(json[:data].pluck(:start_time)).to eq(%w[08:00 07:45 07:45])
     end
 
+    it "force ends a run on the road, once" do
+      patch end_api_v1_occurrence_path(run_id), as: :json
+      expect(json.dig(:error, :message)).to eq("This run has not started")
+
+      travel_to Time.zone.local(2026, 11, 4, 8, 30)
+      patch end_api_v1_occurrence_path(run_id), as: :json
+      expect(json[:data]).to include(status: "completed", grid_status: "done", ended_by: user.name, end_time: "09:00")
+      expect(Time.zone.parse(json.dig(:data, :ended_at))).to eq(Time.current)
+
+      patch end_api_v1_occurrence_path(run_id), as: :json
+      expect(json.dig(:error, :message)).to eq("This run has already ended")
+
+      travel_to Time.zone.local(2026, 11, 3, 8, 30) # the one-off trip of that day has no bus
+      get api_v1_occurrences_path, params: { date: "2026-11-03", unassigned: 1 }
+      patch end_api_v1_occurrence_path(json.dig(:data, 0, :id)), as: :json
+      expect(json.dig(:error, :message)).to eq("This run has no bus")
+    end
+
     it "raises an issue only on a run that is done" do
       post issue_api_v1_occurrence_path(run_id), params: { reason: "Late" }, as: :json
       expect(response).to have_http_status(:unprocessable_content)

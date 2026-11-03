@@ -2,6 +2,7 @@
 class TripOccurrencePolicy < ApplicationPolicy
   def cancel? = write?
   def restore? = write?
+  def end? = write?
   def issue? = write?
   def time? = write?
   def move? = write?

@@ -8168,6 +8168,7 @@ CREATE TABLE public.trip_occurrences (
     cancelled_by_client boolean DEFAULT false NOT NULL,
     max_delay_minutes integer,
     started_at timestamp with time zone,
+    ended_by_id bigint,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
     CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 )
@@ -8239,6 +8240,7 @@ CREATE TABLE public.trip_occurrences_y2026m09 (
     cancelled_by_client boolean DEFAULT false NOT NULL,
     max_delay_minutes integer,
     started_at timestamp with time zone,
+    ended_by_id bigint,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
     CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 );
@@ -8295,6 +8297,7 @@ CREATE TABLE public.trip_occurrences_y2026m10 (
     cancelled_by_client boolean DEFAULT false NOT NULL,
     max_delay_minutes integer,
     started_at timestamp with time zone,
+    ended_by_id bigint,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
     CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 );
@@ -8351,6 +8354,7 @@ CREATE TABLE public.trip_occurrences_y2026m11 (
     cancelled_by_client boolean DEFAULT false NOT NULL,
     max_delay_minutes integer,
     started_at timestamp with time zone,
+    ended_by_id bigint,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
     CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 );
@@ -8407,6 +8411,7 @@ CREATE TABLE public.trip_occurrences_y2026m12 (
     cancelled_by_client boolean DEFAULT false NOT NULL,
     max_delay_minutes integer,
     started_at timestamp with time zone,
+    ended_by_id bigint,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
     CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 );
@@ -8463,6 +8468,7 @@ CREATE TABLE public.trip_occurrences_y2027m01 (
     cancelled_by_client boolean DEFAULT false NOT NULL,
     max_delay_minutes integer,
     started_at timestamp with time zone,
+    ended_by_id bigint,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
     CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 );
@@ -8519,6 +8525,7 @@ CREATE TABLE public.trip_occurrences_y2027m02 (
     cancelled_by_client boolean DEFAULT false NOT NULL,
     max_delay_minutes integer,
     started_at timestamp with time zone,
+    ended_by_id bigint,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
     CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 );
@@ -8575,6 +8582,7 @@ CREATE TABLE public.trip_occurrences_y2027m03 (
     cancelled_by_client boolean DEFAULT false NOT NULL,
     max_delay_minutes integer,
     started_at timestamp with time zone,
+    ended_by_id bigint,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
     CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 );
@@ -24268,6 +24276,14 @@ ALTER TABLE public.trip_occurrences
 
 
 --
+-- Name: trip_occurrences trip_occurrences_ended_by_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE public.trip_occurrences
+    ADD CONSTRAINT trip_occurrences_ended_by_id_fkey FOREIGN KEY (ended_by_id) REFERENCES public.users(id) ON DELETE SET NULL;
+
+
+--
 -- Name: trip_occurrences trip_occurrences_issue_raised_by_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -24354,6 +24370,7 @@ ALTER TABLE public.trip_occurrences
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261103170000'),
 ('20261103150000'),
 ('20261103140000'),
 ('20261103130300'),

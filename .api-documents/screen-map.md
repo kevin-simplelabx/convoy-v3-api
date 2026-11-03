@@ -83,8 +83,9 @@ Rail icon `calendar_view_week`.
 | --- | --- | --- |
 | Open the drawer | `GET /occurrences/:id` | [scheduler § 5.1](scheduler.md#51-open-a-run-get-occurrencesid) |
 | Cancel / Restore | `PATCH /occurrences/:id/cancel` / `restore` | [scheduler § 5.2](scheduler.md#52-drawer-actions) |
+| More › Force End Trip (run on the road) | `PATCH /occurrences/:id/end` | [scheduler § 5.2](scheduler.md#52-drawer-actions) |
 | Raise an Issue / Clear Issue | `POST` / `DELETE /occurrences/:id/issue` | [scheduler § 5.2](scheduler.md#52-drawer-actions) |
-| Change the pick-up time (Today Only / Every Run From Today / Undo) | `PATCH /occurrences/:id/time` | [scheduler § 5.2](scheduler.md#52-drawer-actions) |
+| Change the pick-up time (one-off: Save; recurring: Today Only / Every Run From Today; Undo) | `PATCH /occurrences/:id/time` | [scheduler § 5.2](scheduler.md#52-drawer-actions) |
 | Change Vehicle | `move_preview` then `move` | [scheduler § 3](scheduler.md#3-drag-and-drop) |
 | Back to Regular Bus | `PATCH /occurrences/:id/regular_bus` | [scheduler § 5.2](scheduler.md#52-drawer-actions) |
 | Assign External Vehicle | `POST /vehicles/external`, then `move` | [External Vehicle](#new-external-vehicle) |
@@ -462,6 +463,7 @@ Rail footer icon `settings`.
 | New visit (defaults) | `GET /maintenance_visits/new?vehicle_id=&date=&start_time=` | [scheduler § 11](scheduler.md#11-maintenance-dialog-and-workshops) |
 | Open a visit (purple block) | `GET /maintenance_visits/:id` | [scheduler § 11](scheduler.md#11-maintenance-dialog-and-workshops) |
 | Plan the Visit / Record the Work / Cancel visit | `POST /maintenance_visits` or `PATCH /maintenance_visits/:id` / `PATCH /maintenance_visits/:id` (`status: completed`) / `PATCH /maintenance_visits/:id/cancel` | [scheduler § 11](scheduler.md#11-maintenance-dialog-and-workshops) |
+| Delete ("Delete this maintenance record?") | `DELETE /maintenance_visits/:id` | [scheduler § 11](scheduler.md#11-maintenance-dialog-and-workshops) |
 | Read the invoice | `POST /document_reads` `kind: maintenance_invoice` | [scheduler § 11](scheduler.md#11-maintenance-dialog-and-workshops) |
 | Workshops window | `GET` / `POST /workshops`, `PATCH` / `DELETE /workshops/:id` | [scheduler § 11](scheduler.md#11-maintenance-dialog-and-workshops) |
 
@@ -471,6 +473,7 @@ Rail footer icon `settings`.
 | --- | --- | --- |
 | Templates | `GET /notice_templates` | [scheduler § 12](scheduler.md#12-notice-form) |
 | Send / Edit (scheduled) | `POST /notices` / `PATCH /notices/:id` | [scheduler § 12](scheduler.md#12-notice-form) |
+| School Routes: school picker / route chips | `GET /schools` / `GET /schools/:id/routes?date=` | [scheduler § 12](scheduler.md#12-notice-form) |
 
 ### New External Vehicle
 
