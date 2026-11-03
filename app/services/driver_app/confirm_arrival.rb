@@ -17,6 +17,7 @@ module DriverApp
       event = Runs.event_for(@occ, target)
       at = arrival_time(target, event) or return
       event.update!(arrived_at: at, source: event.persisted? ? event.source : "telematics")
+      TripHistory::Punctuality.call(@occ)
       target[:position]
     end
 

@@ -7,7 +7,7 @@ module TripHistory
                  { history_notes: :author, driver_report: :photos, correction: [ :vehicle, :driver, :stops, { logs: :user } ],
                    stop_events: [], trip_summary: [], company: [], replacement: %i[vehicle driver operator_driver], disposal: %i[runs extensions],
                    trip: [ :standby, :created_by, { stops: [], runs: :times } ], trip_run: :times,
-                   school_route: [ :stops, :attendant, { plan: :school } ] } ].freeze
+                   passenger_marks: [], school_route: [ :attendant, { stops: :riders, plan: :school } ] } ].freeze
 
     def self.call(occ) = new(occ).call
 
@@ -30,7 +30,7 @@ module TripHistory
         vehicle: used_vehicle, original_vehicle: vehicle(@occ.original_vehicle),
         operator: @occ.operator&.slice(:id, :name, :kind), crew:, stops:, stop_summary:, has_track: @occ.trip_summary&.ping_count.to_i.positive?,
         speed:, driving_summary:, trip_info:, standby:, point_of_contact:,
-        passengers: @trip&.school_run? ? SchoolRuns::Passengers.call(@occ) : nil, driver_report:, issue:,
+        passengers:, driver_report:, issue:,
         replacement: @occ.replacement && ReplacementBlueprint.render_as_hash(@occ.replacement.decorate),
         driver_end: @occ.driver_end && { kind: @occ.driver_end, reason: @occ.driver_end_reason, on_board: @occ.end_on_board },
         disposal: @occ.disposal && DriverDisposalBlueprint.render_as_hash(@occ.disposal.decorate),
@@ -39,6 +39,13 @@ module TripHistory
     end
 
     private
+
+    # The Passenger List: School Run (the route list) or School Bus (the route's children), with what was marked on the run.
+    def passengers
+      if @occ.school_route then Occurrences::Passengers.stop_list(@occ)
+      elsif @trip&.school_run? then SchoolRuns::Passengers.call(@occ)
+      end
+    end
 
     # Why it did not run: the calendar's reason, or who cancelled it and for whom.
     def not_run

@@ -1,6 +1,7 @@
 # What a driver earns in a month from bonuses (Earnings and the Salary Simulator). Trip Target bonuses are worked out
 # from the month's trips: daily (each day), weekly (Monday–Sunday weeks inside the month), monthly. On-time and
-# attendance bonuses only in the simulator (from the percentages typed in). Quarterly and longer periods are not
+# attendance bonuses: in Earnings from the Convoy Driver app's records (Pay::Reliability), in the simulator from the
+# percentages typed in. Quarterly and longer periods are not
 # worked out for one month. A bonus overlapping the scheme's own incentive of the same period adds to it, replaces it
 # (supercede) or gives way (prevail). Paid at the end of the period / next payroll counts this month; later payments are listed.
 module Pay
@@ -19,7 +20,7 @@ module Pay
       scheme_ids = @result.parts.filter_map { |p| p.scheme&.id }
       return [] if scheme_ids.empty?
 
-      PayBonus.kept.includes(:tiers, :payments, :bonus_schemes, :bonus_drivers).select do |b|
+      PayBonus.kept.includes(:tiers, :payments, :bonus_schemes, :bonus_drivers, :excluded_periods).select do |b|
         b.covers?(@month, @month.end_of_month) && (b.all_schemes? || b.bonus_schemes.any? { |s| scheme_ids.include?(s.pay_scheme_id) }) && joined?(b)
       end.filter_map { |b| work_out(b) }
     end
@@ -62,11 +63,15 @@ module Pay
     end
 
     def reliability(b)
-      value = b.reliability_otp? ? @on_time : @attendance
-      return nil if value.nil? || !b.every_monthly?
+      return nil unless b.every_monthly?
+
+      value = @driver ? Reliability.call(driver: @driver, month: @month, bonus: b) : (b.reliability_otp? ? @on_time : @attendance)
+      what = b.reliability_otp? ? "on time" : "attendance"
+      return [ 0.to_d, 0, "No #{b.reliability_otp? ? 'arrivals' : 'trips'} recorded yet for #{what}" ] if value.nil? && @driver
+      return nil if value.nil?
 
       tier = b.tier_for(value.to_d)
-      [ tier ? tier.amount : 0.to_d, tier&.points.to_i, "#{value}% #{b.reliability_otp? ? 'on time' : 'attendance'}" ]
+      [ tier ? tier.amount : 0.to_d, tier&.points.to_i, "#{value}% #{what}" ]
     end
 
     # [amount, adjustment to the scheme's incentive] by the overlap rule of the period.

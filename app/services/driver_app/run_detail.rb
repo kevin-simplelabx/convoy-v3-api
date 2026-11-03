@@ -11,7 +11,7 @@ module DriverApp
 
     def call
       points = Occurrences::Stops.detailed(@occ)
-      passengers = Passengers.call(@occ, points:)
+      passengers = Occurrences::Passengers.call(@occ, points:)
       RunList.new(member: @member, runs: [ @occ ]).card(@occ).merge(
         trip_value: Runs.trip_value(@occ, @member), notes: @trip&.notes, airport:, disposal:, series:, standby:, attachments:,
         contacts:, contractor:, replacement:, points: with_record(points, passengers), passengers:,

@@ -22,6 +22,8 @@ module DriverApp
     SKIP_TRIP_REASONS = [ "Traffic Congestion", "Permission granted by Supervisor/Manager" ].freeze
     SKIP_STOP_REASONS = [ "No Passengers", "Passengers are late", "Traffic Congestion", "Instruction given by supervisor/client" ].freeze
     START_EARLY = 60.minutes
+    # Actions that record arrivals at points: On Time (Trip History, Dashboard) is worked out again after them.
+    TIMED = %w[arrive leave skip_stop route complete force_end disposal_start disposal_end].freeze
     UUID = /\A\h{8}-\h{4}-\h{4}-\h{4}-\h{12}\z/
 
     def initialize(account:, member:, occ:, action:, params:)
@@ -45,6 +47,7 @@ module DriverApp
         @at = at
         check_run!
         public_send(@action)
+        TripHistory::Punctuality.call(@occ) if TIMED.include?(@action)
         DriverAppAction.create!(company_id: @occ.company_id, driver_account: @account, client_id:, occurrence: @occ, kind: @action, at: @at,
                                 payload:)
       end
@@ -230,7 +233,7 @@ module DriverApp
 
     def event_for(point) = Runs.event_for(@occ, point)
 
-    def passengers = @passengers ||= Passengers.call(@occ.tap { it.passenger_marks.reset }, points:)
+    def passengers = @passengers ||= Occurrences::Passengers.call(@occ.tap { it.passenger_marks.reset }, points:)
 
     # Children who should get on or off here and are not ticked yet.
     def missing_at(point)

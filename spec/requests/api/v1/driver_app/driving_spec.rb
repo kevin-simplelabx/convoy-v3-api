@@ -80,11 +80,17 @@ RSpec.describe "Driver app driving" do
 
     within_tenant(company) do
       occ.reload
-      expect(occ).to have_attributes(driver_end: "completed", started_at: Time.zone.local(2026, 11, 3, 7, 30))
+      expect(occ).to have_attributes(driver_end: "completed", started_at: Time.zone.local(2026, 11, 3, 7, 30), max_delay_minutes: -2)
       expect(occ.stop_events.order(:position).pluck(:position, :on_board, :source)).to eq([ [ 0, 7, "driver_app" ], [ 2, 0, "driver_app" ] ])
       expect(occ.driver_report).to have_attributes(note: "Clementi pick-up B is blocked by roadworks", driver_name: "Kumar")
       expect(DriverAppAction.where(occurrence_id: occ.id).pluck(:kind)).to eq(%w[start arrive count leave arrive complete])
     end
+
+    travel_to Time.zone.local(2026, 11, 4, 9, 0)
+    OccurrenceCompleteJob.perform_now
+    sign_in_as(create(:user, :admin, company:))
+    get api_v1_trip_history_run_path(occ.id)
+    expect(json[:data]).to include(on_time: "on_time")
   end
 
   it "keeps one trip on the road, force ends with a reason, and skips a trip as Trip History shows" do
@@ -179,6 +185,20 @@ RSpec.describe "Driver app driving" do
       sign_in_as(create(:user, :admin, company:))
       get api_v1_school_live_path(route.plan.school), params: { date: day.iso8601 }
       expect(json.dig(:data, :kpis, :riders)).to include(at_school: 1, not_required: 2, waiting: 1)
+
+      travel_to Time.zone.local(2026, 11, 4, 9, 0)
+      OccurrenceCompleteJob.perform_now
+      get api_v1_trip_history_run_path(occ.id)
+      list = json.dig(:data, :passengers)
+      expect(list[:list]).to eq("Term 4 AM")
+      expect(list[:stops].map { [ it[:name], it[:time], it[:students].map { |k| [ k[:key], k[:status] ] } ] }).to eq([
+        [ "Blk 101 Bedok North", "06:30", [ %w[S-1 alighted], %w[S-2 bus_not_required] ] ],
+        [ "Blk 32 Siglap", "06:45", [ %w[S-3 expected] ] ],
+        [ "Blk 9 Kembangan", "06:55", [ %w[S-4 not_boarding] ] ]
+      ])
+      expect(list.dig(:stops, 0, :students, 0)).to include(name: "Child 1", board_method: "qr", by: "Kumar", boarded_at: be_present, alighted_at: be_present)
+      expect(list.dig(:stops, 0, :students, 1)).to include(reason: "Unwell")
+      expect(json[:data]).to include(on_time: "on_time")
     end
   end
 end

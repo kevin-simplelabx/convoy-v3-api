@@ -299,8 +299,15 @@ covers the month and the scheme (Earnings: also the driver's eligibility and sig
 
 - Trip Target: daily — each day ("12 of 21 days reached a tier"); weekly — Monday–Sunday weeks inside the month; monthly —
   the month. The highest tier reached is paid (`rate_increase`: amount × trips).
-- On-time / attendance: simulator only, from `on_time_percent` / `attendance_percent` (default 100). Quarterly and longer:
-  "…periods are not worked out for one month".
+- On-time / attendance (monthly): the simulator uses `on_time_percent` / `attendance_percent` (default 100). Earnings works
+  them out from what the Convoy Driver app recorded over the bonus's days in the month (its start / end), less its Excluded
+  Days, up to now — `sub` "95.0% on time", "71.4% attendance":
+  - **on time**: of the completed runs with arrivals recorded, the share within the company's On Time allowance (Company
+    Settings, default 5 min; the same figure as Trip History and the Dashboard). Runs with no arrival recorded do not count.
+  - **attendance**: of the runs given to the driver (not cancelled by the office or the client; a trip the driver skipped
+    counts as missed), the share the driver started in the app.
+  - Nothing recorded yet: `amount` 0, `sub` "No arrivals recorded yet for on time" / "No trips recorded yet for attendance".
+- Quarterly and longer: "…periods are not worked out for one month".
 - `adjust`: Bonus Supersedes takes the scheme's incentive of the same period off (negative); Scheme Prevails pays 0.
 - `paid_now`: paid this month (end of period / next payroll) → counted in Earnings `total` and the simulator's
   `total_with_bonuses`; otherwise `note` ("Paid 2 months after the period", "Paid later in 2 parts").
@@ -384,9 +391,9 @@ month), monthly targets, the rejection penalty (simulator only: rejected jobs ar
 
 ## 10. Not built yet
 
-- Rejected jobs, on-time % and attendance % from real data (driver app): the rejection penalty and on-time / attendance
-  bonuses work only in the Salary Simulator.
-- Quarterly / half-yearly / yearly bonuses, bonuses paid months later or in split payments, Excluded Days of attendance bonuses.
+- Rejected jobs from real data: the driver app has no offers to reject yet, so the rejection penalty works only in the
+  Salary Simulator.
+- Quarterly / half-yearly / yearly bonuses, bonuses paid months later or in split payments.
 - Driver app: bonus sign-up, redeeming rewards, the driver's own statement.
 - Payroll: payslips, CPF, allowances and deductions, bank export, maker-checker for driver pay.
 - Shifts that run past midnight; partial weeks at the start and end of a month for weekly targets (as in the prototype).

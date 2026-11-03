@@ -94,7 +94,8 @@ The card fields plus:
   "passengers": [
     { "id": "S-1", "name": "Aaron Lee", "gender": "M", "level": "P3", "address": "Blk 123 Tampines St 11 #08-21",
       "parent_name": "Jason Lee", "parent_phone": "+6598224417", "note": "Allergic to peanuts",
-      "pickup_position": 0, "dropoff_position": 5, "state": "expected", "reason": null, "qr_code": "CVR1-S-1-3f9a0c1b2d4e" }
+      "pickup_position": 0, "dropoff_position": 5, "state": "expected", "reason": null, "qr_code": "CVR1-S-1-3f9a0c1b2d4e",
+      "boarded_at": null, "board_method": null, "alighted_at": null, "alight_method": null, "marked_by": null }
   ],
   "before_you_go": { "not_riding": [ { "id": "S-2", "name": "Emma Lim", "point": "Blk 201 Tampines St 21", "state": "bus_not_required",
                                        "reason": "Unwell. Fever" } ], "skipped_points": [] }
@@ -121,7 +122,8 @@ The card fields plus:
 
 **Passengers** (School Bus and School Run only; `[]` for other runs): every name with their pick-up and drop-off point
 (`position`), `state` (§ 6) and, on School Bus, `qr_code` = the child's boarding pass (match a scanned code with it;
-"Not on this trip" otherwise). `reason`: why Bus Not Required. `parent_phone` for Call Parent.
+"Not on this trip" otherwise). `reason`: why Bus Not Required. `parent_phone` for Call Parent. `boarded_at`, `board_method`,
+`alighted_at`, `alight_method`, `marked_by`: what was recorded (All Passengers).
 
 **Before You Go**: `not_riding` = children not riding today (Bus Not Required from the parent, or marked not boarding) at
 their own stop; `skipped_points` = points that will be skipped ([Edit Route](driving.md#8-edit-route-patch-driverrunsidroute)).

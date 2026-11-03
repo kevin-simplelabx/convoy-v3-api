@@ -634,6 +634,7 @@ School Bus route runs included). Opens on the past 30 days.
 | Summary strip | `trip_label`, `date`, `start_time` (first pick-up), `outcome_label`, `on_time` |
 | Why the trip did not run | `not_run`: `{ kind: "skipped", reason }` (e.g. "Public holiday: Deepavali", a calendar day off) or `{ kind: "cancelled", by_client, by, at }` |
 | Vehicle and crew | `vehicle` (`photo` = `{ url, name, size, content_type, thumb_url }`, else the `default_picture` illustration; `id: null` when a corrected plate is not in the fleet), `original_vehicle` (the bus a replacement took over from), `operator`, `crew.driver`, `crew.attendant` (School Bus) |
+| On Time | `on_time` also for runs driven in the Convoy Driver app (from the arrivals the driver recorded) |
 | Stop record | `stop_summary` (header: Distance, Duration `started_at`–`ended_at`, Stops "`stops_served` of `stops_total` served, `stops_skipped` skipped", Late Stops "stop 2, stop 4", Passengers boarded) and `stops` in travel order (`position` from 0): `planned_time` (the run's timetable; ad hoc trips: the first pick-up only), what happened — `arrived_at`, `departed_at`, `boarded`, `alighted` (corrected first, else recorded; null = N/A), `served` (false → "Not served", or "Not served, trip ended before this stop" when Incomplete), `skipped` ("Passed at `arrived_at`, no passenger to pick up"), `delay_minutes` ("+3 min"), `late` (Late badge), `on_board`; from the Convoy Driver app also `skip_reason` (why the driver skipped it, "Trip force ended", "Skipped by the driver before the trip") and `left_early_missing` (left the pick-up with that many children not there) |
 | Disposal actuals | `disposal`: null, or the Convoy Driver app's record — start / end odometer and photos, `km`, block `clock` (`used_minutes`, `booked_minutes`, `overtime_minutes` billed in 15-minute blocks, `standing_by_minutes`), `runs` (roads, pax), `extensions` (who signed), `released_by` ([driver/disposal.md](../driver/disposal.md#1-the-disposal-block-in-trip-details)) |
 | How the driver ended it | `driver_end`: null, or `{ kind: "completed" \| "forced" \| "skipped", reason, on_board }` from the Convoy Driver app — Force End Trip ("Force ended: Vehicle breakdown · 3 still on board") or Skip Trip (outcome `skipped_by_driver`) |
@@ -643,7 +644,7 @@ School Bus route runs included). Opens on the past 30 days.
 | Trip information | `trip_info` (`run` = "Direction 1, run 2" for shuttles; `recurrence` "Mon to Fri" / "One-off") |
 | Standby area | `standby` (`report_time` = start − minutes) |
 | Point of contact | `point_of_contact.requestor`, `.guest` (null when the guest is the requestor) |
-| Passenger list | `passengers` (School Run; same shape as `GET /occurrences/:id/passengers`) |
+| Passenger list | `passengers`: School Run and School Bus runs, the shape of `GET /occurrences/:id/passengers` (`{ list, stops: [{ name, time, students }] }`; null for other runs). School Bus: `list` = the route plan, each child under their own stop (pick-up in the morning, drop-off in the afternoon), `status` adds `bus_not_required` (the parent, with `reason`), and `board_method` / `alight_method` (`tick`, `qr`, `card`, `palm`), `by` = who marked (the driver in the Convoy Driver app) |
 | Driver's report | `driver_report` (note, photos) or null ("No photos taken on this trip") |
 | Replacements, changes and corrections | `replacement`, `issue`, `changes` (edits to this run), `corrections` (each Correct Record save: who, when, reason, change lines) |
 | Notes / Trip log | `notes` oldest first; `log` newest first |
@@ -706,8 +707,7 @@ cancellation accepted on the Bookings page cancels its runs as by the client.
 | Bookings | Client Portal / Convoy App endpoints (the client records, acknowledges, approves, cancels) | Admin records the client's steps (`acknowledge`, `client_approve`, `client_decline`, cancel requests) |
 | Bookings | Multi-step client approval (several approvers) | One client approval step |
 | Bookings bell | Sending the emails | Emails are recorded only |
-| Trip History | Driver app / telematics ingest (GPS, stop events, driver's report) | Sample data from the seed |
+| Trip History | GPS tracker (hardware) ingest | The Convoy Driver app sends GPS, stop events, attendance and the driver's report |
 | Trip History | Conditions During the Trip (weather / traffic), road names in the replay, Ops on Duty, Linked Incident Report, Client Feedback | Not in the response |
 | Trip History | Correct Record feeding driver pay and invoices | Corrections show in Trip History only |
-| Trip History | Passenger list of a School Bus route run (riders are kept as counts per stop until the School menu is built) | `passengers: null`; `pax` = riders count |
 | Settings | Editing `on_time_minutes` and `speed_limit_kmh` | Defaults 5 min and 80 km/h (shown in `meta`) |
