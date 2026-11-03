@@ -1,13 +1,13 @@
 # OpenAPI 3.0 file for Apidog, built from three sources:
 #   - Rails routes under /api/v1: every endpoint (PUT is left out where PATCH does the same).
-#   - .api-documents/*.md: menu folder, summary and description of the section that names the endpoint.
+#   - .api-documents/*.md and <app>/*.md: menu folder, summary and description of the section that names the endpoint.
 #   - recorded examples (ApiDocs::Recorder): request specs (OPENAPI=1) and the development probe of the seed data:
 #     query params, request bodies, responses and their schemas.
 # One folder per resource (controller) inside its menu: tags "Fleet / Vehicles" and x-apidog-folder "Fleet/Vehicles".
 module ApiDocs
   class OpenApiBuilder
     DOCS = Rails.root.join(".api-documents")
-    MENUS = { "scheduler.md" => "Scheduler", "trips.md" => "Trips", "fleet.md" => "Fleet", "settings.md" => "Settings", "clients.md" => "Clients", "hr.md" => "HR", "finance.md" => "Finance", "reports.md" => "Reports", "live-map.md" => "Live Map", "ops-control.md" => "Ops Control", "school-bus-setup.md" => "School Bus", "school-bus-money.md" => "School Bus", "school-bus-stops.md" => "School Bus", "school-bus-routes.md" => "School Bus", "school-bus-parents.md" => "School Bus", "school-bus-finance.md" => "School Bus", "school-bus-live.md" => "School Bus", "dashboard.md" => "Dashboard", "convoy-admin.md" => "Convoy Admin",
+    MENUS = { "convoy-os/scheduler.md" => "Scheduler", "convoy-os/trips.md" => "Trips", "convoy-os/fleet.md" => "Fleet", "convoy-os/settings.md" => "Settings", "convoy-os/clients.md" => "Clients", "convoy-os/hr.md" => "HR", "convoy-os/finance.md" => "Finance", "convoy-os/reports.md" => "Reports", "convoy-os/live-map.md" => "Live Map", "convoy-os/ops-control.md" => "Ops Control", "convoy-os/school-bus-setup.md" => "School Bus", "convoy-os/school-bus-money.md" => "School Bus", "convoy-os/school-bus-stops.md" => "School Bus", "convoy-os/school-bus-routes.md" => "School Bus", "convoy-os/school-bus-parents.md" => "School Bus", "convoy-os/school-bus-finance.md" => "School Bus", "convoy-os/school-bus-live.md" => "School Bus", "convoy-os/dashboard.md" => "Dashboard", "convoy-os/convoy-admin.md" => "Convoy Admin",
               "README.md" => "Common" }.freeze
     # Folder = the Convoy OS menu that owns the resource (.notes/data-ownership.md), not the doc that first names it.
     FOLDERS = {

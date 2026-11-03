@@ -8,7 +8,7 @@ This guide covers the money steps of School Bus Year Setup:
 - Operator Pay, including the Break Month Calculator and the bus attendant prices.
 
 Schools, academic years and the other setup steps are in [school-bus-setup.md](school-bus-setup.md). Conventions are in
-[README.md](README.md); paths start with `/api/v1`.
+[README.md](../README.md); paths start with `/api/v1`.
 
 **Permissions**
 

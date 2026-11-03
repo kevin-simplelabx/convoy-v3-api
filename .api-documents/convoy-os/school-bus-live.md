@@ -2,7 +2,7 @@
 
 This guide covers the two monitoring pages of one school in Convoy OS: the **School Dashboard** (Operations and Finance
 tabs) and **Live Ops** (the school's buses for a session of a day, and one run in detail). Conventions are in
-[README.md](README.md). Paths start with `/api/v1`.
+[README.md](../README.md). Paths start with `/api/v1`.
 
 **Permissions**
 

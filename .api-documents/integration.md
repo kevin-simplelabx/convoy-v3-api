@@ -124,25 +124,25 @@ The prototype's JS uses short internal names and display values (`t.stby`, `t.sc
 
 | Screen | Label → field table |
 | --- | --- |
-| Scheduler grid (runs, vehicles, unassigned tray) | [scheduler § 1](scheduler.md#get-scheduler) |
-| Trip drawer | [scheduler § 5.1](scheduler.md#51-open-a-run-get-occurrencesid) |
-| Trip form: every field, stops, vehicles, timings | [scheduler § 7.3](scheduler.md#73-trip-fields-trip), [§ 7.4](scheduler.md#74-nested-lists-send-the-whole-list-existing-rows-with-id-_destroy-true-to-remove) |
-| Replace dialog fields | [scheduler § 9.2](scheduler.md#92-save) |
-| Trips page columns | [trips § 1](trips.md#get-occurrenceslist) |
-| Notices page columns and buttons | [trips § 2](trips.md#get-notices) |
-| Rate card view / edit | [trips § 3](trips.md#view--edit--get-rate_cardsid) |
-| Booking details, approval texts | [trips § 4](trips.md#booking-details--get-bookingsid), [approve / reject](trips.md#approve-reject-and-the-clients-steps) |
-| Trip History list and record | [trips § 5](trips.md#list--get-trip_history), [record](trips.md#record--get-trip_historyid) |
-| Vehicles list row, vehicle record | [fleet § 1.1](fleet.md#11-list-get-vehicles), [§ 1.3](fleet.md#13-vehicle-record-get-vehiclesid) |
-| Drivers tabs and row buttons | [fleet § 2.1](fleet.md#21-tabs-get-driversstatusactive), [§ 2.3](fleet.md#23-row-buttons) |
-| Managed Operators row | [fleet § 3.1](fleet.md#31-list-get-operatorsqkind_eqmanaged) |
-| External Vehicles columns | [fleet § 4.1](fleet.md#41-list-and-slots) |
-| Vehicle Types table | [fleet § 5.1](fleet.md#51-table-get-vehicle_types) |
-| Maintenance list row | [fleet § 7.1](fleet.md#71-list-get-maintenance_visitstabupcoming) |
-| Fuel log, cards, alerts | [fleet § 8](fleet.md#8-fuel--energy) |
+| Scheduler grid (runs, vehicles, unassigned tray) | [scheduler § 1](convoy-os/scheduler.md#get-scheduler) |
+| Trip drawer | [scheduler § 5.1](convoy-os/scheduler.md#51-open-a-run-get-occurrencesid) |
+| Trip form: every field, stops, vehicles, timings | [scheduler § 7.3](convoy-os/scheduler.md#73-trip-fields-trip), [§ 7.4](convoy-os/scheduler.md#74-nested-lists-send-the-whole-list-existing-rows-with-id-_destroy-true-to-remove) |
+| Replace dialog fields | [scheduler § 9.2](convoy-os/scheduler.md#92-save) |
+| Trips page columns | [trips § 1](convoy-os/trips.md#get-occurrenceslist) |
+| Notices page columns and buttons | [trips § 2](convoy-os/trips.md#get-notices) |
+| Rate card view / edit | [trips § 3](convoy-os/trips.md#view--edit--get-rate_cardsid) |
+| Booking details, approval texts | [trips § 4](convoy-os/trips.md#booking-details--get-bookingsid), [approve / reject](convoy-os/trips.md#approve-reject-and-the-clients-steps) |
+| Trip History list and record | [trips § 5](convoy-os/trips.md#list--get-trip_history), [record](convoy-os/trips.md#record--get-trip_historyid) |
+| Vehicles list row, vehicle record | [fleet § 1.1](convoy-os/fleet.md#11-list-get-vehicles), [§ 1.3](convoy-os/fleet.md#13-vehicle-record-get-vehiclesid) |
+| Drivers tabs and row buttons | [fleet § 2.1](convoy-os/fleet.md#21-tabs-get-driversstatusactive), [§ 2.3](convoy-os/fleet.md#23-row-buttons) |
+| Managed Operators row | [fleet § 3.1](convoy-os/fleet.md#31-list-get-operatorsqkind_eqmanaged) |
+| External Vehicles columns | [fleet § 4.1](convoy-os/fleet.md#41-list-and-slots) |
+| Vehicle Types table | [fleet § 5.1](convoy-os/fleet.md#51-table-get-vehicle_types) |
+| Maintenance list row | [fleet § 7.1](convoy-os/fleet.md#71-list-get-maintenance_visitstabupcoming) |
+| Fuel log, cards, alerts | [fleet § 8](convoy-os/fleet.md#8-fuel--energy) |
 
-4. Enum values and their screen labels: [scheduler § 17 Values reference](scheduler.md#17-values-reference) and
-   [fleet § 9 Values reference](fleet.md#9-values-reference). Labels come from these tables or from the `*_label`,
+4. Enum values and their screen labels: [scheduler § 17 Values reference](convoy-os/scheduler.md#17-values-reference) and
+   [fleet § 9 Values reference](convoy-os/fleet.md#9-values-reference). Labels come from these tables or from the `*_label`,
    `*_name`, `*_text` fields the API already sends. Do not rebuild them from the prototype's code.
 5. A label with no field anywhere in the docs: **stop and report it** (section 9). Do not guess a field.
 
@@ -152,41 +152,41 @@ The prototype's page ids (in `logic/mixins/admin.js`, rail and sub-menus) and wh
 
 | Prototype page id | Screen | API resource | Doc |
 | --- | --- | --- | --- |
-| `scheduler` | Scheduler | `/scheduler`, `/occurrences` | [screen-map](screen-map.md#scheduler) |
-| `trips` | Trips | `/occurrences/list` | [screen-map](screen-map.md#trips-page) |
-| `triphist` | Trip History | `/trip_history` | [screen-map](screen-map.md#trip-history) |
-| `notices` | Notices | `/notices`, `/notice_templates` | [screen-map](screen-map.md#notices) |
-| `bookings` | Bookings | `/bookings`, `/booking_trips`, `/booking_notifications` | [screen-map](screen-map.md#bookings) |
-| `rates` | Rate Cards | `/rate_cards`, `/rate_card_assignments` | [screen-map](screen-map.md#rate-cards) |
-| `vehicles` | Vehicles | `/vehicles`, `/vehicle_teams` | [screen-map](screen-map.md#vehicles) |
-| `drivers` | Drivers | `/drivers` | [screen-map](screen-map.md#drivers) |
-| `attendants` | Bus Attendants | `/attendants` | [screen-map](screen-map.md#bus-attendants) |
-| `extveh` | External Vehicles | `/vehicles?ownership[]=external`, `/vehicles/external`, `/external_share_link`, `/external_vehicle_submissions` | [screen-map](screen-map.md#external-vehicles) |
-| `fuel` | Fuel & Energy | `/fuel_entries`, `/fuel`, `/fuel_alerts`, `/fuel_companies` | [screen-map](screen-map.md#fuel--energy) |
-| `maint` | Maintenance | `/maintenance_visits`, `/workshops` | [screen-map](screen-map.md#maintenance) |
-| `vtypes` | Vehicle Types | `/vehicle_types`, `/vehicle_type_requests` | [screen-map](screen-map.md#vehicle-types) |
-| `subcons` | Managed Operators | `/operators`, `/banks` | [screen-map](screen-map.md#transport-operators) |
-| `opveh` | Operator Vehicles | `/vehicles?ownership[]=managed`, `/operator_drivers/assign_preview` | [screen-map](screen-map.md#transport-operators) |
-| `opdrv` | Operator Drivers | `/operator_drivers` | [screen-map](screen-map.md#transport-operators) |
-| `clients` | Managed Clients | `/clients`, `/clients/:client_id/sites`, `/clients/:client_id/users`, `/client_users/roles` | [screen-map](screen-map.md#clients) |
-| `coset` | Company Settings | `/companies/:id`, `/countries`, `/country_requests` | [screen-map](screen-map.md#company-settings) |
-| `users` | Users | `/users` | [screen-map](screen-map.md#users) |
-| `phol` | Calendars | `/calendars`, `/public_holidays` | [screen-map](screen-map.md#calendars) |
-| Account menu → Profile | Profile dialog | `/profile` | [screen-map](screen-map.md#sign-in-and-app-shell) |
-| `paydrv`, `payearn`, `payschemes`, `payrates`, `paybon`, `paypts`, `payrew`, `paysim`, `paylog` | HR pages | `/pay/...` | [screen-map](screen-map.md#hr) |
-| `companies`, `terms`, `discover`, `leads` | Convoy Admin pages | `/companies`, `/message_terms`, `/discover/...`, `/leads` | [screen-map](screen-map.md#convoy-admin) |
-| `codash` | Dashboard | `/dashboard`, `/dashboard/widgets`, `/dashboard/layout` | [screen-map](screen-map.md#dashboard) |
-| `reports` | Reports (Shuttle Report) | `/reports/shuttle/...` | [screen-map](screen-map.md#reports) |
-| `schools`, `school`, `levels`, `calendar`, `holidays`, `sessions`, `baset`, `fares`, `policy`, `pay`, `aysum`, `setup` | School Bus: Schools & Year Setup | `/schools`, `/academic_years` (+ `/fares`, `/extra_charges`), `/schools/:id/policy`, `/payment_methods`, `/operator_pay` | [screen-map](screen-map.md#school-bus-schools--year-setup) |
-| `plans`, `feas` | School Bus: Route Plans, Feasibility Studies | `/routing/settings`, `/schools/:id/routing_runs`, `/schools/:id/plans`, `/plans/:id`, `/routes/:id`, `/feasibility_studies` | [screen-map](screen-map.md#school-bus-schools--year-setup) |
-| `families`, `reg`, `applications`, `cca` | School Bus: Families, Registration, Bus Service Requests, CCA Rides | `/schools/:id/families`, `/families/:id`, `/academic_years/:id/registration`, `/schools/:id/bus_requests`, `/bus_requests/:id`, `/bus_requests/alerts`, `/schools/:id/cca_rides` | [screen-map](screen-map.md#school-bus-schools--year-setup) |
-| `library`, `assign` | School Bus: Stop Library, Stop Assignment | `/stops`, `/schools/:id/stops`, `/schools/:id/stop_assignment`, `/stop_photo_requests` | [screen-map](screen-map.md#school-bus-schools--year-setup) |
-| `opsctl` | Ops Control | `/ops_control`, `/ops_control/log`, `/ops_control/runs/:id/acknowledge` | [screen-map](screen-map.md#ops-control) |
-| `livemap` | Live Map | `/live_map`, `/live_map/vehicles/:id`, `/live_map/runs/:id/track` | [screen-map](screen-map.md#live-map) |
-| `cinv`, `cfdocs`, `cfpay`, `vehfin`, `finset` | Finance pages | `/finance/...` | [screen-map](screen-map.md#finance) |
-| `cfcol` | Finance › School Bus Collections | `/finance/school_collections` | [school-bus-finance § 6](school-bus-finance.md#6-company-finance-pages) |
-| `dashboard`, `liveops` | School Bus: School Dashboard, Live Ops | `/schools/:id/dashboard` (+ `/finance`), `/schools/:id/live`, `/schools/:id/live/runs/:id` | [school-bus-live](school-bus-live.md) |
-| `opconn`, `clconn`, and every other page | Connected Operators / Clients | **No API yet** | [screen-map](screen-map.md#not-built-yet) |
+| `scheduler` | Scheduler | `/scheduler`, `/occurrences` | [screen-map](convoy-os/screen-map.md#scheduler) |
+| `trips` | Trips | `/occurrences/list` | [screen-map](convoy-os/screen-map.md#trips-page) |
+| `triphist` | Trip History | `/trip_history` | [screen-map](convoy-os/screen-map.md#trip-history) |
+| `notices` | Notices | `/notices`, `/notice_templates` | [screen-map](convoy-os/screen-map.md#notices) |
+| `bookings` | Bookings | `/bookings`, `/booking_trips`, `/booking_notifications` | [screen-map](convoy-os/screen-map.md#bookings) |
+| `rates` | Rate Cards | `/rate_cards`, `/rate_card_assignments` | [screen-map](convoy-os/screen-map.md#rate-cards) |
+| `vehicles` | Vehicles | `/vehicles`, `/vehicle_teams` | [screen-map](convoy-os/screen-map.md#vehicles) |
+| `drivers` | Drivers | `/drivers` | [screen-map](convoy-os/screen-map.md#drivers) |
+| `attendants` | Bus Attendants | `/attendants` | [screen-map](convoy-os/screen-map.md#bus-attendants) |
+| `extveh` | External Vehicles | `/vehicles?ownership[]=external`, `/vehicles/external`, `/external_share_link`, `/external_vehicle_submissions` | [screen-map](convoy-os/screen-map.md#external-vehicles) |
+| `fuel` | Fuel & Energy | `/fuel_entries`, `/fuel`, `/fuel_alerts`, `/fuel_companies` | [screen-map](convoy-os/screen-map.md#fuel--energy) |
+| `maint` | Maintenance | `/maintenance_visits`, `/workshops` | [screen-map](convoy-os/screen-map.md#maintenance) |
+| `vtypes` | Vehicle Types | `/vehicle_types`, `/vehicle_type_requests` | [screen-map](convoy-os/screen-map.md#vehicle-types) |
+| `subcons` | Managed Operators | `/operators`, `/banks` | [screen-map](convoy-os/screen-map.md#transport-operators) |
+| `opveh` | Operator Vehicles | `/vehicles?ownership[]=managed`, `/operator_drivers/assign_preview` | [screen-map](convoy-os/screen-map.md#transport-operators) |
+| `opdrv` | Operator Drivers | `/operator_drivers` | [screen-map](convoy-os/screen-map.md#transport-operators) |
+| `clients` | Managed Clients | `/clients`, `/clients/:client_id/sites`, `/clients/:client_id/users`, `/client_users/roles` | [screen-map](convoy-os/screen-map.md#clients) |
+| `coset` | Company Settings | `/companies/:id`, `/countries`, `/country_requests` | [screen-map](convoy-os/screen-map.md#company-settings) |
+| `users` | Users | `/users` | [screen-map](convoy-os/screen-map.md#users) |
+| `phol` | Calendars | `/calendars`, `/public_holidays` | [screen-map](convoy-os/screen-map.md#calendars) |
+| Account menu → Profile | Profile dialog | `/profile` | [screen-map](convoy-os/screen-map.md#sign-in-and-app-shell) |
+| `paydrv`, `payearn`, `payschemes`, `payrates`, `paybon`, `paypts`, `payrew`, `paysim`, `paylog` | HR pages | `/pay/...` | [screen-map](convoy-os/screen-map.md#hr) |
+| `companies`, `terms`, `discover`, `leads` | Convoy Admin pages | `/companies`, `/message_terms`, `/discover/...`, `/leads` | [screen-map](convoy-os/screen-map.md#convoy-admin) |
+| `codash` | Dashboard | `/dashboard`, `/dashboard/widgets`, `/dashboard/layout` | [screen-map](convoy-os/screen-map.md#dashboard) |
+| `reports` | Reports (Shuttle Report) | `/reports/shuttle/...` | [screen-map](convoy-os/screen-map.md#reports) |
+| `schools`, `school`, `levels`, `calendar`, `holidays`, `sessions`, `baset`, `fares`, `policy`, `pay`, `aysum`, `setup` | School Bus: Schools & Year Setup | `/schools`, `/academic_years` (+ `/fares`, `/extra_charges`), `/schools/:id/policy`, `/payment_methods`, `/operator_pay` | [screen-map](convoy-os/screen-map.md#school-bus-schools--year-setup) |
+| `plans`, `feas` | School Bus: Route Plans, Feasibility Studies | `/routing/settings`, `/schools/:id/routing_runs`, `/schools/:id/plans`, `/plans/:id`, `/routes/:id`, `/feasibility_studies` | [screen-map](convoy-os/screen-map.md#school-bus-schools--year-setup) |
+| `families`, `reg`, `applications`, `cca` | School Bus: Families, Registration, Bus Service Requests, CCA Rides | `/schools/:id/families`, `/families/:id`, `/academic_years/:id/registration`, `/schools/:id/bus_requests`, `/bus_requests/:id`, `/bus_requests/alerts`, `/schools/:id/cca_rides` | [screen-map](convoy-os/screen-map.md#school-bus-schools--year-setup) |
+| `library`, `assign` | School Bus: Stop Library, Stop Assignment | `/stops`, `/schools/:id/stops`, `/schools/:id/stop_assignment`, `/stop_photo_requests` | [screen-map](convoy-os/screen-map.md#school-bus-schools--year-setup) |
+| `opsctl` | Ops Control | `/ops_control`, `/ops_control/log`, `/ops_control/runs/:id/acknowledge` | [screen-map](convoy-os/screen-map.md#ops-control) |
+| `livemap` | Live Map | `/live_map`, `/live_map/vehicles/:id`, `/live_map/runs/:id/track` | [screen-map](convoy-os/screen-map.md#live-map) |
+| `cinv`, `cfdocs`, `cfpay`, `vehfin`, `finset` | Finance pages | `/finance/...` | [screen-map](convoy-os/screen-map.md#finance) |
+| `cfcol` | Finance › School Bus Collections | `/finance/school_collections` | [school-bus-finance § 6](convoy-os/school-bus-finance.md#6-company-finance-pages) |
+| `dashboard`, `liveops` | School Bus: School Dashboard, Live Ops | `/schools/:id/dashboard` (+ `/finance`), `/schools/:id/live`, `/schools/:id/live/runs/:id` | [school-bus-live](convoy-os/school-bus-live.md) |
+| `opconn`, `clconn`, and every other page | Connected Operators / Clients | **No API yet** | [screen-map](convoy-os/screen-map.md#not-built-yet) |
 
 ### 5.3 Value formats
 
@@ -213,7 +213,7 @@ so a field that was always empty in the examples may be typed loosely).
    writing your own.
 3. Wire the calls through the shared client. After a write, use the response (most writes return the updated record) or
    reload the list the doc names.
-4. "FE only" in the map = no API call. A screen under [Not built yet](screen-map.md#not-built-yet) has no API: build
+4. "FE only" in the map = no API call. A screen under [Not built yet](convoy-os/screen-map.md#not-built-yet) has no API: build
    the UI on a mock module named clearly (e.g. `mocks/dashboard.ts`) and say so.
 5. Check against staging with real calls. Test as Admin and as Member (hidden / disabled actions), and a write as
    Convoy Admin (must show the `403` message).

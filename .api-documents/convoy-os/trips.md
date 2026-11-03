@@ -4,7 +4,7 @@ The Trips menu (rail icon `assignment`): **Trips**, **Trip History**, **Notices*
 Every screen of the menu and what opens from it is covered below; what is not built yet is listed in
 [§ 6](#6-not-built-yet).
 
-Conventions (sign-in, errors, paging, files, background reads, runs) are in [README.md](README.md).
+Conventions (sign-in, errors, paging, files, background reads, runs) are in [README.md](../README.md).
 All paths below start with `/api/v1`. Screens shared with the Scheduler (trip form, trip drawer, Notice form) are in
 [scheduler.md](scheduler.md).
 

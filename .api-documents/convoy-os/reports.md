@@ -2,7 +2,7 @@
 
 The Reports menu (rail icon `insert_chart`): the **Shuttle Report** for clients — one Corporate Shuttle route and period at
 a time: utilisation, riders, on-time per stop against the timetable, and stop activity. Needs the `vehicles`, `finance` or
-`finview` permission (read only). Conventions are in [README.md](README.md); paths start with `/api/v1`.
+`finview` permission (read only). Conventions are in [README.md](../README.md); paths start with `/api/v1`.
 
 Numbers come from what was recorded at each stop of each run (the driver app / telematics stop events), with Correct Record
 values first. Runs with nothing recorded are left out. **Export CSV** and **Export PDF** are made by the front end from the data.

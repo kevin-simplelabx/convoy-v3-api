@@ -5,7 +5,7 @@ The Fleet menu (rail icon `directions_bus`) with its two groups:
 **Transport Operators**: Managed Operators, Operator Vehicles, Operator Drivers, Connected Operators.
 What is not built yet is listed in [§ 10](#10-not-built-yet).
 
-Conventions (sign-in, errors, paging, files, background reads) are in [README.md](README.md).
+Conventions (sign-in, errors, paging, files, background reads) are in [README.md](../README.md).
 All paths below start with `/api/v1`. The vehicle form (log card, insurance, default driver) is the Edit Vehicle screen of
 the Scheduler: see [scheduler.md § 14](scheduler.md#14-edit-vehicle). It is not repeated here.
 
@@ -356,7 +356,7 @@ Build the page link from the token (for example `Convoy OS.dc.html?xform=<token>
   "Enter your mobile number", "Enter the company you drive for".
 - 404 `"This link no longer works. Ask for a new one"` (revoked or unknown token).
 - At most 10 answers per hour from one address: `429` `too_many_requests` "Too many tries. Try again in N seconds", with
-  `Retry-After` ([README § Rate limits](README.md#rate-limits)).
+  `Retry-After` ([README § Rate limits](../README.md#rate-limits)).
 
 ### 4.5 Answers waiting
 
@@ -534,7 +534,7 @@ the same energy: km between the two readings divided by everything added since (
 
 ### 8.3 Reading a receipt
 
-As every Claude read ([README](README.md)): `POST /document_reads { kind: "fuel_receipt", file }` → poll
+As every Claude read ([README](../README.md)): `POST /document_reads { kind: "fuel_receipt", file }` → poll
 `GET /document_reads/:id` until `done`. `result`: `{ kind, brand, station, date, time, quantity, cost, plate, odometer }`
 (missing keys were not on the receipt). Then save the entry with `document_read_id`: empty fields are filled, the company is
 matched in Fuel Companies, the bus is picked by plate when none is picked, and the receipt file is attached.

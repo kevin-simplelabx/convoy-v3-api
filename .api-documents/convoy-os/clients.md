@@ -4,7 +4,7 @@ The Clients menu (rail icon `corporate_fare`): **Managed Clients** (list and the
 Clients** (Coming Soon). This file also covers the **Client Portal sign-in** (§ 5), since client users are added here.
 What is not built yet is listed in [§ 7](#7-not-built-yet).
 
-Conventions (sign-in, errors, paging, files, background reads) are in [README.md](README.md).
+Conventions (sign-in, errors, paging, files, background reads) are in [README.md](../README.md).
 All paths below start with `/api/v1`. Any company user can add and change clients (the trip form adds them too);
 a Convoy Admin can only read.
 
@@ -197,7 +197,7 @@ Errors (`422` unless noted):
 - Sign in: `401` "Email or password is incorrect".
 - Too many tries: `429` `too_many_requests` with `Retry-After` and `details.retry_after` (seconds). The email step (lookup,
   send a code) allows 30 a minute per IP; the password and code steps 10 a minute per IP and 5 a minute per email, so
-  mistyped emails do not lock the password step. See [README § Rate limits](README.md#rate-limits).
+  mistyped emails do not lock the password step. See [README § Rate limits](../README.md#rate-limits).
 
 ### 5.2 Session
 

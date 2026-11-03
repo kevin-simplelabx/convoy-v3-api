@@ -3,7 +3,7 @@
 A reverse index for front-end developers: find the screen and the button you are building in the Convoy OS prototype
 (`Convoy OS.dc.html`), and this table gives the API call and the section that explains it (params, response, messages).
 
-- Read [README.md](README.md#base-url-and-format) first (sign-in, errors, paging, files, background reads, runs).
+- Read [README.md](../README.md#base-url-and-format) first (sign-in, errors, paging, files, background reads, runs).
 - Paths start with `/api/v1`. **FE only** = no API call (the screen does it alone).
 - Menus are in the order of the rail. A dialog opened from several screens (Trip form, Maintenance, Notice, Replace,
   Edit Vehicle, External Vehicle) is listed once under [Shared dialogs](#shared-dialogs); screens link to it.
@@ -36,14 +36,14 @@ A reverse index for front-end developers: find the screen and the button you are
 
 | Screen / element | API | Doc |
 | --- | --- | --- |
-| Sign-in page: Sign In | `POST /session` → `data.token`, then `Authorization: Bearer <token>` on every call | [README](README.md#signing-in-bearer-token) |
-| Page load: who am I, company name / logo / theme colour, date and time formats, rail items by permission | `GET /session` | [README](README.md#signing-in-bearer-token) |
+| Sign-in page: Sign In | `POST /session` → `data.token`, then `Authorization: Bearer <token>` on every call | [README](../README.md#signing-in-bearer-token) |
+| Page load: who am I, company name / logo / theme colour, date and time formats, rail items by permission | `GET /session` | [README](../README.md#signing-in-bearer-token) |
 | Account menu: Profile (picture, Display Name, Mobile) | `GET` / `PATCH /profile` | [settings § 2](settings.md#2-profile) |
 | Account menu: Company Settings | Opens Settings > Company Settings | [Settings](#settings) |
-| Sign Out | `DELETE /session` | [README](README.md#signing-in-bearer-token) |
-| Convoy Admin: pick the company to view | `PATCH /session` `{ company_id }` (company list: `GET /companies`) | [README](README.md#signing-in-bearer-token) |
-| Any image or file (`<img src>`, open in a new tab) | The `url` / `thumb_url` already in the record (`GET /downloads/:token`, no header) | [README](README.md#files-uploads-and-downloads) |
-| Any "Read with Claude" (log card, insurance, invoice, receipt, route list, trip message) | `POST /document_reads`, poll `GET /document_reads/:id` | [README](README.md#reading-documents-with-claude-background-reads) |
+| Sign Out | `DELETE /session` | [README](../README.md#signing-in-bearer-token) |
+| Convoy Admin: pick the company to view | `PATCH /session` `{ company_id }` (company list: `GET /companies`) | [README](../README.md#signing-in-bearer-token) |
+| Any image or file (`<img src>`, open in a new tab) | The `url` / `thumb_url` already in the record (`GET /downloads/:token`, no header) | [README](../README.md#files-uploads-and-downloads) |
+| Any "Read with Claude" (log card, insurance, invoice, receipt, route list, trip message) | `POST /document_reads`, poll `GET /document_reads/:id` | [README](../README.md#reading-documents-with-claude-background-reads) |
 
 ---
 

@@ -1,4 +1,4 @@
-# A driver's pay for a part of a month on one pay scheme (port of DriverPay.simulate, see .notes/menus/hr/inventory.md § 8.3).
+# A driver's pay for a part of a month on one pay scheme (port of DriverPay.simulate, see .notes/apps/convoy-os/hr/inventory.md § 8.3).
 # Earnings and the Salary Simulator both call it: Pay::Month splits a month into parts by scheme and adds them up.
 #
 # Fixed pay (basic, monthly pay, shift salary, the guarantee, the route retainer) and the monthly targets follow the

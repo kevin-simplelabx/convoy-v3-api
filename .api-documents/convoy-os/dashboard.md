@@ -2,7 +2,7 @@
 
 The Dashboard (rail icon `dashboard`, the Company Dashboard): widgets in four sections — Operations, Fleet and People,
 Money, Clients — on up to 6 pages of an 8-column grid that each user arranges (drag, resize, add from the tray, remove).
-Conventions are in [README.md](README.md); paths start with `/api/v1`. Everyone in the company sees the Dashboard; Money
+Conventions are in [README.md](../README.md); paths start with `/api/v1`. Everyone in the company sees the Dashboard; Money
 widgets follow permissions. A Convoy Admin can read but not save a layout.
 
 ## Contents

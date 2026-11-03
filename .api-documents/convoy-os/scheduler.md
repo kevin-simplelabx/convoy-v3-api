@@ -3,7 +3,7 @@
 The Scheduler menu (rail icon `calendar_view_week`) and every screen it opens: the grid, the trip drawer, the vehicle panel,
 the trip form, the Assign page, replacements, Change a Day, maintenance, notices, Edit Vehicle and the public tracking page.
 
-Conventions (sign-in, errors, paging, files, background reads, runs) are in [README.md](README.md).
+Conventions (sign-in, errors, paging, files, background reads, runs) are in [README.md](../README.md).
 All paths below start with `/api/v1`.
 
 ## Contents

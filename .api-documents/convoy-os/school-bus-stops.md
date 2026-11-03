@@ -1,7 +1,7 @@
 # School Bus › Stop Library & Stop Assignment — API Guide
 
 In Convoy OS the Stop Library (company), Stop Assignment (per school) and Route Plans are one map screen with three
-modes. This guide covers the first two; Route Plans comes later. Conventions are in [README.md](README.md); paths start
+modes. This guide covers the first two; Route Plans comes later. Conventions are in [README.md](../README.md); paths start
 with `/api/v1`.
 
 **Permissions**

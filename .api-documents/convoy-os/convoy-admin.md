@@ -1,7 +1,7 @@
 # Convoy Admin — API Guide
 
 The Convoy Admin menus (only for Convoy staff, role `convoy_admin`): **Transport Companies**, **Message Terms**,
-**Discover**, **Company Leads**. Company users get `403`. Conventions are in [README.md](README.md); paths start with `/api/v1`.
+**Discover**, **Company Leads**. Company users get `403`. Conventions are in [README.md](../README.md); paths start with `/api/v1`.
 These are Convoy's own records, so no company needs to be picked first.
 
 ## Contents

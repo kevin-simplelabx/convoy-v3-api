@@ -7,7 +7,7 @@ This guide covers the first part of the School Bus menu (rail icon `school`):
 - Holidays & Special Days;
 - the setup strip and the Summary.
 
-Fares, Policy, Payment Methods and Operator Pay are still to come in this menu. Conventions are in [README.md](README.md);
+Fares, Policy, Payment Methods and Operator Pay are still to come in this menu. Conventions are in [README.md](../README.md);
 paths start with `/api/v1`.
 
 **Permissions**

@@ -2,7 +2,7 @@
 
 The Live Map menu (rail icon `map`) shows every bus now: on a trip, available or offline. You can open a bus to see its
 device and the stops of its run, trace it, or replay a run. You need the `vehicles` or `plans` permission (read only; a
-Convoy Admin sees it too). Conventions are in [README.md](README.md); paths start with `/api/v1`.
+Convoy Admin sees it too). Conventions are in [README.md](../README.md); paths start with `/api/v1`.
 
 Positions come from the **last report of each bus's device**: the Convoy Driver app on the driver's phone, or a GPS
 tracker fitted to the bus. Progress on a run comes from what was recorded at its stops. The prototype ran on a demo clock

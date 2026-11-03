@@ -3,7 +3,7 @@
 The Settings menu (rail footer icon `settings`): **Company Settings**, **Users**, **Calendars**, plus the **Profile**
 dialog of the account menu in the top bar. What is not built yet is listed in [§ 5](#5-not-built-yet).
 
-Conventions (sign-in, errors, paging, files, background reads) are in [README.md](README.md).
+Conventions (sign-in, errors, paging, files, background reads) are in [README.md](../README.md).
 All paths below start with `/api/v1`. A Convoy Admin can only read.
 
 ## Contents

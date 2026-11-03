@@ -14,6 +14,10 @@ servers:
 ssh:
   user: deployer
 
+# Fewer parallel SSH connections: dropped handshakes count as sshd PerSourcePenalties (see .notes/deploy.md).
+sshkit:
+  max_concurrent_starts: 5
+
 # kamal-proxy terminates SSL (Let's Encrypt) in front of the app.
 proxy:
   ssl: true

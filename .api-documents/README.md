@@ -1,33 +1,40 @@
-# Convoy OS API — Front-end Guide
+# Convoy API — Front-end Guide
 
-One document per menu of Convoy OS. Each document lists the screen actions and the API call behind each one.
+One API serves every Convoy app. This file and [integration.md](integration.md) are shared; each app has its own
+folder with one document per menu, listing the screen actions and the API call behind each one.
+
+| App | Folder |
+| --- | --- |
+| Convoy OS (operator web app) | [`convoy-os/`](convoy-os/) — menus below, screen map in [convoy-os/screen-map.md](convoy-os/screen-map.md) |
+
+## Convoy OS
 
 | Menu | Document |
 | --- | --- |
-| Scheduler (rail icon `calendar_view_week`) and everything it opens | [scheduler.md](scheduler.md) |
-| Trips (rail icon `assignment`): Trips, Trip History, Notices, Bookings, Rate Cards | [trips.md](trips.md) |
-| Fleet (rail icon `directions_bus`): Vehicles, Drivers, Bus Attendants, External Vehicles, Fuel & Energy, Maintenance, Vehicle Types, and Transport Operators (Managed Operators, Operator Vehicles, Operator Drivers) | [fleet.md](fleet.md) |
-| Settings (rail footer icon `settings`): Company Settings, Users, Calendars, and the Profile dialog | [settings.md](settings.md) |
-| Clients (rail icon `corporate_fare`): Managed Clients, Client Users, and the Client Portal sign-in | [clients.md](clients.md) |
-| HR (rail icon `badge`): Drivers, Earnings, Pay Schemes, Rate Plans, Bonuses, Points, Rewards, Salary Simulator, Audit Log | [hr.md](hr.md) |
-| Convoy Admin (Convoy staff only): Transport Companies, Message Terms, Discover, Company Leads | [convoy-admin.md](convoy-admin.md) |
-| Dashboard (rail icon `dashboard`): the Company Dashboard (widgets, layout per user) | [dashboard.md](dashboard.md) |
-| Reports (rail icon `insert_chart`): the Shuttle Report for clients | [reports.md](reports.md) |
-| School Bus › Schools & Year Setup (rail icon `school`): schools, riders, academic years, holidays, levels, sessions, bus attendants | [school-bus-setup.md](school-bus-setup.md) |
-| School Bus › Fares, Policy, Payment Methods, Operator Pay (Year Setup money steps) | [school-bus-money.md](school-bus-money.md) |
-| School Bus › Stop Library & Stop Assignment | [school-bus-stops.md](school-bus-stops.md) |
-| School Bus › Route Plans & Feasibility Studies | [school-bus-routes.md](school-bus-routes.md) |
-| School Bus › Families & Riders, Bus Service Registration, Bus Service Requests, CCA Rides | [school-bus-parents.md](school-bus-parents.md) |
-| School Bus › School Finance: Collections (Family Bills), Documents, Operator Payments (school pay runs) | [school-bus-finance.md](school-bus-finance.md) |
-| School Bus › School Dashboard and Live Ops | [school-bus-live.md](school-bus-live.md) |
-| Ops Control (rail icon `desktop_windows`): runs in the next 2 hours checked against rules, alerts, Acknowledge, Alert Log | [ops-control.md](ops-control.md) |
-| Live Map (rail icon `map`): every bus now, its device, the run it is on, Trace and Replay | [live-map.md](live-map.md) |
-| Finance (rail icon `account_balance`): Client Invoices, Documents, Operator Payments, Vehicle Financials, Finance Settings | [finance.md](finance.md) |
+| Scheduler (rail icon `calendar_view_week`) and everything it opens | [scheduler.md](convoy-os/scheduler.md) |
+| Trips (rail icon `assignment`): Trips, Trip History, Notices, Bookings, Rate Cards | [trips.md](convoy-os/trips.md) |
+| Fleet (rail icon `directions_bus`): Vehicles, Drivers, Bus Attendants, External Vehicles, Fuel & Energy, Maintenance, Vehicle Types, and Transport Operators (Managed Operators, Operator Vehicles, Operator Drivers) | [fleet.md](convoy-os/fleet.md) |
+| Settings (rail footer icon `settings`): Company Settings, Users, Calendars, and the Profile dialog | [settings.md](convoy-os/settings.md) |
+| Clients (rail icon `corporate_fare`): Managed Clients, Client Users, and the Client Portal sign-in | [clients.md](convoy-os/clients.md) |
+| HR (rail icon `badge`): Drivers, Earnings, Pay Schemes, Rate Plans, Bonuses, Points, Rewards, Salary Simulator, Audit Log | [hr.md](convoy-os/hr.md) |
+| Convoy Admin (Convoy staff only): Transport Companies, Message Terms, Discover, Company Leads | [convoy-admin.md](convoy-os/convoy-admin.md) |
+| Dashboard (rail icon `dashboard`): the Company Dashboard (widgets, layout per user) | [dashboard.md](convoy-os/dashboard.md) |
+| Reports (rail icon `insert_chart`): the Shuttle Report for clients | [reports.md](convoy-os/reports.md) |
+| School Bus › Schools & Year Setup (rail icon `school`): schools, riders, academic years, holidays, levels, sessions, bus attendants | [school-bus-setup.md](convoy-os/school-bus-setup.md) |
+| School Bus › Fares, Policy, Payment Methods, Operator Pay (Year Setup money steps) | [school-bus-money.md](convoy-os/school-bus-money.md) |
+| School Bus › Stop Library & Stop Assignment | [school-bus-stops.md](convoy-os/school-bus-stops.md) |
+| School Bus › Route Plans & Feasibility Studies | [school-bus-routes.md](convoy-os/school-bus-routes.md) |
+| School Bus › Families & Riders, Bus Service Registration, Bus Service Requests, CCA Rides | [school-bus-parents.md](convoy-os/school-bus-parents.md) |
+| School Bus › School Finance: Collections (Family Bills), Documents, Operator Payments (school pay runs) | [school-bus-finance.md](convoy-os/school-bus-finance.md) |
+| School Bus › School Dashboard and Live Ops | [school-bus-live.md](convoy-os/school-bus-live.md) |
+| Ops Control (rail icon `desktop_windows`): runs in the next 2 hours checked against rules, alerts, Acknowledge, Alert Log | [ops-control.md](convoy-os/ops-control.md) |
+| Live Map (rail icon `map`): every bus now, its device, the run it is on, Trace and Replay | [live-map.md](convoy-os/live-map.md) |
+| Finance (rail icon `account_balance`): Client Invoices, Documents, Operator Payments, Vehicle Financials, Finance Settings | [finance.md](convoy-os/finance.md) |
 
 **Integrating the API (or asking an AI assistant to)?** Start with [integration.md](integration.md): it is the one
 file to read first, and it points to everything else.
 
-**Building a screen?** [screen-map.md](screen-map.md) maps every screen and button of the Convoy OS prototype to its
+**Building a screen?** [screen-map.md](convoy-os/screen-map.md) maps every screen and button of the Convoy OS prototype to its
 API call and the section that explains it.
 
 Read the conventions below first; the menu documents do not repeat them.
@@ -96,7 +103,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
 ```
 
 - `role`: `convoy_admin` (Convoy staff, **view only**: every write returns `403`), `admin` (every permission), `member` (only `permissions`).
-  `owner` = Super Admin. Show `shown_name` (display name or name) in the top bar. Users and the Profile: [settings.md](settings.md).
+  `owner` = Super Admin. Show `shown_name` (display name or name) in the top bar. Users and the Profile: [settings.md](convoy-os/settings.md).
 - `company` is `null` for a Convoy Admin until `PATCH /session` picks one (per token: a new sign-in starts with none);
   company data then answers `422 "Pick a company first"`.
 - Sample accounts (seed): `ops@simpledrive.sg` / `Simple123!` (Admin), `dispatch@simpledrive.sg` / `Simple123!` (Member, vehicles),

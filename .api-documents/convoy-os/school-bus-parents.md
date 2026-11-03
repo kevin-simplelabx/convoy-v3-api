@@ -2,7 +2,7 @@
 
 This guide covers the parent side of School Bus in Convoy OS: Families & Riders, Bus Service Registration (Year Setup),
 Bus Service Requests (New Service, Change of Address, Change of Service, Stop Service), the bell / strip / 08:00 email,
-and CCA Rides. Conventions are in [README.md](README.md). Paths start with `/api/v1`.
+and CCA Rides. Conventions are in [README.md](../README.md). Paths start with `/api/v1`.
 
 **Permissions**
 

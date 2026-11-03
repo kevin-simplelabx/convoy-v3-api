@@ -1,7 +1,7 @@
 # OpenAPI file for Apidog: .api-documents/convoy-v3-api.openapi.json
 #   bin/rails api_docs:record    run the request specs and record their requests / responses (tmp/openapi/examples.json)
 #   bin/rails api_docs:probe     GET every endpoint against the development seed data (tmp/openapi/probe.json)
-#   bin/rails api_docs:openapi   build the file from routes + .api-documents/*.md + recorded examples
+#   bin/rails api_docs:openapi   build the file from routes + .api-documents/**/*.md + recorded examples
 #   bin/rails api_docs:all       all three
 namespace :api_docs do
   desc "Record API examples from the request specs"

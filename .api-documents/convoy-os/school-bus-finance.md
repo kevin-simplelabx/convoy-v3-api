@@ -2,7 +2,7 @@
 
 This guide covers School Finance for one school in Convoy OS: **Collections** (with the Family Bills card),
 **Documents**, and **Operator Payments** (the school's operator pay runs). It also covers what School Bus adds to the
-company Finance pages. Conventions are in [README.md](README.md). Paths start with `/api/v1`.
+company Finance pages. Conventions are in [README.md](../README.md). Paths start with `/api/v1`.
 
 **Permissions**
 

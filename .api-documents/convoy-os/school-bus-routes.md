@@ -2,7 +2,7 @@
 
 Route Plans is the third mode of the School Bus map screen, after Stop Library and Stop Assignment
 ([school-bus-stops.md](school-bus-stops.md)). Feasibility Studies is a company-level sandbox. Conventions are in
-[README.md](README.md); paths start with `/api/v1`.
+[README.md](../README.md); paths start with `/api/v1`.
 
 The **routing engine** (Convoy Pathfinder, the prototype's engine unchanged) runs in the routing service on the server.
 The FE never calls it. Rails builds its input from the database, runs it in the background, and stores every run.

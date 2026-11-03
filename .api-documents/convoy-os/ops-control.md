@@ -3,7 +3,7 @@
 Ops Control (rail icon `desktop_windows`) is a control-station view of every trip whose first pick-up is in the next
 2 hours. Each run is checked against fixed rules so the duty team can call the driver in time. You need the `vehicles` or
 `plans` permission to see it. A Convoy Admin can see it but cannot acknowledge. Conventions are in
-[README.md](README.md); paths start with `/api/v1`.
+[README.md](../README.md); paths start with `/api/v1`.
 
 The prototype ran on a demo clock with sample trips. The API uses **real data at server time**:
 

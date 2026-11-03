@@ -4,7 +4,7 @@ The Finance menu (rail icon `account_balance`): **Client Invoices**, **Documents
 **Vehicle Financials**, **Finance Settings**, and **School Bus Collections** (see [school-bus-finance § 6](school-bus-finance.md#6-company-finance-pages)). What is not built
 yet is in [§ 8](#8-not-built-yet).
 
-Conventions (sign-in, errors, paging, files, background reads) are in [README.md](README.md). All paths start with `/api/v1`.
+Conventions (sign-in, errors, paging, files, background reads) are in [README.md](../README.md). All paths start with `/api/v1`.
 
 **Permissions.** Finance pages need `finance` or `finview` (read); changing needs `finance`. Finance Settings need `finset`;
 Vehicle Financials need `vehfin`. Unlock needs an Admin (admin, Super Admin or the `users` permission). Convoy Admin: read only.

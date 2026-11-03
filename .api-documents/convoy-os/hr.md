@@ -3,7 +3,7 @@
 The HR menu (rail icon `badge`): driver pay. Pages: **Drivers**, **Earnings**, **Pay Schemes**, **Rate Plans**,
 **Bonuses**, **Points**, **Rewards**, **Salary Simulator**, **Audit Log**. What is not built yet is in [§ 10](#10-not-built-yet).
 
-Conventions (sign-in, errors, paging, files) are in [README.md](README.md). All paths start with `/api/v1`.
+Conventions (sign-in, errors, paging, files) are in [README.md](../README.md). All paths start with `/api/v1`.
 
 **Permissions.** HR needs the `finance` or `finview` permission (`403` otherwise); changing anything needs `finance`.
 **Unlock** and **Reopen Month** need an Admin (admin, Super Admin, or the `users` permission). A Convoy Admin can only read.
