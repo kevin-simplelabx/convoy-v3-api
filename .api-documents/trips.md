@@ -268,8 +268,10 @@ the card are ignored.
 
 ### Live warnings while editing — `POST /rate_cards/check`
 
-Same body as save; nothing is saved. Returns `{ "data": { "overlaps": [...], "gaps": [...], "errors": [...] } }`
-(`errors` = the save rules broken so far, in order). Call it after edits (debounced) to show the overlap / gap banners.
+Same body as save, plus `id` (top level) when editing an existing card: `{ "id": 2, "rate_card": {...} }`. Leave `id` out
+for a new card. Without `id` the card's own name counts as "Another card has this name". Nothing is saved. Returns
+`{ "data": { "overlaps": [...], "gaps": [...], "errors": [...] } }` (`errors` = the save rules broken so far, in order).
+Call it after edits (debounced) to show the overlap / gap banners.
 
 ### Client Rate Cards — `GET /rate_card_assignments`
 

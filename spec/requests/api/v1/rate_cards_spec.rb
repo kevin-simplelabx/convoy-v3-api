@@ -47,9 +47,12 @@ RSpec.describe "Rate Cards page" do
       { name: "Evening", days: %w[mon], ranges: [ { starts_at: "19:00", ends_at: "23:00" } ], rates: [] }
     ]
 
-    post check_api_v1_rate_cards_path, params: { rate_card: body }, as: :json
+    post check_api_v1_rate_cards_path, params: { id: card[:id], rate_card: body }, as: :json
     expect(json[:data][:overlaps]).to eq([ "Day and Evening overlap on MON" ])
     expect(json[:data][:gaps]).to eq([ "MON from 00:00", "TUE from 00:00", "WED from 00:00", "THU from 00:00" ])
+    expect(json[:data][:errors]).to eq([])
+    post check_api_v1_rate_cards_path, params: { rate_card: body }, as: :json # as a new card, the name is taken
+    expect(json[:data][:errors]).to eq([ "Another card has this name" ])
 
     patch api_v1_rate_card_path(card[:id]), params: { rate_card: body, lock_version: card[:lock_version] }, as: :json
     expect(response).to have_http_status(:ok)

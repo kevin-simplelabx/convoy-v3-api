@@ -12,8 +12,10 @@ module RateCards
 
     attr_reader :card, :errors
 
-    def initialize(card, params)
+    # editing: the saved card a Check is for (Check works on a fresh card), so its own name is not "another card".
+    def initialize(card, params, editing: nil)
       @card = card
+      @own_id = editing&.id || card.id
       @params = params.to_h.deep_symbolize_keys
       @errors = []
     end
@@ -86,7 +88,7 @@ module RateCards
     end
 
     def name_taken?
-      RateCard.where.not(id: @card.id).exists?([ "LOWER(name) = ?", @card.name.downcase ])
+      RateCard.where.not(id: @own_id).exists?([ "LOWER(name) = ?", @card.name.downcase ])
     end
 
     # Bands go up in km; the last has no upper limit and is the only one that may charge per km.

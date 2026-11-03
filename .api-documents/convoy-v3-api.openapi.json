@@ -119799,7 +119799,7 @@
     "/rate_cards/check": {
       "post": {
         "summary": "Live warnings while editing",
-        "description": "POST /rate_cards/check { rate_card: {...} } — overlaps and gaps while editing; nothing is saved.\n\nSame body as save; nothing is saved. Returns `{ \"data\": { \"overlaps\": [...], \"gaps\": [...], \"errors\": [...] } }`\n(`errors` = the save rules broken so far, in order). Call it after edits (debounced) to show the overlap / gap banners.\n\n_Source: `trips.md` § Live warnings while editing — `POST /rate_cards/check`_\n\n`rate_cards#check`",
+        "description": "POST /rate_cards/check { id, rate_card: {...} } — overlaps, gaps and the save rules broken while editing; nothing is\nsaved. id = the card being edited (left out for a new card), so its own name is not \"another card\".\n\nSame body as save, plus `id` (top level) when editing an existing card: `{ \"id\": 2, \"rate_card\": {...} }`. Leave `id` out\nfor a new card. Without `id` the card's own name counts as \"Another card has this name\". Nothing is saved. Returns\n`{ \"data\": { \"overlaps\": [...], \"gaps\": [...], \"errors\": [...] } }` (`errors` = the save rules broken so far, in order).\nCall it after edits (debounced) to show the overlap / gap banners.\n\n_Source: `trips.md` § Live warnings while editing — `POST /rate_cards/check`_\n\n`rate_cards#check`",
         "operationId": "rate_cards_check_post",
         "tags": [
           "Trips / Rate Cards"

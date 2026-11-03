@@ -36,10 +36,11 @@ module Api
         render_card card
       end
 
-      # POST /rate_cards/check { rate_card: {...} } — overlaps and gaps while editing; nothing is saved.
+      # POST /rate_cards/check { id, rate_card: {...} } — overlaps, gaps and the save rules broken while editing; nothing is
+      # saved. id = the card being edited (left out for a new card), so its own name is not "another card".
       def check
         authorize RateCard
-        form = RateCards::Form.new(RateCard.new, card_params).build
+        form = RateCards::Form.new(RateCard.new, card_params, editing: params[:id].presence && find).build
         render json: { data: RateCards::Check.call(form.card).merge(errors: form.errors) }
       end
 
