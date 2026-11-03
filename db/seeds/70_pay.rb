@@ -28,13 +28,15 @@ with_company("SD") do
   end
 end
 
-# Pay schemes: "Basic + Trips" (default, as the prototype seeds it) and "Monthly 2,400" for a contrast.
+# Pay schemes: "Basic + Trips" (default, as the prototype seeds it, unless the company already picked one) and "Monthly 2,400"
+# for a contrast.
 with_company("SD") do
   owner = User.find_by!(email: "ops@simpledrive.sg")
   plan = PayRatePlan.kept.find_by!(name: "Standard")
   basic = PayScheme.kept.find_or_initialize_by(name: "Basic + Trips")
   if basic.new_record?
-    basic.update!(description: "Basic pay with 1 trip a day included, topped up to S$2,200", is_default: true, scheme_type: "basic_plus_trips",
+    basic.update!(description: "Basic pay with 1 trip a day included, topped up to S$2,200", scheme_type: "basic_plus_trips",
+                  is_default: !PayScheme.kept.exists?(is_default: true),
                   rate_plan: plan, basic_salary: 500, basic_covers_daily_trips: true, basic_covered_daily_trips: 1,
                   has_guarantee: true, guaranteed_amount: 2200, on_top_ph: true, has_post_guarantee_boost: true,
                   post_guarantee_boost_type: "percentage", post_guarantee_boost_value: 20, has_rejection_penalty: true,
