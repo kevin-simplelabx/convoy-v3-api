@@ -21,17 +21,17 @@ module Occurrences
       {
         company: trip.company.name, date: @occ.date, start_time: @occ.start_time_hm, end_time: @occ.end_time_hm,
         starts_at: @occ.starts_at, ends_at: @occ.ends_at, trip_label: @occ.trip_label, title: trip.title, kind: trip.kind_name,
-        stops: stops(trip), bus: bus, driver: driver_first_name
+        stops:, bus:, driver: driver_first_name
       }
     end
 
-    # Stops in travel order with the run's times (a shuttle's timetable; else the start at the first stop and the end at the last).
-    def stops(trip)
-      list = trip.stops_in(@occ.trip_run&.direction || 1)
-      times = @occ.trip_run ? @occ.trip_run.stop_minutes.map { |m| m && m + (@occ.start_time - @occ.trip_run.start_time) } : []
+    # Stops in travel order with the run's planned times (the start at the first stop and the end at the last when a
+    # stop has no time of its own).
+    def stops
+      list = Occurrences::Stops.planned(@occ)
       list.each_with_index.map do |s, i|
-        t = times[i] || (i.zero? ? @occ.start_time : (i == list.size - 1 ? @occ.end_time : nil))
-        { name: s.name, time: Clock.hm(t), use: s.use, lat: s.lat&.to_f, lng: s.lng&.to_f }
+        minute = s[:planned_minute] || (i == list.size - 1 ? @occ.end_time : nil)
+        { name: s[:name], time: Clock.hm(minute), use: s[:use], lat: s[:lat]&.to_f, lng: s[:lng]&.to_f }
       end
     end
 

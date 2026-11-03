@@ -24,7 +24,7 @@ module SchoolLive
           arrived_at: e&.arrived_at, departed_at: e&.departed_at, skipped: e&.skipped || false, reached:,
           left: reached && (e.skipped || e.departed_at.present? || (!@am && i == list.size - 1)) }
       end
-      boardings = occ.boardings.index_by(&:rid)
+      boardings = occ.passenger_marks.index_by(&:passenger_key)
       @riders = list.each_with_index.flat_map do |s, i|
         s.riders.sort_by(&:rid).map { |r| rider(r.rid, i, names[r.rid], absences[r.rid], boardings[r.rid]) }
       end
@@ -97,7 +97,7 @@ module SchoolLive
 
     def rider(rid, i, info, absence, b)
       stop = stops[i]
-      status, by = if absence&.covers?(route.plan.session) then [ "not_required", "Parent" ]
+      status, by = if b.nil? && absence&.covers?(route.plan.session) then [ "not_required", "Parent" ]
       elsif b.nil? then [ "waiting", nil ]
       elsif b.state == "not_boarding" then [ "not_required", b.marked_by ]
       elsif b.state == "not_boarded" then [ "no_show", b.marked_by ]

@@ -72,6 +72,7 @@ class Vehicle < ApplicationRecord
   has_many :maintenance_visits, dependent: :restrict_with_error
   has_many :tracking_devices, dependent: :nullify
   has_one :live_position, class_name: "VehicleLivePosition", dependent: :delete
+  has_many :handovers, class_name: "VehicleHandover", dependent: :restrict_with_error
 
   normalizes :plate, with: ->(v) { v.to_s.gsub(/\s+/, "").upcase }
   normalizes :chassis_number, :engine_number, with: ->(v) { v.to_s.strip.upcase.presence }
@@ -172,7 +173,7 @@ class Vehicle < ApplicationRecord
   # the typed name for external ones. Returns a Driver, an OperatorDriver or nil.
   def default_driver_on(date)
     return operator_driver if operator_id
-    driver_schedules.select { |s| s.starts_on <= date }.max_by(&:starts_on)&.driver
+    driver_schedules.select { |s| s.starts_on <= date }.max_by(&:sort_key)&.driver
   end
 
   private

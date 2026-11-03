@@ -16,7 +16,7 @@ module SchoolRuns
       Trip.transaction do
         TripStopStudent.where(trip_stop_id: trip.stops.select(:id)).delete_all
         trip.route_list_versions.destroy_all
-        trip.attendances.delete_all
+        OccurrencePassenger.where(occurrence_id: trip.occurrences.select(:id)).delete_all
         trip.update_columns(pax: 0, students_purged_at: Time.current)
       end
     end

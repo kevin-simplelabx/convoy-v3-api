@@ -46,13 +46,13 @@ with_company("SD") do
 
     if operator
       driver = OperatorDriver.find_or_initialize_by(phone: OperatorDriver.normalize_value_for(:phone, phone.(i)))
-      driver.assign_attributes(name: driver_name, operator:, status: :active, responded_at: 3.months.ago)
+      driver.assign_attributes(name: driver_name, operator:, status: :active, responded_at: 3.months.ago, joined_at: 3.months.ago)
       driver.photo = SeedFiles.open("fleet", driver_photo) if driver_photo && driver.photo.blank?
       driver.save!
       driver.assign_vehicle!(vehicle) unless driver.vehicle_id == vehicle.id
     else
       driver = Driver.find_or_initialize_by(phone: Driver.normalize_value_for(:phone, phone.(i)))
-      driver.assign_attributes(name: driver_name, status: :active, responded_at: 6.months.ago)
+      driver.assign_attributes(name: driver_name, status: :active, responded_at: 6.months.ago, joined_at: 6.months.ago)
       driver.photo = SeedFiles.open("fleet", driver_photo) if driver_photo && driver.photo.blank?
       driver.save!
       vehicle.driver_schedules.find_or_create_by!(starts_on: Date.current - 180) { |s| s.driver = driver }
@@ -63,7 +63,7 @@ with_company("SD") do
   spare = [ [ "Kumar s/o Rajan", "+65 9001 2233" ], [ "Lee Kok Wah", "+65 9002 3344" ],
             [ "Siti Nurhaliza", "+65 9003 4455" ], [ "Daniel Wong", "+65 9004 5566" ] ].map do |name, ph|
     Driver.find_or_initialize_by(phone: Driver.normalize_value_for(:phone, ph)).tap do |d|
-      d.update!(name:, status: :active, responded_at: 1.month.ago)
+      d.update!(name:, status: :active, responded_at: 1.month.ago, joined_at: 1.month.ago)
     end
   end
   Driver.find_or_create_by!(phone: "+6590055667") { |d| d.name = "Hafiz Rahman" }  # invite pending

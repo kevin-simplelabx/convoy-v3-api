@@ -9,11 +9,16 @@
 #  country                   :string           default("SG"), not null
 #  country_set_at            :datetime
 #  date_format               :string           default("dmy"), not null
+#  depot_address             :text
 #  external_vehicle_cap      :integer          default(10), not null
 #  logo                      :string
 #  name                      :string           not null
 #  observed_holidays         :string           default("off"), not null
 #  on_time_minutes           :integer          default(5), not null
+#  ops_email                 :string
+#  ops_hours                 :string
+#  ops_phone                 :string
+#  ops_whatsapp              :string
 #  route_list_import_enabled :boolean          default(TRUE), not null
 #  school_run_enabled        :boolean          default(TRUE), not null
 #  short_name                :string(12)
@@ -51,6 +56,7 @@ class Company < ApplicationRecord
   has_many :country_requests, class_name: "CompanyCountryRequest", dependent: :restrict_with_error
   has_one :pending_country_request, -> { pending }, class_name: "CompanyCountryRequest", inverse_of: :company
   belongs_to :country_set_by, class_name: "User", optional: true
+  has_many :links, class_name: "CompanyLink", dependent: :delete_all
 
   # Observed Holidays Day Off / Working Day for trips without a calendar.
   after_update_commit if: :saved_change_to_observed_holidays? do
@@ -72,6 +78,8 @@ class Company < ApplicationRecord
   validates :timezone, inclusion: { in: ActiveSupport::TimeZone::MAPPING.values.uniq | TZInfo::Timezone.all_identifiers }
   validates :theme_color, format: { with: /\A#\h{6}\z/ }, allow_blank: true
   validates :external_vehicle_cap, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
+  validates :ops_email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
+  validates :ops_phone, :ops_whatsapp, phone: { possible: true, allow_blank: true }
 
   # Country: picked once, then locked (a change is a CompanyCountryRequest Convoy approves).
   def country_locked? = country_set_at.present?

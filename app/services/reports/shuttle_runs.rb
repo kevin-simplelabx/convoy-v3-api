@@ -27,7 +27,7 @@ module Reports
 
     def build(occ)
       recorded = TripHistory.recorded_stops(occ)
-      planned = TripHistory.planned_stops(occ)
+      planned = Occurrences::Stops.planned(occ)
       stops = planned.each_with_index.map do |s, i|
         fixed = occ.correction&.stop(s[:position])
         rec = recorded[s[:position]] || {}

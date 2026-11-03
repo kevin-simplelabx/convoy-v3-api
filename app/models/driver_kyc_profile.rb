@@ -15,6 +15,7 @@
 #  id_number_masked              :string
 #  licence_class                 :string
 #  licence_qualified_on          :date
+#  licences                      :jsonb            not null
 #  nationality                   :string
 #  residential_status            :string
 #  shared_at                     :datetime

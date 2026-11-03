@@ -91,7 +91,7 @@ module OpsControl
     end
 
     def live = @occ.vehicle&.live_position
-    def planned = @planned ||= TripHistory.planned_stops(@occ)
+    def planned = @planned ||= Occurrences::Stops.planned(@occ)
     def first_stop = planned.first
     def first_event = @occ.stop_events.min_by(&:position)
     def gps_lost? = ping_minutes.to_i >= GPS[0]

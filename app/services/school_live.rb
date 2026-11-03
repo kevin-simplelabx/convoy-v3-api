@@ -11,7 +11,7 @@ module SchoolLive
   # The school's runs of a day by session (am, pm, asa), with all a run needs.
   def runs(school, date)
     TripOccurrence.joins(school_route: :plan).where(school_plans: { school_id: school.id }, date:).where.not(status: LiveMap::NOT_DRIVEN)
-                  .includes(:driver, :operator_driver, :stop_events, :boardings, :ops_alerts, vehicle: %i[operator live_position],
+                  .includes(:driver, :operator_driver, :stop_events, :passenger_marks, :ops_alerts, vehicle: %i[operator live_position],
                                                                                                 school_route: [ :attendant, :plan, { stops: :riders } ])
                   .order(:starts_at, :id).to_a
                   .group_by { it.school_route.plan.session }

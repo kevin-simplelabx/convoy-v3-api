@@ -9,11 +9,16 @@
 #  country                   :string           default("SG"), not null
 #  country_set_at            :datetime
 #  date_format               :string           default("dmy"), not null
+#  depot_address             :text
 #  external_vehicle_cap      :integer          default(10), not null
 #  logo                      :string
 #  name                      :string           not null
 #  observed_holidays         :string           default("off"), not null
 #  on_time_minutes           :integer          default(5), not null
+#  ops_email                 :string
+#  ops_hours                 :string
+#  ops_phone                 :string
+#  ops_whatsapp              :string
 #  route_list_import_enabled :boolean          default(TRUE), not null
 #  school_run_enabled        :boolean          default(TRUE), not null
 #  short_name                :string(12)

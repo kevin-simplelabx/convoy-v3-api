@@ -67,7 +67,7 @@ module Telematics
 
     # A run in progress: points every EVERY seconds from its start to now, and the stops reached so far.
     def drive(occ, device, i)
-      stops = TripHistory.planned_stops(occ).select { |s| s[:lat] && s[:lng] }
+      stops = Occurrences::Stops.planned(occ).select { |s| s[:lat] && s[:lng] }
       return park(occ.vehicle, device, [], i) if stops.size < 2
       return approach(occ, device, stops.first, i) if @now < occ.starts_at
 
@@ -121,11 +121,11 @@ module Telematics
     def park(v, device, list, i)
       done = list.reverse.find { |o| o.ends_at <= @now }
       nxt = list.find { |o| o.starts_at > @now }
-      if nxt && i % 3 == 0 && nxt.starts_at <= @now + 20.minutes && (first = TripHistory.planned_stops(nxt).find { |s| s[:lat] })
+      if nxt && i % 3 == 0 && nxt.starts_at <= @now + 20.minutes && (first = Occurrences::Stops.planned(nxt).find { |s| s[:lat] })
         return approach(nxt, device, first, i)
       end
 
-      spot = (done && TripHistory.planned_stops(done).reverse.find { |s| s[:lat] }) || (nxt && TripHistory.planned_stops(nxt).find { |s| s[:lat] })
+      spot = (done && Occurrences::Stops.planned(done).reverse.find { |s| s[:lat] }) || (nxt && Occurrences::Stops.planned(nxt).find { |s| s[:lat] })
       ll = spot ? [ spot[:lat].to_f, spot[:lng].to_f ] : [ DEPOT[0] + ((v.id % 7) * 0.012) - 0.04, DEPOT[1] + ((v.id % 5) * 0.02) - 0.05 ]
       ping(device, @now - (5 + (i % 40)).seconds, ll[0], ll[1], 0, 0, i)
     end

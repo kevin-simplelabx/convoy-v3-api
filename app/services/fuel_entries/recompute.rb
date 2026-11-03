@@ -45,6 +45,6 @@ module FuelEntries
       last_full[entry.energy] = { odo:, added: 0.to_d } if entry.full?
     end
 
-    def driver_on(schedules, date) = schedules.select { |s| s.starts_on <= date }.max_by(&:starts_on)&.driver_id
+    def driver_on(schedules, date) = schedules.select { |s| s.starts_on <= date }.max_by(&:sort_key)&.driver_id
   end
 end

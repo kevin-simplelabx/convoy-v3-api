@@ -7,7 +7,8 @@ module TripHistory
     "incomplete" => { label: "Incomplete", tone: "warning" },
     "cancelled_by_client" => { label: "Cancelled by Client", tone: "neutral" },
     "cancelled_by_us" => { label: "Cancelled by Us", tone: "danger" },
-    "skipped" => { label: "Skipped by Calendar", tone: "neutral" }
+    "skipped" => { label: "Skipped by Calendar", tone: "neutral" },
+    "skipped_by_driver" => { label: "Skipped by Driver", tone: "danger" }
   }.freeze
   ON_TIME = { "on_time" => "On Time", "late" => "Late", "na" => "N/A" }.freeze
   DAY_NAMES = %w[Sun Mon Tue Wed Thu Fri Sat].freeze
@@ -18,7 +19,10 @@ module TripHistory
   def self.recorded_outcome(occ)
     case occ.status
     when "skipped" then "skipped"
-    when "cancelled" then occ.cancelled_by_client? ? "cancelled_by_client" : "cancelled_by_us"
+    when "cancelled"
+      if occ.driver_end == "skipped" then "skipped_by_driver"
+      else occ.cancelled_by_client? ? "cancelled_by_client" : "cancelled_by_us"
+      end
     else "completed"
     end
   end
@@ -57,7 +61,7 @@ module TripHistory
   def self.recorded_stops(occ)
     occ.stop_events.to_h do |e|
       [ e.position, { arrived_at: run_minute(occ, e.arrived_at), departed_at: run_minute(occ, e.departed_at), boarded: e.boarded,
-                      alighted: e.alighted, skipped: e.skipped } ]
+                      alighted: e.alighted, skipped: e.skipped, skip_reason: e.skip_reason, left_early_missing: e.left_early_missing } ]
     end
   end
 
@@ -68,7 +72,7 @@ module TripHistory
   def self.stop_record(occ, on_time_minutes)
     recorded = recorded_stops(occ)
     on_board = 0
-    planned_stops(occ).map do |s|
+    Occurrences::Stops.planned(occ).map do |s|
       fixed = occ.correction&.stop(s[:position])
       rec = recorded[s[:position]] || {}
       actual = STOP_FIELDS.to_h { |f| [ f, fixed && !fixed[f].nil? ? fixed[f] : rec[f] ] }
@@ -78,7 +82,8 @@ module TripHistory
       on_board += actual[:boarded].to_i - actual[:alighted].to_i if served
       was = STOP_FIELDS.select { |f| fixed && !fixed[f].nil? }.to_h { |f| [ f, show(f, rec[f]) ] }
       s.merge(STOP_FIELDS.to_h { |f| [ f, show(f, actual[f]) ] })
-       .merge(served:, skipped:, delay_minutes: delay, late: !delay.nil? && delay > on_time_minutes, on_board: served ? on_board : nil, was:)
+       .merge(served:, skipped:, delay_minutes: delay, late: !delay.nil? && delay > on_time_minutes, on_board: served ? on_board : nil, was:,
+              skip_reason: rec[:skip_reason], left_early_missing: rec[:left_early_missing])
     end
   end
 
@@ -95,24 +100,5 @@ module TripHistory
       fixed.nil? ? recorded.dig(pos, :boarded) : fixed
     end
     known.any? ? known.sum : occ.pax
-  end
-
-  # The run's stops in travel order with their planned times (the run's timetable, else the first pick-up time).
-  def self.planned_stops(occ)
-    if occ.school_route
-      return occ.school_route.stops.each_with_index.map do |s, i|
-        { position: i, name: s.name, use: nil, planned_time: s.scheduled_time_hm, planned_minute: s.scheduled_time, lat: s.lat, lng: s.lng }
-      end
-    end
-    trip = occ.trip
-    return [] unless trip
-
-    times = occ.trip_run ? occ.trip_run.stop_minutes : []
-    trip.stops_in(occ.trip_run&.direction || 1).each_with_index.map do |s, i|
-      minute = times[i] || s.scheduled_time || (occ.start_time - occ.shift_minutes if i.zero?)
-      minute += occ.shift_minutes if minute
-      { position: i, name: s.name, use: s.use, planned_time: Clock.hm(minute), planned_minute: minute, lat: s.lat, lng: s.lng,
-        note: s.driver_note }
-    end
   end
 end

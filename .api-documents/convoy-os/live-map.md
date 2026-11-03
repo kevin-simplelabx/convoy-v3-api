@@ -9,7 +9,8 @@ tracker fitted to the bus. Progress on a run comes from what was recorded at its
 with sample routes. The API has no clock: **"now" is the server time**. Poll `GET /live_map` (every 10–15 s is enough) and
 let markers glide between reports on the front end.
 
-> Until the driver app and trackers send real pings, staging has sample data. `bin/rails live_map:simulate` writes "now"
+> The Convoy Driver app now sends real positions (its phone shows as a `driver_app` device named after the phone; see
+> [driver/gps.md](../driver/gps.md)); GPS trackers have no ingest yet. Staging also has sample data. `bin/rails live_map:simulate` writes "now"
 > for the seed company (buses on a run get GPS points and stops passed; others park; two are offline). `LOOP=10` keeps it
 > moving. It only produces buses "On Trip" while runs are in progress, so run it during the day.
 
@@ -110,9 +111,9 @@ returns the same row plus:
   - Points `points_done` of `points`, `on_board` (boarded minus alighted so far), ETA Last `eta_last`.
   - Stops in travel order. `state` is `done` (reached or skipped), `current` (heading there) or `upcoming`. Show
     `arrived_at` for done stops and `planned_at` for the rest.
-  - `students` is filled only for School Run trips (matched by stop name). `status` is `boarded` / `alighted` / `absent`
-    / `not_marked`. The label depends on the stop:
-    - at a pick-up that is done: Picked up / Absent
+  - `students` is filled only for School Run trips (matched by stop name). `status` is `boarded` / `alighted` / `not_boarded`
+    / `not_boarding` / `expected`. The label depends on the stop:
+    - at a pick-up that is done: Picked up / Absent (`not_boarded`, `not_boarding`)
     - at the current stop: Waiting
     - otherwise: Not yet
     - at the last stop: Dropped off / On board

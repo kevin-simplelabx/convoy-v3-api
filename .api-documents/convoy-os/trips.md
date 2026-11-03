@@ -544,7 +544,7 @@ School Bus route runs included). Opens on the past 30 days.
 | `driver[]` | Driver names as listed in the facets |
 | `operator[]` | `own`, `none` (no vehicle) or operator ids |
 | `kind[]` | `ad_hoc`, `corporate_shuttle`, `airport_transfer`, `disposal`, `school_run`, `school_route` |
-| `outcome[]` | `completed`, `incomplete`, `cancelled_by_client`, `cancelled_by_us`, `skipped` |
+| `outcome[]` | `completed`, `incomplete`, `cancelled_by_client`, `cancelled_by_us`, `skipped`, `skipped_by_driver` (Skip Trip in the Convoy Driver app) |
 | `on_time[]` | `on_time`, `late`, `na` |
 | `needs_look` | `true` = Needs a Look: a note, a correction, a replacement, an issue, an Incomplete run, or time above the speed limit |
 | `sort` | `new` (date, newest first; default), `old`, `id` (Trip ID), `client` |
@@ -603,7 +603,8 @@ School Bus route runs included). Opens on the past 30 days.
                "was": { "arrived_at": "08:02" } },
              { "position": 1, "name": "MBC", "use": "do", "planned_time": null, "planned_minute": null, "lat": null, "lng": null, "note": null,
                "arrived_at": "08:40", "departed_at": "08:41", "boarded": null, "alighted": 9,
-               "served": true, "skipped": false, "delay_minutes": null, "late": false, "on_board": 0, "was": {} } ],
+               "served": true, "skipped": false, "delay_minutes": null, "late": false, "on_board": 0, "was": {},
+               "skip_reason": null, "left_early_missing": null } ],
   "stop_summary": { "distance_km": "13.42", "duration_minutes": 40, "started_at": "...", "ended_at": "...", "stops_total": 2,
                     "stops_served": 2, "stops_skipped": 0, "late_stops": [], "boarded": 9 },
   "has_track": true,
@@ -633,7 +634,9 @@ School Bus route runs included). Opens on the past 30 days.
 | Summary strip | `trip_label`, `date`, `start_time` (first pick-up), `outcome_label`, `on_time` |
 | Why the trip did not run | `not_run`: `{ kind: "skipped", reason }` (e.g. "Public holiday: Deepavali", a calendar day off) or `{ kind: "cancelled", by_client, by, at }` |
 | Vehicle and crew | `vehicle` (`photo` = `{ url, name, size, content_type, thumb_url }`, else the `default_picture` illustration; `id: null` when a corrected plate is not in the fleet), `original_vehicle` (the bus a replacement took over from), `operator`, `crew.driver`, `crew.attendant` (School Bus) |
-| Stop record | `stop_summary` (header: Distance, Duration `started_at`–`ended_at`, Stops "`stops_served` of `stops_total` served, `stops_skipped` skipped", Late Stops "stop 2, stop 4", Passengers boarded) and `stops` in travel order (`position` from 0): `planned_time` (the run's timetable; ad hoc trips: the first pick-up only), what happened — `arrived_at`, `departed_at`, `boarded`, `alighted` (corrected first, else recorded; null = N/A), `served` (false → "Not served", or "Not served, trip ended before this stop" when Incomplete), `skipped` ("Passed at `arrived_at`, no passenger to pick up"), `delay_minutes` ("+3 min"), `late` (Late badge), `on_board` |
+| Stop record | `stop_summary` (header: Distance, Duration `started_at`–`ended_at`, Stops "`stops_served` of `stops_total` served, `stops_skipped` skipped", Late Stops "stop 2, stop 4", Passengers boarded) and `stops` in travel order (`position` from 0): `planned_time` (the run's timetable; ad hoc trips: the first pick-up only), what happened — `arrived_at`, `departed_at`, `boarded`, `alighted` (corrected first, else recorded; null = N/A), `served` (false → "Not served", or "Not served, trip ended before this stop" when Incomplete), `skipped` ("Passed at `arrived_at`, no passenger to pick up"), `delay_minutes` ("+3 min"), `late` (Late badge), `on_board`; from the Convoy Driver app also `skip_reason` (why the driver skipped it, "Trip force ended", "Skipped by the driver before the trip") and `left_early_missing` (left the pick-up with that many children not there) |
+| Disposal actuals | `disposal`: null, or the Convoy Driver app's record — start / end odometer and photos, `km`, block `clock` (`used_minutes`, `booked_minutes`, `overtime_minutes` billed in 15-minute blocks, `standing_by_minutes`), `runs` (roads, pax), `extensions` (who signed), `released_by` ([driver/disposal.md](../driver/disposal.md#1-the-disposal-block-in-trip-details)) |
+| How the driver ended it | `driver_end`: null, or `{ kind: "completed" \| "forced" \| "skipped", reason, on_board }` from the Convoy Driver app — Force End Trip ("Force ended: Vehicle breakdown · 3 still on board") or Skip Trip (outcome `skipped_by_driver`) |
 | Speed history | `speed` (Max, Average while moving, time above `limit_kmh`; null without GPS). The chart and replay use `GET /trip_history/:id/track` when `has_track` |
 | Driving summary | `driving_summary` (null without GPS): Distance, Actual Duration (`vs_plan_minutes` "+5 vs plan"), Odometer, Idling Away From Stops, Harsh Braking or Acceleration, GPS Pings ("241 every 10 s"), Fuel or Charge Used ("(est.)" when `fuel_estimated`) |
 | Corrected badges | `was` holds the recorded value of each corrected field (record: `outcome_label`, `plate`, `driver_name`; each stop: its fields) — show "Corrected" with `was` as the tooltip |

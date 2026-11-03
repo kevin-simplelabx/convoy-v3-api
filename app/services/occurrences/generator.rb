@@ -8,7 +8,8 @@ module Occurrences
     Row = Struct.new(:trip_id, :school_route_id, :date, :trip_run_id, :run_key, :slot_no, :part, :client_id, :kind, :trip_label,
                      :start_time, :end_time, :starts_at, :ends_at, :shift_minutes, :pax, :vehicle_id, :driver_id,
                      :operator_driver_id, :driver_name, :driver_phone, :operator_id, :original_vehicle_id, :price,
-                     :trip_value, :operator_cost, :trip_assignment_id, :replacement_id, :skip_reason, keyword_init: true) do
+                     :trip_value, :operator_cost, :trip_assignment_id, :replacement_id, :skip_reason,
+                     :original_driver_id, :original_operator_driver_id, keyword_init: true) do
       def identity = [ trip_id, school_route_id, date, trip_run_id, slot_no, part ]
 
       # Changes when anything Sync writes changes, so unchanged rows are skipped.
@@ -70,7 +71,7 @@ module Occurrences
       elsif assignment then assignment.vehicle_id
       else planned_vehicle(trip, run, slot)
       end
-      bus = Occurrences.vehicle_attrs(@fleet, trip, vehicle_id, date)
+      bus = Occurrences.vehicle_attrs(@fleet, trip, vehicle_id, date, start_time)
       if assignment && !occ&.overridden?(:vehicle_id)
         bus[:operator_id] = assignment.operator_id if assignment.to_operator?
         bus[:operator_cost] = assignment_pay(trip, assignment, date) || bus[:operator_cost] unless assignment.to_own?
@@ -87,19 +88,28 @@ module Occurrences
       )
     end
 
-    # Layer 4: the replacement for the run, if any. A handover gives a second part on the new bus.
+    # Layer 4: the replacement for the run, if any. A handover gives a second part on the new bus. A run that changes
+    # driver keeps who had it (original_driver_id / original_operator_driver_id): they still see it, as Replaced.
     def replace(row, trip)
       rep = @replacements.for(row.trip_id, row.date, row.trip_run_id, row.slot_no, row.vehicle_id, school_route_id: row.school_route_id)
       return [ row ] if rep.nil?
 
+      before = [ row.driver_id, row.operator_driver_id ]
       row.replacement_id = rep.id
+      rows = [ row ]
       case rep.kind
       when "drv" then new_driver(row, rep, row.vehicle_id)
       when "veh" then new_bus(row, rep, trip, keep_driver: true)
       when "crew" then new_bus(row, rep, trip, keep_driver: false)
-      when "hand" then return handover(row, rep, trip)
+      when "hand" then rows = handover(row, rep, trip)
       end
-      [ row ]
+      rows.each { |r| keep_original_driver(r, before) }
+    end
+
+    def keep_original_driver(row, before)
+      return if before.none? || [ row.driver_id, row.operator_driver_id ] == before || row.original_driver_id || row.original_operator_driver_id
+
+      row.original_driver_id, row.original_operator_driver_id = before
     end
 
     def new_driver(row, rep, vehicle_id)
@@ -109,7 +119,7 @@ module Occurrences
         row.driver_name = rep.driver_id || rep.operator_driver_id ? nil : rep.driver_name
         row.driver_phone = rep.driver_id || rep.operator_driver_id ? nil : rep.driver_phone
       else
-        d = @fleet.driver_on(vehicle_id, row.date)
+        d = @fleet.driver_on(vehicle_id, row.date, row.start_time)
         row.driver_id = d.is_a?(Driver) ? d.id : nil
         row.operator_driver_id = d.is_a?(OperatorDriver) ? d.id : nil
       end

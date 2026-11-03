@@ -33,6 +33,14 @@ module Occurrences
       @academic_years[school_id] ||= AcademicYear.where(school_id:).includes(:terms, :holidays).to_a
     end
 
+    # The regular bus's driver, when the route's replacement bus for the day comes with another driver.
+    def original_driver(regular, date, minute, bus)
+      was = Occurrences.vehicle_attrs(@fleet, nil, regular, date, minute).slice(:driver_id, :operator_driver_id)
+      return {} if was.values.none? || was == bus.slice(:driver_id, :operator_driver_id)
+
+      { original_driver_id: was[:driver_id], original_operator_driver_id: was[:operator_driver_id] }
+    end
+
     def base_route_row(route, plan, school, date, occ)
       shift = occ&.shift_minutes.to_i
       regular = route.regular_vehicle_id(date)
@@ -44,13 +52,14 @@ module Occurrences
       end
       start_time = route.start_time + shift
       end_time = route.end_time + shift
+      bus = Occurrences.vehicle_attrs(@fleet, nil, vehicle_id, date, start_time)
       Row.new(
         trip_id: nil, school_route_id: route.id, date:, trip_run_id: nil, run_key: nil, slot_no: 1, part: 1,
         client_id: school.client_id, kind: "school_route", trip_label: route.title, start_time:, end_time:,
         starts_at: at(date, start_time), ends_at: at(date, end_time), shift_minutes: occ&.shift_minutes.to_i,
         pax: route.riders_count, price: 0, trip_value: 1, trip_assignment_id: nil, replacement_id: nil,
-        original_vehicle_id: route_rep ? regular : nil, driver_name: nil, driver_phone: nil,
-        **Occurrences.vehicle_attrs(@fleet, nil, vehicle_id, date)
+        original_vehicle_id: route_rep ? regular : nil, driver_name: nil, driver_phone: nil, **bus,
+        **(route_rep ? original_driver(regular, date, start_time, bus) : {})
       )
     end
   end

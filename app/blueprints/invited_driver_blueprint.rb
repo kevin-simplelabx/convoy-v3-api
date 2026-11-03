@@ -1,6 +1,6 @@
 # Fields shared by own drivers and operator drivers (Drivers and Operator Drivers pages).
 class InvitedDriverBlueprint < ApplicationBlueprint
-  fields :name, :phone, :phone_display, :status, :invited_at, :responded_at, :status_on
+  fields :name, :phone, :phone_display, :status, :invited_at, :responded_at, :joined_at, :left_at, :status_on
   field(:photo) { |d| d.photo_info }
   field(:display) { |d| d.display_info }
   field(:kyc_shared) { |d| d.kyc_profile.present? }

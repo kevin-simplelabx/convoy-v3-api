@@ -3,6 +3,7 @@ Rails.application.routes.draw do
 
   devise_for :users, skip: :all
   devise_for :portal_accounts, skip: :all
+  devise_for :driver_accounts, skip: :all
 
   namespace :api, defaults: { format: :json } do
     namespace :v1 do
@@ -16,6 +17,64 @@ Rails.application.routes.draw do
           post :verify
         end
         resource :password, only: :create
+      end
+
+      # Convoy Driver app (drivers' phones)
+      namespace :driver_app, path: "driver" do
+        resource :session, only: %i[show create update destroy] do
+          post :code
+          post :email
+        end
+        resources :companies, only: :index, param: :key do
+          member do
+            post :accept
+            post :decline
+            post :disconnect
+          end
+        end
+        resource :company, only: :show, controller: :company
+        resource :profile, only: %i[show update] do
+          patch :email
+        end
+        resources :licences, only: %i[create update destroy]
+        resource :vehicle, only: :show, controller: :vehicle do
+          get :history
+          resources :handovers, only: :create, controller: :vehicle_handovers
+        end
+        resources :runs, only: %i[index show] do
+          collection do
+            get :schedule
+            get :on_going
+          end
+          member do
+            post :seen
+            post :start
+            post :arrive
+            post :leave
+            post :skip_stop
+            post :attendance
+            post :count
+            post :complete
+            post :force_end
+            post :skip
+            patch :route
+            post :geofence
+            post :disposal_start
+            post :disposal_run_start
+            post :disposal_run_end
+            post :disposal_extend
+            post :disposal_end
+          end
+        end
+        resources :positions, only: :create
+        resources :notifications, only: :index do
+          post :read, on: :member
+          post :read_all, on: :collection
+        end
+        resources :notices, only: :show do
+          post :acknowledge, on: :member
+        end
+        resource :config, only: :show, controller: :config
       end
       resources :companies, only: %i[index show create update]
 

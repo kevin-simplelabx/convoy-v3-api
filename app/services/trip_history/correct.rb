@@ -101,7 +101,7 @@ module TripHistory
       list = Array(@params[:stops])
       return if list.empty?
 
-      planned = TripHistory.planned_stops(@occ)
+      planned = Occurrences::Stops.planned(@occ)
       recorded = TripHistory.recorded_stops(@occ)
       list.each do |input|
         input = input.to_h.with_indifferent_access

@@ -297,13 +297,16 @@ runs ("School route times are set in School Bus").
 { "data": { "list": "AM13 route list Nov.pdf",
             "stops": [ { "name": "Bedok Court Main Gate", "time": "06:35",
                          "students": [ { "key": "2d9ea1b7-...", "name": "Lim Jia Hui", "class_name": "P3", "parent_name": "Mdm Lim",
-                                         "phone": "91234567", "phone2": null, "note": null, "status": "not_marked",
+                                         "phone": "91234567", "phone2": null, "note": null, "status": "expected",
                                          "boarded_at": null, "alighted_at": null, "by": null, "at": null } ] } ] } }
 ```
 
 - The list is the route list in force on that date (an earlier list for dates before an import's Apply From).
-- Mark: `PATCH /occurrences/:id/passengers/:key` `{ "mark": "boarded" | "alighted" | "absent" | "clear" }` → the whole list again.
-- `status`: `not_marked`, `boarded`, `alighted`, `absent`.
+- Mark: `PATCH /occurrences/:id/passengers/:key` `{ "mark": "boarded" | "alighted" | "not_boarded" | "expected" }` → the whole
+  list again (`expected` clears the mark).
+- `status`: `expected` (not marked), `boarded`, `alighted`, `not_boarded` (not at the stop: show "Absent"), `not_boarding`
+  (the driver marked them not riding today, before the trip). The Convoy Driver app writes the same marks; `by` is who
+  marked (a user's name, or the driver's).
 
 ### 5.4 Stop photos (Stops section of the drawer)
 
@@ -799,10 +802,15 @@ While `plate_conflict` is true (the log card shows another plate), saving is ref
 
 | Action | Call |
 | --- | --- |
-| History with periods | `GET /vehicles/:vehicle_id/driver_schedules` → `[{ id, starts_on, ends_on, driver { id, name, phone } }]` |
-| Change Default Driver from a date (may be ahead) | `POST /vehicles/:vehicle_id/driver_schedules` `{ "vehicle_driver_schedule": { driver_id, starts_on } }` (same date replaces) |
+| History with periods | `GET /vehicles/:vehicle_id/driver_schedules` → `[{ id, starts_on, start_time, ends_on, ends_at, driver { id, name, phone } }]` |
+| Change Default Driver from a date (may be ahead) | `POST /vehicles/:vehicle_id/driver_schedules` `{ "vehicle_driver_schedule": { driver_id, starts_on, start_time } }` (same date and time replaces) |
 | Remove an upcoming change | `DELETE /vehicles/:vehicle_id/driver_schedules/:id` (only ones not started) |
 | Driver list | `GET /drivers?status=active` |
+
+`start_time` (optional, "HH:MM", default "00:00" = the whole day): a driver who switches buses during the day (from 06:30 on
+PC1234X): runs on the bus starting from that time take the new driver, earlier runs keep the old one (enter the same time
+on the other bus with its new driver, or none). A period that ends during a day has `ends_on` = that day and `ends_at` =
+the time; otherwise `ends_at` is null. The driver does the handover inspection in the Convoy Driver app (Switch Vehicle).
 
 Managed (operator) buses: the driver is the operator driver on the bus: `PATCH /operator_drivers/:id/assign_vehicle` `{ vehicle_id }`
 (swaps with the driver already on it). Runs take the new driver in the background.

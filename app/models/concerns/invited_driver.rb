@@ -5,6 +5,8 @@
 #   declined, past → pending (invite again)
 # The mobile is stored in E.164 (+6591234567) and can only change while the invite is pending; it is unique among
 # drivers who are pending or active. Each send is kept in driver_invites (SMS recorded, not sent yet).
+# The person behind the record is a DriverAccount (the app sign-in), linked by mobile number: at once when the account
+# exists, else when that mobile first signs in to the app.
 module InvitedDriver
   extend ActiveSupport::Concern
 
@@ -18,6 +20,7 @@ module InvitedDriver
     mount_uploader :display_photo, ImageUploader
 
     belongs_to :last_vehicle, class_name: "Vehicle", optional: true
+    belongs_to :driver_account, optional: true
     belongs_to :display_set_by, class_name: "User", optional: true
     has_many :invites, -> { order(:created_at) }, as: :invitable, class_name: "DriverInvite", dependent: :destroy
     has_one :kyc_profile, as: :driver, class_name: "DriverKycProfile", dependent: :destroy
@@ -28,9 +31,9 @@ module InvitedDriver
       state :pending, initial: true
       state :active, :declined, :past
 
-      event(:accept) { transitions from: :pending, to: :active, after: :mark_responded }
+      event(:accept) { transitions from: :pending, to: :active, after: :mark_joined }
       event(:decline) { transitions from: :pending, to: :declined, after: :mark_responded }
-      event(:remove) { transitions from: :active, to: :past, after: :mark_responded }
+      event(:remove) { transitions from: :active, to: :past, after: :mark_left }
       event(:reinvite) { transitions from: %i[declined past], to: :pending, after: :mark_invited }
     end
 
@@ -42,6 +45,7 @@ module InvitedDriver
     validate :phone_locked, on: :update
 
     before_create { self.invited_at ||= Time.current }
+    before_save :link_driver_account, if: :will_save_change_to_phone?
 
     scope :live, -> { kept.where(status: %w[pending active]) }
   end
@@ -72,9 +76,22 @@ module InvitedDriver
 
   def mark_responded = self.responded_at = Time.current
 
+  def mark_joined
+    mark_responded
+    assign_attributes(joined_at: responded_at, left_at: nil)
+  end
+
+  def mark_left
+    mark_responded
+    self.left_at = responded_at
+  end
+
+  def link_driver_account
+    self.driver_account = DriverAccount.find_by(phone:)
+  end
+
   def mark_invited
-    self.invited_at = Time.current
-    self.responded_at = nil
+    assign_attributes(invited_at: Time.current, responded_at: nil, joined_at: nil, left_at: nil)
   end
 
   def phone_unique_while_live

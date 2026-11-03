@@ -19,7 +19,8 @@ class TripHistoryQuery
 
   OUTCOME_SQL = <<~SQL.squish.freeze
     CASE trip_occurrences.status WHEN 'skipped' THEN 'skipped'
-      WHEN 'cancelled' THEN CASE WHEN trip_occurrences.cancelled_by_client THEN 'cancelled_by_client' ELSE 'cancelled_by_us' END
+      WHEN 'cancelled' THEN CASE WHEN trip_occurrences.driver_end = 'skipped' THEN 'skipped_by_driver'
+        WHEN trip_occurrences.cancelled_by_client THEN 'cancelled_by_client' ELSE 'cancelled_by_us' END
       ELSE COALESCE(occurrence_corrections.outcome, 'completed') END
   SQL
   DRIVER_SQL = <<~SQL.squish.freeze

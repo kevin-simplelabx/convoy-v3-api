@@ -1,6 +1,8 @@
 # Integration Guide — start here
 
-**For the AI assistant (and developers) building the Convoy OS front end or mobile app against the Convoy V3 API.**
+**For the AI assistant (and developers) building the Convoy OS front end against the Convoy V3 API.** Building the
+**Convoy Driver** phone app? Start at [driver/README.md](driver/README.md) instead (its own sign-in, conventions and
+screen map); the shared rules in `README.md` apply to both.
 This is the entry point of the API docs: read it fully first. It holds what applies to every screen and tells you which
 other file and section to open for each task. It does not repeat them: open them when it points you there.
 

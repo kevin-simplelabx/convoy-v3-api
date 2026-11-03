@@ -5,19 +5,27 @@
 # Table name: occurrence_stop_events
 # Database name: primary
 #
-#  id              :bigint           not null, primary key
-#  alighted        :integer
-#  arrived_at      :datetime
-#  boarded         :integer
-#  departed_at     :datetime
-#  occurrence_date :date             not null
-#  position        :integer          not null
-#  skipped         :boolean          default(FALSE), not null
-#  stop_name       :string
-#  created_at      :datetime         not null
-#  updated_at      :datetime         not null
-#  company_id      :bigint           not null
-#  occurrence_id   :bigint           not null
+#  id                  :bigint           not null, primary key
+#  alighted            :integer
+#  arrived_at          :datetime
+#  boarded             :integer
+#  departed_at         :datetime
+#  geofence_entered_at :datetime
+#  geofence_exited_at  :datetime
+#  left_early_missing  :integer
+#  occurrence_date     :date             not null
+#  on_board            :integer
+#  planned_skip        :boolean          default(FALSE), not null
+#  position            :integer          not null
+#  skip_reason         :string
+#  skipped             :boolean          default(FALSE), not null
+#  skipped_by          :string
+#  source              :string           default("telematics"), not null
+#  stop_name           :string
+#  created_at          :datetime         not null
+#  updated_at          :datetime         not null
+#  company_id          :bigint           not null
+#  occurrence_id       :bigint           not null
 #
 # Indexes
 #
@@ -31,9 +39,17 @@
 class OccurrenceStopEvent < ApplicationRecord
   include TenantScoped
 
+  # Who skipped the point: the driver, the app because no one was riding today, or the driver before the trip (Edit Route).
+  SKIPPED_BY = %w[driver auto plan].freeze
+  SOURCES = %w[driver_app telematics].freeze
+
   belongs_to :occurrence, class_name: "TripOccurrence", foreign_key: %i[occurrence_id occurrence_date], primary_key: %i[id date],
                           inverse_of: :stop_events
 
   validates :position, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
-  validates :boarded, :alighted, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :boarded, :alighted, :on_board, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :skipped_by, inclusion: { in: SKIPPED_BY }, allow_nil: true
+  validates :source, inclusion: { in: SOURCES }
+
+  def reached? = skipped || arrived_at.present?
 end

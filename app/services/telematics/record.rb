@@ -16,7 +16,7 @@ module Telematics
       raise Error, "Only a run that ran has a GPS record" unless @occ.completed?
 
       Occurrences::Partitions.ensure!(@occ.date, @occ.date)
-      names = TripHistory.planned_stops(@occ).to_h { |s| [ s[:position], s[:name] ] }
+      names = Occurrences::Stops.planned(@occ).to_h { |s| [ s[:position], s[:name] ] }
       OccurrencePosition.transaction do
         @occ.positions.delete_all
         @occ.stop_events.delete_all

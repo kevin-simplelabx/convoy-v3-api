@@ -1767,7 +1767,12 @@ CREATE TABLE public.companies (
     country_set_at timestamp(6) without time zone,
     country_set_by_id bigint,
     stop_photo_auto_driver boolean DEFAULT false NOT NULL,
-    stop_photo_auto_parent boolean DEFAULT false NOT NULL
+    stop_photo_auto_parent boolean DEFAULT false NOT NULL,
+    ops_phone character varying,
+    ops_hours character varying,
+    ops_whatsapp character varying,
+    ops_email character varying,
+    depot_address text
 );
 
 
@@ -1899,6 +1904,41 @@ CREATE SEQUENCE public.company_leads_id_seq
 --
 
 ALTER SEQUENCE public.company_leads_id_seq OWNED BY public.company_leads.id;
+
+
+--
+-- Name: company_links; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.company_links (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    title character varying NOT NULL,
+    url character varying NOT NULL,
+    note character varying,
+    "position" integer DEFAULT 0 NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: company_links_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.company_links_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: company_links_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.company_links_id_seq OWNED BY public.company_links.id;
 
 
 --
@@ -2148,6 +2188,90 @@ ALTER SEQUENCE public.document_reads_id_seq OWNED BY public.document_reads.id;
 
 
 --
+-- Name: driver_accounts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.driver_accounts (
+    id bigint NOT NULL,
+    phone character varying NOT NULL,
+    name character varying,
+    email character varying,
+    encrypted_password character varying DEFAULT ''::character varying NOT NULL,
+    password_set_at timestamp(6) without time zone,
+    phone_verified_at timestamp(6) without time zone,
+    last_sign_in_at timestamp(6) without time zone,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    date_of_birth date,
+    nationality character varying,
+    residential_status character varying,
+    id_number text,
+    id_number_masked character varying,
+    address text,
+    postal_code character varying,
+    photo character varying,
+    singpass_verified_at timestamp(6) without time zone,
+    singpass_fields character varying[] DEFAULT '{}'::character varying[] NOT NULL
+);
+
+
+--
+-- Name: driver_accounts_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.driver_accounts_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: driver_accounts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.driver_accounts_id_seq OWNED BY public.driver_accounts.id;
+
+
+--
+-- Name: driver_app_actions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.driver_app_actions (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    driver_account_id bigint NOT NULL,
+    client_id uuid NOT NULL,
+    occurrence_id bigint NOT NULL,
+    occurrence_date date NOT NULL,
+    kind character varying NOT NULL,
+    at timestamp(6) without time zone NOT NULL,
+    payload jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: driver_app_actions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.driver_app_actions_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: driver_app_actions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.driver_app_actions_id_seq OWNED BY public.driver_app_actions.id;
+
+
+--
 -- Name: driver_app_sessions; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -2224,6 +2348,46 @@ ALTER SEQUENCE public.driver_invites_id_seq OWNED BY public.driver_invites.id;
 
 
 --
+-- Name: driver_jwts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.driver_jwts (
+    id bigint NOT NULL,
+    driver_account_id bigint NOT NULL,
+    jti character varying NOT NULL,
+    aud character varying,
+    exp timestamp(6) without time zone NOT NULL,
+    name character varying,
+    last_used_at timestamp(6) without time zone,
+    driver_id bigint,
+    operator_driver_id bigint,
+    driver_app_session_id bigint,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT driver_jwts_one_membership CHECK ((num_nonnulls(driver_id, operator_driver_id) <= 1))
+);
+
+
+--
+-- Name: driver_jwts_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.driver_jwts_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: driver_jwts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.driver_jwts_id_seq OWNED BY public.driver_jwts.id;
+
+
+--
 -- Name: driver_kyc_profiles; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -2245,7 +2409,8 @@ CREATE TABLE public.driver_kyc_profiles (
     vocational_licence_expires_on date,
     shared_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    licences jsonb DEFAULT '[]'::jsonb NOT NULL
 );
 
 
@@ -2266,6 +2431,168 @@ CREATE SEQUENCE public.driver_kyc_profiles_id_seq
 --
 
 ALTER SEQUENCE public.driver_kyc_profiles_id_seq OWNED BY public.driver_kyc_profiles.id;
+
+
+--
+-- Name: driver_licences; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.driver_licences (
+    id bigint NOT NULL,
+    driver_account_id bigint NOT NULL,
+    kind character varying NOT NULL,
+    name character varying NOT NULL,
+    classes character varying,
+    number character varying,
+    issued_on date,
+    expires_on date,
+    card_front character varying,
+    card_back character varying,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: driver_licences_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.driver_licences_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: driver_licences_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.driver_licences_id_seq OWNED BY public.driver_licences.id;
+
+
+--
+-- Name: driver_notice_recipients; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.driver_notice_recipients (
+    id bigint NOT NULL,
+    driver_notice_id bigint NOT NULL,
+    driver_id bigint,
+    operator_driver_id bigint,
+    read_at timestamp(6) without time zone,
+    acknowledged_at timestamp(6) without time zone,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT driver_notice_recipients_one_driver CHECK ((num_nonnulls(driver_id, operator_driver_id) = 1))
+);
+
+
+--
+-- Name: driver_notice_recipients_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.driver_notice_recipients_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: driver_notice_recipients_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.driver_notice_recipients_id_seq OWNED BY public.driver_notice_recipients.id;
+
+
+--
+-- Name: driver_notices; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.driver_notices (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    kind character varying NOT NULL,
+    title character varying NOT NULL,
+    summary character varying,
+    body text,
+    image character varying,
+    image_caption character varying,
+    link_url character varying,
+    link_label character varying,
+    from_name character varying,
+    audience character varying DEFAULT 'all'::character varying NOT NULL,
+    starts_at timestamp(6) without time zone NOT NULL,
+    ends_at timestamp(6) without time zone,
+    created_by_id bigint,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: driver_notices_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.driver_notices_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: driver_notices_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.driver_notices_id_seq OWNED BY public.driver_notices.id;
+
+
+--
+-- Name: driver_notifications; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.driver_notifications (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    driver_id bigint,
+    operator_driver_id bigint,
+    kind character varying NOT NULL,
+    title character varying NOT NULL,
+    body character varying,
+    occurrence_id bigint,
+    occurrence_date date,
+    vehicle_id bigint,
+    driver_notice_id bigint,
+    read_at timestamp(6) without time zone,
+    pushed_at timestamp(6) without time zone,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT driver_notifications_one_driver CHECK ((num_nonnulls(driver_id, operator_driver_id) = 1))
+);
+
+
+--
+-- Name: driver_notifications_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.driver_notifications_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: driver_notifications_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.driver_notifications_id_seq OWNED BY public.driver_notifications.id;
 
 
 --
@@ -2530,6 +2857,42 @@ ALTER SEQUENCE public.driver_point_lots_id_seq OWNED BY public.driver_point_lots
 
 
 --
+-- Name: driver_sign_in_codes; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.driver_sign_in_codes (
+    id bigint NOT NULL,
+    phone character varying NOT NULL,
+    code_digest character varying NOT NULL,
+    expires_at timestamp(6) without time zone NOT NULL,
+    attempts integer DEFAULT 0 NOT NULL,
+    used_at timestamp(6) without time zone,
+    ip character varying,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: driver_sign_in_codes_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.driver_sign_in_codes_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: driver_sign_in_codes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.driver_sign_in_codes_id_seq OWNED BY public.driver_sign_in_codes.id;
+
+
+--
 -- Name: driver_vehicle_types; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -2584,7 +2947,10 @@ CREATE TABLE public.drivers (
     display_photo character varying,
     display_set_by_id bigint,
     display_set_at timestamp(6) without time zone,
-    discarded_at timestamp(6) without time zone
+    discarded_at timestamp(6) without time zone,
+    driver_account_id bigint,
+    joined_at timestamp(6) without time zone,
+    left_at timestamp(6) without time zone
 );
 
 
@@ -3983,6 +4349,132 @@ ALTER SEQUENCE public.occurrence_corrections_id_seq OWNED BY public.occurrence_c
 
 
 --
+-- Name: occurrence_disposal_extensions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.occurrence_disposal_extensions (
+    id bigint NOT NULL,
+    occurrence_disposal_id bigint NOT NULL,
+    at timestamp(6) without time zone NOT NULL,
+    from_minutes integer NOT NULL,
+    to_minutes integer NOT NULL,
+    signed_by character varying NOT NULL,
+    signature character varying,
+    operations_told boolean DEFAULT false NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: occurrence_disposal_extensions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.occurrence_disposal_extensions_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: occurrence_disposal_extensions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.occurrence_disposal_extensions_id_seq OWNED BY public.occurrence_disposal_extensions.id;
+
+
+--
+-- Name: occurrence_disposal_runs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.occurrence_disposal_runs (
+    id bigint NOT NULL,
+    occurrence_disposal_id bigint NOT NULL,
+    started_at timestamp(6) without time zone NOT NULL,
+    ended_at timestamp(6) without time zone,
+    from_road character varying,
+    to_road character varying,
+    from_lat double precision,
+    from_lng double precision,
+    to_lat double precision,
+    to_lng double precision,
+    pax integer,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: occurrence_disposal_runs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.occurrence_disposal_runs_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: occurrence_disposal_runs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.occurrence_disposal_runs_id_seq OWNED BY public.occurrence_disposal_runs.id;
+
+
+--
+-- Name: occurrence_disposals; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.occurrence_disposals (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    occurrence_id bigint NOT NULL,
+    occurrence_date date NOT NULL,
+    booked_minutes integer NOT NULL,
+    block_starts_at timestamp(6) without time zone NOT NULL,
+    started_at timestamp(6) without time zone NOT NULL,
+    early_start boolean DEFAULT false NOT NULL,
+    late_minutes integer DEFAULT 0 NOT NULL,
+    start_odometer integer NOT NULL,
+    start_photo character varying,
+    extension_minutes integer DEFAULT 0 NOT NULL,
+    ended_at timestamp(6) without time zone,
+    end_odometer integer,
+    end_photo character varying,
+    released_by character varying,
+    release_signature character varying,
+    used_minutes integer,
+    overtime_minutes integer,
+    km integer,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: occurrence_disposals_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.occurrence_disposals_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: occurrence_disposals_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.occurrence_disposals_id_seq OWNED BY public.occurrence_disposals.id;
+
+
+--
 -- Name: occurrence_driver_reports; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -4051,6 +4543,52 @@ CREATE SEQUENCE public.occurrence_notes_id_seq
 --
 
 ALTER SEQUENCE public.occurrence_notes_id_seq OWNED BY public.occurrence_notes.id;
+
+
+--
+-- Name: occurrence_passengers; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.occurrence_passengers (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    occurrence_id bigint NOT NULL,
+    occurrence_date date NOT NULL,
+    passenger_key character varying NOT NULL,
+    name character varying,
+    state character varying NOT NULL,
+    boarded_at timestamp(6) without time zone,
+    board_method character varying,
+    board_lat double precision,
+    board_lng double precision,
+    alighted_at timestamp(6) without time zone,
+    alight_method character varying,
+    alight_lat double precision,
+    alight_lng double precision,
+    marked_by character varying,
+    source character varying DEFAULT 'driver_app'::character varying NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: occurrence_passengers_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.occurrence_passengers_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: occurrence_passengers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.occurrence_passengers_id_seq OWNED BY public.occurrence_passengers.id;
 
 
 --
@@ -4255,7 +4793,15 @@ CREATE TABLE public.occurrence_stop_events (
     boarded integer,
     alighted integer,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    skip_reason character varying,
+    skipped_by character varying,
+    planned_skip boolean DEFAULT false NOT NULL,
+    on_board integer,
+    left_early_missing integer,
+    source character varying DEFAULT 'telematics'::character varying NOT NULL,
+    geofence_entered_at timestamp(6) without time zone,
+    geofence_exited_at timestamp(6) without time zone
 );
 
 
@@ -4385,7 +4931,10 @@ CREATE TABLE public.operator_drivers (
     display_photo character varying,
     display_set_by_id bigint,
     display_set_at timestamp(6) without time zone,
-    discarded_at timestamp(6) without time zone
+    discarded_at timestamp(6) without time zone,
+    driver_account_id bigint,
+    joined_at timestamp(6) without time zone,
+    left_at timestamp(6) without time zone
 );
 
 
@@ -7291,51 +7840,6 @@ ALTER SEQUENCE public.school_rider_absences_id_seq OWNED BY public.school_rider_
 
 
 --
--- Name: school_rider_boardings; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.school_rider_boardings (
-    id bigint NOT NULL,
-    company_id bigint NOT NULL,
-    occurrence_id bigint NOT NULL,
-    occurrence_date date NOT NULL,
-    school_route_id bigint NOT NULL,
-    rid character varying NOT NULL,
-    state character varying NOT NULL,
-    boarded_at timestamp(6) without time zone,
-    board_method character varying,
-    board_lat double precision,
-    board_lng double precision,
-    alighted_at timestamp(6) without time zone,
-    alight_method character varying,
-    alight_lat double precision,
-    alight_lng double precision,
-    marked_by character varying,
-    created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
-);
-
-
---
--- Name: school_rider_boardings_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.school_rider_boardings_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: school_rider_boardings_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.school_rider_boardings_id_seq OWNED BY public.school_rider_boardings.id;
-
-
---
 -- Name: school_riders; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -7977,47 +8481,6 @@ ALTER SEQUENCE public.stops_id_seq OWNED BY public.stops.id;
 
 
 --
--- Name: student_attendances; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.student_attendances (
-    id bigint NOT NULL,
-    company_id bigint NOT NULL,
-    trip_id bigint NOT NULL,
-    run_date date NOT NULL,
-    trip_run_id bigint,
-    slot_no integer DEFAULT 1 NOT NULL,
-    student_key uuid NOT NULL,
-    student_name character varying NOT NULL,
-    boarded_at timestamp(6) without time zone,
-    alighted_at timestamp(6) without time zone,
-    absent boolean DEFAULT false NOT NULL,
-    recorded_by_id bigint,
-    created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
-);
-
-
---
--- Name: student_attendances_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.student_attendances_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: student_attendances_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.student_attendances_id_seq OWNED BY public.student_attendances.id;
-
-
---
 -- Name: tracking_devices; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -8252,6 +8715,12 @@ CREATE TABLE public.trip_occurrences (
     max_delay_minutes integer,
     started_at timestamp with time zone,
     ended_by_id bigint,
+    original_driver_id bigint,
+    original_operator_driver_id bigint,
+    driver_seen_at timestamp(6) without time zone,
+    driver_end character varying,
+    driver_end_reason character varying,
+    end_on_board integer,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
     CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 )
@@ -8324,6 +8793,12 @@ CREATE TABLE public.trip_occurrences_y2026m09 (
     max_delay_minutes integer,
     started_at timestamp with time zone,
     ended_by_id bigint,
+    original_driver_id bigint,
+    original_operator_driver_id bigint,
+    driver_seen_at timestamp(6) without time zone,
+    driver_end character varying,
+    driver_end_reason character varying,
+    end_on_board integer,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
     CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 );
@@ -8381,6 +8856,12 @@ CREATE TABLE public.trip_occurrences_y2026m10 (
     max_delay_minutes integer,
     started_at timestamp with time zone,
     ended_by_id bigint,
+    original_driver_id bigint,
+    original_operator_driver_id bigint,
+    driver_seen_at timestamp(6) without time zone,
+    driver_end character varying,
+    driver_end_reason character varying,
+    end_on_board integer,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
     CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 );
@@ -8438,6 +8919,12 @@ CREATE TABLE public.trip_occurrences_y2026m11 (
     max_delay_minutes integer,
     started_at timestamp with time zone,
     ended_by_id bigint,
+    original_driver_id bigint,
+    original_operator_driver_id bigint,
+    driver_seen_at timestamp(6) without time zone,
+    driver_end character varying,
+    driver_end_reason character varying,
+    end_on_board integer,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
     CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 );
@@ -8495,6 +8982,12 @@ CREATE TABLE public.trip_occurrences_y2026m12 (
     max_delay_minutes integer,
     started_at timestamp with time zone,
     ended_by_id bigint,
+    original_driver_id bigint,
+    original_operator_driver_id bigint,
+    driver_seen_at timestamp(6) without time zone,
+    driver_end character varying,
+    driver_end_reason character varying,
+    end_on_board integer,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
     CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 );
@@ -8552,6 +9045,12 @@ CREATE TABLE public.trip_occurrences_y2027m01 (
     max_delay_minutes integer,
     started_at timestamp with time zone,
     ended_by_id bigint,
+    original_driver_id bigint,
+    original_operator_driver_id bigint,
+    driver_seen_at timestamp(6) without time zone,
+    driver_end character varying,
+    driver_end_reason character varying,
+    end_on_board integer,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
     CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 );
@@ -8609,6 +9108,12 @@ CREATE TABLE public.trip_occurrences_y2027m02 (
     max_delay_minutes integer,
     started_at timestamp with time zone,
     ended_by_id bigint,
+    original_driver_id bigint,
+    original_operator_driver_id bigint,
+    driver_seen_at timestamp(6) without time zone,
+    driver_end character varying,
+    driver_end_reason character varying,
+    end_on_board integer,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
     CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 );
@@ -8666,6 +9171,12 @@ CREATE TABLE public.trip_occurrences_y2027m03 (
     max_delay_minutes integer,
     started_at timestamp with time zone,
     ended_by_id bigint,
+    original_driver_id bigint,
+    original_operator_driver_id bigint,
+    driver_seen_at timestamp(6) without time zone,
+    driver_end character varying,
+    driver_end_reason character varying,
+    end_on_board integer,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
     CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 );
@@ -9504,7 +10015,8 @@ CREATE TABLE public.vehicle_driver_schedules (
     starts_on date NOT NULL,
     created_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    start_time integer DEFAULT 0 NOT NULL
 );
 
 
@@ -9616,6 +10128,82 @@ CREATE SEQUENCE public.vehicle_financials_id_seq
 --
 
 ALTER SEQUENCE public.vehicle_financials_id_seq OWNED BY public.vehicle_financials.id;
+
+
+--
+-- Name: vehicle_handover_photos; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.vehicle_handover_photos (
+    id bigint NOT NULL,
+    vehicle_handover_id bigint NOT NULL,
+    side character varying NOT NULL,
+    photo character varying NOT NULL,
+    marked_photo character varying,
+    marks jsonb DEFAULT '[]'::jsonb NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: vehicle_handover_photos_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.vehicle_handover_photos_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: vehicle_handover_photos_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.vehicle_handover_photos_id_seq OWNED BY public.vehicle_handover_photos.id;
+
+
+--
+-- Name: vehicle_handovers; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.vehicle_handovers (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    vehicle_id bigint NOT NULL,
+    driver_account_id bigint NOT NULL,
+    driver_id bigint,
+    operator_driver_id bigint,
+    vehicle_driver_schedule_id bigint,
+    client_id uuid NOT NULL,
+    at timestamp(6) without time zone NOT NULL,
+    declared_at timestamp(6) without time zone NOT NULL,
+    note text,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT vehicle_handovers_one_driver CHECK ((num_nonnulls(driver_id, operator_driver_id) = 1))
+);
+
+
+--
+-- Name: vehicle_handovers_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.vehicle_handovers_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: vehicle_handovers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.vehicle_handovers_id_seq OWNED BY public.vehicle_handovers.id;
 
 
 --
@@ -10430,6 +11018,13 @@ ALTER TABLE ONLY public.company_leads ALTER COLUMN id SET DEFAULT nextval('publi
 
 
 --
+-- Name: company_links id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.company_links ALTER COLUMN id SET DEFAULT nextval('public.company_links_id_seq'::regclass);
+
+
+--
 -- Name: company_sequences id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -10472,6 +11067,20 @@ ALTER TABLE ONLY public.document_reads ALTER COLUMN id SET DEFAULT nextval('publ
 
 
 --
+-- Name: driver_accounts id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_accounts ALTER COLUMN id SET DEFAULT nextval('public.driver_accounts_id_seq'::regclass);
+
+
+--
+-- Name: driver_app_actions id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_app_actions ALTER COLUMN id SET DEFAULT nextval('public.driver_app_actions_id_seq'::regclass);
+
+
+--
 -- Name: driver_app_sessions id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -10486,10 +11095,45 @@ ALTER TABLE ONLY public.driver_invites ALTER COLUMN id SET DEFAULT nextval('publ
 
 
 --
+-- Name: driver_jwts id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_jwts ALTER COLUMN id SET DEFAULT nextval('public.driver_jwts_id_seq'::regclass);
+
+
+--
 -- Name: driver_kyc_profiles id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.driver_kyc_profiles ALTER COLUMN id SET DEFAULT nextval('public.driver_kyc_profiles_id_seq'::regclass);
+
+
+--
+-- Name: driver_licences id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_licences ALTER COLUMN id SET DEFAULT nextval('public.driver_licences_id_seq'::regclass);
+
+
+--
+-- Name: driver_notice_recipients id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_notice_recipients ALTER COLUMN id SET DEFAULT nextval('public.driver_notice_recipients_id_seq'::regclass);
+
+
+--
+-- Name: driver_notices id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_notices ALTER COLUMN id SET DEFAULT nextval('public.driver_notices_id_seq'::regclass);
+
+
+--
+-- Name: driver_notifications id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_notifications ALTER COLUMN id SET DEFAULT nextval('public.driver_notifications_id_seq'::regclass);
 
 
 --
@@ -10539,6 +11183,13 @@ ALTER TABLE ONLY public.driver_point_deductions ALTER COLUMN id SET DEFAULT next
 --
 
 ALTER TABLE ONLY public.driver_point_lots ALTER COLUMN id SET DEFAULT nextval('public.driver_point_lots_id_seq'::regclass);
+
+
+--
+-- Name: driver_sign_in_codes id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_sign_in_codes ALTER COLUMN id SET DEFAULT nextval('public.driver_sign_in_codes_id_seq'::regclass);
 
 
 --
@@ -10801,6 +11452,27 @@ ALTER TABLE ONLY public.occurrence_corrections ALTER COLUMN id SET DEFAULT nextv
 
 
 --
+-- Name: occurrence_disposal_extensions id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.occurrence_disposal_extensions ALTER COLUMN id SET DEFAULT nextval('public.occurrence_disposal_extensions_id_seq'::regclass);
+
+
+--
+-- Name: occurrence_disposal_runs id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.occurrence_disposal_runs ALTER COLUMN id SET DEFAULT nextval('public.occurrence_disposal_runs_id_seq'::regclass);
+
+
+--
+-- Name: occurrence_disposals id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.occurrence_disposals ALTER COLUMN id SET DEFAULT nextval('public.occurrence_disposals_id_seq'::regclass);
+
+
+--
 -- Name: occurrence_driver_reports id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -10812,6 +11484,13 @@ ALTER TABLE ONLY public.occurrence_driver_reports ALTER COLUMN id SET DEFAULT ne
 --
 
 ALTER TABLE ONLY public.occurrence_notes ALTER COLUMN id SET DEFAULT nextval('public.occurrence_notes_id_seq'::regclass);
+
+
+--
+-- Name: occurrence_passengers id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.occurrence_passengers ALTER COLUMN id SET DEFAULT nextval('public.occurrence_passengers_id_seq'::regclass);
 
 
 --
@@ -11354,13 +12033,6 @@ ALTER TABLE ONLY public.school_rider_absences ALTER COLUMN id SET DEFAULT nextva
 
 
 --
--- Name: school_rider_boardings id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.school_rider_boardings ALTER COLUMN id SET DEFAULT nextval('public.school_rider_boardings_id_seq'::regclass);
-
-
---
 -- Name: school_riders id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -11470,13 +12142,6 @@ ALTER TABLE ONLY public.stop_points ALTER COLUMN id SET DEFAULT nextval('public.
 --
 
 ALTER TABLE ONLY public.stops ALTER COLUMN id SET DEFAULT nextval('public.stops_id_seq'::regclass);
-
-
---
--- Name: student_attendances id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.student_attendances ALTER COLUMN id SET DEFAULT nextval('public.student_attendances_id_seq'::regclass);
 
 
 --
@@ -11673,6 +12338,20 @@ ALTER TABLE ONLY public.vehicle_finance_entries ALTER COLUMN id SET DEFAULT next
 --
 
 ALTER TABLE ONLY public.vehicle_financials ALTER COLUMN id SET DEFAULT nextval('public.vehicle_financials_id_seq'::regclass);
+
+
+--
+-- Name: vehicle_handover_photos id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vehicle_handover_photos ALTER COLUMN id SET DEFAULT nextval('public.vehicle_handover_photos_id_seq'::regclass);
+
+
+--
+-- Name: vehicle_handovers id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vehicle_handovers ALTER COLUMN id SET DEFAULT nextval('public.vehicle_handovers_id_seq'::regclass);
 
 
 --
@@ -12122,6 +12801,14 @@ ALTER TABLE ONLY public.company_leads
 
 
 --
+-- Name: company_links company_links_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.company_links
+    ADD CONSTRAINT company_links_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: company_sequences company_sequences_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -12170,6 +12857,22 @@ ALTER TABLE ONLY public.document_reads
 
 
 --
+-- Name: driver_accounts driver_accounts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_accounts
+    ADD CONSTRAINT driver_accounts_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: driver_app_actions driver_app_actions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_app_actions
+    ADD CONSTRAINT driver_app_actions_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: driver_app_sessions driver_app_sessions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -12186,11 +12889,51 @@ ALTER TABLE ONLY public.driver_invites
 
 
 --
+-- Name: driver_jwts driver_jwts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_jwts
+    ADD CONSTRAINT driver_jwts_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: driver_kyc_profiles driver_kyc_profiles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.driver_kyc_profiles
     ADD CONSTRAINT driver_kyc_profiles_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: driver_licences driver_licences_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_licences
+    ADD CONSTRAINT driver_licences_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: driver_notice_recipients driver_notice_recipients_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_notice_recipients
+    ADD CONSTRAINT driver_notice_recipients_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: driver_notices driver_notices_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_notices
+    ADD CONSTRAINT driver_notices_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: driver_notifications driver_notifications_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_notifications
+    ADD CONSTRAINT driver_notifications_pkey PRIMARY KEY (id);
 
 
 --
@@ -12247,6 +12990,14 @@ ALTER TABLE ONLY public.driver_point_deductions
 
 ALTER TABLE ONLY public.driver_point_lots
     ADD CONSTRAINT driver_point_lots_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: driver_sign_in_codes driver_sign_in_codes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_sign_in_codes
+    ADD CONSTRAINT driver_sign_in_codes_pkey PRIMARY KEY (id);
 
 
 --
@@ -12546,6 +13297,30 @@ ALTER TABLE ONLY public.occurrence_corrections
 
 
 --
+-- Name: occurrence_disposal_extensions occurrence_disposal_extensions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.occurrence_disposal_extensions
+    ADD CONSTRAINT occurrence_disposal_extensions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: occurrence_disposal_runs occurrence_disposal_runs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.occurrence_disposal_runs
+    ADD CONSTRAINT occurrence_disposal_runs_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: occurrence_disposals occurrence_disposals_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.occurrence_disposals
+    ADD CONSTRAINT occurrence_disposals_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: occurrence_driver_reports occurrence_driver_reports_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -12559,6 +13334,14 @@ ALTER TABLE ONLY public.occurrence_driver_reports
 
 ALTER TABLE ONLY public.occurrence_notes
     ADD CONSTRAINT occurrence_notes_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: occurrence_passengers occurrence_passengers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.occurrence_passengers
+    ADD CONSTRAINT occurrence_passengers_pkey PRIMARY KEY (id);
 
 
 --
@@ -13250,14 +14033,6 @@ ALTER TABLE ONLY public.school_rider_absences
 
 
 --
--- Name: school_rider_boardings school_rider_boardings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.school_rider_boardings
-    ADD CONSTRAINT school_rider_boardings_pkey PRIMARY KEY (id);
-
-
---
 -- Name: school_riders school_riders_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -13383,14 +14158,6 @@ ALTER TABLE ONLY public.stop_points
 
 ALTER TABLE ONLY public.stops
     ADD CONSTRAINT stops_pkey PRIMARY KEY (id);
-
-
---
--- Name: student_attendances student_attendances_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.student_attendances
-    ADD CONSTRAINT student_attendances_pkey PRIMARY KEY (id);
 
 
 --
@@ -13714,6 +14481,22 @@ ALTER TABLE ONLY public.vehicle_financials
 
 
 --
+-- Name: vehicle_handover_photos vehicle_handover_photos_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vehicle_handover_photos
+    ADD CONSTRAINT vehicle_handover_photos_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: vehicle_handovers vehicle_handovers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vehicle_handovers
+    ADD CONSTRAINT vehicle_handovers_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: vehicle_insurance_documents vehicle_insurance_documents_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -13899,6 +14682,13 @@ CREATE UNIQUE INDEX idx_on_occurrence_id_occurrence_date_f3ece8f775 ON public.op
 
 
 --
+-- Name: idx_on_occurrence_id_occurrence_date_fc9484b589; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_on_occurrence_id_occurrence_date_fc9484b589 ON public.occurrence_disposals USING btree (occurrence_id, occurrence_date);
+
+
+--
 -- Name: idx_on_occurrence_id_occurrence_date_position_02f6e5902d; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -13906,10 +14696,10 @@ CREATE UNIQUE INDEX idx_on_occurrence_id_occurrence_date_position_02f6e5902d ON 
 
 
 --
--- Name: idx_on_occurrence_id_occurrence_date_rid_de574147e6; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_on_operator_driver_id_created_at_0144cf6d7d; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX idx_on_occurrence_id_occurrence_date_rid_de574147e6 ON public.school_rider_boardings USING btree (occurrence_id, occurrence_date, rid);
+CREATE INDEX idx_on_operator_driver_id_created_at_0144cf6d7d ON public.driver_notifications USING btree (operator_driver_id, created_at) WHERE (operator_driver_id IS NOT NULL);
 
 
 --
@@ -14900,6 +15690,13 @@ CREATE INDEX index_company_leads_on_domain_and_asked_at ON public.company_leads 
 
 
 --
+-- Name: index_company_links_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_company_links_on_company_id ON public.company_links USING btree (company_id);
+
+
+--
 -- Name: index_company_sequences_on_company_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -14998,6 +15795,34 @@ CREATE INDEX index_document_reads_on_user_id ON public.document_reads USING btre
 
 
 --
+-- Name: index_driver_accounts_on_email; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_driver_accounts_on_email ON public.driver_accounts USING btree (email) WHERE (email IS NOT NULL);
+
+
+--
+-- Name: index_driver_accounts_on_phone; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_driver_accounts_on_phone ON public.driver_accounts USING btree (phone);
+
+
+--
+-- Name: index_driver_app_actions_on_driver_account_id_and_client_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_driver_app_actions_on_driver_account_id_and_client_id ON public.driver_app_actions USING btree (driver_account_id, client_id);
+
+
+--
+-- Name: index_driver_app_actions_on_occurrence_id_and_occurrence_date; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_driver_app_actions_on_occurrence_id_and_occurrence_date ON public.driver_app_actions USING btree (occurrence_id, occurrence_date);
+
+
+--
 -- Name: index_driver_app_sessions_on_company_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -15040,6 +15865,41 @@ CREATE INDEX index_driver_invites_on_sent_by_id ON public.driver_invites USING b
 
 
 --
+-- Name: index_driver_jwts_on_driver_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_driver_jwts_on_driver_account_id ON public.driver_jwts USING btree (driver_account_id);
+
+
+--
+-- Name: index_driver_jwts_on_driver_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_driver_jwts_on_driver_id ON public.driver_jwts USING btree (driver_id);
+
+
+--
+-- Name: index_driver_jwts_on_exp; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_driver_jwts_on_exp ON public.driver_jwts USING btree (exp);
+
+
+--
+-- Name: index_driver_jwts_on_jti; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_driver_jwts_on_jti ON public.driver_jwts USING btree (jti);
+
+
+--
+-- Name: index_driver_jwts_on_operator_driver_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_driver_jwts_on_operator_driver_id ON public.driver_jwts USING btree (operator_driver_id);
+
+
+--
 -- Name: index_driver_kyc_profiles_on_company_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -15051,6 +15911,48 @@ CREATE INDEX index_driver_kyc_profiles_on_company_id ON public.driver_kyc_profil
 --
 
 CREATE UNIQUE INDEX index_driver_kyc_profiles_on_driver ON public.driver_kyc_profiles USING btree (driver_type, driver_id);
+
+
+--
+-- Name: index_driver_licences_on_driver_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_driver_licences_on_driver_account_id ON public.driver_licences USING btree (driver_account_id);
+
+
+--
+-- Name: index_driver_notice_recipients_on_driver_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_driver_notice_recipients_on_driver_id ON public.driver_notice_recipients USING btree (driver_id);
+
+
+--
+-- Name: index_driver_notice_recipients_on_operator_driver_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_driver_notice_recipients_on_operator_driver_id ON public.driver_notice_recipients USING btree (operator_driver_id);
+
+
+--
+-- Name: index_driver_notice_recipients_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_driver_notice_recipients_unique ON public.driver_notice_recipients USING btree (driver_notice_id, driver_id, operator_driver_id);
+
+
+--
+-- Name: index_driver_notices_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_driver_notices_on_company_id ON public.driver_notices USING btree (company_id);
+
+
+--
+-- Name: index_driver_notifications_on_driver_id_and_created_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_driver_notifications_on_driver_id_and_created_at ON public.driver_notifications USING btree (driver_id, created_at) WHERE (driver_id IS NOT NULL);
 
 
 --
@@ -15180,6 +16082,13 @@ CREATE INDEX index_driver_point_lots_on_pay_bonus_id ON public.driver_point_lots
 
 
 --
+-- Name: index_driver_sign_in_codes_on_phone_and_created_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_driver_sign_in_codes_on_phone_and_created_at ON public.driver_sign_in_codes USING btree (phone, created_at);
+
+
+--
 -- Name: index_driver_vehicle_types_on_company_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -15219,6 +16128,13 @@ CREATE INDEX index_drivers_on_company_id_and_status ON public.drivers USING btre
 --
 
 CREATE INDEX index_drivers_on_display_set_by_id ON public.drivers USING btree (display_set_by_id);
+
+
+--
+-- Name: index_drivers_on_driver_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_drivers_on_driver_account_id ON public.drivers USING btree (driver_account_id);
 
 
 --
@@ -15817,6 +16733,20 @@ CREATE INDEX index_occurrence_corrections_on_vehicle_id ON public.occurrence_cor
 
 
 --
+-- Name: index_occurrence_disposal_extensions_on_occurrence_disposal_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_occurrence_disposal_extensions_on_occurrence_disposal_id ON public.occurrence_disposal_extensions USING btree (occurrence_disposal_id);
+
+
+--
+-- Name: index_occurrence_disposal_runs_on_occurrence_disposal_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_occurrence_disposal_runs_on_occurrence_disposal_id ON public.occurrence_disposal_runs USING btree (occurrence_disposal_id);
+
+
+--
 -- Name: index_occurrence_driver_reports_on_company_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -15842,6 +16772,13 @@ CREATE INDEX index_occurrence_notes_on_company_id ON public.occurrence_notes USI
 --
 
 CREATE INDEX index_occurrence_notes_on_occurrence_id_and_occurrence_date ON public.occurrence_notes USING btree (occurrence_id, occurrence_date);
+
+
+--
+-- Name: index_occurrence_passengers_on_run_and_key; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_occurrence_passengers_on_run_and_key ON public.occurrence_passengers USING btree (occurrence_id, occurrence_date, passenger_key);
 
 
 --
@@ -15919,6 +16856,13 @@ CREATE INDEX index_operator_drivers_on_company_id_and_status ON public.operator_
 --
 
 CREATE INDEX index_operator_drivers_on_display_set_by_id ON public.operator_drivers USING btree (display_set_by_id);
+
+
+--
+-- Name: index_operator_drivers_on_driver_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_operator_drivers_on_driver_account_id ON public.operator_drivers USING btree (driver_account_id);
 
 
 --
@@ -17021,20 +17965,6 @@ CREATE UNIQUE INDEX index_school_rider_absences_on_school_id_and_rid_and_date ON
 
 
 --
--- Name: index_school_rider_boardings_on_company_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_school_rider_boardings_on_company_id ON public.school_rider_boardings USING btree (company_id);
-
-
---
--- Name: index_school_rider_boardings_on_school_route_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_school_rider_boardings_on_school_route_id ON public.school_rider_boardings USING btree (school_route_id);
-
-
---
 -- Name: index_school_riders_manual_rid; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -17301,41 +18231,6 @@ CREATE INDEX index_stops_on_company_id_and_library_status ON public.stops USING 
 
 
 --
--- Name: index_student_attendances_on_company_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_student_attendances_on_company_id ON public.student_attendances USING btree (company_id);
-
-
---
--- Name: index_student_attendances_on_recorded_by_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_student_attendances_on_recorded_by_id ON public.student_attendances USING btree (recorded_by_id);
-
-
---
--- Name: index_student_attendances_on_trip_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_student_attendances_on_trip_id ON public.student_attendances USING btree (trip_id);
-
-
---
--- Name: index_student_attendances_on_trip_run_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX index_student_attendances_on_trip_run_id ON public.student_attendances USING btree (trip_run_id);
-
-
---
--- Name: index_student_attendances_once; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX index_student_attendances_once ON public.student_attendances USING btree (trip_id, run_date, trip_run_id, slot_no, student_key);
-
-
---
 -- Name: index_tracking_devices_on_company_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -17522,6 +18417,20 @@ CREATE INDEX index_trip_occurrences_on_id ON ONLY public.trip_occurrences USING 
 --
 
 CREATE INDEX index_trip_occurrences_on_operator_driver_date ON ONLY public.trip_occurrences USING btree (operator_driver_id, date) WHERE (operator_driver_id IS NOT NULL);
+
+
+--
+-- Name: index_trip_occurrences_on_original_driver_date; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_trip_occurrences_on_original_driver_date ON ONLY public.trip_occurrences USING btree (original_driver_id, date) WHERE (original_driver_id IS NOT NULL);
+
+
+--
+-- Name: index_trip_occurrences_on_original_operator_driver_date; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_trip_occurrences_on_original_operator_driver_date ON ONLY public.trip_occurrences USING btree (original_operator_driver_id, date) WHERE (original_operator_driver_id IS NOT NULL);
 
 
 --
@@ -18085,17 +18994,17 @@ CREATE INDEX index_vehicle_driver_schedules_on_driver_id_and_starts_on ON public
 
 
 --
+-- Name: index_vehicle_driver_schedules_on_vehicle_date_time; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_vehicle_driver_schedules_on_vehicle_date_time ON public.vehicle_driver_schedules USING btree (vehicle_id, starts_on, start_time);
+
+
+--
 -- Name: index_vehicle_driver_schedules_on_vehicle_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX index_vehicle_driver_schedules_on_vehicle_id ON public.vehicle_driver_schedules USING btree (vehicle_id);
-
-
---
--- Name: index_vehicle_driver_schedules_on_vehicle_id_and_starts_on; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX index_vehicle_driver_schedules_on_vehicle_id_and_starts_on ON public.vehicle_driver_schedules USING btree (vehicle_id, starts_on);
 
 
 --
@@ -18145,6 +19054,48 @@ CREATE INDEX index_vehicle_financials_on_updated_by_id ON public.vehicle_financi
 --
 
 CREATE UNIQUE INDEX index_vehicle_financials_on_vehicle_id ON public.vehicle_financials USING btree (vehicle_id);
+
+
+--
+-- Name: index_vehicle_handover_photos_on_vehicle_handover_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_vehicle_handover_photos_on_vehicle_handover_id ON public.vehicle_handover_photos USING btree (vehicle_handover_id);
+
+
+--
+-- Name: index_vehicle_handover_photos_on_vehicle_handover_id_and_side; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_vehicle_handover_photos_on_vehicle_handover_id_and_side ON public.vehicle_handover_photos USING btree (vehicle_handover_id, side);
+
+
+--
+-- Name: index_vehicle_handovers_on_driver_account_id_and_client_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_vehicle_handovers_on_driver_account_id_and_client_id ON public.vehicle_handovers USING btree (driver_account_id, client_id);
+
+
+--
+-- Name: index_vehicle_handovers_on_driver_id_and_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_vehicle_handovers_on_driver_id_and_at ON public.vehicle_handovers USING btree (driver_id, at);
+
+
+--
+-- Name: index_vehicle_handovers_on_operator_driver_id_and_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_vehicle_handovers_on_operator_driver_id_and_at ON public.vehicle_handovers USING btree (operator_driver_id, at);
+
+
+--
+-- Name: index_vehicle_handovers_on_vehicle_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_vehicle_handovers_on_vehicle_id ON public.vehicle_handovers USING btree (vehicle_id);
 
 
 --
@@ -18512,6 +19463,20 @@ CREATE INDEX trip_occurrences_y2026m09_operator_driver_id_date_idx ON public.tri
 
 
 --
+-- Name: trip_occurrences_y2026m09_original_driver_id_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX trip_occurrences_y2026m09_original_driver_id_date_idx ON public.trip_occurrences_y2026m09 USING btree (original_driver_id, date) WHERE (original_driver_id IS NOT NULL);
+
+
+--
+-- Name: trip_occurrences_y2026m09_original_operator_driver_id_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX trip_occurrences_y2026m09_original_operator_driver_id_date_idx ON public.trip_occurrences_y2026m09 USING btree (original_operator_driver_id, date) WHERE (original_operator_driver_id IS NOT NULL);
+
+
+--
 -- Name: trip_occurrences_y2026m09_school_route_id_date_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -18579,6 +19544,20 @@ CREATE INDEX trip_occurrences_y2026m10_id_idx ON public.trip_occurrences_y2026m1
 --
 
 CREATE INDEX trip_occurrences_y2026m10_operator_driver_id_date_idx ON public.trip_occurrences_y2026m10 USING btree (operator_driver_id, date) WHERE (operator_driver_id IS NOT NULL);
+
+
+--
+-- Name: trip_occurrences_y2026m10_original_driver_id_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX trip_occurrences_y2026m10_original_driver_id_date_idx ON public.trip_occurrences_y2026m10 USING btree (original_driver_id, date) WHERE (original_driver_id IS NOT NULL);
+
+
+--
+-- Name: trip_occurrences_y2026m10_original_operator_driver_id_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX trip_occurrences_y2026m10_original_operator_driver_id_date_idx ON public.trip_occurrences_y2026m10 USING btree (original_operator_driver_id, date) WHERE (original_operator_driver_id IS NOT NULL);
 
 
 --
@@ -18652,6 +19631,20 @@ CREATE INDEX trip_occurrences_y2026m11_operator_driver_id_date_idx ON public.tri
 
 
 --
+-- Name: trip_occurrences_y2026m11_original_driver_id_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX trip_occurrences_y2026m11_original_driver_id_date_idx ON public.trip_occurrences_y2026m11 USING btree (original_driver_id, date) WHERE (original_driver_id IS NOT NULL);
+
+
+--
+-- Name: trip_occurrences_y2026m11_original_operator_driver_id_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX trip_occurrences_y2026m11_original_operator_driver_id_date_idx ON public.trip_occurrences_y2026m11 USING btree (original_operator_driver_id, date) WHERE (original_operator_driver_id IS NOT NULL);
+
+
+--
 -- Name: trip_occurrences_y2026m11_school_route_id_date_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -18719,6 +19712,20 @@ CREATE INDEX trip_occurrences_y2026m12_id_idx ON public.trip_occurrences_y2026m1
 --
 
 CREATE INDEX trip_occurrences_y2026m12_operator_driver_id_date_idx ON public.trip_occurrences_y2026m12 USING btree (operator_driver_id, date) WHERE (operator_driver_id IS NOT NULL);
+
+
+--
+-- Name: trip_occurrences_y2026m12_original_driver_id_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX trip_occurrences_y2026m12_original_driver_id_date_idx ON public.trip_occurrences_y2026m12 USING btree (original_driver_id, date) WHERE (original_driver_id IS NOT NULL);
+
+
+--
+-- Name: trip_occurrences_y2026m12_original_operator_driver_id_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX trip_occurrences_y2026m12_original_operator_driver_id_date_idx ON public.trip_occurrences_y2026m12 USING btree (original_operator_driver_id, date) WHERE (original_operator_driver_id IS NOT NULL);
 
 
 --
@@ -18792,6 +19799,20 @@ CREATE INDEX trip_occurrences_y2027m01_operator_driver_id_date_idx ON public.tri
 
 
 --
+-- Name: trip_occurrences_y2027m01_original_driver_id_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX trip_occurrences_y2027m01_original_driver_id_date_idx ON public.trip_occurrences_y2027m01 USING btree (original_driver_id, date) WHERE (original_driver_id IS NOT NULL);
+
+
+--
+-- Name: trip_occurrences_y2027m01_original_operator_driver_id_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX trip_occurrences_y2027m01_original_operator_driver_id_date_idx ON public.trip_occurrences_y2027m01 USING btree (original_operator_driver_id, date) WHERE (original_operator_driver_id IS NOT NULL);
+
+
+--
 -- Name: trip_occurrences_y2027m01_school_route_id_date_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -18862,6 +19883,20 @@ CREATE INDEX trip_occurrences_y2027m02_operator_driver_id_date_idx ON public.tri
 
 
 --
+-- Name: trip_occurrences_y2027m02_original_driver_id_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX trip_occurrences_y2027m02_original_driver_id_date_idx ON public.trip_occurrences_y2027m02 USING btree (original_driver_id, date) WHERE (original_driver_id IS NOT NULL);
+
+
+--
+-- Name: trip_occurrences_y2027m02_original_operator_driver_id_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX trip_occurrences_y2027m02_original_operator_driver_id_date_idx ON public.trip_occurrences_y2027m02 USING btree (original_operator_driver_id, date) WHERE (original_operator_driver_id IS NOT NULL);
+
+
+--
 -- Name: trip_occurrences_y2027m02_school_route_id_date_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -18929,6 +19964,20 @@ CREATE INDEX trip_occurrences_y2027m03_id_idx ON public.trip_occurrences_y2027m0
 --
 
 CREATE INDEX trip_occurrences_y2027m03_operator_driver_id_date_idx ON public.trip_occurrences_y2027m03 USING btree (operator_driver_id, date) WHERE (operator_driver_id IS NOT NULL);
+
+
+--
+-- Name: trip_occurrences_y2027m03_original_driver_id_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX trip_occurrences_y2027m03_original_driver_id_date_idx ON public.trip_occurrences_y2027m03 USING btree (original_driver_id, date) WHERE (original_driver_id IS NOT NULL);
+
+
+--
+-- Name: trip_occurrences_y2027m03_original_operator_driver_id_date_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX trip_occurrences_y2027m03_original_operator_driver_id_date_idx ON public.trip_occurrences_y2027m03 USING btree (original_operator_driver_id, date) WHERE (original_operator_driver_id IS NOT NULL);
 
 
 --
@@ -19156,6 +20205,20 @@ ALTER INDEX public.index_trip_occurrences_on_operator_driver_date ATTACH PARTITI
 
 
 --
+-- Name: trip_occurrences_y2026m09_original_driver_id_date_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_trip_occurrences_on_original_driver_date ATTACH PARTITION public.trip_occurrences_y2026m09_original_driver_id_date_idx;
+
+
+--
+-- Name: trip_occurrences_y2026m09_original_operator_driver_id_date_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_trip_occurrences_on_original_operator_driver_date ATTACH PARTITION public.trip_occurrences_y2026m09_original_operator_driver_id_date_idx;
+
+
+--
 -- Name: trip_occurrences_y2026m09_pkey; Type: INDEX ATTACH; Schema: public; Owner: -
 --
 
@@ -19230,6 +20293,20 @@ ALTER INDEX public.index_trip_occurrences_on_id ATTACH PARTITION public.trip_occ
 --
 
 ALTER INDEX public.index_trip_occurrences_on_operator_driver_date ATTACH PARTITION public.trip_occurrences_y2026m10_operator_driver_id_date_idx;
+
+
+--
+-- Name: trip_occurrences_y2026m10_original_driver_id_date_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_trip_occurrences_on_original_driver_date ATTACH PARTITION public.trip_occurrences_y2026m10_original_driver_id_date_idx;
+
+
+--
+-- Name: trip_occurrences_y2026m10_original_operator_driver_id_date_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_trip_occurrences_on_original_operator_driver_date ATTACH PARTITION public.trip_occurrences_y2026m10_original_operator_driver_id_date_idx;
 
 
 --
@@ -19310,6 +20387,20 @@ ALTER INDEX public.index_trip_occurrences_on_operator_driver_date ATTACH PARTITI
 
 
 --
+-- Name: trip_occurrences_y2026m11_original_driver_id_date_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_trip_occurrences_on_original_driver_date ATTACH PARTITION public.trip_occurrences_y2026m11_original_driver_id_date_idx;
+
+
+--
+-- Name: trip_occurrences_y2026m11_original_operator_driver_id_date_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_trip_occurrences_on_original_operator_driver_date ATTACH PARTITION public.trip_occurrences_y2026m11_original_operator_driver_id_date_idx;
+
+
+--
 -- Name: trip_occurrences_y2026m11_pkey; Type: INDEX ATTACH; Schema: public; Owner: -
 --
 
@@ -19384,6 +20475,20 @@ ALTER INDEX public.index_trip_occurrences_on_id ATTACH PARTITION public.trip_occ
 --
 
 ALTER INDEX public.index_trip_occurrences_on_operator_driver_date ATTACH PARTITION public.trip_occurrences_y2026m12_operator_driver_id_date_idx;
+
+
+--
+-- Name: trip_occurrences_y2026m12_original_driver_id_date_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_trip_occurrences_on_original_driver_date ATTACH PARTITION public.trip_occurrences_y2026m12_original_driver_id_date_idx;
+
+
+--
+-- Name: trip_occurrences_y2026m12_original_operator_driver_id_date_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_trip_occurrences_on_original_operator_driver_date ATTACH PARTITION public.trip_occurrences_y2026m12_original_operator_driver_id_date_idx;
 
 
 --
@@ -19464,6 +20569,20 @@ ALTER INDEX public.index_trip_occurrences_on_operator_driver_date ATTACH PARTITI
 
 
 --
+-- Name: trip_occurrences_y2027m01_original_driver_id_date_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_trip_occurrences_on_original_driver_date ATTACH PARTITION public.trip_occurrences_y2027m01_original_driver_id_date_idx;
+
+
+--
+-- Name: trip_occurrences_y2027m01_original_operator_driver_id_date_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_trip_occurrences_on_original_operator_driver_date ATTACH PARTITION public.trip_occurrences_y2027m01_original_operator_driver_id_date_idx;
+
+
+--
 -- Name: trip_occurrences_y2027m01_pkey; Type: INDEX ATTACH; Schema: public; Owner: -
 --
 
@@ -19538,6 +20657,20 @@ ALTER INDEX public.index_trip_occurrences_on_id ATTACH PARTITION public.trip_occ
 --
 
 ALTER INDEX public.index_trip_occurrences_on_operator_driver_date ATTACH PARTITION public.trip_occurrences_y2027m02_operator_driver_id_date_idx;
+
+
+--
+-- Name: trip_occurrences_y2027m02_original_driver_id_date_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_trip_occurrences_on_original_driver_date ATTACH PARTITION public.trip_occurrences_y2027m02_original_driver_id_date_idx;
+
+
+--
+-- Name: trip_occurrences_y2027m02_original_operator_driver_id_date_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_trip_occurrences_on_original_operator_driver_date ATTACH PARTITION public.trip_occurrences_y2027m02_original_operator_driver_id_date_idx;
 
 
 --
@@ -19618,6 +20751,20 @@ ALTER INDEX public.index_trip_occurrences_on_operator_driver_date ATTACH PARTITI
 
 
 --
+-- Name: trip_occurrences_y2027m03_original_driver_id_date_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_trip_occurrences_on_original_driver_date ATTACH PARTITION public.trip_occurrences_y2027m03_original_driver_id_date_idx;
+
+
+--
+-- Name: trip_occurrences_y2027m03_original_operator_driver_id_date_idx; Type: INDEX ATTACH; Schema: public; Owner: -
+--
+
+ALTER INDEX public.index_trip_occurrences_on_original_operator_driver_date ATTACH PARTITION public.trip_occurrences_y2027m03_original_operator_driver_id_date_idx;
+
+
+--
 -- Name: trip_occurrences_y2027m03_pkey; Type: INDEX ATTACH; Schema: public; Owner: -
 --
 
@@ -19643,6 +20790,14 @@ ALTER INDEX public.index_trip_occurrences_on_trip_date ATTACH PARTITION public.t
 --
 
 ALTER INDEX public.index_trip_occurrences_on_vehicle_date ATTACH PARTITION public.trip_occurrences_y2027m03_vehicle_id_date_idx;
+
+
+--
+-- Name: driver_notice_recipients fk_rails_0152a90d82; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_notice_recipients
+    ADD CONSTRAINT fk_rails_0152a90d82 FOREIGN KEY (operator_driver_id) REFERENCES public.operator_drivers(id) ON DELETE CASCADE;
 
 
 --
@@ -19795,14 +20950,6 @@ ALTER TABLE ONLY public.trip_run_times
 
 ALTER TABLE ONLY public.school_bill_payments
     ADD CONSTRAINT fk_rails_09f44aa22b FOREIGN KEY (receipt_id) REFERENCES public.school_documents(id) ON DELETE SET NULL;
-
-
---
--- Name: student_attendances fk_rails_0b23321c06; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.student_attendances
-    ADD CONSTRAINT fk_rails_0b23321c06 FOREIGN KEY (trip_id) REFERENCES public.trips(id);
 
 
 --
@@ -19963,14 +21110,6 @@ ALTER TABLE ONLY public.trips
 
 ALTER TABLE ONLY public.trip_run_groups
     ADD CONSTRAINT fk_rails_13d5d0ee58 FOREIGN KEY (trip_id) REFERENCES public.trips(id);
-
-
---
--- Name: school_rider_boardings fk_rails_13df7286ea; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.school_rider_boardings
-    ADD CONSTRAINT fk_rails_13df7286ea FOREIGN KEY (school_route_id) REFERENCES public.school_routes(id);
 
 
 --
@@ -20198,6 +21337,14 @@ ALTER TABLE ONLY public.client_sites
 
 
 --
+-- Name: vehicle_handovers fk_rails_2084a55b6d; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vehicle_handovers
+    ADD CONSTRAINT fk_rails_2084a55b6d FOREIGN KEY (driver_id) REFERENCES public.drivers(id);
+
+
+--
 -- Name: replacements fk_rails_20ad5cb2d5; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -20267,6 +21414,14 @@ ALTER TABLE ONLY public.school_routes
 
 ALTER TABLE ONLY public.vehicle_insurance_policies
     ADD CONSTRAINT fk_rails_23b5f436d3 FOREIGN KEY (vehicle_id) REFERENCES public.vehicles(id);
+
+
+--
+-- Name: driver_notice_recipients fk_rails_243a4f0120; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_notice_recipients
+    ADD CONSTRAINT fk_rails_243a4f0120 FOREIGN KEY (driver_id) REFERENCES public.drivers(id) ON DELETE CASCADE;
 
 
 --
@@ -20534,6 +21689,14 @@ ALTER TABLE ONLY public.finance_settings
 
 
 --
+-- Name: driver_notifications fk_rails_32d3680b06; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_notifications
+    ADD CONSTRAINT fk_rails_32d3680b06 FOREIGN KEY (driver_notice_id) REFERENCES public.driver_notices(id) ON DELETE CASCADE;
+
+
+--
 -- Name: school_bill_runs fk_rails_3302375832; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -20699,6 +21862,14 @@ ALTER TABLE ONLY public.vehicle_finance_entries
 
 ALTER TABLE ONLY public.occurrence_driver_reports
     ADD CONSTRAINT fk_rails_3a963001f8 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: occurrence_disposal_extensions fk_rails_3b72d5933b; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.occurrence_disposal_extensions
+    ADD CONSTRAINT fk_rails_3b72d5933b FOREIGN KEY (occurrence_disposal_id) REFERENCES public.occurrence_disposals(id) ON DELETE CASCADE;
 
 
 --
@@ -20870,14 +22041,6 @@ ALTER TABLE ONLY public.school_plans
 
 
 --
--- Name: student_attendances fk_rails_41d39c3bea; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.student_attendances
-    ADD CONSTRAINT fk_rails_41d39c3bea FOREIGN KEY (recorded_by_id) REFERENCES public.users(id);
-
-
---
 -- Name: finance_settings fk_rails_41d877d9bf; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -21027,6 +22190,14 @@ ALTER TABLE ONLY public.school_bills
 
 ALTER TABLE ONLY public.stop_photo_requests
     ADD CONSTRAINT fk_rails_499bc1f1e2 FOREIGN KEY (stop_point_id) REFERENCES public.stop_points(id) ON DELETE CASCADE;
+
+
+--
+-- Name: vehicle_handover_photos fk_rails_49b8eeaded; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vehicle_handover_photos
+    ADD CONSTRAINT fk_rails_49b8eeaded FOREIGN KEY (vehicle_handover_id) REFERENCES public.vehicle_handovers(id) ON DELETE CASCADE;
 
 
 --
@@ -21982,6 +23153,14 @@ ALTER TABLE ONLY public.rider_assignments
 
 
 --
+-- Name: driver_notifications fk_rails_7d99434d9d; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_notifications
+    ADD CONSTRAINT fk_rails_7d99434d9d FOREIGN KEY (vehicle_id) REFERENCES public.vehicles(id) ON DELETE SET NULL;
+
+
+--
 -- Name: notices fk_rails_7e3081eff2; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -22179,14 +23358,6 @@ ALTER TABLE ONLY public.rate_card_vehicle_types
 
 ALTER TABLE ONLY public.school_bills
     ADD CONSTRAINT fk_rails_85cdb6c2c4 FOREIGN KEY (created_by_id) REFERENCES public.users(id);
-
-
---
--- Name: student_attendances fk_rails_8663610681; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.student_attendances
-    ADD CONSTRAINT fk_rails_8663610681 FOREIGN KEY (company_id) REFERENCES public.companies(id);
 
 
 --
@@ -22422,6 +23593,14 @@ ALTER TABLE ONLY public.school_route_stops
 
 
 --
+-- Name: driver_notifications fk_rails_9045cddfd0; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_notifications
+    ADD CONSTRAINT fk_rails_9045cddfd0 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
 -- Name: bus_requests fk_rails_90abea8f9e; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -22587,6 +23766,14 @@ ALTER TABLE ONLY public.school_documents
 
 ALTER TABLE ONLY public.notices
     ADD CONSTRAINT fk_rails_98a64c4856 FOREIGN KEY (notice_template_id) REFERENCES public.notice_templates(id);
+
+
+--
+-- Name: vehicle_handovers fk_rails_98df1d598c; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vehicle_handovers
+    ADD CONSTRAINT fk_rails_98df1d598c FOREIGN KEY (company_id) REFERENCES public.companies(id);
 
 
 --
@@ -22870,6 +24057,14 @@ ALTER TABLE ONLY public.school_route_replacements
 
 
 --
+-- Name: driver_jwts fk_rails_a86c6a3336; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_jwts
+    ADD CONSTRAINT fk_rails_a86c6a3336 FOREIGN KEY (driver_id) REFERENCES public.drivers(id) ON DELETE SET NULL;
+
+
+--
 -- Name: booking_trip_vehicles fk_rails_a8aaa68933; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -22963,14 +24158,6 @@ ALTER TABLE ONLY public.rate_card_rates
 
 ALTER TABLE ONLY public.school_documents
     ADD CONSTRAINT fk_rails_ac21e84d6b FOREIGN KEY (voided_by_id) REFERENCES public.users(id);
-
-
---
--- Name: student_attendances fk_rails_acef7d2f7c; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.student_attendances
-    ADD CONSTRAINT fk_rails_acef7d2f7c FOREIGN KEY (trip_run_id) REFERENCES public.trip_runs(id);
 
 
 --
@@ -23142,6 +24329,14 @@ ALTER TABLE ONLY public.trip_vehicle_requirements
 
 
 --
+-- Name: driver_jwts fk_rails_b6f5ca9a5e; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_jwts
+    ADD CONSTRAINT fk_rails_b6f5ca9a5e FOREIGN KEY (operator_driver_id) REFERENCES public.operator_drivers(id) ON DELETE SET NULL;
+
+
+--
 -- Name: notice_routes fk_rails_b7213b4c04; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -23171,6 +24366,14 @@ ALTER TABLE ONLY public.fuel_alerts
 
 ALTER TABLE ONLY public.rate_card_amounts
     ADD CONSTRAINT fk_rails_b8122cde29 FOREIGN KEY (vehicle_type_id) REFERENCES public.vehicle_types(id);
+
+
+--
+-- Name: driver_notifications fk_rails_b8293649fa; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_notifications
+    ADD CONSTRAINT fk_rails_b8293649fa FOREIGN KEY (driver_id) REFERENCES public.drivers(id) ON DELETE CASCADE;
 
 
 --
@@ -23219,6 +24422,14 @@ ALTER TABLE ONLY public.school_documents
 
 ALTER TABLE ONLY public.school_payouts
     ADD CONSTRAINT fk_rails_bc379ea2d0 FOREIGN KEY (sent_by_id) REFERENCES public.users(id);
+
+
+--
+-- Name: driver_app_actions fk_rails_bc737e3ce5; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_app_actions
+    ADD CONSTRAINT fk_rails_bc737e3ce5 FOREIGN KEY (company_id) REFERENCES public.companies(id);
 
 
 --
@@ -23278,6 +24489,30 @@ ALTER TABLE ONLY public.trip_price_cells
 
 
 --
+-- Name: occurrence_passengers fk_rails_bfe622b408; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.occurrence_passengers
+    ADD CONSTRAINT fk_rails_bfe622b408 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: company_links fk_rails_bfe6904708; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.company_links
+    ADD CONSTRAINT fk_rails_bfe6904708 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: driver_notices fk_rails_c0c615b2a7; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_notices
+    ADD CONSTRAINT fk_rails_c0c615b2a7 FOREIGN KEY (created_by_id) REFERENCES public.users(id);
+
+
+--
 -- Name: operator_drivers fk_rails_c0e174bbfd; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -23307,6 +24542,14 @@ ALTER TABLE ONLY public.bookings
 
 ALTER TABLE ONLY public.trip_route_vias
     ADD CONSTRAINT fk_rails_c260397e31 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: occurrence_disposal_runs fk_rails_c2e7e2479a; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.occurrence_disposal_runs
+    ADD CONSTRAINT fk_rails_c2e7e2479a FOREIGN KEY (occurrence_disposal_id) REFERENCES public.occurrence_disposals(id) ON DELETE CASCADE;
 
 
 --
@@ -23550,6 +24793,14 @@ ALTER TABLE ONLY public.school_payout_files
 
 
 --
+-- Name: vehicle_handovers fk_rails_cf6e55299c; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vehicle_handovers
+    ADD CONSTRAINT fk_rails_cf6e55299c FOREIGN KEY (driver_account_id) REFERENCES public.driver_accounts(id);
+
+
+--
 -- Name: routing_runs fk_rails_cf772b365e; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -23630,6 +24881,14 @@ ALTER TABLE ONLY public.company_lead_domains
 
 
 --
+-- Name: vehicle_handovers fk_rails_d46b740264; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vehicle_handovers
+    ADD CONSTRAINT fk_rails_d46b740264 FOREIGN KEY (vehicle_driver_schedule_id) REFERENCES public.vehicle_driver_schedules(id) ON DELETE SET NULL;
+
+
+--
 -- Name: occurrence_correction_logs fk_rails_d46eac2cb2; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -23643,6 +24902,14 @@ ALTER TABLE ONLY public.occurrence_correction_logs
 
 ALTER TABLE ONLY public.driver_vehicle_types
     ADD CONSTRAINT fk_rails_d471a5a82f FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: driver_jwts fk_rails_d4ad31c807; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_jwts
+    ADD CONSTRAINT fk_rails_d4ad31c807 FOREIGN KEY (driver_app_session_id) REFERENCES public.driver_app_sessions(id) ON DELETE SET NULL;
 
 
 --
@@ -23726,6 +24993,14 @@ ALTER TABLE ONLY public.pay_bonus_schemes
 
 
 --
+-- Name: occurrence_disposals fk_rails_d83dc88f47; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.occurrence_disposals
+    ADD CONSTRAINT fk_rails_d83dc88f47 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
 -- Name: client_invoice_lines fk_rails_d850b449ba; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -23742,19 +25017,19 @@ ALTER TABLE ONLY public.companies
 
 
 --
--- Name: school_rider_boardings fk_rails_d904b312b5; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.school_rider_boardings
-    ADD CONSTRAINT fk_rails_d904b312b5 FOREIGN KEY (company_id) REFERENCES public.companies(id);
-
-
---
 -- Name: clients fk_rails_db0f958971; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.clients
     ADD CONSTRAINT fk_rails_db0f958971 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: driver_licences fk_rails_db902c2e64; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_licences
+    ADD CONSTRAINT fk_rails_db902c2e64 FOREIGN KEY (driver_account_id) REFERENCES public.driver_accounts(id) ON DELETE CASCADE;
 
 
 --
@@ -23779,6 +25054,14 @@ ALTER TABLE ONLY public.vehicle_loan_payments
 
 ALTER TABLE ONLY public.notice_runs
     ADD CONSTRAINT fk_rails_dc6a6d3ca5 FOREIGN KEY (trip_run_id) REFERENCES public.trip_runs(id);
+
+
+--
+-- Name: driver_notifications fk_rails_dc759d33dc; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_notifications
+    ADD CONSTRAINT fk_rails_dc759d33dc FOREIGN KEY (operator_driver_id) REFERENCES public.operator_drivers(id) ON DELETE CASCADE;
 
 
 --
@@ -23910,6 +25193,14 @@ ALTER TABLE ONLY public.booking_trips
 
 
 --
+-- Name: driver_app_actions fk_rails_e58202068a; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_app_actions
+    ADD CONSTRAINT fk_rails_e58202068a FOREIGN KEY (driver_account_id) REFERENCES public.driver_accounts(id);
+
+
+--
 -- Name: setup_locks fk_rails_e64267a8c4; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -24006,6 +25297,14 @@ ALTER TABLE ONLY public.vehicle_cost_spike_acks
 
 
 --
+-- Name: vehicle_handovers fk_rails_ea00c0df0f; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vehicle_handovers
+    ADD CONSTRAINT fk_rails_ea00c0df0f FOREIGN KEY (vehicle_id) REFERENCES public.vehicles(id);
+
+
+--
 -- Name: vehicle_log_cards fk_rails_ea1e6bdc96; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -24035,6 +25334,14 @@ ALTER TABLE ONLY public.school_payout_adjustments
 
 ALTER TABLE ONLY public.schools
     ADD CONSTRAINT fk_rails_eb67311315 FOREIGN KEY (client_id) REFERENCES public.clients(id);
+
+
+--
+-- Name: driver_notice_recipients fk_rails_eb701ec011; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_notice_recipients
+    ADD CONSTRAINT fk_rails_eb701ec011 FOREIGN KEY (driver_notice_id) REFERENCES public.driver_notices(id) ON DELETE CASCADE;
 
 
 --
@@ -24190,6 +25497,14 @@ ALTER TABLE ONLY public.fare_bus_rates
 
 
 --
+-- Name: vehicle_handovers fk_rails_f20c4192d9; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.vehicle_handovers
+    ADD CONSTRAINT fk_rails_f20c4192d9 FOREIGN KEY (operator_driver_id) REFERENCES public.operator_drivers(id);
+
+
+--
 -- Name: pay_schemes fk_rails_f22e12e1ef; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -24235,6 +25550,14 @@ ALTER TABLE ONLY public.vehicle_finance_entries
 
 ALTER TABLE ONLY public.school_policy_versions
     ADD CONSTRAINT fk_rails_f3490479bd FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: operator_drivers fk_rails_f34ebe3460; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.operator_drivers
+    ADD CONSTRAINT fk_rails_f34ebe3460 FOREIGN KEY (driver_account_id) REFERENCES public.driver_accounts(id);
 
 
 --
@@ -24414,6 +25737,14 @@ ALTER TABLE ONLY public.route_charges
 
 
 --
+-- Name: driver_jwts fk_rails_fdb8670e57; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_jwts
+    ADD CONSTRAINT fk_rails_fdb8670e57 FOREIGN KEY (driver_account_id) REFERENCES public.driver_accounts(id);
+
+
+--
 -- Name: school_plan_changes fk_rails_fdfb531cc8; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -24422,11 +25753,27 @@ ALTER TABLE ONLY public.school_plan_changes
 
 
 --
+-- Name: drivers fk_rails_fec33b6e8d; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.drivers
+    ADD CONSTRAINT fk_rails_fec33b6e8d FOREIGN KEY (driver_account_id) REFERENCES public.driver_accounts(id);
+
+
+--
 -- Name: school_route_labels fk_rails_fef97aa7b9; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.school_route_labels
     ADD CONSTRAINT fk_rails_fef97aa7b9 FOREIGN KEY (school_id) REFERENCES public.schools(id);
+
+
+--
+-- Name: driver_notices fk_rails_ff608220a2; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_notices
+    ADD CONSTRAINT fk_rails_ff608220a2 FOREIGN KEY (company_id) REFERENCES public.companies(id);
 
 
 --
@@ -24502,6 +25849,22 @@ ALTER TABLE public.trip_occurrences
 
 
 --
+-- Name: trip_occurrences trip_occurrences_original_driver_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE public.trip_occurrences
+    ADD CONSTRAINT trip_occurrences_original_driver_id_fkey FOREIGN KEY (original_driver_id) REFERENCES public.drivers(id) ON DELETE SET NULL;
+
+
+--
+-- Name: trip_occurrences trip_occurrences_original_operator_driver_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE public.trip_occurrences
+    ADD CONSTRAINT trip_occurrences_original_operator_driver_id_fkey FOREIGN KEY (original_operator_driver_id) REFERENCES public.operator_drivers(id) ON DELETE SET NULL;
+
+
+--
 -- Name: trip_occurrences trip_occurrences_original_vehicle_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -24564,6 +25927,17 @@ ALTER TABLE public.trip_occurrences
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261104110000'),
+('20261104100100'),
+('20261104100000'),
+('20261104090000'),
+('20261103230000'),
+('20261103220100'),
+('20261103220000'),
+('20261103210000'),
+('20261103200000'),
+('20261103190100'),
+('20261103190000'),
 ('20261103180000'),
 ('20261103170000'),
 ('20261103150000'),

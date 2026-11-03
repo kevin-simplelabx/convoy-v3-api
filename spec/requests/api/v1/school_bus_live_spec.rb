@@ -49,9 +49,9 @@ RSpec.describe "School Bus Live Ops" do
                               departed_at: Time.zone.local(2026, 11, 3, 6, 34), boarded: 1)
       # Still 2 km from the second stop at 06:49 (planned 06:45): late
       VehicleLivePosition.create!(vehicle: f[:bus], lat: 1.3305, lng: 103.9373, speed_kmh: 30, heading: 200, recorded_at: Time.zone.local(2026, 11, 3, 6, 49, 30))
-      SchoolRiderBoarding.create!(occurrence: occ, school_route: f[:r1], rid: "S-1", state: "boarded", boarded_at: Time.zone.local(2026, 11, 3, 6, 32),
+      OccurrencePassenger.create!(occurrence: occ, passenger_key: "S-1", state: "boarded", boarded_at: Time.zone.local(2026, 11, 3, 6, 32),
                                   board_method: "qr", board_lat: 1.33052, board_lng: 103.93731, marked_by: "Mdm Rosnah")
-      SchoolRiderBoarding.create!(occurrence: occ, school_route: f[:r1], rid: "S-2", state: "not_boarded", marked_by: "Mdm Rosnah")
+      OccurrencePassenger.create!(occurrence: occ, passenger_key: "S-2", state: "not_boarded", marked_by: "Mdm Rosnah")
       # AM 2 started but its bus last reported 10 min ago
       o2 = f[:r2].occurrences.find_by!(date: day)
       o2.update_columns(started_at: Time.zone.local(2026, 11, 3, 6, 38))
@@ -105,10 +105,10 @@ RSpec.describe "School Bus Live Ops" do
 
   it "writes sample attendance for the runs that have started (seed / live_map:simulate)" do
     within_tenant(company) { SchoolLive::Simulate.call }
-    rows = within_tenant(company) { SchoolRiderBoarding.order(:rid).pluck(:rid, :state, :board_method) }
+    rows = within_tenant(company) { OccurrencePassenger.order(:passenger_key).pluck(:passenger_key, :state, :board_method) }
     expect(rows.map(&:first)).to eq(%w[S-1 S-2]) # S-4 Bus Not Required, S-3's stop not left yet, AM 2 has no stop left
     expect(rows.map { it[1] }).to all(eq("boarded"))
     within_tenant(company) { SchoolLive::Simulate.call }
-    expect(within_tenant(company) { SchoolRiderBoarding.count }).to eq(2)
+    expect(within_tenant(company) { OccurrencePassenger.count }).to eq(2)
   end
 end

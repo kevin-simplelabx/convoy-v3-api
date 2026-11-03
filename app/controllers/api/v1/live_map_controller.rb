@@ -48,7 +48,7 @@ module Api
           columns: %w[at lat lng speed_kmh heading],
           points: points.pluck(:recorded_at, :lat, :lng, :speed_kmh, :heading).map { |t, *rest| [ t.iso8601, *rest ] },
           speed_limit_kmh: current_company.speed_limit_kmh,
-          stops: TripHistory.planned_stops(occ).map do |s|
+          stops: Occurrences::Stops.planned(occ).map do |s|
             e = events[s[:position]]
             { position: s[:position], name: s[:name], lat: s[:lat]&.to_f, lng: s[:lng]&.to_f, planned_at: LiveMap.at_minute(occ, s[:planned_minute]),
               arrived_at: e&.arrived_at, departed_at: e&.departed_at, skipped: e&.skipped || false }

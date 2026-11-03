@@ -81,7 +81,7 @@ module Finance
     end
 
     def drivers
-      schedules = VehicleDriverSchedule.where(vehicle_id: @ids).order(:starts_on).group_by(&:vehicle_id)
+      schedules = VehicleDriverSchedule.where(vehicle_id: @ids).order(:starts_on, :start_time).group_by(&:vehicle_id)
       salary = {}
       month = [ @from, @today.beginning_of_month << 35 ].max
       while month <= [ @to, @today ].min

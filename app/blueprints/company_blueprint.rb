@@ -7,6 +7,8 @@ class CompanyBlueprint < ApplicationBlueprint
   # Company Settings page. Pass actor: (the signed-in user) for can_edit.
   view :settings do
     fields :country_set_at
+    # Operations contacts drivers see in the Convoy Driver app (Contact Operations).
+    fields :ops_phone, :ops_hours, :ops_whatsapp, :ops_email, :depot_address
 
     field(:country_locked) { |company| company.country_locked? }
     field(:country_set_by) { |company| company.country_set_by && { id: company.country_set_by.id, name: company.country_set_by.shown_name } }

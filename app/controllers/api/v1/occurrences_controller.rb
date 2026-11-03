@@ -65,10 +65,11 @@ module Api
         render json: { data: SchoolRuns::Passengers.call(@occ) }
       end
 
-      # PATCH /occurrences/:id/passengers/:key { mark: boarded | alighted | absent | clear }
+      # PATCH /occurrences/:id/passengers/:key { mark: boarded | alighted | not_boarded | expected }
       def mark_passenger
         authorize @occ, :move?
-        SchoolRuns::MarkAttendance.call(occurrence: @occ, student_key: params[:key], mark: params.require(:mark), user: current_user)
+        Occurrences::MarkPassengers.call(occ: @occ, marks: [ { key: params[:key], state: params.require(:mark) } ],
+                                         by: current_user.name, source: "office")
         render json: { data: SchoolRuns::Passengers.call(@occ) }
       end
 

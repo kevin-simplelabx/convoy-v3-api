@@ -5,7 +5,8 @@ folder with one document per menu, listing the screen actions and the API call b
 
 | App | Folder |
 | --- | --- |
-| Convoy OS (operator web app) | [`convoy-os/`](convoy-os/) — menus below, screen map in [convoy-os/screen-map.md](convoy-os/screen-map.md) |
+| Convoy OS (operator web app) | [`convoy-os/`](convoy-os/) — menus below, screen map in [convoy-os/screen-map.md](convoy-os/screen-map.md); changes the OS front-end must make: [convoy-os/fe-updates.md](convoy-os/fe-updates.md) |
+| Convoy Driver (drivers' phone app) | [`driver/`](driver/) — start with [driver/README.md](driver/README.md) |
 
 ## Convoy OS
 

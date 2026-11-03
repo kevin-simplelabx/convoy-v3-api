@@ -8,7 +8,7 @@ module ApiDocs
   class OpenApiBuilder
     DOCS = Rails.root.join(".api-documents")
     MENUS = { "convoy-os/scheduler.md" => "Scheduler", "convoy-os/trips.md" => "Trips", "convoy-os/fleet.md" => "Fleet", "convoy-os/settings.md" => "Settings", "convoy-os/clients.md" => "Clients", "convoy-os/hr.md" => "HR", "convoy-os/finance.md" => "Finance", "convoy-os/reports.md" => "Reports", "convoy-os/live-map.md" => "Live Map", "convoy-os/ops-control.md" => "Ops Control", "convoy-os/school-bus-setup.md" => "School Bus", "convoy-os/school-bus-money.md" => "School Bus", "convoy-os/school-bus-stops.md" => "School Bus", "convoy-os/school-bus-routes.md" => "School Bus", "convoy-os/school-bus-parents.md" => "School Bus", "convoy-os/school-bus-finance.md" => "School Bus", "convoy-os/school-bus-live.md" => "School Bus", "convoy-os/dashboard.md" => "Dashboard", "convoy-os/convoy-admin.md" => "Convoy Admin",
-              "README.md" => "Common" }.freeze
+              "driver/auth.md" => "Driver App", "driver/profile.md" => "Driver App", "driver/runs.md" => "Driver App", "driver/driving.md" => "Driver App", "driver/gps.md" => "Driver App", "driver/disposal.md" => "Driver App", "driver/vehicle.md" => "Driver App", "driver/notifications.md" => "Driver App", "README.md" => "Common" }.freeze
     # Folder = the Convoy OS menu that owns the resource (.notes/data-ownership.md), not the doc that first names it.
     FOLDERS = {
       "Common" => %w[sessions downloads document_reads banks],
@@ -34,12 +34,17 @@ module ApiDocs
       "Dashboard" => %w[dashboard],
       "Convoy Admin" => %w[message_terms discover company_leads],
       "Client Portal" => %w[portal/sessions portal/passwords],
+      "Driver App" => %w[driver_app/sessions driver_app/companies driver_app/company driver_app/profiles driver_app/licences driver_app/vehicle driver_app/runs driver_app/positions driver_app/config driver_app/vehicle_handovers driver_app/notifications driver_app/notices],
       "Settings" => %w[users profiles companies countries country_requests calendars calendar_days public_holidays]
     }.flat_map { |folder, names| names.map { [ "api/v1/#{it}", folder ] } }.to_h.freeze
-    ORDER = %w[Common Dashboard Ops\ Control Live\ Map Scheduler Trips School\ Bus Fleet Clients Reports Finance HR Settings Convoy\ Admin Client\ Portal Other].freeze
+    ORDER = %w[Common Dashboard Ops\ Control Live\ Map Scheduler Trips School\ Bus Fleet Clients Reports Finance HR Settings Convoy\ Admin Client\ Portal Driver\ App Other].freeze
     MENTION = %r{`(GET|POST|PATCH|PUT|DELETE) (/[^`\s?]*)}
     PUBLIC = %w[api/v1/sessions#create api/v1/downloads#show api/v1/portal/sessions#lookup api/v1/portal/sessions#code
-                api/v1/portal/sessions#verify api/v1/portal/sessions#create api/v1/portal/passwords#create].freeze
+                api/v1/portal/sessions#verify api/v1/portal/sessions#create api/v1/portal/passwords#create
+                api/v1/driver_app/sessions#code api/v1/driver_app/sessions#create api/v1/driver_app/sessions#email].freeze
+    # Each app signs in with its own token (Convoy OS, Client Portal, Driver app); a public endpoint takes none.
+    TOKEN_SCHEMES = { "api/v1/portal/" => "portalAuth", "api/v1/driver_app/" => "driverAuth" }.freeze
+
     CRUD = { "index" => "List %s", "show" => "Get %s", "create" => "Create %s", "update" => "Update %s",
              "destroy" => "Delete %s" }.freeze
     DESCRIPTION_LIMIT = 8_000
@@ -102,7 +107,7 @@ module ApiDocs
         parameters: path_params(route) + query_params(route, examples, mention),
         requestBody: request_body(route, examples),
         responses: responses(route, examples),
-        security: PUBLIC.include?("#{route[:controller]}##{route[:action]}") || !protected?(route) ? [] : nil
+        security: security(route)
       }.compact
     end
 
@@ -135,8 +140,18 @@ module ApiDocs
     end
 
     def protected?(route)
+      return false if PUBLIC.include?("#{route[:controller]}##{route[:action]}")
+
       klass = controller_class(route[:controller])
-      klass.nil? || klass <= Api::V1::BaseController
+      klass.nil? || [ Api::V1::BaseController, Api::V1::Portal::BaseController, Api::V1::DriverApp::BaseController ].any? { klass <= it }
+    end
+
+    # nil = the default (Convoy OS bearerAuth).
+    def security(route)
+      return [] unless protected?(route)
+
+      scheme = TOKEN_SCHEMES.find { |prefix, _| route[:controller].start_with?(prefix) }&.last
+      scheme && [ { scheme => [] } ]
     end
 
     # ---- parameters ---------------------------------------------------------------------------------------------
@@ -245,7 +260,7 @@ module ApiDocs
       if out.keys.none? { it.start_with?("2") }
         out[route[:action] == "destroy" ? "204" : "200"] = { description: route[:action] == "destroy" ? "No Content" : "OK (no recorded example)" }
       end
-      out["401"] ||= { "$ref": "#/components/responses/Unauthorized" } if protected?(route) && !PUBLIC.include?("#{route[:controller]}##{route[:action]}")
+      out["401"] ||= { "$ref": "#/components/responses/Unauthorized" } if protected?(route)
       out["404"] ||= { "$ref": "#/components/responses/NotFound" } if route[:path].include?(":")
       out["422"] ||= { "$ref": "#/components/responses/Invalid" } unless route[:verb] == "GET"
       out
@@ -330,7 +345,14 @@ module ApiDocs
 
     # ---- folders and tags ---------------------------------------------------------------------------------------
 
-    def resource_name(controller) = controller.delete_prefix("api/v1/").split("/").map { it.titleize }.join(" ")
+    # "Driver App / Sessions", not "Driver App / Driver App Sessions": an app's namespace is its folder already.
+    APP_NAMESPACES = %w[portal driver_app].freeze
+
+    def resource_name(controller)
+      parts = controller.delete_prefix("api/v1/").split("/")
+      parts.shift if parts.size > 1 && APP_NAMESPACES.include?(parts.first)
+      parts.map { it.titleize }.join(" ")
+    end
 
     def menu(controller) = FOLDERS.fetch(controller, "Other")
 
@@ -380,7 +402,11 @@ module ApiDocs
       {
         securitySchemes: {
           bearerAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT",
-                        description: "data.token from POST /session, sent as Authorization: Bearer <token> (30 days)." }
+                        description: "Convoy OS: data.token from POST /session, sent as Authorization: Bearer <token> (30 days)." },
+          portalAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT",
+                        description: "Client Portal: data.token from POST /portal/session or /portal/password." },
+          driverAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT",
+                        description: "Convoy Driver app: data.token from POST /driver/session (mobile + code 123456) or /driver/session/email." }
         },
         schemas: {
           Error: {

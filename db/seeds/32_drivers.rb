@@ -7,7 +7,7 @@ with_company("SD") do
 
   # A past own driver (left last month, last drove PD2185B) and a pending operator driver.
   Driver.find_or_initialize_by(phone: "+6590077889").tap do |d|
-    d.update!(name: "Goh Chee Keong", status: :past, responded_at: 1.month.ago, last_vehicle: Vehicle.kept.find_by(plate: "PD2185B"))
+    d.update!(name: "Goh Chee Keong", status: :past, responded_at: 1.month.ago, joined_at: 2.years.ago, left_at: 1.month.ago, last_vehicle: Vehicle.kept.find_by(plate: "PD2185B"))
   end
   OperatorDriver.find_or_initialize_by(phone: "+6590088990").tap do |d|
     d.update!(name: "Rajesh Kumar", operator: hup_seng, status: :pending, notes: "Tamil, Malay. Knows Jurong well")

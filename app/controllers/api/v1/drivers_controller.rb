@@ -15,7 +15,7 @@ module Api
       def list_options(drivers)
         ids = Array(drivers).map(&:id)
         today = VehicleDriverSchedule.current_on(Date.current).where(driver_id: ids).includes(:vehicle).index_by(&:driver_id)
-        upcoming = VehicleDriverSchedule.upcoming.where(driver_id: ids).includes(:vehicle).order(:starts_on).group_by(&:driver_id)
+        upcoming = VehicleDriverSchedule.upcoming.where(driver_id: ids).includes(:vehicle).order(:starts_on, :start_time).group_by(&:driver_id)
         { today:, upcoming: }
       end
 

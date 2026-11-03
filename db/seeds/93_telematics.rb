@@ -11,7 +11,7 @@ with_company("SD") do
     runs.each_with_index do |occ, n|
       next if occ.trip_summary
 
-      stops = TripHistory.planned_stops(occ).select { |s| s[:lat] && s[:lng] }
+      stops = Occurrences::Stops.planned(occ).select { |s| s[:lat] && s[:lng] }
       next if stops.size < 2
 
       late = n == 1 ? 9 : n % 3

@@ -83,7 +83,7 @@ The row fields plus:
 | Field | Description |
 | --- | --- |
 | `registered_on`, `chassis_number`, `engine_number`, `coe_expires_on`, `road_tax_expires_on` | Log card details (editable on the vehicle form, [scheduler.md § 14.1](scheduler.md#141-vehicle)) |
-| `upcoming_drivers` | Default driver changes still to come (own buses): `[{ starts_on, driver: { id, name } \| null }]`. "Starts on" text |
+| `upcoming_drivers` | Default driver changes still to come (own buses): `[{ starts_on, start_time, driver: { id, name } \| null }]`. "Starts on" text (add the time when not "00:00") |
 | `fuel` | Fuel & Energy summary (section 8.5) |
 | `financials` | Vehicle Financials summary for users with `vehicle financials` (`vehfin`) permission, else `null` (hide the section). See [finance § 6](finance.md#6-vehicle-financials-purchase-and-loan) |
 
@@ -158,18 +158,20 @@ Row (both pages):
 
 ```json
 { "id": 7, "name": "Eric Pang", "phone": "+6592104100", "phone_display": "+65 9210 4100", "status": "active",
-  "invited_at": "...", "responded_at": "...", "status_on": "...",
+  "invited_at": "...", "responded_at": "...", "joined_at": "...", "left_at": null, "status_on": "...",
   "photo": { "url": "/api/v1/downloads/...", "thumb_url": "..." },
   "display": { "name": "Eric", "photo": null, "set_by": "Ops Admin", "set_at": "..." },
   "kyc_shared": true, "last_vehicle": null }
 ```
 
 Own drivers add `vehicle { id, plate, since }` (default driver today, "Default driver since <since>"; null = "Not on a bus") and
-`upcoming [{ vehicle_id, plate, starts_on }]` ("Starts on PD1A from 7 Nov").
+`upcoming [{ vehicle_id, plate, starts_on, start_time }]` ("Starts on PD1A from 7 Nov", "from 7 Nov 06:30" when the time is not "00:00").
 Operator drivers add `operator_id, operator_name, notes, vehicle_id, vehicle_plate`.
 
 Third column per tab: Active = bus; Pending = "Invited <status_on>"; Declined = "Declined <status_on>"; Past = "Left <status_on>" and
 "Last drove <last_vehicle.plate>".
+`joined_at` = accepted the invitation, `left_at` = removed or disconnected (null otherwise). Drivers answer invitations and
+disconnect themselves in the Convoy Driver app ([driver/auth.md](../driver/auth.md)); the row buttons still work for the office.
 
 ### 2.2 Invite and edit
 
@@ -221,10 +223,15 @@ All are `PATCH /drivers/:id/<action>` (or `/operator_drivers/:id/<action>`) and 
              "id_label": "NRIC", "id_number": "S****567A", "id_revealed": false,
              "licence_class": "Class 4", "licence_qualified_on": "1993-01-01",
              "vocational_licence_number": "BD100000", "vocational_licence_expires_on": "2026-12-16", "vocational_status": "due_soon",
+             "licences": [ { "kind": "dl", "name": "Driving Licence", "classes": "Class 4", "number": null, "issued_on": "1993-01-01", "expires_on": "2033-01-01" },
+                           { "kind": "vl", "name": "Vocational Licence", "classes": "BDVL", "number": "BD100000", "issued_on": null, "expires_on": "2026-12-16" } ],
              "shared_at": "..." } } }
 ```
 
 - `kyc: null` = the driver has not shared yet ("Shared from the Convoy Driver app once the driver accepts").
+- `kyc` is the company's copy of the driver's profile from the Convoy Driver app: updated whenever the driver changes it while
+  working for the company, kept as it was after they leave. `licences` = every licence the driver listed (Driving
+  Credentials); the single `licence_class` / `vocational_*` fields come from the driving and vocational licence.
 - The eye button: `GET /drivers/:id/details?reveal_id=true` returns the full `id_number` (`id_revealed: true`). Each reveal is logged.
 - `vocational_status`: `expired` (red "Expired"), `due_soon` (orange "in N days", 90 days), `valid`.
 - Only the driver can change these details (Driver app); there is no endpoint to edit them.

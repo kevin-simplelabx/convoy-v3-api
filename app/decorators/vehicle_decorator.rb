@@ -32,11 +32,11 @@ class VehicleDecorator < ApplicationDecorator
     end
   end
 
-  # Default driver changes still to come on an own bus: [{ starts_on, driver: { id, name } | nil }].
+  # Default driver changes still to come on an own bus: [{ starts_on, start_time, driver: { id, name } | nil }].
   def upcoming_drivers
     return [] unless own?
 
-    driver_schedules.select { |s| s.starts_on > Date.current }
-                    .map { |s| { starts_on: s.starts_on, driver: s.driver && { id: s.driver.id, name: s.driver.name } } }
+    driver_schedules.select { |s| s.starts_on > Date.current }.sort_by(&:sort_key)
+                    .map { |s| { starts_on: s.starts_on, start_time: s.start_time_hm, driver: s.driver && { id: s.driver.id, name: s.driver.name } } }
   end
 end

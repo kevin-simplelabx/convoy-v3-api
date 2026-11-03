@@ -100,7 +100,7 @@ module LiveMap
       @stops ||= {}
       @stops[occ.id] ||= begin
         events = occ.stop_events.index_by(&:position)
-        list = TripHistory.planned_stops(occ)
+        list = Occurrences::Stops.planned(occ)
         list.each_with_index.map do |s, i|
           e = events[s[:position]]
           reached = e.present? && (e.skipped || e.arrived_at.present?)

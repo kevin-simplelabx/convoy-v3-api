@@ -59,7 +59,7 @@ RSpec.describe "Fleet drivers" do
       get api_v1_drivers_path
       row = json[:data].find { |d| d[:id] == id }
       expect(row[:vehicle]).to include(plate: "PD1A", since: "2026-10-03")
-      expect(row[:upcoming]).to eq([ { vehicle_id: f[:van2].id, plate: "PD2B", starts_on: "2026-11-07" } ])
+      expect(row[:upcoming]).to eq([ { vehicle_id: f[:van2].id, plate: "PD2B", starts_on: "2026-11-07", start_time: "00:00" } ])
 
       patch remove_api_v1_driver_path(id)
       expect(json[:data]).to include(status: "past", last_vehicle: { id: f[:van].id, plate: "PD1A" })

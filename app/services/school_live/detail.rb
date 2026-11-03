@@ -20,7 +20,7 @@ module SchoolLive
         on_board: r.counts["on_board"], stops_count: r.stops.size,
         next_stop: (n = r.next_stop) && { index: n[:index], name: n[:name], at_stop: r.at_stop&.dig(:index) == n[:index], expected_at: r.expected_at(n) },
         end: { planned_at: r.end_planned_at, at: r.end_at, done: r.done? },
-        methods: SchoolRiderBoarding::METHODS.keys.index_with { |m| boarded.count { it[:board_method] == m } },
+        methods: OccurrencePassenger::METHODS.keys.index_with { |m| boarded.count { it[:board_method] == m } },
         crew: crew, log: log, school: r.school_point, position: r.position,
         stops: r.stops.map { |s| stop(s) } }
     end

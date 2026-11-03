@@ -5,7 +5,7 @@ module TripHistory
   class Record
     INCLUDES = [ :vehicle, :original_vehicle, :driver, :operator_driver, :operator, :client, :cancelled_by, :issue_raised_by,
                  { history_notes: :author, driver_report: :photos, correction: [ :vehicle, :driver, :stops, { logs: :user } ],
-                   stop_events: [], trip_summary: [], company: [], replacement: %i[vehicle driver operator_driver],
+                   stop_events: [], trip_summary: [], company: [], replacement: %i[vehicle driver operator_driver], disposal: %i[runs extensions],
                    trip: [ :standby, :created_by, { stops: [], runs: :times } ], trip_run: :times,
                    school_route: [ :stops, :attendant, { plan: :school } ] } ].freeze
 
@@ -32,6 +32,8 @@ module TripHistory
         speed:, driving_summary:, trip_info:, standby:, point_of_contact:,
         passengers: @trip&.school_run? ? SchoolRuns::Passengers.call(@occ) : nil, driver_report:, issue:,
         replacement: @occ.replacement && ReplacementBlueprint.render_as_hash(@occ.replacement.decorate),
+        driver_end: @occ.driver_end && { kind: @occ.driver_end, reason: @occ.driver_end_reason, on_board: @occ.end_on_board },
+        disposal: @occ.disposal && DriverDisposalBlueprint.render_as_hash(@occ.disposal.decorate),
         changes:, corrections:, notes: notes, log:
       }
     end

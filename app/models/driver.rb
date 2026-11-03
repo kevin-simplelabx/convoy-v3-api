@@ -9,6 +9,8 @@
 #  display_photo     :string
 #  display_set_at    :datetime
 #  invited_at        :datetime
+#  joined_at         :datetime
+#  left_at           :datetime
 #  name              :string           not null
 #  phone             :string           not null
 #  photo             :string
@@ -18,6 +20,7 @@
 #  updated_at        :datetime         not null
 #  company_id        :bigint           not null
 #  display_set_by_id :bigint
+#  driver_account_id :bigint
 #  last_vehicle_id   :bigint
 #
 # Indexes
@@ -25,6 +28,7 @@
 #  index_drivers_on_company_id             (company_id)
 #  index_drivers_on_company_id_and_status  (company_id,status)
 #  index_drivers_on_display_set_by_id      (display_set_by_id)
+#  index_drivers_on_driver_account_id      (driver_account_id)
 #  index_drivers_on_last_vehicle_id        (last_vehicle_id)
 #  index_drivers_on_live_phone             (company_id,phone) UNIQUE WHERE (((status)::text = ANY ((ARRAY['pending'::character varying, 'active'::character varying])::text[])) AND (discarded_at IS NULL))
 #
@@ -32,6 +36,7 @@
 #
 #  fk_rails_...  (company_id => companies.id)
 #  fk_rails_...  (display_set_by_id => users.id)
+#  fk_rails_...  (driver_account_id => driver_accounts.id)
 #  fk_rails_...  (last_vehicle_id => vehicles.id)
 #
 # An own driver: added with name and mobile (an invite); they set up their own Convoy Driver account.
@@ -55,5 +60,5 @@ class Driver < ApplicationRecord
   end
 
   # Default driver changes still to come for this driver: [schedule entries].
-  def upcoming_schedules = vehicle_driver_schedules.upcoming.includes(:vehicle).order(:starts_on)
+  def upcoming_schedules = vehicle_driver_schedules.upcoming.includes(:vehicle).order(:starts_on, :start_time)
 end

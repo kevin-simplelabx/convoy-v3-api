@@ -14,6 +14,7 @@ module Occurrences
       raise ApplicationService::Error, "This run is already cancelled" if @occ.cancelled?
 
       save!(status: "cancelled", cancelled_at: Time.current, cancelled_by: @user, cancelled_by_client: by_client, overridden_fields: add(:status))
+        .tap { DriverApp::RunNotifications.cancelled(it) }
     end
 
     def restore!
@@ -21,6 +22,7 @@ module Occurrences
 
       status = @occ.ends_at <= Time.current ? "completed" : "scheduled"
       save!(status:, cancelled_at: nil, cancelled_by: nil, cancelled_by_client: false, overridden_fields: drop(:status))
+        .tap { DriverApp::RunNotifications.cancelled(it, restored: true) }
     end
 
     # Force End Trip: a run on the road ends now (the driver did not press End). It counts as done at once (pay, invoices,
@@ -128,10 +130,17 @@ module Occurrences
     def add(field) = (@occ.overridden_fields | [ field.to_s ])
     def drop(field) = (@occ.overridden_fields - [ field.to_s ])
 
+    # A new time or bus shows the run as New again in the Driver app and rings the driver's bell (as Sync does).
     def save!(attrs)
       raise ApplicationService::Error, "This run does not run that day (#{@occ.skip_reason})" if @occ.skipped?
 
-      @occ.update!(attrs)
+      bell = DriverApp::RunNotifications.new
+      before = @occ.attributes.symbolize_keys
+      @occ.assign_attributes(attrs)
+      @occ.driver_seen_at = nil if Sync::DRIVER_SEES.any? { @occ.will_save_change_to_attribute?(it) }
+      @occ.save!
+      bell.changed(@occ, before, @occ.attributes.symbolize_keys)
+      bell.flush
       @occ
     end
   end

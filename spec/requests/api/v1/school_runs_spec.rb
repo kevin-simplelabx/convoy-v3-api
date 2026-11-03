@@ -121,7 +121,7 @@ RSpec.describe "School Runs" do
     end
   end
 
-  it "marks students boarded, alighted and absent on the Passenger List" do
+  it "marks students boarded, alighted and not boarded on the Passenger List" do
     post api_v1_trips_path, params: { trip: school_run }, as: :json
     get api_v1_occurrences_path, params: { trip_id: json.dig(:data, :id), date: "2026-11-03" }
     occ = json.dig(:data, 0, :id)
@@ -130,12 +130,12 @@ RSpec.describe "School Runs" do
 
     patch mark_passenger_api_v1_occurrence_path(occ, key: lim[:key]), params: { mark: "boarded" }, as: :json
     patch mark_passenger_api_v1_occurrence_path(occ, key: lim[:key]), params: { mark: "alighted" }, as: :json
-    patch mark_passenger_api_v1_occurrence_path(occ, key: ali[:key]), params: { mark: "absent" }, as: :json
+    patch mark_passenger_api_v1_occurrence_path(occ, key: ali[:key]), params: { mark: "not_boarded" }, as: :json
     statuses = json.dig(:data, :stops).flat_map { |s| s[:students] }.to_h { |s| [ s[:name], s[:status] ] }
-    expect(statuses).to eq("Lim Jia Hui" => "alighted", "Ali Hassan" => "absent", "Chen Yu" => "not_marked")
+    expect(statuses).to eq("Lim Jia Hui" => "alighted", "Ali Hassan" => "not_boarded", "Chen Yu" => "expected")
 
-    patch mark_passenger_api_v1_occurrence_path(occ, key: ali[:key]), params: { mark: "clear" }, as: :json
-    expect(json.dig(:data, :stops, 1, :students, 0, :status)).to eq("not_marked")
+    patch mark_passenger_api_v1_occurrence_path(occ, key: ali[:key]), params: { mark: "expected" }, as: :json
+    expect(json.dig(:data, :stops, 1, :students, 0, :status)).to eq("expected")
   end
 
   it "clears student data 7 years after the run ended" do

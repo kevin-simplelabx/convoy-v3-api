@@ -11,7 +11,7 @@ with_company("SD") do
     runs.each do |occ|
       next if occ.stop_events.any?
 
-      stops = TripHistory.planned_stops(occ)
+      stops = Occurrences::Stops.planned(occ)
       next if stops.size < 2
 
       rng = Random.new(occ.id)

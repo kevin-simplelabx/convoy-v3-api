@@ -33,13 +33,13 @@ with_company("SD") do
     ]
   })
 
-  # Last school day's Passenger List: everyone boarded and alighted, one absent.
+  # Last school day's Passenger List: everyone boarded and alighted, one not there.
   trip = result.trip
   occ = TripOccurrence.where(trip:).where(date: ...Date.current).order(date: :desc).first
   if occ
-    SchoolRuns::Passengers.call(occ)[:stops].flat_map { |s| s[:students] }.each do |s|
-      mark = s[:name] == "Chen Yu Xuan" ? "absent" : "alighted"
-      SchoolRuns::MarkAttendance.call(occurrence: occ, student_key: s[:key], mark:, user: admin)
+    marks = SchoolRuns::Passengers.call(occ)[:stops].flat_map { |s| s[:students] }.map do |s|
+      { key: s[:key], state: s[:name] == "Chen Yu Xuan" ? "not_boarded" : "alighted", at: occ.ends_at }
     end
+    Occurrences::MarkPassengers.call(occ:, marks:, by: admin.name, source: "office")
   end
 end

@@ -74,6 +74,27 @@ RSpec.describe Occurrences::Sync, :tenant do
     expect(runs(trip).find_by(date: Date.new(2026, 10, 29))).to be_present # past Thursday kept
   end
 
+  it "keeps a run with records on it (Edit Route, a note) as removed, and brings it back with them" do
+    trip = weekday_trip
+    described_class.call(trips: [ trip ])
+    thu = runs(trip).find_by(date: Date.new(2026, 11, 5))
+    fri = runs(trip).find_by(date: Date.new(2026, 11, 6))
+    thu.passenger_marks.create!(company_id: thu.company_id, passenger_key: "S-1", state: "not_boarding", source: "driver_app")
+    thu.stop_events.create!(company_id: thu.company_id, position: 1, planned_skip: true, skipped: true, skipped_by: "plan", source: "driver_app")
+    fri.history_notes.create!(company_id: fri.company_id, body: "Gate code 1234", author: create(:user, company: trip.company))
+
+    trip.update!(days: [ 1, 2, 3 ])
+    described_class.call(trips: [ trip ])
+    expect([ thu.reload.status, fri.reload.status ]).to eq(%w[removed removed])
+    expect(runs(trip).find_by(date: Date.new(2026, 11, 12))).to be_nil
+
+    trip.update!(days: [ 1, 2, 3, 4, 5 ])
+    described_class.call(trips: [ trip ])
+    expect(thu.reload.status).to eq("scheduled")
+    expect(thu.passenger_marks.pluck(:passenger_key, :state)).to eq([ %w[S-1 not_boarding] ])
+    expect(thu.stop_events.pluck(:planned_skip)).to eq([ true ])
+  end
+
   it "applies calendar shifts and Every Run From This Date" do
     cal = create(:calendar, kind: :general)
     cal.days.create!(kind: :shift, starts_on: "2026-11-03", shift_minutes: -30)

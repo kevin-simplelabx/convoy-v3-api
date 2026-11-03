@@ -6,6 +6,6 @@ class DriverBlueprint < InvitedDriverBlueprint
   end
   # Changes still to come: [{ vehicle_id, plate, starts_on }] ("Starts on PD1A from 5 Nov").
   field(:upcoming) do |d, options|
-    Array(options[:upcoming]&.dig(d.id)).map { |s| { vehicle_id: s.vehicle_id, plate: s.vehicle.plate, starts_on: s.starts_on } }
+    Array(options[:upcoming]&.dig(d.id)).map { |s| { vehicle_id: s.vehicle_id, plate: s.vehicle.plate, starts_on: s.starts_on, start_time: s.start_time_hm } }
   end
 end

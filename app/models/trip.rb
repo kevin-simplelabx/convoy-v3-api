@@ -167,7 +167,6 @@ class Trip < ApplicationRecord
   has_many :run_groups, class_name: "TripRunGroup", dependent: :destroy
   has_many :price_cells, class_name: "TripPriceCell", dependent: :delete_all
   has_many :route_list_versions, -> { order(:valid_until) }, dependent: :destroy
-  has_many :attendances, class_name: "StudentAttendance", dependent: :delete_all
   has_many :assignments, -> { order(:effective_from, :id) }, class_name: "TripAssignment", dependent: :destroy
   has_many :time_changes, -> { order(:effective_from, :id) }, class_name: "TripTimeChange", dependent: :destroy
   has_many :occurrences, class_name: "TripOccurrence", dependent: :delete_all

@@ -28,7 +28,7 @@ module SchoolLive
 
     def write(run)
       occ = run.occ
-      occ.boardings.delete_all
+      occ.passenger_marks.delete_all
       return unless run.started?
 
       attendant = run.route.attendant&.name || occ.decorate.driver_info&.dig(:name)
@@ -38,7 +38,7 @@ module SchoolLive
         stop = run.stops[k[:stop][:index]]
         n = k[:rid].sum
         method = METHODS[n % METHODS.size]
-        row = BLANK.merge(company_id: occ.company_id, occurrence_id: occ.id, occurrence_date: occ.date, school_route_id: run.route.id, rid: k[:rid],
+        row = BLANK.merge(company_id: occ.company_id, occurrence_id: occ.id, occurrence_date: occ.date, passenger_key: k[:rid], source: "simulator",
                           marked_by: attendant, created_at: @now, updated_at: @now)
         if run.am?
           left = stop[:departed_at] || (run.done? ? stop[:planned_at] : nil)
@@ -63,7 +63,7 @@ module SchoolLive
                     alight_lat: off && stop[:lat], alight_lng: off && stop[:lng])
         end
       end
-      SchoolRiderBoarding.insert_all!(rows) if rows.any?
+      OccurrencePassenger.insert_all!(rows) if rows.any?
     end
 
     # Where the pass was read: a few metres from the stop, now and then far enough to check.

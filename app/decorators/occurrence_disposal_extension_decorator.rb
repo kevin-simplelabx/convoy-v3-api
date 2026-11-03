@@ -1,0 +1,2 @@
+class OccurrenceDisposalExtensionDecorator < ApplicationDecorator
+end

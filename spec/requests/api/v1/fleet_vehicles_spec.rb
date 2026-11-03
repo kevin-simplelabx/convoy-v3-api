@@ -88,7 +88,7 @@ RSpec.describe "Fleet vehicles" do
       get api_v1_vehicle_path(f[:van])
       expect(json[:data]).to include(financials: { status: "no_details" }) # the signed-in admin has vehfin
       expect(json.dig(:data, :fuel)).to include(entries: 0, last: nil)
-      expect(json.dig(:data, :upcoming_drivers)).to eq([ { starts_on: (Date.current + 5).iso8601, driver: { id: Driver.unscoped.last.id, name: "Tan" } } ])
+      expect(json.dig(:data, :upcoming_drivers)).to eq([ { starts_on: (Date.current + 5).iso8601, start_time: "00:00", driver: { id: Driver.unscoped.last.id, name: "Tan" } } ])
     end
   end
 
