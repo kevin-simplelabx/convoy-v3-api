@@ -1,7 +1,8 @@
 # Sample live data for the Live Map until the driver app and trackers send real pings (seed, `bin/rails live_map:simulate`;
-# never in production). Gives every bus of the current company a device, then writes "now": a bus on a run gets GPS
-# points from the run's start to now along its stops (straight lines) and the stops it has passed; other buses report from
-# where their last run ended or the next one starts; two buses with nothing to do today went offline 1 and 5 days ago.
+# never in production, except staging with SAMPLE_DATA=1). Gives every bus of the current company a device, then writes
+# "now": a bus on a run gets GPS points from the run's start to now along its stops (straight lines) and the stops it has
+# passed; other buses report from where their last run ended or the next one starts; two buses with nothing to do today
+# went offline 1 and 5 days ago.
 # Ops Control cases: drivers of today's runs are logged in to the app (every 4th with a run soon is not), runs in progress
 # were started by the driver (every 4th started 6 min late, every 5th lost GPS 5 min ago), and for a run starting within
 # 20 min every 3rd bus is on its way (started) while the others wait at the first pick-up, not started.
@@ -18,7 +19,7 @@ module Telematics
     end
 
     def call
-      raise Error, "Sample live data is not for production" if Rails.env.production?
+      raise Error, "Sample live data is not for production" if Rails.env.production? && ENV["SAMPLE_DATA"] != "1"
 
       vehicles = Vehicle.kept.includes(:tracking_devices).order(:plate).to_a
       runs = LiveMap.runs_around(vehicles.map(&:id), @now).group_by(&:vehicle_id)

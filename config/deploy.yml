@@ -47,6 +47,8 @@ env:
     CORS_ALLOW_LOCALHOST: true
     # Staging only: the Client Portal sign-in code is returned as dev_code until SMTP is set up. Never in production.
     PORTAL_SHOW_CODE: 1
+    # Staging only: seeds / live_map:simulate may write sample GPS data (Live Map, Ops Control). Never in production.
+    SAMPLE_DATA: 1
     # School Bus routing engine (accessory "routing" below)
     ROUTING_URL: http://convoy_v3-routing:4000
 

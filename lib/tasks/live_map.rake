@@ -1,5 +1,5 @@
 namespace :live_map do
-  desc "Sample live data for the Live Map now (not production). COMPANY=code to limit, LOOP=seconds to repeat"
+  desc "Sample live data for the Live Map now (not production, except staging with SAMPLE_DATA=1). COMPANY=code to limit, LOOP=seconds to repeat"
   task simulate: :environment do
     scope = ENV["COMPANY"] ? Company.where(code: ENV["COMPANY"]) : Company.all
     loop do
