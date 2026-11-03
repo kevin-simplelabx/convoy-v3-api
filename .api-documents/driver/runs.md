@@ -116,6 +116,8 @@ The card fields plus:
 - `pickup` / `dropoff`: the arrow; `waypoint: true` = a "Via" row (drive through, nobody boards; no number pin needed);
   `vias` = road pins set between this point and the next (diamonds on the route line).
 - `school: true` (School Bus): the school, last in the morning and first in the afternoon.
+- `photos`, `street_view_url`: the company's stop photos (trips), or the Stop Library's photo and Street View of the point
+  (School Bus). Empty when there is none.
 - `planned_time` may be null for middle points of a trip without stop times.
 - `pickups` / `dropoffs`: how many names board / alight here (before the trip: "pick-up 2 children").
 - `record`: what was recorded (null before the bus gets there): arrival, departure, skipped, boarded and alighted counts.

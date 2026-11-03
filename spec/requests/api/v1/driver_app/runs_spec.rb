@@ -123,7 +123,11 @@ RSpec.describe "Driver app runs" do
         end
         am = school.plans.create!(name: "Term 4 AM", session: "am", effective_from: Date.new(2026, 10, 1), in_use: true)
         route = am.routes.create!(number: 1, label: "AM 1", start_time: "06:30", end_time: "07:20", bus_type: "LARGE_40", seats: 40)
-        s1 = route.stops.create!(position: 0, name: "Blk 101 Bedok North", scheduled_time: "06:30", lat: 1.3305, lng: 103.9373)
+        library = Stop.new(code: "BDSZ03-0001", subzone_code: "BDSZ03", name: "Blk 101 Bedok North")
+        library.all_points.build(suffix: "A", usage: "both", sizes: %w[S M L], primary: true, lat: 1.3305, lng: 103.9373,
+                                 street_view_url: "https://maps.google.com/?cbll=1.3305,103.9373", photo: Rack::Test::UploadedFile.new(Rails.root.join("spec/fixtures/files/photo.png"), "image/png"))
+        library.save!
+        s1 = route.stops.create!(position: 0, name: "Blk 101 Bedok North", scheduled_time: "06:30", lat: 1.3305, lng: 103.9373, stop: library)
         s2 = route.stops.create!(position: 1, name: "Blk 32 Siglap", scheduled_time: "06:45", lat: 1.3136, lng: 103.9247)
         [ [ s1, "S-1" ], [ s1, "S-2" ], [ s2, "S-3" ] ].each { |s, rid| SchoolRouteRider.create!(school_route: route, stop: s, rid:) }
         route.vehicle_changes.create!(vehicle: f[:a], effective_from: Date.new(2026, 10, 1))
@@ -147,6 +151,8 @@ RSpec.describe "Driver app runs" do
         [ 2, "St. Stephen's School", "07:20", false, true, true, 0, 3 ]
       ])
       expect(d.dig(:points, 2, :address)).to eq("20 Siglap View, Singapore 455789")
+      expect(d.dig(:points, 0)).to include(street_view_url: "https://maps.google.com/?cbll=1.3305,103.9373", photos: [ hash_including(:url, :thumb_url) ])
+      expect(d.dig(:points, 1)).to include(street_view_url: nil, photos: [])
       expect(d[:passengers].map { [ it[:id], it[:state], it[:pickup_position], it[:dropoff_position] ] })
         .to eq([ [ "S-1", "expected", 0, 2 ], [ "S-2", "bus_not_required", 0, 2 ], [ "S-3", "expected", 1, 2 ] ])
       expect(d[:passengers].first).to include(name: "Child 1", level: "P1", parent_name: "Parent 1", parent_phone: "+6590000000")

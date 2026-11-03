@@ -7,7 +7,7 @@ module TripHistory
                  { history_notes: :author, driver_report: :photos, correction: [ :vehicle, :driver, :stops, { logs: :user } ],
                    stop_events: [], trip_summary: [], company: [], replacement: %i[vehicle driver operator_driver], disposal: %i[runs extensions],
                    trip: [ :standby, :created_by, { stops: [], runs: :times } ], trip_run: :times,
-                   passenger_marks: [], school_route: [ :attendant, { stops: :riders, plan: :school } ] } ].freeze
+                   passenger_marks: [], school_route: [ :attendant, { stops: [ :riders, :stop_point, { stop: :points } ], plan: :school } ] } ].freeze
 
     def self.call(occ) = new(occ).call
 

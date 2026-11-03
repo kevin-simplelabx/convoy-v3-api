@@ -46,13 +46,21 @@ module Occurrences
     end
 
     def stop_details(stop, occ)
-      return { address: nil, school: false, waypoint: false, photos: [], street_view_url: nil, vias: [] } unless stop.is_a?(TripStop)
+      return school_stop_details(stop) if stop.is_a?(SchoolRouteStop)
 
       direction = occ.trip_run&.direction || 1
       vias = occ.trip.route_vias.select { |v| v.direction == direction && v.from_position == stop.position }
       { address: stop.address, school: false, pickup: stop.use.in?(%w[pu both]), dropoff: stop.use.in?(%w[do both]), waypoint: stop.use == "via",
         photos: stop.photos.map { it.decorate.file_info(:photo, versions: [ :thumb ]) }, street_view_url: stop.street_view_url,
         vias: vias.map { { lat: it.lat&.to_f, lng: it.lng&.to_f } } }
+    end
+
+    # A School Bus stop's photo and Street View come from the Stop Library (the point the route uses, else the stop's
+    # primary point).
+    def school_stop_details(stop)
+      point = stop.stop_point || stop.stop&.points&.find(&:primary)
+      photo = point&.photo.present? ? [ point.decorate.photo_info ] : []
+      { address: nil, school: false, waypoint: false, photos: photo, street_view_url: point&.street_view_url, vias: [] }
     end
   end
 end

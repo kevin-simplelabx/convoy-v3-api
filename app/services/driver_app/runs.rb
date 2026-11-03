@@ -12,7 +12,7 @@ module DriverApp
     STATUS_LABELS = { "scheduled" => "Scheduled", "on_the_way" => "On the Way", "started" => "Started", "ended" => "Ended",
                       "replaced" => "Replaced", "skipped" => "Skipped", "cancelled" => "Cancelled" }.freeze
     INCLUDES = [ :client, :vehicle, :original_vehicle, :driver, :operator_driver, :stop_events, :replacement, { trip_run: :times },
-                 { trip: [ :client, { stops: :photos }, :route_vias ] }, { school_route: [ { stops: :riders }, { plan: :school } ] } ].freeze
+                 { trip: [ :client, { stops: :photos }, :route_vias ] }, { school_route: [ { stops: [ :riders, :stop_point, { stop: :points } ] }, { plan: :school } ] } ].freeze
 
     DETAIL_INCLUDES = [ *INCLUDES, :passenger_marks, :driver_report, { disposal: %i[runs extensions] },
                         { trip: [ :client, :route_vias, :attachments, { stops: :photos }, { standby: :photos }, { booking_trip: { booking: :days } } ] } ].freeze
