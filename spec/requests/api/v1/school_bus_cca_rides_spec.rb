@@ -58,7 +58,8 @@ RSpec.describe "School Bus CCA rides" do
 
     # The Tan family's S$16 credit pays the next week's two rides; Sports Day has no school
     next_bill = pay(f[:tan], [ pick("Ethan Tan", "2026-11-17"), pick("Ethan Tan", "2026-11-19") ], Date.new(2026, 11, 12))
-    expect(next_bill).to have_attributes(gross: 16, credit_used: 16, total: 0, method: "Credit")
+    expect(next_bill).to have_attributes(gross: 16, credit_used: 16, total: 0, payments: [])
+    expect(within_tenant(company) { CcaBooking.where(school_bill: next_bill).pluck(:method).uniq }).to eq([ "Credit" ])
     get path, params: { week_of: "2026-11-18" }
     expect(json.dig(:data, :days).last).to include(status: "No School", no_school: { run: false, label: "Sports Day (no school)" }, can_no_school_credit: true)
     post not_running_api_v1_school_cca_rides_path(f[:school]), params: { date: "2026-11-19", reason: "no_school", note: "Sports Day" }, as: :json

@@ -65,7 +65,7 @@ with_company("SD") do
     BusRequests::Accept.call([ paid, lapsed, fresh ], user: admin)
     BusRequests::RecordPayment.call(paid.reload, method: "PayNow", user: admin)
     lapsed.update!(offer_by: 2.hours.ago)
-    lapsed.first_bill.update!(due_at: lapsed.offer_by)
+    lapsed.first_bill.update!(due_at: lapsed.offer_by, due_on: lapsed.offer_by.to_date)
   end
 
   unless school.bus_requests.where.not(kind: "new").exists?

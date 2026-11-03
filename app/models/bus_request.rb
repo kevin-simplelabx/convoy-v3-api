@@ -18,7 +18,7 @@
 #  answer_by        :date
 #  birth_date       :date
 #  cca              :boolean          default(FALSE), not null
-#  cca_days         :string           default([]), not null, is an Array
+#  cca_days         :integer          default([]), not null, is an Array
 #  child_name       :string           not null
 #  class_name       :string
 #  code             :string           not null
@@ -37,10 +37,10 @@
 #  kind             :string           default("new"), not null
 #  km               :decimal(6, 2)
 #  last_on          :date
-#  lat              :float
+#  lat              :decimal(10, 7)
 #  level            :string
 #  level_moved_on   :date
-#  lng              :float
+#  lng              :decimal(10, 7)
 #  medical          :text
 #  mid              :boolean          default(FALSE), not null
 #  new_stop         :string

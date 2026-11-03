@@ -17,7 +17,7 @@ module BusRequests
     def call
       days = Days.new(@today)
       reqs = BusRequest.where(school: @schools, status: STATUSES, ended_at: nil)
-                       .includes(:school_rider, :first_bill, school: { academic_years: %i[registration terms] }, academic_year: %i[registration terms])
+                       .includes(:school_rider, { first_bill: :payments }, school: { academic_years: %i[registration terms] }, academic_year: %i[registration terms])
       items = reqs.filter_map do |r|
         n = BusRequests.needs(r, BusRequests.mid_settings(year_of(r)), @today, days) or next
         item(r, n)

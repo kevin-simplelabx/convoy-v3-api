@@ -5,6 +5,7 @@
 #                       pays operators in full for cancellations. Ready once the run is done and has a cost.
 #   replacement:<id>    a replacement we arranged for an operator's bus: its deduction + premium taken off.
 #   item:<id>           a manual item (pay or deduct).
+#   school_payout:<id>  a school's pay run for an operator's month (School Finance): what is left to pay; ready once approved.
 module OperatorPay
   class Due < ApplicationService
     Item = Struct.new(:ref, :source, :operator, :description, :details, :item_on, :amount, :ready, :why, :editable, keyword_init: true)
@@ -18,7 +19,7 @@ module OperatorPay
     def call
       taken = OperatorPayBatchLine.joins(operator_pay_batch_operator: :operator_pay_batch)
                                   .where(operator_pay_batches: { company_id: ActsAsTenant.current_tenant.id }).pluck(:ref).to_set
-      (runs + replacements + items).reject { |i| taken.include?(i.ref) }
+      (runs + replacements + items + school_runs).reject { |i| taken.include?(i.ref) }
     end
 
     private
@@ -50,6 +51,22 @@ module OperatorPay
         Item.new(ref: "replacement:#{r.id}", source: "replacement", operator: op, description: "Replacement bus we arranged",
                  details: "#{r.original_vehicle.plate} | #{r.starts_on.strftime('%-d %b')} to #{r.ends_on.strftime('%-d %b %Y')}",
                  item_on: r.starts_on, amount: -(r.deduction.to_d + r.premium.to_d), ready: true, editable: false)
+      end
+    end
+
+    def school_runs
+      scope = SchoolPayout.includes(:school, :operator, :adjustments, :payments)
+      scope = scope.where(operator_id: @operator_id) if @operator_id
+      scope.filter_map do |p|
+        left = p.base && (SchoolPay.net(p.base, p.auto_lines.map(&:symbolize_keys), p.adjustments.to_a) - p.paid_amount).round(2)
+        next if left && left <= 0.005
+
+        paid = p.paid_amount
+        why = { "draft" => "Not sent to Finance", "ready" => "Waiting for approval" }[p.status]
+        Item.new(ref: SchoolPay.ref(p), source: "school", operator: p.operator, description: "#{p.school.name} | School routes",
+                 details: [ p.month.strftime("%b %Y"), ("#{p.routes_count} route#{'s' unless p.routes_count == 1}" if p.routes_count),
+                            ("S$#{format('%.2f', paid)} paid before" if paid.positive?) ].compact.join(" | "),
+                 item_on: p.month.end_of_month, amount: left, ready: why.nil?, why:, editable: false)
       end
     end
 

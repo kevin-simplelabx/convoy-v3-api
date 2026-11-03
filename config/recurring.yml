@@ -28,6 +28,9 @@ production:
   bus_requests_digest:
     class: BusRequestsDigestJob
     schedule: every day at 8:00am
+  school_bills_daily:
+    class: SchoolBillsDailyJob
+    schedule: every day at 1:00am
   clear_expired_sign_ins:
     command: "AllowlistedJwt.expired.delete_all; PortalJwt.expired.delete_all; PortalSignInCode.where(created_at: ...1.day.ago).delete_all"
     schedule: every day at 3:00am

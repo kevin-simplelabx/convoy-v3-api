@@ -64,6 +64,10 @@ class School < ApplicationRecord
   has_many :family_riders, dependent: :delete_all
   has_many :route_charges_without_route, -> { where(school_route_id: nil).order(:starts_on) }, class_name: "RouteCharge", inverse_of: :school
   has_many :bus_size_rates, -> { order(:bus_type) }, class_name: "SchoolBusSizeRate", dependent: :delete_all, inverse_of: :school
+  has_many :school_bills, dependent: :destroy
+  has_many :school_documents, dependent: :destroy
+  has_many :school_bill_runs, dependent: :delete_all
+  has_many :school_payouts, dependent: :destroy
 
   validates :name, presence: true, uniqueness: { scope: :company_id }
   validates :postal, format: { with: /\A\d{6}\z/, message: "must be 6 digits" }, allow_nil: true

@@ -360,7 +360,7 @@ Rail icon `account_balance`. Needs `finance` or `finview`; Finance Settings `fin
 | Vehicle Financials: list, vehicle, edit form, schedule, instalments | `/finance/vehicles`, `/finance/vehicles/:vehicle_id` | [finance § 6](finance.md#6-vehicle-financials-purchase-and-loan) |
 | Vehicle Financials: P&L, charts, break-even, cost per km, spikes, due, manual entries | `/finance/vehicles/pl`, `/finance/vehicles/:vehicle_id/pl`, … | [finance § 7](finance.md#7-vehicle-financials-profit-and-loss) |
 | Finance Settings | `/finance/settings` | [finance § 1](finance.md#1-finance-settings) |
-| School Bus Collections | Comes with the School Bus menu | [finance § 8](finance.md#8-not-built-yet) |
+| School Bus Collections | `GET /finance/school_collections` | [school-bus-finance § 6](school-bus-finance.md#6-company-finance-pages) |
 
 ---
 
@@ -539,7 +539,12 @@ Rail icon `school`. Read: any company user (their schools). Changes: see [school
 | Change of Address / Service / Stop Service tabs, Not Agreed, End Rider | `/bus_requests/:id/confirm_change`, `/confirm_stop`, `/not_agreed`, `/end_rider` | [parents § 5](school-bus-parents.md#5-change-of-address-change-of-service-stop-service) |
 | Bus requests bell, strip (Ops Control, School Live Ops), 08:00 email preview | `GET /bus_requests/alerts`, `GET /bus_requests/digest` | [parents § 6](school-bus-parents.md#6-alerts-and-the-0800-email) |
 | CCA Rides: settings, week, Bus Not Running, No School credit | `/schools/:id/cca_rides` (+ `/not_running`) | [parents § 7](school-bus-parents.md#7-cca-rides) |
-| School Finance (Collections), School Dashboard, Live Ops | **No API yet** | — |
+| Collections › Family Bills: period, draft / Draft Again, issue, settings | `/schools/:id/bill_runs` (+ `/issue`), `PATCH /school_bills/settings` | [finance § 1](school-bus-finance.md#1-family-bills-draft-and-issue) |
+| Collections: KPIs, filters, list, CSV, Mark Paid, billing differences | `/schools/:id/bills` (+ `/export`, `/pay`, `/differences`) | [finance § 2](school-bus-finance.md#2-collections) |
+| Collections: open a bill, Record Payment, Waive Late Fee, Credit / Debit Note, print | `/school_bills/:id` (+ `/payments`, `/waive_late`, `/notes`) | [finance § 3](school-bus-finance.md#3-one-bill-payments-notes-late-fees) |
+| Documents: list, filters, print, Void receipt, Statement of Account | `/schools/:id/documents`, `/school_documents/:id` (+ `/void`), `/schools/:id/statement` | [finance § 4](school-bus-finance.md#4-documents-and-statements) |
+| Operator Payments (school): month, routes, lines + files, invoice no., Send / Recall / Send Back / Approve / Reopen, Pay, voucher | `/schools/:id/payouts` (+ `/:operator_id/...`), `/school_payouts/:id/voucher` | [finance § 5](school-bus-finance.md#5-operator-payments-pay-runs) |
+| School Dashboard, Live Ops | **No API yet** | — |
 
 ---
 
@@ -576,7 +581,6 @@ Rail icon `map`. Needs `vehicles` or `plans`. Poll the board every 10–15 s.
 
 ## Not built yet
 
-These rail menus of Convoy OS have **no API yet**: School Bus › School Finance (Collections), School Dashboard and Live Ops
-(and Finance > School Bus Collections), and Clients > Connected Clients.
+These rail menus of Convoy OS have **no API yet**: School Bus › School Dashboard and Live Ops, and Clients > Connected Clients.
 Smaller gaps inside built menus are listed in [trips § 6](trips.md#6-not-built-yet) and
 [fleet § 10](fleet.md#10-not-built-yet), [settings § 5](settings.md#5-not-built-yet), [clients § 7](clients.md#7-not-built-yet), [hr § 10](hr.md#10-not-built-yet) and [finance § 8](finance.md#8-not-built-yet).

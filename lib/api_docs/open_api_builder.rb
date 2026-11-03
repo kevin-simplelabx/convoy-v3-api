@@ -7,7 +7,7 @@
 module ApiDocs
   class OpenApiBuilder
     DOCS = Rails.root.join(".api-documents")
-    MENUS = { "scheduler.md" => "Scheduler", "trips.md" => "Trips", "fleet.md" => "Fleet", "settings.md" => "Settings", "clients.md" => "Clients", "hr.md" => "HR", "finance.md" => "Finance", "reports.md" => "Reports", "live-map.md" => "Live Map", "ops-control.md" => "Ops Control", "school-bus-setup.md" => "School Bus", "school-bus-money.md" => "School Bus", "school-bus-stops.md" => "School Bus", "school-bus-routes.md" => "School Bus", "school-bus-parents.md" => "School Bus", "dashboard.md" => "Dashboard", "convoy-admin.md" => "Convoy Admin",
+    MENUS = { "scheduler.md" => "Scheduler", "trips.md" => "Trips", "fleet.md" => "Fleet", "settings.md" => "Settings", "clients.md" => "Clients", "hr.md" => "HR", "finance.md" => "Finance", "reports.md" => "Reports", "live-map.md" => "Live Map", "ops-control.md" => "Ops Control", "school-bus-setup.md" => "School Bus", "school-bus-money.md" => "School Bus", "school-bus-stops.md" => "School Bus", "school-bus-routes.md" => "School Bus", "school-bus-parents.md" => "School Bus", "school-bus-finance.md" => "School Bus", "dashboard.md" => "Dashboard", "convoy-admin.md" => "Convoy Admin",
               "README.md" => "Common" }.freeze
     # Folder = the Convoy OS menu that owns the resource (.notes/data-ownership.md), not the doc that first names it.
     FOLDERS = {
@@ -22,14 +22,14 @@ module ApiDocs
                     external_share_links external_vehicle_submissions public/share_forms],
       "Clients" => %w[clients client_sites client_end_customers client_pickup_points client_users pickup_points],
       "HR" => %w[pay_rate_plans pay_schemes pay_drivers pay_earnings pay_simulator pay_bonuses pay_points pay_rewards pay_audit_log],
-      "Finance" => %w[finance_settings client_invoices client_billing finance_documents operator_payments vehicle_financials vehicle_pl],
+      "Finance" => %w[finance_settings client_invoices client_billing finance_documents finance_school_collections operator_payments vehicle_financials vehicle_pl],
       "Reports" => %w[reports],
       "Live Map" => %w[live_map],
       "Ops Control" => %w[ops_control],
       "School Bus" => %w[schools rider_datasets school_riders academic_years school_levels bus_sessions school_attendant_policies
                         fare_tables extra_charges school_policies school_payment_methods school_operator_pays
                         stops school_stops stop_photo_requests routing school_plans school_routes route_money rider_assignments
-                        feasibility_studies families school_registrations bus_requests cca_rides],
+                        feasibility_studies families school_registrations bus_requests cca_rides school_bills school_documents school_payouts],
       "Dashboard" => %w[dashboard],
       "Convoy Admin" => %w[message_terms discover company_leads],
       "Client Portal" => %w[portal/sessions portal/passwords],

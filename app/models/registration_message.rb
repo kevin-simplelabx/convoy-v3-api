@@ -15,6 +15,7 @@
 #  offset_days            :integer
 #  offset_hours           :integer
 #  released_at            :timestamptz
+#  scheduled              :boolean          default(FALSE), not null
 #  subject                :string
 #  whatsapp               :boolean          default(TRUE), not null
 #  whatsapp_body          :text

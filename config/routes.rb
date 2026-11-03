@@ -66,6 +66,30 @@ Rails.application.routes.draw do
         resource :cca_rides, only: %i[show update] do
           post :not_running
         end
+        resources :bills, controller: :school_bills, only: :index do
+          collection do
+            get :export
+            get :differences
+            post :pay, action: :pay_many
+          end
+        end
+        get :bill_runs, to: "school_bills#runs"
+        get :documents, to: "school_documents#index"
+        resources :payouts, controller: :school_payouts, param: :operator_id, only: %i[index update] do
+          member do
+            post :lines, action: :add_line
+            delete "lines/:line_id", action: :remove_line, as: :line
+            post :send, action: :send_to_finance, as: :send_to_finance
+            post :recall
+            post :send_back
+            post :approve
+            post :reopen
+            post :payments, action: :pay
+          end
+        end
+        get :statement, to: "school_documents#statement"
+        post :bill_runs, to: "school_bills#draft"
+        post "bill_runs/issue", to: "school_bills#issue", as: :issue_bill_runs
         resources :bus_requests, only: %i[index create] do
           collection do
             post :accept, action: :accept_many
@@ -99,6 +123,18 @@ Rails.application.routes.draw do
       get "routing/settings", to: "routing#settings"
       put "routing/settings", to: "routing#save_settings"
       get "routing_runs/:id", to: "routing#show_run", as: :routing_run
+      patch "school_bills/settings", to: "school_bills#settings", as: :school_bill_settings
+      get "school_payouts/:id/voucher", to: "school_payouts#voucher", as: :school_payout_voucher
+      resources :school_documents, only: :show do
+        post :void, on: :member
+      end
+      resources :school_bills, only: :show do
+        member do
+          post :payments, action: :pay
+          post :waive_late
+          post :notes, action: :add_note
+        end
+      end
       resources :bus_requests, only: :show do
         collection do
           get :alerts
@@ -282,6 +318,7 @@ Rails.application.routes.draw do
         patch "vehicles/:vehicle_id", to: "vehicle_financials#update"
         post "vehicles/:vehicle_id/instalments", to: "vehicle_financials#instalments", as: :vehicle_instalments
         get "documents", to: "finance_documents#index"
+        get "school_collections", to: "finance_school_collections#index"
         get "documents/brand", to: "finance_documents#brand_info", as: :documents_brand
         get "documents/payment_notices/:id", to: "finance_documents#payment_notice", as: :payment_notice
         get "billing/:client_id", to: "client_billing#show", as: :billing

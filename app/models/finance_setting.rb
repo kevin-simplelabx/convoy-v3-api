@@ -4,35 +4,37 @@
 # Table name: finance_settings
 # Database name: primary
 #
-#  id             :bigint           not null, primary key
-#  account_name   :string
-#  account_number :string
-#  approval       :string           default("single"), not null
-#  brand_address  :text
-#  brand_email    :string
-#  brand_name     :string
-#  brand_note     :string           default("Thank you for riding with us.")
-#  brand_phone    :string
-#  brand_uen      :string
-#  gst_mode       :string           default("excl"), not null
-#  gst_on         :boolean          default(FALSE), not null
-#  gst_rate       :decimal(5, 2)    default(9.0), not null
-#  gst_reg_no     :string
-#  locked_at      :datetime
-#  payment_note   :string           default("Please pay by the due date and quote the invoice number.")
-#  paynow         :string
-#  prefix_cn      :string           default("CN"), not null
-#  prefix_dn      :string           default("DN"), not null
-#  prefix_inv     :string           default("INV"), not null
-#  prefix_pb      :string           default("PB"), not null
-#  prefix_pn      :string           default("PN"), not null
-#  prefix_pv      :string           default("PV"), not null
-#  prefix_rcp     :string           default("RCP"), not null
-#  created_at     :datetime         not null
-#  updated_at     :datetime         not null
-#  bank_id        :bigint
-#  company_id     :bigint           not null
-#  locked_by_id   :bigint
+#  id                     :bigint           not null, primary key
+#  account_name           :string
+#  account_number         :string
+#  approval               :string           default("single"), not null
+#  brand_address          :text
+#  brand_email            :string
+#  brand_name             :string
+#  brand_note             :string           default("Thank you for riding with us.")
+#  brand_phone            :string
+#  brand_uen              :string
+#  gst_mode               :string           default("excl"), not null
+#  gst_on                 :boolean          default(FALSE), not null
+#  gst_rate               :decimal(5, 2)    default(9.0), not null
+#  gst_reg_no             :string
+#  locked_at              :datetime
+#  payment_note           :string           default("Please pay by the due date and quote the invoice number.")
+#  paynow                 :string
+#  prefix_cn              :string           default("CN"), not null
+#  prefix_dn              :string           default("DN"), not null
+#  prefix_inv             :string           default("INV"), not null
+#  prefix_pb              :string           default("PB"), not null
+#  prefix_pn              :string           default("PN"), not null
+#  prefix_pv              :string           default("PV"), not null
+#  prefix_rcp             :string           default("RCP"), not null
+#  school_bill_draft_days :integer          default(7), not null
+#  school_bill_start_rule :string           default("prorate"), not null
+#  created_at             :datetime         not null
+#  updated_at             :datetime         not null
+#  bank_id                :bigint
+#  company_id             :bigint           not null
+#  locked_by_id           :bigint
 #
 # Indexes
 #

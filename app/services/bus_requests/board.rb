@@ -36,7 +36,7 @@ module BusRequests
     private
 
     def scope(kind)
-      rel = @school.bus_requests.of_kind(kind).not_withdrawn.includes(:family, :school_rider, :events, :places, :first_bill)
+      rel = @school.bus_requests.of_kind(kind).not_withdrawn.includes(:family, :school_rider, :events, :places, first_bill: :payments)
       kind == "new" ? rel.where(academic_year: @year) : rel
     end
 

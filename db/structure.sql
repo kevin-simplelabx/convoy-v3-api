@@ -264,7 +264,7 @@ CREATE TABLE public.banks (
     "position" integer DEFAULT 0 NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT banks_branch_rule CHECK (((branch_rule)::text = ANY (ARRAY[('pre3'::character varying)::text, ('pre3drop'::character varying)::text, ('posb'::character varying)::text, ('sc'::character varying)::text, ('uob'::character varying)::text, ('list'::character varying)::text])))
+    CONSTRAINT banks_branch_rule CHECK (((branch_rule)::text = ANY ((ARRAY['pre3'::character varying, 'pre3drop'::character varying, 'posb'::character varying, 'sc'::character varying, 'uob'::character varying, 'list'::character varying])::text[])))
 );
 
 
@@ -1238,7 +1238,7 @@ CREATE TABLE public.client_billing_contacts (
     "position" integer DEFAULT 0 NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT client_billing_contacts_send_as CHECK (((send_as)::text = ANY (ARRAY[('to'::character varying)::text, ('cc'::character varying)::text])))
+    CONSTRAINT client_billing_contacts_send_as CHECK (((send_as)::text = ANY ((ARRAY['to'::character varying, 'cc'::character varying])::text[])))
 );
 
 
@@ -1384,7 +1384,7 @@ CREATE TABLE public.client_invoice_lines (
     amount numeric(12,2) DEFAULT 0.0 NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT client_invoice_lines_source CHECK (((source)::text = ANY (ARRAY[('trip'::character varying)::text, ('late_cancel'::character varying)::text, ('manual'::character varying)::text])))
+    CONSTRAINT client_invoice_lines_source CHECK (((source)::text = ANY ((ARRAY['trip'::character varying, 'late_cancel'::character varying, 'manual'::character varying])::text[])))
 );
 
 
@@ -1517,8 +1517,8 @@ CREATE TABLE public.client_invoices (
     voided_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT client_invoices_kind CHECK (((kind)::text = ANY (ARRAY[('invoice'::character varying)::text, ('credit_note'::character varying)::text]))),
-    CONSTRAINT client_invoices_status CHECK (((status)::text = ANY (ARRAY[('draft'::character varying)::text, ('issued'::character varying)::text, ('void'::character varying)::text])))
+    CONSTRAINT client_invoices_kind CHECK (((kind)::text = ANY ((ARRAY['invoice'::character varying, 'credit_note'::character varying])::text[]))),
+    CONSTRAINT client_invoices_status CHECK (((status)::text = ANY ((ARRAY['draft'::character varying, 'issued'::character varying, 'void'::character varying])::text[])))
 );
 
 
@@ -1671,7 +1671,7 @@ CREATE TABLE public.client_users (
     discarded_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT client_users_role CHECK (((role)::text = ANY (ARRAY[('super'::character varying)::text, ('adm'::character varying)::text, ('fin'::character varying)::text, ('ssa'::character varying)::text, ('sa'::character varying)::text, ('sfin'::character varying)::text, ('member'::character varying)::text])))
+    CONSTRAINT client_users_role CHECK (((role)::text = ANY ((ARRAY['super'::character varying, 'adm'::character varying, 'fin'::character varying, 'ssa'::character varying, 'sa'::character varying, 'sfin'::character varying, 'member'::character varying])::text[])))
 );
 
 
@@ -1806,7 +1806,7 @@ CREATE TABLE public.company_country_requests (
     decided_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT company_country_requests_status CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('approved'::character varying)::text, ('declined'::character varying)::text, ('withdrawn'::character varying)::text])))
+    CONSTRAINT company_country_requests_status CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'approved'::character varying, 'declined'::character varying, 'withdrawn'::character varying])::text[])))
 );
 
 
@@ -1841,7 +1841,7 @@ CREATE TABLE public.company_lead_domains (
     updated_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT company_lead_domains_status CHECK (((status)::text = ANY (ARRAY[('new'::character varying)::text, ('contacted'::character varying)::text, ('demo'::character varying)::text, ('signed'::character varying)::text, ('lost'::character varying)::text])))
+    CONSTRAINT company_lead_domains_status CHECK (((status)::text = ANY ((ARRAY['new'::character varying, 'contacted'::character varying, 'demo'::character varying, 'signed'::character varying, 'lost'::character varying])::text[])))
 );
 
 
@@ -2015,7 +2015,7 @@ CREATE TABLE public.discover_advertisers (
     discarded_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT discover_advertisers_kind CHECK (((kind)::text = ANY (ARRAY[('tc'::character varying)::text, ('attr'::character varying)::text, ('prog'::character varying)::text, ('brand'::character varying)::text])))
+    CONSTRAINT discover_advertisers_kind CHECK (((kind)::text = ANY ((ARRAY['tc'::character varying, 'attr'::character varying, 'prog'::character varying, 'brand'::character varying])::text[])))
 );
 
 
@@ -2081,8 +2081,8 @@ CREATE TABLE public.discover_placements (
     created_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT discover_placements_kind CHECK (((kind)::text = ANY (ARRAY[('trip'::character varying)::text, ('prog'::character varying)::text, ('ad'::character varying)::text, ('news'::character varying)::text]))),
-    CONSTRAINT discover_placements_status CHECK (((status)::text = ANY (ARRAY[('draft'::character varying)::text, ('live'::character varying)::text, ('paused'::character varying)::text])))
+    CONSTRAINT discover_placements_kind CHECK (((kind)::text = ANY ((ARRAY['trip'::character varying, 'prog'::character varying, 'ad'::character varying, 'news'::character varying])::text[]))),
+    CONSTRAINT discover_placements_status CHECK (((status)::text = ANY ((ARRAY['draft'::character varying, 'live'::character varying, 'paused'::character varying])::text[])))
 );
 
 
@@ -2200,7 +2200,7 @@ CREATE TABLE public.driver_invites (
     delivery character varying DEFAULT 'recorded'::character varying NOT NULL,
     sent_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT driver_invites_kind CHECK (((kind)::text = ANY (ARRAY[('invite'::character varying)::text, ('resend'::character varying)::text])))
+    CONSTRAINT driver_invites_kind CHECK (((kind)::text = ANY ((ARRAY['invite'::character varying, 'resend'::character varying])::text[])))
 );
 
 
@@ -2506,7 +2506,7 @@ CREATE TABLE public.driver_point_lots (
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
     CONSTRAINT driver_point_lots_points CHECK (((points > 0) AND ((remaining >= 0) AND (remaining <= points)))),
-    CONSTRAINT driver_point_lots_source CHECK (((source)::text = ANY (ARRAY[('manual'::character varying)::text, ('bonus'::character varying)::text])))
+    CONSTRAINT driver_point_lots_source CHECK (((source)::text = ANY ((ARRAY['manual'::character varying, 'bonus'::character varying])::text[])))
 );
 
 
@@ -2663,7 +2663,7 @@ CREATE TABLE public.external_vehicle_submissions (
     submitted_ip character varying,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT external_vehicle_submissions_status CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('added'::character varying)::text, ('dismissed'::character varying)::text])))
+    CONSTRAINT external_vehicle_submissions_status CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'added'::character varying, 'dismissed'::character varying])::text[])))
 );
 
 
@@ -3339,8 +3339,10 @@ CREATE TABLE public.finance_settings (
     locked_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT finance_settings_approval CHECK (((approval)::text = ANY (ARRAY[('single'::character varying)::text, ('maker'::character varying)::text]))),
-    CONSTRAINT finance_settings_gst_mode CHECK (((gst_mode)::text = ANY (ARRAY[('excl'::character varying)::text, ('incl'::character varying)::text])))
+    school_bill_draft_days integer DEFAULT 7 NOT NULL,
+    school_bill_start_rule character varying DEFAULT 'prorate'::character varying NOT NULL,
+    CONSTRAINT finance_settings_approval CHECK (((approval)::text = ANY ((ARRAY['single'::character varying, 'maker'::character varying])::text[]))),
+    CONSTRAINT finance_settings_gst_mode CHECK (((gst_mode)::text = ANY ((ARRAY['excl'::character varying, 'incl'::character varying])::text[])))
 );
 
 
@@ -3383,8 +3385,8 @@ CREATE TABLE public.fuel_alerts (
     checked_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT fuel_alerts_kind CHECK (((kind)::text = ANY (ARRAY[('eff'::character varying)::text, ('odo'::character varying)::text, ('dbl'::character varying)::text, ('big'::character varying)::text, ('price'::character varying)::text, ('trend'::character varying)::text]))),
-    CONSTRAINT fuel_alerts_status CHECK (((status)::text = ANY (ARRAY[('open'::character varying)::text, ('checked'::character varying)::text])))
+    CONSTRAINT fuel_alerts_kind CHECK (((kind)::text = ANY ((ARRAY['eff'::character varying, 'odo'::character varying, 'dbl'::character varying, 'big'::character varying, 'price'::character varying, 'trend'::character varying])::text[]))),
+    CONSTRAINT fuel_alerts_status CHECK (((status)::text = ANY ((ARRAY['open'::character varying, 'checked'::character varying])::text[])))
 );
 
 
@@ -3419,7 +3421,7 @@ CREATE TABLE public.fuel_companies (
     "position" integer DEFAULT 0 NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT fuel_companies_kind CHECK (((kind)::text = ANY (ARRAY[('fuel'::character varying)::text, ('elec'::character varying)::text, ('both'::character varying)::text])))
+    CONSTRAINT fuel_companies_kind CHECK (((kind)::text = ANY ((ARRAY['fuel'::character varying, 'elec'::character varying, 'both'::character varying])::text[])))
 );
 
 
@@ -3471,7 +3473,7 @@ CREATE TABLE public.fuel_entries (
     updated_at timestamp(6) without time zone NOT NULL,
     energy_km integer,
     CONSTRAINT fuel_entries_amounts CHECK (((quantity > (0)::numeric) AND (cost >= (0)::numeric))),
-    CONSTRAINT fuel_entries_kind CHECK (((kind)::text = ANY (ARRAY[('diesel'::character varying)::text, ('petrol'::character varying)::text, ('def'::character varying)::text, ('elec'::character varying)::text])))
+    CONSTRAINT fuel_entries_kind CHECK (((kind)::text = ANY ((ARRAY['diesel'::character varying, 'petrol'::character varying, 'def'::character varying, 'elec'::character varying])::text[])))
 );
 
 
@@ -3957,7 +3959,7 @@ CREATE TABLE public.occurrence_corrections (
     lock_version integer DEFAULT 0 NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT occurrence_corrections_outcome CHECK (((outcome)::text = ANY (ARRAY[('completed'::character varying)::text, ('incomplete'::character varying)::text])))
+    CONSTRAINT occurrence_corrections_outcome CHECK (((outcome)::text = ANY ((ARRAY['completed'::character varying, 'incomplete'::character varying])::text[])))
 );
 
 
@@ -4496,7 +4498,7 @@ CREATE TABLE public.operator_pay_batches (
     created_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT operator_pay_batches_kind CHECK (((kind)::text = ANY (ARRAY[('batch'::character varying)::text, ('adhoc'::character varying)::text])))
+    CONSTRAINT operator_pay_batches_kind CHECK (((kind)::text = ANY ((ARRAY['batch'::character varying, 'adhoc'::character varying])::text[])))
 );
 
 
@@ -4693,7 +4695,7 @@ CREATE TABLE public.pay_bonus_drivers (
     signed_up_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT pay_bonus_drivers_role CHECK (((role)::text = ANY (ARRAY[('eligible'::character varying)::text, ('signed_up'::character varying)::text])))
+    CONSTRAINT pay_bonus_drivers_role CHECK (((role)::text = ANY ((ARRAY['eligible'::character varying, 'signed_up'::character varying])::text[])))
 );
 
 
@@ -4882,8 +4884,8 @@ CREATE TABLE public.pay_bonuses (
     discarded_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT pay_bonuses_frequency CHECK (((frequency)::text = ANY (ARRAY[('daily'::character varying)::text, ('weekly'::character varying)::text, ('monthly'::character varying)::text, ('quarterly'::character varying)::text, ('half_yearly'::character varying)::text, ('yearly'::character varying)::text]))),
-    CONSTRAINT pay_bonuses_plan_type CHECK (((plan_type)::text = ANY (ARRAY[('trip_target'::character varying)::text, ('reliability_otp'::character varying)::text, ('reliability_attendance'::character varying)::text])))
+    CONSTRAINT pay_bonuses_frequency CHECK (((frequency)::text = ANY ((ARRAY['daily'::character varying, 'weekly'::character varying, 'monthly'::character varying, 'quarterly'::character varying, 'half_yearly'::character varying, 'yearly'::character varying])::text[]))),
+    CONSTRAINT pay_bonuses_plan_type CHECK (((plan_type)::text = ANY ((ARRAY['trip_target'::character varying, 'reliability_otp'::character varying, 'reliability_attendance'::character varying])::text[])))
 );
 
 
@@ -5091,7 +5093,7 @@ CREATE TABLE public.pay_rewards (
     discarded_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT pay_rewards_status CHECK (((status)::text = ANY (ARRAY[('active'::character varying)::text, ('inactive'::character varying)::text])))
+    CONSTRAINT pay_rewards_status CHECK (((status)::text = ANY ((ARRAY['active'::character varying, 'inactive'::character varying])::text[])))
 );
 
 
@@ -5162,7 +5164,7 @@ CREATE TABLE public.pay_scheme_target_tiers (
     "position" integer DEFAULT 0 NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT pay_scheme_target_tiers_period CHECK (((period)::text = ANY (ARRAY[('weekly'::character varying)::text, ('monthly'::character varying)::text])))
+    CONSTRAINT pay_scheme_target_tiers_period CHECK (((period)::text = ANY ((ARRAY['weekly'::character varying, 'monthly'::character varying])::text[])))
 );
 
 
@@ -5277,7 +5279,7 @@ CREATE TABLE public.pay_schemes (
     discarded_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT pay_schemes_type CHECK (((scheme_type)::text = ANY (ARRAY[('basic_plus_trips'::character varying)::text, ('monthly_with_minimum'::character varying)::text, ('shift_based'::character varying)::text])))
+    CONSTRAINT pay_schemes_type CHECK (((scheme_type)::text = ANY ((ARRAY['basic_plus_trips'::character varying, 'monthly_with_minimum'::character varying, 'shift_based'::character varying])::text[])))
 );
 
 
@@ -5543,7 +5545,7 @@ CREATE TABLE public.portal_sign_in_codes (
     ip character varying,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT portal_sign_in_codes_purpose CHECK (((purpose)::text = ANY (ARRAY[('first'::character varying)::text, ('reset'::character varying)::text])))
+    CONSTRAINT portal_sign_in_codes_purpose CHECK (((purpose)::text = ANY ((ARRAY['first'::character varying, 'reset'::character varying])::text[])))
 );
 
 
@@ -5907,8 +5909,8 @@ CREATE TABLE public.registration_messages (
     subject character varying,
     body text,
     whatsapp_body text,
-    scheduled boolean DEFAULT false NOT NULL,
-    released_at timestamp with time zone
+    released_at timestamp with time zone,
+    scheduled boolean DEFAULT false NOT NULL
 );
 
 
@@ -6002,8 +6004,8 @@ CREATE TABLE public.replacements (
     updated_at timestamp(6) without time zone NOT NULL,
     school_route_id bigint,
     CONSTRAINT replacements_dates CHECK ((ends_on >= starts_on)),
-    CONSTRAINT replacements_kind CHECK (((kind)::text = ANY (ARRAY[('drv'::character varying)::text, ('veh'::character varying)::text, ('crew'::character varying)::text, ('hand'::character varying)::text]))),
-    CONSTRAINT replacements_range_kinds CHECK ((((scope)::text = 'run'::text) OR ((kind)::text = ANY (ARRAY[('drv'::character varying)::text, ('veh'::character varying)::text])))),
+    CONSTRAINT replacements_kind CHECK (((kind)::text = ANY ((ARRAY['drv'::character varying, 'veh'::character varying, 'crew'::character varying, 'hand'::character varying])::text[]))),
+    CONSTRAINT replacements_range_kinds CHECK ((((scope)::text = 'run'::text) OR ((kind)::text = ANY ((ARRAY['drv'::character varying, 'veh'::character varying])::text[])))),
     CONSTRAINT replacements_run_source CHECK ((((scope)::text = 'range'::text) OR (num_nonnulls(trip_id, school_route_id) = 1)))
 );
 
@@ -6427,7 +6429,10 @@ CREATE TABLE public.school_bill_lines (
     child_name character varying,
     description character varying NOT NULL,
     amount numeric(12,2) NOT NULL,
-    "position" integer DEFAULT 0 NOT NULL
+    "position" integer DEFAULT 0 NOT NULL,
+    rid character varying,
+    note character varying,
+    credit_note_id bigint
 );
 
 
@@ -6451,6 +6456,121 @@ ALTER SEQUENCE public.school_bill_lines_id_seq OWNED BY public.school_bill_lines
 
 
 --
+-- Name: school_bill_payments; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.school_bill_payments (
+    id bigint NOT NULL,
+    school_bill_id bigint NOT NULL,
+    receipt_id bigint,
+    paid_on date NOT NULL,
+    amount numeric(12,2) NOT NULL,
+    method character varying,
+    reference character varying,
+    source character varying DEFAULT 'console'::character varying NOT NULL,
+    recorded_by_id bigint,
+    voided_at timestamp with time zone,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: school_bill_payments_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.school_bill_payments_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: school_bill_payments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.school_bill_payments_id_seq OWNED BY public.school_bill_payments.id;
+
+
+--
+-- Name: school_bill_runs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.school_bill_runs (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    school_id bigint NOT NULL,
+    academic_year_id bigint NOT NULL,
+    period_index integer NOT NULL,
+    label character varying,
+    due_on date,
+    skipped character varying[] DEFAULT '{}'::character varying[] NOT NULL,
+    unlinked integer DEFAULT 0 NOT NULL,
+    auto boolean DEFAULT false NOT NULL,
+    drafted_at timestamp with time zone NOT NULL,
+    drafted_by_id bigint,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: school_bill_runs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.school_bill_runs_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: school_bill_runs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.school_bill_runs_id_seq OWNED BY public.school_bill_runs.id;
+
+
+--
+-- Name: school_bill_waivers; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.school_bill_waivers (
+    id bigint NOT NULL,
+    school_bill_id bigint NOT NULL,
+    kind character varying DEFAULT 'late'::character varying NOT NULL,
+    amount numeric(12,2) NOT NULL,
+    reason text NOT NULL,
+    created_by_id bigint,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: school_bill_waivers_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.school_bill_waivers_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: school_bill_waivers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.school_bill_waivers_id_seq OWNED BY public.school_bill_waivers.id;
+
+
+--
 -- Name: school_bills; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -6462,9 +6582,9 @@ CREATE TABLE public.school_bills (
     family_id bigint,
     school_rider_id bigint,
     bus_request_id bigint,
-    number character varying NOT NULL,
+    number character varying,
     kind character varying DEFAULT 'first'::character varying NOT NULL,
-    status character varying DEFAULT 'open'::character varying NOT NULL,
+    status character varying DEFAULT 'draft'::character varying NOT NULL,
     bill_to character varying,
     period_label character varying,
     period_starts_on date,
@@ -6474,15 +6594,22 @@ CREATE TABLE public.school_bills (
     gst_rate numeric(5,2) DEFAULT 0.0 NOT NULL,
     gst_amount numeric(12,2) DEFAULT 0.0 NOT NULL,
     total numeric(12,2) NOT NULL,
-    paid_at timestamp with time zone,
-    method character varying,
-    recorded_by_id bigint,
     created_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
     gross numeric(12,2),
     credit_used numeric(12,2) DEFAULT 0.0 NOT NULL,
-    week_of date
+    week_of date,
+    payer character varying DEFAULT 'family'::character varying NOT NULL,
+    bill_to_email character varying,
+    bill_to_code character varying,
+    period_index integer,
+    billing_month date,
+    due_on date,
+    drafted_at timestamp with time zone,
+    issued_at timestamp with time zone,
+    client_id bigint,
+    issued_by_id bigint
 );
 
 
@@ -6545,6 +6672,60 @@ CREATE SEQUENCE public.school_bus_size_rates_id_seq
 --
 
 ALTER SEQUENCE public.school_bus_size_rates_id_seq OWNED BY public.school_bus_size_rates.id;
+
+
+--
+-- Name: school_documents; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.school_documents (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    school_id bigint NOT NULL,
+    doc_type character varying NOT NULL,
+    number character varying NOT NULL,
+    issued_on date NOT NULL,
+    school_bill_id bigint,
+    family_id bigint,
+    payer character varying DEFAULT 'family'::character varying NOT NULL,
+    bill_to character varying,
+    description character varying,
+    subtotal numeric(12,2) DEFAULT 0.0 NOT NULL,
+    gst_rate numeric(5,2) DEFAULT 0.0 NOT NULL,
+    gst_amount numeric(12,2) DEFAULT 0.0 NOT NULL,
+    total numeric(12,2) NOT NULL,
+    reason text,
+    credit_use character varying,
+    refund_on date,
+    method character varying,
+    reference character varying,
+    applied_bill_id bigint,
+    voided_at timestamp with time zone,
+    void_reason text,
+    voided_by_id bigint,
+    created_by_id bigint,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: school_documents_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.school_documents_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: school_documents_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.school_documents_id_seq OWNED BY public.school_documents.id;
 
 
 --
@@ -6706,6 +6887,163 @@ CREATE SEQUENCE public.school_payment_methods_id_seq
 --
 
 ALTER SEQUENCE public.school_payment_methods_id_seq OWNED BY public.school_payment_methods.id;
+
+
+--
+-- Name: school_payout_adjustments; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.school_payout_adjustments (
+    id bigint NOT NULL,
+    school_payout_id bigint NOT NULL,
+    kind character varying NOT NULL,
+    sign integer NOT NULL,
+    adj_on date NOT NULL,
+    route_label character varying,
+    amount numeric(12,2) NOT NULL,
+    reason text NOT NULL,
+    paired_operator_id bigint,
+    pair_id bigint,
+    created_by_id bigint,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: school_payout_adjustments_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.school_payout_adjustments_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: school_payout_adjustments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.school_payout_adjustments_id_seq OWNED BY public.school_payout_adjustments.id;
+
+
+--
+-- Name: school_payout_files; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.school_payout_files (
+    id bigint NOT NULL,
+    school_payout_adjustment_id bigint NOT NULL,
+    file character varying NOT NULL,
+    name character varying,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: school_payout_files_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.school_payout_files_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: school_payout_files_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.school_payout_files_id_seq OWNED BY public.school_payout_files.id;
+
+
+--
+-- Name: school_payout_payments; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.school_payout_payments (
+    id bigint NOT NULL,
+    school_payout_id bigint NOT NULL,
+    paid_on date NOT NULL,
+    amount numeric(12,2) NOT NULL,
+    method character varying NOT NULL,
+    reference character varying,
+    recorded_by_id bigint,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: school_payout_payments_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.school_payout_payments_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: school_payout_payments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.school_payout_payments_id_seq OWNED BY public.school_payout_payments.id;
+
+
+--
+-- Name: school_payouts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.school_payouts (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    school_id bigint NOT NULL,
+    month date NOT NULL,
+    operator_id bigint NOT NULL,
+    status character varying DEFAULT 'draft'::character varying NOT NULL,
+    base numeric(12,2),
+    routes_count integer,
+    auto_lines jsonb DEFAULT '[]'::jsonb NOT NULL,
+    invoice_number character varying,
+    prepared_by_id bigint,
+    sent_by_id bigint,
+    sent_at timestamp with time zone,
+    returned_by_id bigint,
+    returned_at timestamp with time zone,
+    approved_by_id bigint,
+    approved_at timestamp with time zone,
+    voucher_number character varying,
+    voucher_on date,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: school_payouts_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.school_payouts_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: school_payouts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.school_payouts_id_seq OWNED BY public.school_payouts.id;
 
 
 --
@@ -7831,7 +8169,7 @@ CREATE TABLE public.trip_occurrences (
     max_delay_minutes integer,
     started_at timestamp with time zone,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
-    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
+    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 )
 PARTITION BY RANGE (date);
 
@@ -7902,7 +8240,7 @@ CREATE TABLE public.trip_occurrences_y2026m09 (
     max_delay_minutes integer,
     started_at timestamp with time zone,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
-    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
+    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 );
 
 
@@ -7958,7 +8296,7 @@ CREATE TABLE public.trip_occurrences_y2026m10 (
     max_delay_minutes integer,
     started_at timestamp with time zone,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
-    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
+    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 );
 
 
@@ -8014,7 +8352,7 @@ CREATE TABLE public.trip_occurrences_y2026m11 (
     max_delay_minutes integer,
     started_at timestamp with time zone,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
-    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
+    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 );
 
 
@@ -8070,7 +8408,7 @@ CREATE TABLE public.trip_occurrences_y2026m12 (
     max_delay_minutes integer,
     started_at timestamp with time zone,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
-    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
+    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 );
 
 
@@ -8126,7 +8464,7 @@ CREATE TABLE public.trip_occurrences_y2027m01 (
     max_delay_minutes integer,
     started_at timestamp with time zone,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
-    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
+    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 );
 
 
@@ -8182,7 +8520,7 @@ CREATE TABLE public.trip_occurrences_y2027m02 (
     max_delay_minutes integer,
     started_at timestamp with time zone,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
-    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
+    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 );
 
 
@@ -8238,7 +8576,7 @@ CREATE TABLE public.trip_occurrences_y2027m03 (
     max_delay_minutes integer,
     started_at timestamp with time zone,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
-    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
+    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 );
 
 
@@ -8847,8 +9185,8 @@ CREATE TABLE public.trips (
     route_list_imported_at timestamp(6) without time zone,
     students_purged_at timestamp(6) without time zone,
     booking_trip_id bigint,
-    CONSTRAINT trips_end_mode CHECK (((end_mode)::text = ANY (ARRAY[('none'::character varying)::text, ('never'::character varying)::text, ('date'::character varying)::text, ('count'::character varying)::text]))),
-    CONSTRAINT trips_kind CHECK (((kind)::text = ANY (ARRAY[('ad_hoc'::character varying)::text, ('corporate_shuttle'::character varying)::text, ('airport_transfer'::character varying)::text, ('disposal'::character varying)::text, ('school_run'::character varying)::text])))
+    CONSTRAINT trips_end_mode CHECK (((end_mode)::text = ANY ((ARRAY['none'::character varying, 'never'::character varying, 'date'::character varying, 'count'::character varying])::text[]))),
+    CONSTRAINT trips_kind CHECK (((kind)::text = ANY ((ARRAY['ad_hoc'::character varying, 'corporate_shuttle'::character varying, 'airport_transfer'::character varying, 'disposal'::character varying, 'school_run'::character varying])::text[])))
 );
 
 
@@ -9116,7 +9454,7 @@ CREATE TABLE public.vehicle_finance_entries (
     created_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT vehicle_finance_entries_kind CHECK (((kind)::text = ANY (ARRAY[('revenue'::character varying)::text, ('cost'::character varying)::text])))
+    CONSTRAINT vehicle_finance_entries_kind CHECK (((kind)::text = ANY ((ARRAY['revenue'::character varying, 'cost'::character varying])::text[])))
 );
 
 
@@ -9166,7 +9504,7 @@ CREATE TABLE public.vehicle_financials (
     updated_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT vehicle_financials_funding CHECK (((funding)::text = ANY (ARRAY[('loan'::character varying)::text, ('cash'::character varying)::text])))
+    CONSTRAINT vehicle_financials_funding CHECK (((funding)::text = ANY ((ARRAY['loan'::character varying, 'cash'::character varying])::text[])))
 );
 
 
@@ -9437,7 +9775,7 @@ CREATE TABLE public.vehicle_type_requests (
     vehicle_type_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT vehicle_type_requests_status CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('added'::character varying)::text, ('declined'::character varying)::text])))
+    CONSTRAINT vehicle_type_requests_status CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'added'::character varying, 'declined'::character varying])::text[])))
 );
 
 
@@ -10792,6 +11130,27 @@ ALTER TABLE ONLY public.school_bill_lines ALTER COLUMN id SET DEFAULT nextval('p
 
 
 --
+-- Name: school_bill_payments id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_bill_payments ALTER COLUMN id SET DEFAULT nextval('public.school_bill_payments_id_seq'::regclass);
+
+
+--
+-- Name: school_bill_runs id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_bill_runs ALTER COLUMN id SET DEFAULT nextval('public.school_bill_runs_id_seq'::regclass);
+
+
+--
+-- Name: school_bill_waivers id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_bill_waivers ALTER COLUMN id SET DEFAULT nextval('public.school_bill_waivers_id_seq'::regclass);
+
+
+--
 -- Name: school_bills id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -10803,6 +11162,13 @@ ALTER TABLE ONLY public.school_bills ALTER COLUMN id SET DEFAULT nextval('public
 --
 
 ALTER TABLE ONLY public.school_bus_size_rates ALTER COLUMN id SET DEFAULT nextval('public.school_bus_size_rates_id_seq'::regclass);
+
+
+--
+-- Name: school_documents id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_documents ALTER COLUMN id SET DEFAULT nextval('public.school_documents_id_seq'::regclass);
 
 
 --
@@ -10831,6 +11197,34 @@ ALTER TABLE ONLY public.school_operator_pays ALTER COLUMN id SET DEFAULT nextval
 --
 
 ALTER TABLE ONLY public.school_payment_methods ALTER COLUMN id SET DEFAULT nextval('public.school_payment_methods_id_seq'::regclass);
+
+
+--
+-- Name: school_payout_adjustments id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_payout_adjustments ALTER COLUMN id SET DEFAULT nextval('public.school_payout_adjustments_id_seq'::regclass);
+
+
+--
+-- Name: school_payout_files id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_payout_files ALTER COLUMN id SET DEFAULT nextval('public.school_payout_files_id_seq'::regclass);
+
+
+--
+-- Name: school_payout_payments id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_payout_payments ALTER COLUMN id SET DEFAULT nextval('public.school_payout_payments_id_seq'::regclass);
+
+
+--
+-- Name: school_payouts id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_payouts ALTER COLUMN id SET DEFAULT nextval('public.school_payouts_id_seq'::regclass);
 
 
 --
@@ -12599,6 +12993,30 @@ ALTER TABLE ONLY public.school_bill_lines
 
 
 --
+-- Name: school_bill_payments school_bill_payments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_bill_payments
+    ADD CONSTRAINT school_bill_payments_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: school_bill_runs school_bill_runs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_bill_runs
+    ADD CONSTRAINT school_bill_runs_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: school_bill_waivers school_bill_waivers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_bill_waivers
+    ADD CONSTRAINT school_bill_waivers_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: school_bills school_bills_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -12612,6 +13030,14 @@ ALTER TABLE ONLY public.school_bills
 
 ALTER TABLE ONLY public.school_bus_size_rates
     ADD CONSTRAINT school_bus_size_rates_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: school_documents school_documents_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_documents
+    ADD CONSTRAINT school_documents_pkey PRIMARY KEY (id);
 
 
 --
@@ -12644,6 +13070,38 @@ ALTER TABLE ONLY public.school_operator_pays
 
 ALTER TABLE ONLY public.school_payment_methods
     ADD CONSTRAINT school_payment_methods_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: school_payout_adjustments school_payout_adjustments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_payout_adjustments
+    ADD CONSTRAINT school_payout_adjustments_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: school_payout_files school_payout_files_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_payout_files
+    ADD CONSTRAINT school_payout_files_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: school_payout_payments school_payout_payments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_payout_payments
+    ADD CONSTRAINT school_payout_payments_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: school_payouts school_payouts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_payouts
+    ADD CONSTRAINT school_payouts_pkey PRIMARY KEY (id);
 
 
 --
@@ -13359,6 +13817,13 @@ CREATE UNIQUE INDEX idx_on_rate_card_period_id_vehicle_type_id_62c4167068 ON pub
 --
 
 CREATE INDEX idx_on_route_list_version_stop_id_a1ccadebd0 ON public.route_list_version_students USING btree (route_list_version_stop_id);
+
+
+--
+-- Name: idx_on_school_id_academic_year_id_period_index_014fe39487; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_on_school_id_academic_year_id_period_index_014fe39487 ON public.school_bill_runs USING btree (school_id, academic_year_id, period_index);
 
 
 --
@@ -14639,7 +15104,7 @@ CREATE INDEX index_drivers_on_last_vehicle_id ON public.drivers USING btree (las
 -- Name: index_drivers_on_live_phone; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX index_drivers_on_live_phone ON public.drivers USING btree (company_id, phone) WHERE (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('active'::character varying)::text])) AND (discarded_at IS NULL));
+CREATE UNIQUE INDEX index_drivers_on_live_phone ON public.drivers USING btree (company_id, phone) WHERE (((status)::text = ANY ((ARRAY['pending'::character varying, 'active'::character varying])::text[])) AND (discarded_at IS NULL));
 
 
 --
@@ -15339,7 +15804,7 @@ CREATE INDEX index_operator_drivers_on_last_vehicle_id ON public.operator_driver
 -- Name: index_operator_drivers_on_live_phone; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX index_operator_drivers_on_live_phone ON public.operator_drivers USING btree (company_id, phone) WHERE (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('active'::character varying)::text])) AND (discarded_at IS NULL));
+CREATE UNIQUE INDEX index_operator_drivers_on_live_phone ON public.operator_drivers USING btree (company_id, phone) WHERE (((status)::text = ANY ((ARRAY['pending'::character varying, 'active'::character varying])::text[])) AND (discarded_at IS NULL));
 
 
 --
@@ -16176,6 +16641,27 @@ CREATE INDEX index_school_bill_lines_on_school_bill_id ON public.school_bill_lin
 
 
 --
+-- Name: index_school_bill_payments_on_receipt_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_school_bill_payments_on_receipt_id ON public.school_bill_payments USING btree (receipt_id);
+
+
+--
+-- Name: index_school_bill_payments_on_school_bill_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_school_bill_payments_on_school_bill_id ON public.school_bill_payments USING btree (school_bill_id);
+
+
+--
+-- Name: index_school_bill_waivers_on_school_bill_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_school_bill_waivers_on_school_bill_id ON public.school_bill_waivers USING btree (school_bill_id);
+
+
+--
 -- Name: index_school_bills_on_bus_request_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -16204,10 +16690,52 @@ CREATE INDEX index_school_bills_on_school_id ON public.school_bills USING btree 
 
 
 --
+-- Name: index_school_bills_one_per_family_period; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_school_bills_one_per_family_period ON public.school_bills USING btree (school_id, academic_year_id, period_index, family_id) WHERE (((kind)::text = 'period'::text) AND (family_id IS NOT NULL));
+
+
+--
+-- Name: index_school_bills_one_per_school_period; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_school_bills_one_per_school_period ON public.school_bills USING btree (school_id, academic_year_id, period_index) WHERE (((kind)::text = 'period'::text) AND ((payer)::text = 'school'::text));
+
+
+--
 -- Name: index_school_bus_size_rates_on_school_id_and_bus_type; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE UNIQUE INDEX index_school_bus_size_rates_on_school_id_and_bus_type ON public.school_bus_size_rates USING btree (school_id, bus_type);
+
+
+--
+-- Name: index_school_documents_on_applied_bill_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_school_documents_on_applied_bill_id ON public.school_documents USING btree (applied_bill_id) WHERE (applied_bill_id IS NOT NULL);
+
+
+--
+-- Name: index_school_documents_on_company_id_and_number; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_school_documents_on_company_id_and_number ON public.school_documents USING btree (company_id, number);
+
+
+--
+-- Name: index_school_documents_on_school_bill_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_school_documents_on_school_bill_id ON public.school_documents USING btree (school_bill_id);
+
+
+--
+-- Name: index_school_documents_on_school_id_and_doc_type_and_issued_on; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_school_documents_on_school_id_and_doc_type_and_issued_on ON public.school_documents USING btree (school_id, doc_type, issued_on);
 
 
 --
@@ -16236,6 +16764,48 @@ CREATE UNIQUE INDEX index_school_operator_pays_on_school_id ON public.school_ope
 --
 
 CREATE UNIQUE INDEX index_school_payment_methods_on_school_id ON public.school_payment_methods USING btree (school_id);
+
+
+--
+-- Name: index_school_payout_adjustments_on_school_payout_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_school_payout_adjustments_on_school_payout_id ON public.school_payout_adjustments USING btree (school_payout_id);
+
+
+--
+-- Name: index_school_payout_files_on_school_payout_adjustment_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_school_payout_files_on_school_payout_adjustment_id ON public.school_payout_files USING btree (school_payout_adjustment_id);
+
+
+--
+-- Name: index_school_payout_payments_on_school_payout_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_school_payout_payments_on_school_payout_id ON public.school_payout_payments USING btree (school_payout_id);
+
+
+--
+-- Name: index_school_payouts_on_company_id_and_status; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_school_payouts_on_company_id_and_status ON public.school_payouts USING btree (company_id, status);
+
+
+--
+-- Name: index_school_payouts_on_operator_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_school_payouts_on_operator_id ON public.school_payouts USING btree (operator_id);
+
+
+--
+-- Name: index_school_payouts_on_school_id_and_month_and_operator_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_school_payouts_on_school_id_and_month_and_operator_id ON public.school_payouts USING btree (school_id, month, operator_id);
 
 
 --
@@ -18906,6 +19476,14 @@ ALTER INDEX public.index_trip_occurrences_on_vehicle_date ATTACH PARTITION publi
 
 
 --
+-- Name: school_bill_lines fk_rails_018bf91972; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_bill_lines
+    ADD CONSTRAINT fk_rails_018bf91972 FOREIGN KEY (credit_note_id) REFERENCES public.school_documents(id) ON DELETE SET NULL;
+
+
+--
 -- Name: school_holidays fk_rails_01b26b908c; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -18938,6 +19516,14 @@ ALTER TABLE ONLY public.trip_vehicle_slots
 
 
 --
+-- Name: school_payouts fk_rails_03394990c6; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_payouts
+    ADD CONSTRAINT fk_rails_03394990c6 FOREIGN KEY (approved_by_id) REFERENCES public.users(id);
+
+
+--
 -- Name: vehicle_finance_entries fk_rails_035d7d1e35; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -18951,6 +19537,22 @@ ALTER TABLE ONLY public.vehicle_finance_entries
 
 ALTER TABLE ONLY public.fare_tiers
     ADD CONSTRAINT fk_rails_045cbb2886 FOREIGN KEY (fare_table_id) REFERENCES public.fare_tables(id) ON DELETE CASCADE;
+
+
+--
+-- Name: school_documents fk_rails_058b692d46; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_documents
+    ADD CONSTRAINT fk_rails_058b692d46 FOREIGN KEY (school_bill_id) REFERENCES public.school_bills(id) ON DELETE CASCADE;
+
+
+--
+-- Name: school_payout_payments fk_rails_06793778b9; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_payout_payments
+    ADD CONSTRAINT fk_rails_06793778b9 FOREIGN KEY (school_payout_id) REFERENCES public.school_payouts(id) ON DELETE CASCADE;
 
 
 --
@@ -19015,6 +19617,14 @@ ALTER TABLE ONLY public.family_riders
 
 ALTER TABLE ONLY public.trip_run_times
     ADD CONSTRAINT fk_rails_09d9aba0f0 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: school_bill_payments fk_rails_09f44aa22b; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_bill_payments
+    ADD CONSTRAINT fk_rails_09f44aa22b FOREIGN KEY (receipt_id) REFERENCES public.school_documents(id) ON DELETE SET NULL;
 
 
 --
@@ -19103,6 +19713,14 @@ ALTER TABLE ONLY public.ops_alerts
 
 ALTER TABLE ONLY public.cca_ride_settings
     ADD CONSTRAINT fk_rails_0fe174eb27 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: school_bill_waivers fk_rails_105c160524; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_bill_waivers
+    ADD CONSTRAINT fk_rails_105c160524 FOREIGN KEY (created_by_id) REFERENCES public.users(id);
 
 
 --
@@ -19354,6 +19972,14 @@ ALTER TABLE ONLY public.maintenance_visits
 
 
 --
+-- Name: school_bill_waivers fk_rails_1e90c0f477; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_bill_waivers
+    ADD CONSTRAINT fk_rails_1e90c0f477 FOREIGN KEY (school_bill_id) REFERENCES public.school_bills(id) ON DELETE CASCADE;
+
+
+--
 -- Name: school_bills fk_rails_1ef4249f68; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -19479,6 +20105,14 @@ ALTER TABLE ONLY public.cca_off_days
 
 ALTER TABLE ONLY public.occurrence_report_photos
     ADD CONSTRAINT fk_rails_25b7d44265 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: school_bills fk_rails_266c89f1b6; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_bills
+    ADD CONSTRAINT fk_rails_266c89f1b6 FOREIGN KEY (issued_by_id) REFERENCES public.users(id);
 
 
 --
@@ -19618,6 +20252,14 @@ ALTER TABLE ONLY public.driver_point_deductions
 
 
 --
+-- Name: school_bill_payments fk_rails_2ef371187a; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_bill_payments
+    ADD CONSTRAINT fk_rails_2ef371187a FOREIGN KEY (recorded_by_id) REFERENCES public.users(id);
+
+
+--
 -- Name: route_charges fk_rails_2f27515a7e; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -19703,6 +20345,14 @@ ALTER TABLE ONLY public.client_bookable_vehicle_types
 
 ALTER TABLE ONLY public.finance_settings
     ADD CONSTRAINT fk_rails_32019f445e FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: school_bill_runs fk_rails_3302375832; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_bill_runs
+    ADD CONSTRAINT fk_rails_3302375832 FOREIGN KEY (company_id) REFERENCES public.companies(id);
 
 
 --
@@ -19815,6 +20465,14 @@ ALTER TABLE ONLY public.booking_trip_changes
 
 ALTER TABLE ONLY public.client_end_customers
     ADD CONSTRAINT fk_rails_38fb529cd4 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: school_payouts fk_rails_39184d30bd; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_payouts
+    ADD CONSTRAINT fk_rails_39184d30bd FOREIGN KEY (operator_id) REFERENCES public.operators(id);
 
 
 --
@@ -20786,6 +21444,14 @@ ALTER TABLE ONLY public.family_riders
 
 
 --
+-- Name: school_payouts fk_rails_6bf6da087f; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_payouts
+    ADD CONSTRAINT fk_rails_6bf6da087f FOREIGN KEY (returned_by_id) REFERENCES public.users(id);
+
+
+--
 -- Name: notice_routes fk_rails_6c220f93f2; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -20938,6 +21604,22 @@ ALTER TABLE ONLY public.trip_assignment_slots
 
 
 --
+-- Name: school_payouts fk_rails_7237c05d29; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_payouts
+    ADD CONSTRAINT fk_rails_7237c05d29 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: school_payout_adjustments fk_rails_72ecd5829c; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_payout_adjustments
+    ADD CONSTRAINT fk_rails_72ecd5829c FOREIGN KEY (created_by_id) REFERENCES public.users(id);
+
+
+--
 -- Name: notice_deliveries fk_rails_72f3faea95; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -21074,6 +21756,14 @@ ALTER TABLE ONLY public.school_payment_methods
 
 
 --
+-- Name: school_bill_runs fk_rails_7b152e88ee; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_bill_runs
+    ADD CONSTRAINT fk_rails_7b152e88ee FOREIGN KEY (school_id) REFERENCES public.schools(id);
+
+
+--
 -- Name: pay_bonus_payments fk_rails_7b8fed7102; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -21178,6 +21868,14 @@ ALTER TABLE ONLY public.trip_time_changes
 
 
 --
+-- Name: school_payout_adjustments fk_rails_80fd8ab835; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_payout_adjustments
+    ADD CONSTRAINT fk_rails_80fd8ab835 FOREIGN KEY (school_payout_id) REFERENCES public.school_payouts(id) ON DELETE CASCADE;
+
+
+--
 -- Name: trip_standbys fk_rails_811768cb79; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -21263,14 +21961,6 @@ ALTER TABLE ONLY public.client_bookable_vehicle_types
 
 ALTER TABLE ONLY public.bookings
     ADD CONSTRAINT fk_rails_84f4389273 FOREIGN KEY (client_site_id) REFERENCES public.client_sites(id);
-
-
---
--- Name: school_bills fk_rails_850c429bc8; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.school_bills
-    ADD CONSTRAINT fk_rails_850c429bc8 FOREIGN KEY (recorded_by_id) REFERENCES public.users(id);
 
 
 --
@@ -21698,6 +22388,14 @@ ALTER TABLE ONLY public.driver_vehicle_types
 
 
 --
+-- Name: school_documents fk_rails_986af5b9bd; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_documents
+    ADD CONSTRAINT fk_rails_986af5b9bd FOREIGN KEY (school_id) REFERENCES public.schools(id);
+
+
+--
 -- Name: notices fk_rails_98a64c4856; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -21970,6 +22668,14 @@ ALTER TABLE ONLY public.fuel_alerts
 
 
 --
+-- Name: school_bill_payments fk_rails_a83babdf9d; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_bill_payments
+    ADD CONSTRAINT fk_rails_a83babdf9d FOREIGN KEY (school_bill_id) REFERENCES public.school_bills(id) ON DELETE CASCADE;
+
+
+--
 -- Name: school_route_replacements fk_rails_a863561bcb; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -21983,6 +22689,14 @@ ALTER TABLE ONLY public.school_route_replacements
 
 ALTER TABLE ONLY public.booking_trip_vehicles
     ADD CONSTRAINT fk_rails_a8aaa68933 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: school_payout_payments fk_rails_a8b76f822d; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_payout_payments
+    ADD CONSTRAINT fk_rails_a8b76f822d FOREIGN KEY (recorded_by_id) REFERENCES public.users(id);
 
 
 --
@@ -22002,11 +22716,27 @@ ALTER TABLE ONLY public.driver_point_lots
 
 
 --
+-- Name: school_bill_runs fk_rails_a99cca4ca0; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_bill_runs
+    ADD CONSTRAINT fk_rails_a99cca4ca0 FOREIGN KEY (academic_year_id) REFERENCES public.academic_years(id) ON DELETE CASCADE;
+
+
+--
 -- Name: school_attendant_policies fk_rails_a9f34184b0; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.school_attendant_policies
     ADD CONSTRAINT fk_rails_a9f34184b0 FOREIGN KEY (school_id) REFERENCES public.schools(id);
+
+
+--
+-- Name: school_bills fk_rails_aa052b10d8; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_bills
+    ADD CONSTRAINT fk_rails_aa052b10d8 FOREIGN KEY (client_id) REFERENCES public.clients(id) ON DELETE SET NULL;
 
 
 --
@@ -22039,6 +22769,14 @@ ALTER TABLE ONLY public.attendants
 
 ALTER TABLE ONLY public.rate_card_rates
     ADD CONSTRAINT fk_rails_abfdeef03a FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: school_documents fk_rails_ac21e84d6b; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_documents
+    ADD CONSTRAINT fk_rails_ac21e84d6b FOREIGN KEY (voided_by_id) REFERENCES public.users(id);
 
 
 --
@@ -22250,6 +22988,14 @@ ALTER TABLE ONLY public.rate_card_amounts
 
 
 --
+-- Name: school_bill_runs fk_rails_b946bf2fbc; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_bill_runs
+    ADD CONSTRAINT fk_rails_b946bf2fbc FOREIGN KEY (drafted_by_id) REFERENCES public.users(id);
+
+
+--
 -- Name: replacements fk_rails_ba22cadbea; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -22271,6 +23017,38 @@ ALTER TABLE ONLY public.fare_size_columns
 
 ALTER TABLE ONLY public.school_riders
     ADD CONSTRAINT fk_rails_bafd250599 FOREIGN KEY (rider_dataset_id) REFERENCES public.rider_datasets(id) ON DELETE CASCADE;
+
+
+--
+-- Name: school_documents fk_rails_bb06e24490; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_documents
+    ADD CONSTRAINT fk_rails_bb06e24490 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: school_payouts fk_rails_bc379ea2d0; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_payouts
+    ADD CONSTRAINT fk_rails_bc379ea2d0 FOREIGN KEY (sent_by_id) REFERENCES public.users(id);
+
+
+--
+-- Name: school_documents fk_rails_bc95464983; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_documents
+    ADD CONSTRAINT fk_rails_bc95464983 FOREIGN KEY (applied_bill_id) REFERENCES public.school_bills(id) ON DELETE SET NULL;
+
+
+--
+-- Name: school_payouts fk_rails_bcdc97b285; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_payouts
+    ADD CONSTRAINT fk_rails_bcdc97b285 FOREIGN KEY (school_id) REFERENCES public.schools(id);
 
 
 --
@@ -22554,6 +23332,14 @@ ALTER TABLE ONLY public.finance_approvers
 
 
 --
+-- Name: school_documents fk_rails_cd265ea4da; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_documents
+    ADD CONSTRAINT fk_rails_cd265ea4da FOREIGN KEY (family_id) REFERENCES public.families(id) ON DELETE SET NULL;
+
+
+--
 -- Name: stop_photo_submissions fk_rails_cda854c3c1; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -22567,6 +23353,14 @@ ALTER TABLE ONLY public.stop_photo_submissions
 
 ALTER TABLE ONLY public.route_charges
     ADD CONSTRAINT fk_rails_ce160510cf FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: school_payout_files fk_rails_cee9745a5d; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_payout_files
+    ADD CONSTRAINT fk_rails_cee9745a5d FOREIGN KEY (school_payout_adjustment_id) REFERENCES public.school_payout_adjustments(id) ON DELETE CASCADE;
 
 
 --
@@ -22882,6 +23676,14 @@ ALTER TABLE ONLY public.finance_settings
 
 
 --
+-- Name: school_documents fk_rails_e28382ad2f; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_documents
+    ADD CONSTRAINT fk_rails_e28382ad2f FOREIGN KEY (created_by_id) REFERENCES public.users(id);
+
+
+--
 -- Name: trip_assignments fk_rails_e2afd36d07; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -23018,6 +23820,14 @@ ALTER TABLE ONLY public.routing_settings
 
 
 --
+-- Name: school_payout_adjustments fk_rails_eab2d7e897; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_payout_adjustments
+    ADD CONSTRAINT fk_rails_eab2d7e897 FOREIGN KEY (paired_operator_id) REFERENCES public.operators(id);
+
+
+--
 -- Name: schools fk_rails_eb67311315; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -23039,6 +23849,14 @@ ALTER TABLE ONLY public.cca_credits
 
 ALTER TABLE ONLY public.trip_attachments
     ADD CONSTRAINT fk_rails_ebc0d3e350 FOREIGN KEY (trip_id) REFERENCES public.trips(id);
+
+
+--
+-- Name: school_payouts fk_rails_ec2888cb31; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_payouts
+    ADD CONSTRAINT fk_rails_ec2888cb31 FOREIGN KEY (prepared_by_id) REFERENCES public.users(id);
 
 
 --
@@ -23536,6 +24354,12 @@ ALTER TABLE public.trip_occurrences
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261103150000'),
+('20261103140000'),
+('20261103130300'),
+('20261103130200'),
+('20261103130100'),
+('20261103130000'),
 ('20261103120000'),
 ('20261103110200'),
 ('20261103110100'),

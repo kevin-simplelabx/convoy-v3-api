@@ -1,7 +1,7 @@
 # Finance — API Guide
 
 The Finance menu (rail icon `account_balance`): **Client Invoices**, **Documents**, **Operator Payments**,
-**Vehicle Financials**, **Finance Settings**. **School Bus Collections** comes with the School Bus menu. What is not built
+**Vehicle Financials**, **Finance Settings**, and **School Bus Collections** (see [school-bus-finance § 6](school-bus-finance.md#6-company-finance-pages)). What is not built
 yet is in [§ 8](#8-not-built-yet).
 
 Conventions (sign-in, errors, paging, files, background reads) are in [README.md](README.md). All paths start with `/api/v1`.
@@ -220,15 +220,16 @@ for its date join it). A batch adds `operators [{ id, operator, pays_by, notice_
 
 | Action | Call |
 | --- | --- |
-| List, type filter, search (number or name) | `GET /finance/documents?type=&q=` |
+| List, type filter, search (number or name), one school | `GET /finance/documents?type=&q=&school_id=` |
 | Print a client invoice / credit note | `GET /finance/invoices/:id` |
 | Print a payment notice | `GET /finance/documents/payment_notices/:id` |
 | Header / footer of every printed document | `GET /finance/documents/brand` |
 
-Row: `{ type, id, number, date, to, amount, status, batch_id }`; `type`: `invoice`, `credit_note`, `payment_notice`
-(chips Invoice / Credit Note / Payment Notice). `meta { count, shown, counts { per type }, types }`; the latest 300 are listed
+Row: `{ type, id, number, date, to, amount, status, batch_id }`; `type`: `invoice`, `credit_note`, `payment_notice`, and the School Bus
+types `school_invoice`, `school_credit_note`, `debit_note`, `receipt`, `payment_voucher` (rows add `school_id`, `school`, `school_type`;
+they open from School Finance, see [school-bus-finance § 6](school-bus-finance.md#6-company-finance-pages)). `meta { count, shown, counts { per type }, types }`; the latest 300 are listed
 ("Showing the latest 300 of N documents…"). Status: invoices as `display_status`; credit notes `issued` / `void`; payment notices
-`issued`, `part_paid`, `paid`. School Bus documents (bills, debit notes, receipts, vouchers) come with the School Bus menu.
+`issued`, `part_paid`, `paid`; School Bus documents as in School Finance.
 
 Brand: `{ name, uen, gst_reg_no (when GST is on), address, phone, email, note, logo, payment { bank, account_number, account_name, paynow, note } }`.
 Title of an invoice: "Tax Invoice" when the invoice has GST, else "Invoice".
@@ -315,9 +316,8 @@ insurance renewals (last premium total), road tax expiry (estimated from the Roa
 
 ## 8. Not built yet
 
-- **School Bus Collections** (bills to families and schools, receipts, debit / credit notes, waivers, payment and refund policy),
-  School Bus documents in Documents, the per-school operator pay runs (with maker-checker and payment vouchers), and the
-  "School Bus (auto)" revenue of a vehicle: built with the School Bus menu.
+- The "School Bus (auto)" revenue of a vehicle (comes with the School Bus Dashboard). School Bus Collections, documents and
+  school pay runs are in [school-bus-finance.md](school-bus-finance.md).
 - Debit notes and receipts for client invoices (the prototype has none).
 - Sending email (sends are recorded only); bank-specific file formats (one generic CSV now); PDF files (printed by the front end).
 - Connected clients (their own Convoy account).

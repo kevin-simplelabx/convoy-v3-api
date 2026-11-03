@@ -41,9 +41,10 @@ module CcaRides
       ApplicationRecord.transaction do
         week = CcaRides.monday(dates.first)
         period = late ? "CCA Bus · Added #{dates.uniq.map { CcaRides.label(it) }.join(', ')}" : "CCA Bus · Week of #{CcaRides.label(week)}"
-        bill = SchoolBill.create!(school: @school, family: @family, kind: "cca", status: "paid", number: Finance::Numbering.next!("inv", date: @today),
-                                  bill_to: @family.name, issued_on: @today, paid_at: Time.current, method:, gross:, credit_used: used, subtotal: total,
+        bill = SchoolBill.create!(school: @school, family: @family, kind: "cca", status: "issued", number: Finance::Numbering.next!("inv", date: @today),
+                                  bill_to: @family.name, bill_to_code: @family.code, issued_on: @today, due_on: @today, issued_at: Time.current, gross:, credit_used: used, subtotal: total,
                                   total:, week_of: week, period_label: period)
+        bill.payments.create!(paid_on: @today, amount: total, method:, source: "app") if total.positive?
         @picks.group_by { it[:child_name] }.each_with_index do |(child, list), i|
           ds = list.map { it[:date] }.sort
           bill.lines.create!(child_name: child, position: i, amount: (ds.size * s.price).round(2),

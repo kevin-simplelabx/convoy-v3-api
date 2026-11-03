@@ -1,11 +1,14 @@
-# Finance > Documents: every client invoice, credit note and operator payment notice, with the data to print one.
+# Finance > Documents: every client invoice, credit note, operator payment notice and School Bus document, with the data
+# to print a payment notice (School Bus documents print from School Finance).
 module Api
   module V1
     class FinanceDocumentsController < BaseController
-      # GET /finance/documents?type=invoice|credit_note|payment_notice&q=
+      # GET /finance/documents?type=invoice|credit_note|payment_notice|school_invoice|school_credit_note|debit_note|receipt|payment_voucher&q=&school_id=
       def index
         authorize :finance, :index?
-        out = Finance::Documents.call(type: params[:type], q: params[:q])
+        schools = policy_scope(School)
+        schools = schools.where(id: params[:school_id]) if params[:school_id].present?
+        out = Finance::Documents.call(type: params[:type], q: params[:q], schools:)
         render json: { data: out[:rows], meta: { count: out[:count], shown: out[:rows].size, counts: out[:counts], types: Finance::Documents::TYPES } }
       end
 

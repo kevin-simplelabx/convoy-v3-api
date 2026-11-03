@@ -76,11 +76,12 @@ module BusRequests
     end
 
     def write_bill(req, settings, now)
-      bill = req.first_bill || req.build_first_bill(school: req.school, kind: "first", number: Finance::Numbering.next!("inv", settings:), created_by: @user)
+      bill = req.first_bill || req.build_first_bill(school: req.school, kind: "first", number: Finance::Numbering.next!("inv", settings:), created_by: @user,
+                                                        issued_by: @user, issued_at: now)
       split = FinanceSetting.split(req.quote_amount, on: settings.gst_on?, rate: settings.gst_rate, mode: settings.gst_mode)
       period = Fare.first_period(req)
-      bill.update!(academic_year: req.academic_year, family: req.family, school_rider: req.school_rider, status: "open", bill_to: req.parent_name,
-                   period_label: period[:label], period_starts_on: period[:starts_on], issued_on: now.to_date, due_at: req.offer_by,
+      bill.update!(academic_year: req.academic_year, family: req.family, school_rider: req.school_rider, status: "issued", bill_to: req.parent_name, bill_to_code: req.family&.code,
+                   period_label: period[:label], period_starts_on: period[:starts_on], issued_on: now.to_date, due_at: req.offer_by, due_on: req.offer_by&.to_date,
                    subtotal: split[:sub], gst_rate: settings.gst_on? ? settings.gst_rate : 0, gst_amount: split[:gst], total: split[:total])
       bill
     end

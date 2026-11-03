@@ -1,5 +1,5 @@
-# Record First Invoice Paid: the bill is paid and the request Active (also from Lapsed while the child is still listed);
-# a new child joins the route plans from the start date.
+# Record First Invoice Paid: what the first invoice still owes is paid (a receipt in School Finance) and the request is
+# Active (also from Lapsed while the child is still listed); a new child joins the route plans from the start date.
 module BusRequests
   class RecordPayment < ApplicationService
     def initialize(req, method:, user:)
@@ -15,7 +15,8 @@ module BusRequests
       raise Error, "Only an accepted or lapsed request can be paid" unless %w[Accepted Lapsed].include?(@req.live_status)
 
       ApplicationRecord.transaction do
-        bill.update!(status: "paid", paid_at: Time.current, method: @method.presence, recorded_by: @user)
+        owed = SchoolBills::Calc.call(bill, policy: nil).owed
+        SchoolBills::RecordPayment.call(@req.school, [ [ bill, owed ] ], paid_on: Date.current, method: @method.presence || "Bank Transfer", user: @user)
         @req.update!(status: "Active")
         @req.log!("First invoice paid#{" by #{@method}" if @method.present?}. Service is active", by: @user)
       end

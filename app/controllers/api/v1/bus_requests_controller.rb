@@ -145,7 +145,7 @@ module Api
       def find_school = policy_scope(School).find(params[:school_id])
 
       def find(id = params[:id])
-        BusRequest.where(school: policy_scope(School)).includes(:family, :school_rider, :events, :acked_by, :quoted_by, :confirmed_by, :places, :first_bill,
+        BusRequest.where(school: policy_scope(School)).includes(:family, :school_rider, :events, :acked_by, :quoted_by, :confirmed_by, :places, { first_bill: :payments },
                                                                 answer_moves: :moved_by, academic_year: %i[registration terms])
                                 .find(id)
       end
@@ -156,7 +156,7 @@ module Api
         ids = Array(params[:ids]).map(&:to_i).uniq
         raise ApplicationService::Error, "Pick at least one request" if ids.empty?
 
-        reqs = school.bus_requests.includes(:events, :places, :first_bill, :school_rider, :family, academic_year: :registration).where(id: ids).to_a
+        reqs = school.bus_requests.includes(:events, :places, { first_bill: :payments }, :school_rider, :family, academic_year: :registration).where(id: ids).to_a
         raise ActiveRecord::RecordNotFound if reqs.size != ids.size
 
         reqs

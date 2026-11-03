@@ -23,7 +23,7 @@ module RouteFit
 
     def holds
       @holds ||= BusRequestPlace.joins(:bus_request).where(bus_requests: { school_id: @school.id, status: %w[Accepted Active] })
-                                .includes(bus_request: %i[school_rider first_bill]).to_a
+                                .includes(bus_request: [ :school_rider, { first_bill: :payments } ]).to_a
                                 .select { %w[Accepted Active].include?(it.bus_request.live_status) }
     end
 
