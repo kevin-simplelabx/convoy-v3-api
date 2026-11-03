@@ -14,6 +14,8 @@ Vì sao materialize (option B) thay vì tính lúc đọc: `menus/scheduler/log/
   `shift_minutes`, `pax`, `vehicle_id`, `driver_id` | `operator_driver_id` | `driver_name/phone`, `operator_id`, `original_vehicle_id` (ghost),
   `trip_assignment_id`, `replacement_id`, `status` (scheduled / cancelled / completed / removed), cancel / issue / ended,
   `price`, `trip_value`, `operator_cost`, `overridden_fields` text[], `source_digest`, `lock_version`, `skip_reason`, `cancelled_by_client`.
+- `started_at` / `ended_at`: driver bấm Start / End trong driver app (`Occurrences::DriverProgress`; Sync không đụng). Live Map coi run đang chạy
+  từ `started_at` (start sớm) hoặc `starts_at`; Ops Control dùng để biết đã start.
 - `status`: scheduled / cancelled / completed / removed / **skipped** (ngày lịch bỏ qua của trip: PH, day off — giữ cho Trip History, giá 0;
   `visible` loại removed + skipped nên Scheduler, list, pay, invoice không thấy; Edit / Move chặn).
 - Index: identity, (company, date), (vehicle, date), (driver, date), (operator_driver, date), unassigned partial, (company, starts_at).

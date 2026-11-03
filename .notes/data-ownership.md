@@ -14,7 +14,7 @@ Bắt đầu menu mới: lọc theo cột **Màn sửa sẽ ở**, những dòng
 | platform | allowlisted_jwts | ghi | session (đăng nhập / đăng xuất, Convoy Admin chọn company) | Settings (thiết bị đang đăng nhập, đăng xuất từ xa) |
 | platform | vehicle_types, disabled_vehicle_types | ghi | Convoy Admin CRUD, company toggle, Fleet > Vehicle Types | — |
 | platform | vehicle_type_requests | ghi | Fleet > Vehicle Types (company gửi, Convoy Admin duyệt) | — |
-| platform | message_terms | seed | — | Convoy Admin |
+| platform | message_terms | ghi | Convoy Admin > Message Terms | — |
 | platform | banks, bank_branches | seed (tham chiếu ACH) | — | — |
 | platform | document_reads | ghi | mọi form có Claude | — |
 | calendars | public_holidays, calendars, calendar_days | ghi | Change a Day, Settings > Calendars | — |
@@ -34,12 +34,14 @@ Bắt đầu menu mới: lọc theo cột **Màn sửa sẽ ở**, những dòng
 | occurrences | occurrence_notes | ghi | Trip History (Add Note) | — |
 | occurrences | occurrence_corrections, occurrence_correction_stops, occurrence_correction_logs | ghi | Trip History (Correct Record) | — |
 | occurrences | occurrence_driver_reports, occurrence_report_photos | seed | — | Driver app |
-| occurrences | occurrence_positions, occurrence_stop_events, occurrence_trip_summaries | seed | — | Driver app / telematics |
+| occurrences | occurrence_positions, occurrence_stop_events, occurrence_trip_summaries | seed | — | Driver app / telematics (Reports đọc stop events) |
 | companies | on_time_minutes, speed_limit_kmh | seed (mặc định) | — | Settings |
 | occurrences | trip_occurrences | ghi (chỉ qua service) | grid, drawer | Ops Control, Live Map, Reports, Finance, HR đọc |
 | replacements | replacements, replacement_notifications | ghi | Replace dialog | — |
 | school | trip_stop_students, route_list_versions, student_attendances, pickup_points | ghi | trip form School Run, Passenger List | School Bus |
-| school | schools, school_plans, school_routes, school_route_stops | seed (`schools.client_id` / `calendar_id` ghi từ Managed Clients) | — | **School Bus** |
+| school | schools | ghi (School Bus › Schools: tạo, postal; `client_id` / `calendar_id` từ Managed Clients) | — | — |
+| school | school_plans, school_routes, school_route_stops, school_route_riders, plan_comments | ghi | School Bus › Route Plans (Run Routing, sửa tay, adopt) | — (Requests sẽ đổi plan giữa năm) |
+| school | routing_settings, routing_runs, rider_assignments, school_route_prices, route_charges, feasibility_* | ghi | School Bus › Route Plans, Stop Assignment, Feasibility Studies | — |
 | school | school_route_vehicle_changes, school_route_replacements | ghi | kéo thả route | School Bus |
 | operations | workshops, maintenance_visits, maintenance_lines, maintenance_invoices | ghi | Maintenance dialog, Fleet > Maintenance | Finance (Vehicle Financials đọc chi phí) |
 | operations | notice_templates | ghi | Trips > Notices (Templates) | — |
@@ -57,5 +59,25 @@ Người dùng của dữ liệu `trip_occurrences` (đọc): Ops Control, Live 
 | finance | client_invoices (+ lines, line_runs, payments, sends) | ghi | Finance > Client Invoices | Client Portal (client xem / trả) |
 | finance | operator_cost_overrides, operator_pay_items, operator_pay_batches (+ con) | ghi | Finance > Operator Payments | — |
 | finance | vehicle_financials, vehicle_loan_payments, vehicle_finance_entries, vehicle_cost_spike_acks | ghi | Finance > Vehicle Financials | — |
+
+| dashboard | dashboard_layouts | ghi | Dashboard | — |
+| platform | discover_advertisers, discover_placements | ghi (views / taps / sold seed) | Convoy Admin > Discover | Convoy App (hiển thị, đếm) |
+| platform | company_leads, company_lead_domains | ghi (lead seed) | Convoy Admin > Company Leads | Convoy App (gửi lead) |
+| live-map | tracking_devices | seed | — | Driver app / màn thiết bị (HTML chưa có) |
+| live-map | vehicle_live_positions | ghi (`Telematics::Ping`; mẫu: seed / `live_map:simulate`) | — | — (endpoint ingest làm cùng driver app) |
+| ops-control | driver_app_sessions | seed (simulator) | — | Driver app (đăng nhập) |
+| ops-control | ops_alerts | ghi (`OpsControl::Sync`, Acknowledge) | Ops Control | — |
+| occurrences | trip_occurrences.started_at / ended_at | seed (simulator, `Occurrences::DriverProgress`) | — | Driver app (Start / End) |
+| school | school_route_labels, rider_datasets, school_riders, academic_years, academic_terms, school_holidays, school_special_days, setup_locks, school_levels, bus_sessions, bus_session_variants, school_attendant_policies | ghi | School Bus › Schools & Year Setup | — (riders: Families / Requests sẽ sửa thêm ở School Bus 5) |
+| school | fare_tables, fare_tiers, fare_size_columns, fare_tier_sizes, fare_surcharges, fare_bus_rates, fare_adjustments, school_policy_versions, policy_reminders, school_payment_methods, school_operator_pays, school_bus_size_rates | ghi | School Bus › Year Setup (Fares, Extra Charges, Policy, Payment Methods, Operator Pay) | — |
+| school | stops, stop_points, school_stops, rider_point_links, stop_photo_requests, stop_photo_submissions | ghi (submission = seed) | School Bus › Stop Library, Stop Assignment | Convoy App (gửi ảnh) |
+| platform | ura_subzones | seed (data.gov.sg) | — | — |
+| platform | postal_geocodes | ghi (`Geo::OneMap`) | — | — |
+| school | families, family_guardians, family_riders | ghi | School Bus › Families & Riders | Convoy App (đăng ký phụ huynh) |
+| school | school_registrations, registration_messages | ghi | School Bus › Year Setup › Bus Service Registration | — |
+| school | bus_requests, bus_request_events, bus_request_answer_moves, bus_request_places | ghi (tạo từ app = seed; console Add Application) | School Bus › Bus Service Requests | Convoy App (gửi / rút / đồng ý giá) |
+| school | school_bills, school_bill_lines | ghi (first invoice, CCA) | Bus Service Requests, CCA Rides | School Bus › School Finance (sub-menu 6) |
+| school | school_plan_changes | ghi (`Plans::ApplyChange`) | Route Plans (version theo request) | — |
+| school | cca_ride_settings, cca_bookings, cca_off_days, cca_credits | ghi (settings, not running); bookings = seed | School Bus › CCA Rides | Convoy App (đặt + trả) |
 
 Thêm bảng mới → thêm 1 dòng ở đây.

@@ -43,3 +43,6 @@
 # Ignore Docker-related files
 /.dockerignore
 /Dockerfile*
+
+# Routing service (Node), built and deployed on its own
+/routing-service/

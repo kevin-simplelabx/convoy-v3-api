@@ -26,7 +26,9 @@ class MessageTerm < ApplicationRecord
 
   belongs_to :created_by, class_name: "User", optional: true
 
-  validates :term, presence: true, uniqueness: { case_sensitive: false }
+  normalizes :term, :means, with: ->(v) { v.to_s.squish }
+
+  validates :term, presence: true, uniqueness: { case_sensitive: false, message: "is already on the list" }
   validates :means, presence: true
   validates :kind, inclusion: { in: KINDS.keys }
 end

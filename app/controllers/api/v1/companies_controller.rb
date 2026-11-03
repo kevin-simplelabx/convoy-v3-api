@@ -10,16 +10,17 @@ module Api
         authorize Company
         companies = policy_scope(Company).includes(:country_set_by, pending_country_request: %i[company requested_by decided_by])
                                          .ransack(ransack_params).result.order(:name)
-        render_page companies, CompanyBlueprint, view: view_name, actor: current_user
+        render_page companies, CompanyBlueprint, view: view_name, actor: current_user, **platform_options(companies)
       end
 
       def show
         render_company authorize(Company.find(params[:id]))
       end
 
+      # POST /companies { company: {...}, admin: { name, email, password } } — Convoy Admin.
       def create
-        company = authorize(Company.new(permitted_attributes(Company)))
-        company.save!
+        authorize Company
+        company = Companies::Create.call(params: permitted_attributes(Company), admin: params.expect(admin: %i[name email password]))
         render_company company, status: :created
       end
 
@@ -38,7 +39,18 @@ module Api
       end
 
       def render_company(company, status: :ok)
-        render_data company, CompanyBlueprint, view: view_name, actor: current_user, status:
+        render_data company, CompanyBlueprint, view: view_name, actor: current_user, status:, **platform_options([ company ])
+      end
+
+      # Admin email, schools and users of each company (Convoy Admin list), and the company opened for this sign-in.
+      def platform_options(companies)
+        return {} unless current_user.convoy_admin?
+
+        ids = companies.map(&:id)
+        owners = User.kept.where(company_id: ids, owner: true).order(:id).group_by(&:company_id).transform_values { |u| { name: u.first.name, email: u.first.email } }
+        users = User.kept.where(company_id: ids).group(:company_id).count
+        schools = ActsAsTenant.without_tenant { School.where(company_id: ids).group(:company_id).count }
+        { stats: ids.index_with { |id| { admin: owners[id], users: users[id], schools: schools[id] } }, current_id: current_jwt.company_id }
       end
     end
   end

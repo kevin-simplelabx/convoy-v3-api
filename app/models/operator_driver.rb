@@ -50,6 +50,7 @@ class OperatorDriver < ApplicationRecord
   include InvitedDriver
 
   belongs_to :operator, inverse_of: :drivers
+  has_many :app_sessions, class_name: "DriverAppSession", dependent: :delete_all
   belongs_to :vehicle, optional: true
 
   validates :vehicle_id, uniqueness: true, allow_nil: true

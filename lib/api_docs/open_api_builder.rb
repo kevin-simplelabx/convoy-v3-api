@@ -7,7 +7,7 @@
 module ApiDocs
   class OpenApiBuilder
     DOCS = Rails.root.join(".api-documents")
-    MENUS = { "scheduler.md" => "Scheduler", "trips.md" => "Trips", "fleet.md" => "Fleet", "settings.md" => "Settings", "clients.md" => "Clients", "hr.md" => "HR", "finance.md" => "Finance",
+    MENUS = { "scheduler.md" => "Scheduler", "trips.md" => "Trips", "fleet.md" => "Fleet", "settings.md" => "Settings", "clients.md" => "Clients", "hr.md" => "HR", "finance.md" => "Finance", "reports.md" => "Reports", "live-map.md" => "Live Map", "ops-control.md" => "Ops Control", "school-bus-setup.md" => "School Bus", "school-bus-money.md" => "School Bus", "school-bus-stops.md" => "School Bus", "school-bus-routes.md" => "School Bus", "school-bus-parents.md" => "School Bus", "dashboard.md" => "Dashboard", "convoy-admin.md" => "Convoy Admin",
               "README.md" => "Common" }.freeze
     # Folder = the Convoy OS menu that owns the resource (.notes/data-ownership.md), not the doc that first names it.
     FOLDERS = {
@@ -23,10 +23,19 @@ module ApiDocs
       "Clients" => %w[clients client_sites client_end_customers client_pickup_points client_users pickup_points],
       "HR" => %w[pay_rate_plans pay_schemes pay_drivers pay_earnings pay_simulator pay_bonuses pay_points pay_rewards pay_audit_log],
       "Finance" => %w[finance_settings client_invoices client_billing finance_documents operator_payments vehicle_financials vehicle_pl],
+      "Reports" => %w[reports],
+      "Live Map" => %w[live_map],
+      "Ops Control" => %w[ops_control],
+      "School Bus" => %w[schools rider_datasets school_riders academic_years school_levels bus_sessions school_attendant_policies
+                        fare_tables extra_charges school_policies school_payment_methods school_operator_pays
+                        stops school_stops stop_photo_requests routing school_plans school_routes route_money rider_assignments
+                        feasibility_studies families school_registrations bus_requests cca_rides],
+      "Dashboard" => %w[dashboard],
+      "Convoy Admin" => %w[message_terms discover company_leads],
       "Client Portal" => %w[portal/sessions portal/passwords],
       "Settings" => %w[users profiles companies countries country_requests calendars calendar_days public_holidays]
     }.flat_map { |folder, names| names.map { [ "api/v1/#{it}", folder ] } }.to_h.freeze
-    ORDER = %w[Common Scheduler Trips Fleet Clients Finance HR Settings Client\ Portal Other].freeze
+    ORDER = %w[Common Dashboard Ops\ Control Live\ Map Scheduler Trips School\ Bus Fleet Clients Reports Finance HR Settings Convoy\ Admin Client\ Portal Other].freeze
     MENTION = %r{`(GET|POST|PATCH|PUT|DELETE) (/[^`\s?]*)}
     PUBLIC = %w[api/v1/sessions#create api/v1/downloads#show api/v1/portal/sessions#lookup api/v1/portal/sessions#code
                 api/v1/portal/sessions#verify api/v1/portal/sessions#create api/v1/portal/passwords#create].freeze

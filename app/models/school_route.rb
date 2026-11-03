@@ -4,11 +4,27 @@
 # Database name: primary
 #
 #  id             :bigint           not null, primary key
+#  badges         :string           default([]), not null, is an Array
+#  bus_type       :string
+#  capacity       :integer
+#  edited         :boolean          default(FALSE), not null
 #  end_time       :integer          not null
+#  engine_route   :jsonb
+#  fill           :decimal(5, 4)
+#  floor          :integer
+#  hidden         :boolean          default(FALSE), not null
 #  label          :string           not null
+#  locked         :boolean          default(FALSE), not null
+#  manual         :boolean          default(FALSE), not null
 #  number         :integer          not null
+#  ride_minutes   :integer
 #  riders_count   :integer          default(0), not null
+#  route_key      :string
+#  seats          :integer
+#  span_seconds   :integer
 #  start_time     :integer          not null
+#  student_seats  :integer
+#  vias           :jsonb            not null
 #  created_at     :datetime         not null
 #  updated_at     :datetime         not null
 #  attendant_id   :bigint
@@ -41,6 +57,9 @@ class SchoolRoute < ApplicationRecord
   has_many :vehicle_changes, -> { order(:effective_from) }, class_name: "SchoolRouteVehicleChange", dependent: :destroy, inverse_of: :route
   has_many :replacements, -> { order(:starts_on) }, class_name: "SchoolRouteReplacement", dependent: :destroy, inverse_of: :route
   has_many :occurrences, class_name: "TripOccurrence", dependent: :delete_all
+  has_many :riders, class_name: "SchoolRouteRider", dependent: :delete_all
+  has_many :prices, -> { order(:effective_from) }, class_name: "SchoolRoutePrice", dependent: :delete_all
+  has_many :charges, -> { order(:starts_on, :id) }, class_name: "RouteCharge", dependent: :nullify
 
   minute_time :start_time, :end_time
 

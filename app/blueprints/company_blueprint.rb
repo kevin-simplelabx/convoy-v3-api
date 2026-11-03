@@ -17,8 +17,15 @@ class CompanyBlueprint < ApplicationBlueprint
     field(:can_edit) { |company, options| options[:actor] ? Pundit.policy!(options[:actor], company).update? : false }
   end
 
+  # Convoy Admin > Transport Companies. Pass stats: { company_id => { admin:, schools:, users: } } and current_id (the
+  # company opened for this sign-in).
   view :platform do
     include_view :settings
     fields :school_run_enabled, :route_list_import_enabled, :external_vehicle_cap, :created_at
+
+    field(:admin) { |c, o| o.dig(:stats, c.id, :admin) }
+    field(:schools_count) { |c, o| o.dig(:stats, c.id, :schools).to_i }
+    field(:users_count) { |c, o| o.dig(:stats, c.id, :users).to_i }
+    field(:is_current) { |c, o| c.id == o[:current_id] }
   end
 end

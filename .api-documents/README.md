@@ -10,6 +10,16 @@ One document per menu of Convoy OS. Each document lists the screen actions and t
 | Settings (rail footer icon `settings`): Company Settings, Users, Calendars, and the Profile dialog | [settings.md](settings.md) |
 | Clients (rail icon `corporate_fare`): Managed Clients, Client Users, and the Client Portal sign-in | [clients.md](clients.md) |
 | HR (rail icon `badge`): Drivers, Earnings, Pay Schemes, Rate Plans, Bonuses, Points, Rewards, Salary Simulator, Audit Log | [hr.md](hr.md) |
+| Convoy Admin (Convoy staff only): Transport Companies, Message Terms, Discover, Company Leads | [convoy-admin.md](convoy-admin.md) |
+| Dashboard (rail icon `dashboard`): the Company Dashboard (widgets, layout per user) | [dashboard.md](dashboard.md) |
+| Reports (rail icon `insert_chart`): the Shuttle Report for clients | [reports.md](reports.md) |
+| School Bus › Schools & Year Setup (rail icon `school`): schools, riders, academic years, holidays, levels, sessions, bus attendants | [school-bus-setup.md](school-bus-setup.md) |
+| School Bus › Fares, Policy, Payment Methods, Operator Pay (Year Setup money steps) | [school-bus-money.md](school-bus-money.md) |
+| School Bus › Stop Library & Stop Assignment | [school-bus-stops.md](school-bus-stops.md) |
+| School Bus › Route Plans & Feasibility Studies | [school-bus-routes.md](school-bus-routes.md) |
+| School Bus › Families & Riders, Bus Service Registration, Bus Service Requests, CCA Rides | [school-bus-parents.md](school-bus-parents.md) |
+| Ops Control (rail icon `desktop_windows`): runs in the next 2 hours checked against rules, alerts, Acknowledge, Alert Log | [ops-control.md](ops-control.md) |
+| Live Map (rail icon `map`): every bus now, its device, the run it is on, Trace and Replay | [live-map.md](live-map.md) |
 | Finance (rail icon `account_balance`): Client Invoices, Documents, Operator Payments, Vehicle Financials, Finance Settings | [finance.md](finance.md) |
 
 **Integrating the API (or asking an AI assistant to)?** Start with [integration.md](integration.md): it is the one

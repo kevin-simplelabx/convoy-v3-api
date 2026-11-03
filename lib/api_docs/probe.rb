@@ -4,7 +4,9 @@ module ApiDocs
   class Probe
     EMAIL = "ops@simpledrive.sg"
     PASSWORD = "Simple123!"
-    MODELS = { "api/v1/occurrences" => "TripOccurrence", "stop_id" => "TripStop", "api/v1/trip_history" => "TripOccurrence" }.freeze
+    MODELS = { "api/v1/occurrences" => "TripOccurrence", "stop_id" => "TripStop", "api/v1/trip_history" => "TripOccurrence",
+               "api/v1/live_map" => "Vehicle", "api/v1/routing" => "RoutingRun", "api/v1/route_money" => "RouteCharge",
+               "api/v1/cca_rides" => "CcaRideSetting" }.freeze
 
     def self.call = new.call
 

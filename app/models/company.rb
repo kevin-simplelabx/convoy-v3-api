@@ -19,6 +19,8 @@
 #  short_name                :string(12)
 #  speed_limit_kmh           :integer          default(80), not null
 #  status                    :string           default("active"), not null
+#  stop_photo_auto_driver    :boolean          default(FALSE), not null
+#  stop_photo_auto_parent    :boolean          default(FALSE), not null
 #  theme_color               :string
 #  time_format               :string           default("24"), not null
 #  timezone                  :string           default("Asia/Singapore"), not null

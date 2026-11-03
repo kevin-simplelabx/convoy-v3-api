@@ -42,3 +42,20 @@ Việc biết là cần nhưng chưa làm. Ghi: ngày · menu phát hiện · vi
 | 02/11/2026 | finance | School Bus Collections (bill, receipt, DN / CN, waiver, policy), chứng từ trường trong Documents, pay run trường + maker-checker + PV, doanh thu "School Bus (auto)" của xe | Cần dữ liệu School Bus |
 | 02/11/2026 | finance | Debit note / receipt cho client invoice; format file ngân hàng riêng (DBS IDEAL, UOB…); PDF server-side | Prototype không có / chưa cần |
 | 02/11/2026 | finance | Lương driver trong P&L xe dùng số HR đã confirm thay cho ước tính scheme | User chọn giữ như prototype |
+| 02/11/2026 | convoy-admin | Endpoint Convoy App: hiển thị Discover theo đối tượng / khu vực, đếm view / tap / sold, bán trip / đăng ký, gửi Company Lead | Làm cùng Convoy App |
+| 02/11/2026 | live-map | Nút Check location sharing (hỏi thiết bị ngay), màn quản lý thiết bị (`tracking_devices`), endpoint ingest ping từ driver app / tracker (gọi `Telematics::Ping`) | Cần driver app / tracker thật |
+| 02/11/2026 | live-map | ETA theo đường thật (routing) thay đường chim bay 30 km/h; tên đường (Road) hiện tại | Cần dịch vụ bản đồ |
+| 02/11/2026 | live-map | Rain (radar + NEA forecast), Traffic (LTA Speed Bands) trên Live Map | Chưa có tích hợp (cùng dòng thời tiết / giao thông của Trips) |
+| 02/11/2026 | ops-control | Gửi escalation thật tới Ops Manager (push / email / SMS); hiện chỉ ghi `escalated_at` | Chưa có kênh gửi |
+| 02/11/2026 | ops-control | Endpoint driver app: đăng nhập (`driver_app_sessions`), Start / End (`Occurrences::DriverProgress`) | Làm cùng driver app |
+| 02/11/2026 | ops-control | Banner Requests (đơn School Bus) trên Ops Control | Làm cùng School Bus |
+| 02/11/2026 | school-bus-1 | Bảng giá BA (Their / Our BA) + số route cần BA; bước Fares / Policy / Operator Pay trong setup strip | School Bus 2 / 4 |
+| 02/11/2026 | school-bus-1 | Rider gắn family, rider events (dashboard), sửa rider (updRider từ Requests) | School Bus 5 / 7 |
+| 02/11/2026 | school-bus-2 | Route Charges (giá thêm theo run khi school pays per bus) | Cần Route Plans (School Bus 4) |
+| 02/11/2026 | school-bus-2 | Gửi reminder theo policy, phí admin card / PayNow vào bill, cổng thanh toán | School Bus 6 / chưa có kênh / gateway |
+| 02/11/2026 | school-bus-3 | Set as assigned, Move All Riders Here, Notify (gửi PUDO cho phụ huynh), đánh dấu plan Out of Date khi stop đổi | Cần Route Plans (School Bus 4) |
+| 02/11/2026 | school-bus-3 | Endpoint Convoy App gửi ảnh PUDO (photo submissions) | Làm cùng Convoy App |
+| 02/11/2026 | school-bus-4 | Self-host OSRM (bản đồ Geofabrik Malaysia–Singapore–Brunei, `osrm-backend`, công thức `node-app/deploy/osrm-setup.sh`) thay `router.project-osrm.org` | User chốt để sau khi scale (hiện 1 user) |
+| 02/11/2026 | school-bus-4 | Feasibility: kéo stop giữa các route trên bản đồ (fzMove / fzUndo) | FE trước, lưu sau nếu cần |
+| 02/11/2026 | school-bus-4 | AM plan adopt ngày tương lai: gán rider → PUDO ngay (HTML gán khi plan thành current) — chuyển sang job khi plan tới ngày nếu cần | Đơn giản hoá |
+| 03/11/2026 | school-bus-5 | Endpoint Convoy App: gửi request (new / renewal / adr / svc / stop), rút, trả bill, đồng ý giá; tự auto-accept khi request tới (run arrive / daily, waitlist_auto); CCA Rides: đặt + trả, Not Riding, Same Days Every Week | Làm cùng Convoy App |

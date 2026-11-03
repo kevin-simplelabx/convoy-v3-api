@@ -19,6 +19,15 @@ production:
   occurrences_complete:
     class: OccurrenceCompleteJob
     schedule: every 5 minutes
+  ops_control_sync:
+    class: OpsControlSyncJob
+    schedule: every minute
+  bus_requests_daily:
+    class: BusRequestsDailyJob
+    schedule: every day at 12:30am
+  bus_requests_digest:
+    class: BusRequestsDigestJob
+    schedule: every day at 8:00am
   clear_expired_sign_ins:
     command: "AllowlistedJwt.expired.delete_all; PortalJwt.expired.delete_all; PortalSignInCode.where(created_at: ...1.day.ago).delete_all"
     schedule: every day at 3:00am

@@ -10,4 +10,17 @@ module Geo
     h = (Math.sin((lat2 - lat1) / 2)**2) + (Math.cos(lat1) * Math.cos(lat2) * (Math.sin((lng2 - lng1) / 2)**2))
     2 * EARTH_M * Math.asin(Math.sqrt(h))
   end
+
+  # Is a [lat, lng] point inside a ring of [lat, lng] points (ray casting)?
+  def inside?(point, ring)
+    lat, lng = point.map(&:to_f)
+    inside = false
+    ring.each_with_index do |a, i|
+      b = ring[i - 1]
+      ya, xa = a.map(&:to_f)
+      yb, xb = b.map(&:to_f)
+      inside = !inside if ((ya > lat) != (yb > lat)) && (lng < ((xb - xa) * (lat - ya) / (yb - ya)) + xa)
+    end
+    inside
+  end
 end

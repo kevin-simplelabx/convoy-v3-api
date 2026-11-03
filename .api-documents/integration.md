@@ -21,6 +21,16 @@ The API docs in this folder are the source of truth. Do not invent endpoints, pa
 | `settings.md` | Company Settings, Users, Calendars, the Profile dialog | When `screen-map.md` links to it |
 | `clients.md` | Managed Clients (record page, sites, Client Users) and the Client Portal sign-in | When `screen-map.md` links to it |
 | `hr.md` | HR: driver pay (rate plans, pay schemes, drivers, earnings, bonuses, points, rewards, simulator, audit log) | When `screen-map.md` links to it |
+| `convoy-admin.md` | Convoy Admin: Transport Companies, Message Terms, Discover, Company Leads | When `screen-map.md` links to it |
+| `dashboard.md` | Dashboard: widgets, layout, figures | When `screen-map.md` links to it |
+| `reports.md` | Reports: the Shuttle Report | When `screen-map.md` links to it |
+| `school-bus-setup.md` | School Bus: Schools, Riders, Year Setup (part 1) | When `screen-map.md` links to it |
+| `school-bus-money.md` | School Bus: Bus Fares, Extra Charges, Policy, Payment Methods, Operator Pay | When `screen-map.md` links to it |
+| `school-bus-stops.md` | School Bus: Stop Library, catchments, Stop Assignment, photo requests | When `screen-map.md` links to it |
+| `school-bus-routes.md` | School Bus: Run Routing, plans, hand edits, Adopt, route money, Feasibility Studies | When `screen-map.md` links to it |
+| `school-bus-parents.md` | School Bus: Families, Registration, Bus Service Requests (Route Fit, first invoice, plan versions), alerts, CCA Rides | When `screen-map.md` links to it |
+| `ops-control.md` | Ops Control: board, rules, Acknowledge, Alert Log | When `screen-map.md` links to it |
+| `live-map.md` | Live Map: board, one bus, Trace, Replay | When `screen-map.md` links to it |
 | `finance.md` | Finance: client invoices, documents, operator payments, vehicle financials, finance settings | When `screen-map.md` links to it |
 | `convoy-v3-api.openapi.json` | OpenAPI 3.0 of every endpoint with request / response examples recorded from real calls (2.4 MB) | For the exact shape of a request / response (section 1.1) |
 
@@ -162,8 +172,17 @@ The prototype's page ids (in `logic/mixins/admin.js`, rail and sub-menus) and wh
 | `phol` | Calendars | `/calendars`, `/public_holidays` | [screen-map](screen-map.md#calendars) |
 | Account menu → Profile | Profile dialog | `/profile` | [screen-map](screen-map.md#sign-in-and-app-shell) |
 | `paydrv`, `payearn`, `payschemes`, `payrates`, `paybon`, `paypts`, `payrew`, `paysim`, `paylog` | HR pages | `/pay/...` | [screen-map](screen-map.md#hr) |
+| `companies`, `terms`, `discover`, `leads` | Convoy Admin pages | `/companies`, `/message_terms`, `/discover/...`, `/leads` | [screen-map](screen-map.md#convoy-admin) |
+| `codash` | Dashboard | `/dashboard`, `/dashboard/widgets`, `/dashboard/layout` | [screen-map](screen-map.md#dashboard) |
+| `reports` | Reports (Shuttle Report) | `/reports/shuttle/...` | [screen-map](screen-map.md#reports) |
+| `schools`, `school`, `levels`, `calendar`, `holidays`, `sessions`, `baset`, `fares`, `policy`, `pay`, `aysum`, `setup` | School Bus: Schools & Year Setup | `/schools`, `/academic_years` (+ `/fares`, `/extra_charges`), `/schools/:id/policy`, `/payment_methods`, `/operator_pay` | [screen-map](screen-map.md#school-bus-schools--year-setup) |
+| `plans`, `feas` | School Bus: Route Plans, Feasibility Studies | `/routing/settings`, `/schools/:id/routing_runs`, `/schools/:id/plans`, `/plans/:id`, `/routes/:id`, `/feasibility_studies` | [screen-map](screen-map.md#school-bus-schools--year-setup) |
+| `families`, `reg`, `applications`, `cca` | School Bus: Families, Registration, Bus Service Requests, CCA Rides | `/schools/:id/families`, `/families/:id`, `/academic_years/:id/registration`, `/schools/:id/bus_requests`, `/bus_requests/:id`, `/bus_requests/alerts`, `/schools/:id/cca_rides` | [screen-map](screen-map.md#school-bus-schools--year-setup) |
+| `library`, `assign` | School Bus: Stop Library, Stop Assignment | `/stops`, `/schools/:id/stops`, `/schools/:id/stop_assignment`, `/stop_photo_requests` | [screen-map](screen-map.md#school-bus-schools--year-setup) |
+| `opsctl` | Ops Control | `/ops_control`, `/ops_control/log`, `/ops_control/runs/:id/acknowledge` | [screen-map](screen-map.md#ops-control) |
+| `livemap` | Live Map | `/live_map`, `/live_map/vehicles/:id`, `/live_map/runs/:id/track` | [screen-map](screen-map.md#live-map) |
 | `cinv`, `cfdocs`, `cfpay`, `vehfin`, `finset` | Finance pages | `/finance/...` | [screen-map](screen-map.md#finance) |
-| `cfcol`, `opconn`, `clconn`, and every other page | School Bus Collections, Connected Operators / Clients, Dashboard, Ops Control, Live Map, School Bus, Reports | **No API yet** | [screen-map](screen-map.md#not-built-yet) |
+| `cfcol`, `opconn`, `clconn`, and every other page | School Bus Collections, Connected Operators / Clients, the rest of School Bus | **No API yet** | [screen-map](screen-map.md#not-built-yet) |
 
 ### 5.3 Value formats
 

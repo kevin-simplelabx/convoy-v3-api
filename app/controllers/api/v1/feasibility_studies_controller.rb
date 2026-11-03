@@ -1,0 +1,186 @@
+# School Bus › Feasibility Studies: studies (school or prospect, pick-up, walk, bus prices, fare tiers), students pasted by
+# postal code, scenarios (add / copy / change / delete / run in the background) with their cost and fares, Use
+# Suggested Fares, and a school's real fare table as tiers.
+module Api
+  module V1
+    class FeasibilityStudiesController < BaseController
+      INCLUDES = [ :school, :created_by, :rows, :bus_prices, :fare_tiers, :scenarios ].freeze
+
+      def index
+        authorize Stop, :index?
+        list = FeasibilityStudy.includes(*INCLUDES).order(updated_at: :desc)
+        render json: { data: list.map { summary(it) } }
+      end
+
+      def show
+        authorize Stop, :index?
+        render json: { data: detail(find) }
+      end
+
+      # POST /feasibility_studies { study: { name, school_mode, school_id, prospect_name, prospect_postal, pickup, walk_m } }
+      def create
+        authorize Stop, :update?
+        study = FeasibilityStudy.new(created_by: current_user)
+        save(study)
+        study.scenarios.create!(position: 1, name: "Scenario 1", sizes: SchoolBus::BUS_TYPES.keys) if study.scenarios.empty?
+        render json: { data: detail(find(study.id)) }, status: :created
+      end
+
+      # PATCH /feasibility_studies/:id { study: {…}, bus_prices: [{ bus_type, monthly, attendant }], fare_tiers: [{ max_km, fare, one_way_fare }] }
+      def update
+        authorize Stop, :update?
+        save(find)
+        render json: { data: detail(find) }
+      end
+
+      def destroy
+        authorize Stop, :update?
+        find.destroy!
+        head :no_content
+      end
+
+      # POST /feasibility_studies/:id/rows { text } — "460101, 3, AM, P4" per line; DELETE /feasibility_studies/:id/rows clears them.
+      def rows
+        authorize Stop, :update?
+        study = find
+        if request.delete?
+          study.rows.delete_all
+        else
+          list, bad = Feasibility.parse(params.require(:text))
+          raise ApplicationService::Error, "No postal codes found. Put one postal code on each line" if list.empty?
+
+          list.each do |r|
+            row = study.rows.find_or_initialize_by(postal: r[:postal], session: r[:session], level: r[:level])
+            row.riders = row.riders.to_i * (row.persisted? ? 1 : 0) + r[:riders]
+            row.save!
+          end
+          skipped = bad
+        end
+        study.scenarios.where.not(result: nil).update_all(stale: true) # rubocop:disable Rails/SkipsModelValidations
+        render json: { data: detail(find), meta: { skipped: skipped || 0 } }
+      end
+
+      # POST /feasibility_studies/:id/scenarios { from_id } — Add Scenario (or copy one)
+      def add_scenario
+        authorize Stop, :update?
+        study = find
+        from = params[:from_id].present? ? study.scenarios.find(params[:from_id]) : nil
+        n = study.scenarios.maximum(:position).to_i + 1
+        attrs = from ? from.slice(:sizes, :attendant, :hard_cap, :target_cap, :margin_pct, :extra_buses, :params) : { sizes: SchoolBus::BUS_TYPES.keys }
+        study.scenarios.create!(attrs.merge(position: n, name: from ? "#{from.name} (copy)" : "Scenario #{n}"))
+        render json: { data: detail(find) }, status: :created
+      end
+
+      # PATCH /feasibility_scenarios/:id { scenario: { name, sizes, attendant, hard_cap, target_cap, margin_pct, extra_buses, params } }
+      def update_scenario
+        authorize Stop, :update?
+        sc = find_scenario
+        p = params.require(:scenario).permit(:name, :attendant, :hard_cap, :target_cap, :margin_pct, sizes: [], extra_buses: {}, params: {})
+        p[:extra_buses] = params[:scenario][:extra_buses].permit!.to_h if params[:scenario][:extra_buses]
+        p[:params] = params[:scenario][:params].permit!.to_h if params[:scenario][:params]
+        sc.update!(p.to_h.merge(stale: sc.result.present? && p.keys.intersect?(%w[sizes attendant hard_cap target_cap params])))
+        render json: { data: detail(find(sc.feasibility_study_id)) }
+      end
+
+      def destroy_scenario
+        authorize Stop, :update?
+        sc = find_scenario
+        raise ApplicationService::Error, "Keep at least one scenario" if sc.feasibility_study.scenarios.count == 1
+
+        sc.destroy!
+        head :no_content
+      end
+
+      # POST /feasibility_scenarios/:id/run — plans AM and PM in the background; poll the study.
+      def run
+        authorize Stop, :update?
+        sc = find_scenario
+        sc.update!(status: "running", error: nil)
+        FeasibilityRunJob.perform_later(sc.id)
+        render json: { data: { id: sc.id, status: sc.status } }, status: :accepted
+      end
+
+      # POST /feasibility_scenarios/:id/use_suggested_fares
+      def use_suggested
+        authorize Stop, :update?
+        sc = find_scenario
+        study = sc.feasibility_study
+        fares = Feasibility::Fares.call(study, sc, Feasibility::Cost.call(study, sc)) or raise ApplicationService::Error, "Run the scenario first"
+        study.fare_tiers.delete_all
+        fares[:tiers].each.with_index(1) do |t, i|
+          study.fare_tiers.create!(position: i, max_km: t[:max_km], fare: t[:suggested], one_way_fare: t[:suggested_one_way])
+        end
+        render json: { data: detail(find(study.id)) }
+      end
+
+      # GET /feasibility_studies/fare_source?school_id= — the school's locked distance fares as monthly tiers.
+      def fare_source
+        authorize Stop, :index?
+        school = policy_scope(School).find(params.require(:school_id))
+        year = school.academic_years.covering(Date.current).first
+        table = year&.fare_table
+        raise ApplicationService::Error, "#{school.name} has no locked distance fares this year" unless table&.locked? && !table.zones? && !table.per_bus?
+
+        calc = FareTables::Calc.call(table, FareTables.periods(year, table))
+        tiers = table.tiers.each_with_index.map do |t, i|
+          k = calc[i][:std]
+          two = k[:two] || k[:one]
+          one = k[:am] ? [ k[:am][:annual], (k[:pm] || k[:am])[:annual] ].max : k.dig(:one, :annual)
+          { max_km: i == table.tiers.size - 1 ? nil : t.max_km, fare: two && (two[:annual] / 12).round(2), one_way_fare: one && (one / 12).round(2) }
+        end
+        render json: { data: { year: year.key, tiers: } }
+      end
+
+      private
+
+      def find(id = params[:id]) = FeasibilityStudy.includes(*INCLUDES).find(id)
+      def find_scenario = FeasibilityScenario.joins(:feasibility_study).merge(FeasibilityStudy.all).find(params[:id])
+
+      def save(study)
+        p = params.fetch(:study, {}).permit(:name, :school_mode, :school_id, :prospect_name, :prospect_postal, :pickup, :walk_m)
+        FeasibilityStudy.transaction do
+          study.assign_attributes(p)
+          study.school = policy_scope(School).find(p[:school_id]) if p[:school_id].present?
+          locate(study) if study.school_mode == "prospect" && study.prospect_postal_changed? && study.prospect_postal.present?
+          study.save!
+          if params.key?(:bus_prices)
+            study.bus_prices.delete_all
+            params[:bus_prices].each { |b| study.bus_prices.create!(b.permit(:bus_type, :monthly, :attendant)) }
+          end
+          if params.key?(:fare_tiers)
+            study.fare_tiers.delete_all
+            params[:fare_tiers].each.with_index(1) { |t, i| study.fare_tiers.create!(t.permit(:max_km, :fare, :one_way_fare).merge(position: i)) }
+          end
+          study.scenarios.where.not(result: nil).update_all(stale: true) if study.saved_change_to_pickup? || study.saved_change_to_walk_m? # rubocop:disable Rails/SkipsModelValidations
+        end
+      end
+
+      def locate(study)
+        point = Geo::OneMap.lookup(study.prospect_postal) or raise ApplicationService::Error, "Postal code not found on OneMap"
+        study.prospect_lat = point[:lat]
+        study.prospect_lng = point[:lng]
+      rescue Geo::OneMap::Unavailable
+        raise ApplicationService::Error, "OneMap cannot be reached. Try again in a moment"
+      end
+
+      def summary(s)
+        best = s.scenarios.filter_map { Feasibility::Cost.call(s, it) }.min_by { it[:runs] }
+        { id: s.id, name: s.name, school: s.place&.dig(:name), students: s.students, scenarios: s.scenarios.size, updated_at: s.updated_at,
+          best: best&.slice(:buses, :runs, :total, :break_even) }
+      end
+
+      def detail(s)
+        summary(s).merge(
+          school_mode: s.school_mode, school_id: s.school_id, prospect_name: s.prospect_name, prospect_postal: s.prospect_postal, place: s.place,
+          pickup: s.pickup, walk_m: s.walk_m, rows: s.rows.map { it.slice(:id, :postal, :riders, :session, :level) },
+          bus_prices: s.bus_prices.map { it.slice(:bus_type, :monthly, :attendant) }, fare_tiers: s.fare_tiers.map { it.slice(:max_km, :fare, :one_way_fare) },
+          scenarios: s.scenarios.map do |sc|
+            cost = Feasibility::Cost.call(s, sc)
+            sc.slice(:id, :name, :sizes, :attendant, :hard_cap, :target_cap, :margin_pct, :extra_buses, :params, :status, :stale, :error, :result)
+              .merge(cost:, fares: Feasibility::Fares.call(s, sc, cost))
+          end
+        )
+      end
+    end
+  end
+end

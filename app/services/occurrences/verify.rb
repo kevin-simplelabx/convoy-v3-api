@@ -5,11 +5,13 @@ module Occurrences
       from = Date.current
       to = Sync.horizon
       trips = Trip.kept.includes(*Sync::TRIP_INCLUDES).to_a
-      gen = Generator.new(context: Calendars::Context.for(ActsAsTenant.current_tenant, from:, to:), fleet: Fleet.new)
+      # One replacement index for the whole range, as Sync does (a generator otherwise keeps the range of its first trip).
+      index = ReplacementIndex.new(from, to)
+      gen = Generator.new(context: Calendars::Context.for(ActsAsTenant.current_tenant, from:, to:), fleet: Fleet.new, replacements: index)
       now = Time.current
       saved = TripOccurrence.where(date: from..to).index_by(&:identity)
       routes = SchoolRoute.joins(:plan).merge(SchoolPlan.running_between(from, to)).includes(*Sync::ROUTE_INCLUDES).to_a
-      route_gen = RouteGenerator.new(context: Calendars::Context.for(ActsAsTenant.current_tenant, from:, to:), fleet: Fleet.new)
+      route_gen = RouteGenerator.new(context: Calendars::Context.for(ActsAsTenant.current_tenant, from:, to:), fleet: Fleet.new, replacements: index)
       desired = (trips.flat_map { |t| gen.rows(t, [ from, t.starts_on ].max, to, existing: saved) } +
                  routes.flat_map { |r| route_gen.rows(r, from, to, existing: saved) }).select { |r| r.starts_at > now }.index_by(&:identity)
       stored = saved.values.reject(&:removed?).select { |o| o.starts_at > now }.index_by(&:identity)

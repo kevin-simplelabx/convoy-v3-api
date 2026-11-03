@@ -37,6 +37,7 @@ env:
   secret:
     - RAILS_MASTER_KEY
     - CONVOY_V3_DATABASE_PASSWORD
+    - ROUTING_SECRET
   clear:
     DB_HOST: convoy_v3-db
     APP_HOST: convoy-api-staging.convoy.sg
@@ -46,6 +47,8 @@ env:
     CORS_ALLOW_LOCALHOST: true
     # Staging only: the Client Portal sign-in code is returned as dev_code until SMTP is set up. Never in production.
     PORTAL_SHOW_CODE: 1
+    # School Bus routing engine (accessory "routing" below)
+    ROUTING_URL: http://convoy_v3-routing:4000
 
 aliases:
   console: app exec --interactive --reuse "bin/rails console"
@@ -72,3 +75,15 @@ accessories:
         - POSTGRES_PASSWORD
     directories:
       - data:/var/lib/postgresql/data
+  # School Bus routing engine (routing-service/, Node). Image built and pushed by bin/routing-image; internal only.
+  routing:
+    image: ghcr.io/kevin-simplelabx/convoy-routing:latest
+    host: 13.229.92.162
+    env:
+      clear:
+        PORT: 4000
+        OSRM_URL: https://router.project-osrm.org
+        SOLVE_CONCURRENCY: 1
+        MAX_EFFORT: high
+      secret:
+        - ROUTING_SECRET

@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Build the routing service image (routing-service/) for the server (amd64) and push it to GHCR, then restart the
+# Kamal accessory: bin/routing-image && bin/kamal accessory reboot routing (first time: bin/kamal accessory boot routing).
+set -euo pipefail
+cd "$(dirname "$0")/../routing-service"
+IMAGE=ghcr.io/kevin-simplelabx/convoy-routing:latest
+docker build --platform linux/amd64 -t "$IMAGE" .
+docker push "$IMAGE"

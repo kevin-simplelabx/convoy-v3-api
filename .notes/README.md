@@ -10,6 +10,12 @@
 | Clients (Managed Clients, Client Portal sign-in) | ✅ Phase 0–5 xong (02/11/2026), 252 specs | `menus/clients/` | `../.api-documents/clients.md` |
 | HR (driver pay) | ✅ Phase 0–9 xong (02/11/2026), 273 specs | `menus/hr/` | `../.api-documents/hr.md` |
 | Finance | ✅ Phase 0–8 xong (02/11/2026), 288 specs (School Bus Collections để School Bus) | `menus/finance/` | `../.api-documents/finance.md` |
+| Reports (Shuttle Report) | ✅ Phase 0–2 xong (02/11/2026), 292 specs | `menus/reports/` | `../.api-documents/reports.md` |
+| Dashboard | ✅ Phase 0–3 xong (02/11/2026), 294 specs | `menus/dashboard/` | `../.api-documents/dashboard.md` |
+| Convoy Admin | ✅ Phase 0–4 xong (02/11/2026), 300 specs | `menus/convoy-admin/` | `../.api-documents/convoy-admin.md` |
+| Live Map | ✅ Phase 0–3 xong (02/11/2026), 304 specs | `menus/live-map/` | `../.api-documents/live-map.md` |
+| Ops Control | ✅ Phase 0–4 xong (02/11/2026), 308 specs | `menus/ops-control/` | `../.api-documents/ops-control.md` |
+| School Bus (7 sub-menu) | 🚧 Sub-menu 1 (Schools & Year Setup) ✅, 2 (Fares, Policy, Payment Methods, Operator Pay) ✅, 3 (Stop Library, Stop Assignment) ✅, 4 (Route Plans, Feasibility + routing-service) ✅ (02/11/2026), 5 (Families, Registration, Bus Requests + Route Fit / first invoice / plan versions, CCA Rides, alerts) ✅ (03/11/2026), 358 specs; tiếp: 6 (School Finance) | `menus/school-bus/overview.md`, `menus/school-bus-1-setup/` … `-5-parents/` | `../.api-documents/school-bus-setup.md`, `school-bus-money.md`, `school-bus-stops.md`, `school-bus-routes.md`, `school-bus-parents.md` |
 
 ## Đọc gì cho việc gì
 | Việc | Đọc |
@@ -27,7 +33,7 @@ README.md            trạng thái + chỉ đường (file này)
 decisions.md         mọi quyết định: ngày · menu · quyết định (chỉ thêm, không xoá)
 backlog.md           việc đã hoãn
 data-ownership.md    bảng → domain → ai ghi → menu sẽ làm màn sửa
-domains/             TÀI LIỆU SỐNG theo nghiệp vụ: platform, occurrences, trips, fleet, clients, pay, finance, school, replacements, calendars, operations
+domains/             TÀI LIỆU SỐNG theo nghiệp vụ: platform, occurrences, trips, fleet, clients, pay, finance, reports, dashboard, convoy-admin, live-map, ops-control, school, replacements, calendars, operations
 menus/<menu>/        scope.md, plan.md, log/NN-phase-*.md (NHẬT KÝ: ghi lúc xong phase, không sửa lại)
 ```
 

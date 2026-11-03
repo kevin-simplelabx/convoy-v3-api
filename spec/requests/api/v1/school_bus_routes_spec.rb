@@ -4,9 +4,6 @@ RSpec.describe "School Bus routes on the Scheduler" do
   let(:company) { create(:company) }
   let!(:f) do
     within_tenant(company) do
-      cal = create(:calendar, kind: :school, name: "MOE")
-      cal.days.create!(kind: :hol, starts_on: "2026-11-20", ends_on: "2026-12-31", label: "Year-End Holidays")
-      cal.days.create!(kind: :late, starts_on: "2026-11-04", usual_time: "07:30", new_time: "09:00")
       create(:public_holiday, date: "2026-11-09", name: "Deepavali Holiday")
       hup = create(:operator, name: "Hup Seng")
       kumar = create(:driver, name: "Kumar")
@@ -14,7 +11,13 @@ RSpec.describe "School Bus routes on the Scheduler" do
       a.driver_schedules.create!(driver: kumar, starts_on: Date.new(2026, 10, 1))
       b = create(:vehicle, plate: "PD1125G", seats: 13)
       c = create(:vehicle, plate: "PC7475L", seats: 23, operator: hup)
-      school = School.create!(name: "St. Stephen's School", short_name: "SSS", calendar: cal)
+      school = School.create!(name: "St. Stephen's School", short_name: "SSS")
+      # Academic year: Term 4 ends 19 Nov; Deepavali on the school's holiday list; a Late Arrival does not move the runs.
+      year = AcademicYears::Create.call(school:, start_year: 2026, start_month: 1)
+      year.terms.first.update!(starts_on: "2026-01-02", ends_on: "2026-05-29")
+      year.terms.second.update!(starts_on: "2026-06-29", ends_on: "2026-11-19")
+      year.holidays.create!(name: "Deepavali Holiday", starts_on: "2026-11-09", ends_on: "2026-11-09")
+      year.special_days.create!(date: "2026-11-04", kind: "late_arrival", time: "09:00")
       plan = school.plans.create!(name: "Term 4 AM", session: "am", effective_from: Date.new(2026, 10, 1))
       route = plan.routes.create!(number: 1, label: "AM 1", start_time: "06:30", end_time: "07:20", riders_count: 23)
       route.stops.create!(position: 0, name: "Blk 101 Bedok North", scheduled_time: "06:30", riders_count: 23)
@@ -36,11 +39,11 @@ RSpec.describe "School Bus routes on the Scheduler" do
     json[:data].select { |o| o[:school_route_id] == route.id }
   end
 
-  it "runs on school days only, moved by Late Arrival, with the regular bus and its driver" do
+  it "runs on the school days of the academic year only, with the regular bus and its driver" do
     runs = route_runs("2026-11-02", "2026-11-23")
-    expect(runs.pluck(:date)).not_to include("2026-11-07", "2026-11-09", "2026-11-20", "2026-11-23") # Saturday, PH, holidays
+    expect(runs.pluck(:date)).not_to include("2026-11-07", "2026-11-09", "2026-11-20", "2026-11-23") # Saturday, holiday, after the term
     wed = runs.find { |o| o[:date] == "2026-11-04" }
-    expect(wed).to include(start_time: "08:00", plate: "PD6604E", trip_label: "SSS AM 1", school_name: "SSS", pax: 23,
+    expect(wed).to include(start_time: "06:30", plate: "PD6604E", trip_label: "SSS AM 1", school_name: "SSS", pax: 23,
                            key: "r#{f[:route].id}|2026-11-04|0|1|1")
     expect(wed.dig(:driver, :name)).to eq("Kumar")
 

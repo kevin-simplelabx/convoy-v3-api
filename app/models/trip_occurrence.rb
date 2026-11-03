@@ -28,6 +28,7 @@
 #  slot_no             :integer          default(1), not null
 #  source_digest       :string
 #  start_time          :integer          not null
+#  started_at          :timestamptz
 #  starts_at           :timestamptz      not null
 #  status              :string           default("scheduled"), not null
 #  trip_label          :string           not null
@@ -118,6 +119,8 @@ class TripOccurrence < ApplicationRecord
                          inverse_of: :occurrence, dependent: :delete
   has_many :positions, class_name: "OccurrencePosition", foreign_key: %i[occurrence_id occurrence_date], primary_key: %i[id date],
                        dependent: :delete_all
+  has_many :ops_alerts, foreign_key: %i[occurrence_id occurrence_date], primary_key: %i[id date], inverse_of: :occurrence,
+                        dependent: :delete_all
 
   # skipped: the calendar skips the date (public holiday, day off); kept for Trip History, never on the Scheduler.
   enum :status, { scheduled: "scheduled", cancelled: "cancelled", completed: "completed", removed: "removed", skipped: "skipped" },

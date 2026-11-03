@@ -1,7 +1,9 @@
-# What a School Bus route's runs should be between two dates: one run on every school day of its plan (the plan's
-# weekdays, in use, not a public holiday or a day off on the school's calendar), at the route's times moved by the
-# calendar (Late Arrival for AM, Early Dismissal for PM and CCA). The bus: changed by hand on the run > the route's
-# replacement for the day (the regular bus becomes the ghost) > its regular bus that day; then Scheduler replacements.
+# What a School Bus route's runs should be between two dates: one run on every school day of its plan — the plan's
+# weekdays, in use, and a school day of the school's academic year (operating day, inside a term, not a holiday); with
+# no academic year covering the date, Monday to Friday except public holidays (as Convoy OS). At the route's times
+# (special days do not move them, as Convoy OS) plus a shift changed by hand on the run. The bus: changed by hand on
+# the run > the route's replacement for the day (the regular bus becomes the ghost) > its regular bus that day; then
+# Scheduler replacements.
 module Occurrences
   class RouteGenerator < Generator
     def rows(route, from, to, existing: {})
@@ -20,11 +22,19 @@ module Occurrences
     private
 
     def school_day?(plan, school, date)
-      @ctx.runs_on?(days: plan.days, skip_public_holidays: true, calendar_id: school.calendar_id, date:)
+      return false unless plan.days.include?(date.wday)
+
+      year = academic_years(school.id).find { |y| date.between?(y.starts_on, y.ends_on) }
+      year ? year.school_day?(date) : date.wday.between?(1, 5) && !@ctx.holiday?(date)
+    end
+
+    def academic_years(school_id)
+      @academic_years ||= {}
+      @academic_years[school_id] ||= AcademicYear.where(school_id:).includes(:terms, :holidays).to_a
     end
 
     def base_route_row(route, plan, school, date, occ)
-      shift = @ctx.time_shift(school.calendar_id, date, route.start_time, plan.calendar_session) + occ&.shift_minutes.to_i
+      shift = occ&.shift_minutes.to_i
       regular = route.regular_vehicle_id(date)
       moved = occ&.overridden?(:vehicle_id)
       route_rep = moved ? nil : route.replacement_on(date)

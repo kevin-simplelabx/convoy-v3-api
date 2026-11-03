@@ -45,6 +45,7 @@ class Driver < ApplicationRecord
   has_many :pay_schemes, -> { order(:starts_on) }, class_name: "DriverPayScheme", dependent: :destroy
   has_many :pay_vehicle_types, -> { order(:starts_on) }, class_name: "DriverVehicleType", dependent: :destroy
   has_many :pay_months, class_name: "DriverPayMonth", dependent: :restrict_with_error
+  has_many :app_sessions, class_name: "DriverAppSession", dependent: :delete_all
 
   def self.ransackable_attributes(_auth = nil) = %w[name phone status]
 

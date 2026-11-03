@@ -1,0 +1,118 @@
+# Bus Service Registration: the 12 parent messages of a registration year (Convoy OS REGMSG). anchor = the date they go
+# out from (eF renewals open, eT renewals close, gF open to all, start service starts) with offset_days; event = sent
+# when something happens; offset_hours = before the offer ends; adjustable = timing can change; manual = Release Now.
+
+- key: inv
+  name: "Renewal Invitation"
+  audience: "Families of current riders"
+  anchor: eF
+  offset_days: 0
+  adjustable: false
+  manual: false
+  subject: "Renew [Child Name]'s bus service for AY [AY]"
+  body: "Dear [Parent Name],\n\nBus service registration for AY [AY] is open to current riders until [Close Date]. Renew by then to keep priority for a seat.\n\nRenew here: [Link]\n\nThank you,\n[School] Transport"
+  whatsapp: "Hi [Parent Name], renew [Child Name]'s bus service for AY [AY] by [Close Date] to keep priority for a seat: [Link]"
+- key: grad
+  name: "Graduating Thank-You"
+  audience: "Families of final-level riders"
+  anchor: eF
+  offset_days: 0
+  adjustable: false
+  manual: false
+  subject: "Thank you for riding with us"
+  body: "Dear [Parent Name],\n\n[Thank-You Message]\n\nIf [Child Name] still needs bus service next year, apply here: [Link]\n\n[School] Transport"
+  whatsapp: "Hi [Parent Name], [Thank-You Message]"
+- key: rem
+  name: "Renewal Reminder"
+  audience: "Families yet to renew"
+  anchor: eT
+  offset_days: -7
+  adjustable: true
+  manual: false
+  subject: "Reminder: renew by [Close Date]"
+  body: "Dear [Parent Name],\n\n[Child Name] has not been renewed for AY [AY]. Renewals close on [Close Date]. After that, renewing riders apply with everyone else.\n\nRenew here: [Link]\n\n[School] Transport"
+  whatsapp: "Hi [Parent Name], renewals for AY [AY] close on [Close Date]. Renew [Child Name] here: [Link]"
+- key: last
+  name: "Last Call to Renew"
+  audience: "Families yet to renew"
+  anchor: eT
+  offset_days: -1
+  adjustable: true
+  manual: false
+  subject: "Renewals close tomorrow"
+  body: "Dear [Parent Name],\n\nRenewals for AY [AY] close tomorrow, [Close Date].\n\nRenew [Child Name] here: [Link]\n\n[School] Transport"
+  whatsapp: "Hi [Parent Name], renewals close tomorrow. Renew [Child Name] here: [Link]"
+- key: open
+  name: "Registration Open"
+  audience: "All families on file"
+  anchor: gF
+  offset_days: 0
+  adjustable: false
+  manual: false
+  subject: "Bus service registration for AY [AY] is open"
+  body: "Dear [Parent Name],\n\nRegistration for the AY [AY] bus service is open until [Close Date].\n\nApply here: [Link]\n\n[School] Transport"
+  whatsapp: "Hi [Parent Name], bus service registration for AY [AY] is open. Apply here: [Link]"
+- key: recv
+  name: "Application Received"
+  audience: "Applicant"
+  event: "When a parent submits"
+  adjustable: false
+  manual: false
+  subject: "We have your application for [Child Name]"
+  body: "Dear [Parent Name],\n\nWe have received your AY [AY] bus service application for [Child Name]. We will let you know once a seat is confirmed.\n\n[School] Transport"
+  whatsapp: "Hi [Parent Name], we have received [Child Name]'s bus application for AY [AY]. We will update you soon."
+- key: offer
+  name: "Seat Offered"
+  audience: "Applicant"
+  event: "When accepted"
+  adjustable: false
+  manual: false
+  subject: "A seat for [Child Name]. Please confirm by [Confirm By]"
+  body: "Dear [Parent Name],\n\nWe have a seat for [Child Name] for AY [AY]. Please confirm by [Confirm By], or the seat goes to the next family.\n\nConfirm here: [Link]\n\n[School] Transport"
+  whatsapp: "Hi [Parent Name], we have a seat for [Child Name]. Please confirm by [Confirm By]: [Link]"
+- key: crem
+  name: "Confirm Reminder"
+  audience: "Applicant"
+  offset_hours: 24
+  adjustable: true
+  manual: false
+  subject: "Please confirm [Child Name]'s seat by [Confirm By]"
+  body: "Dear [Parent Name],\n\n[Child Name]'s seat is held until [Confirm By].\n\nConfirm here: [Link]\n\n[School] Transport"
+  whatsapp: "Hi [Parent Name], [Child Name]'s seat is held until [Confirm By]. Confirm here: [Link]"
+- key: wl
+  name: "Waitlisted"
+  audience: "Applicant"
+  event: "When waitlisted"
+  adjustable: false
+  manual: false
+  subject: "Update on [Child Name]'s application"
+  body: "Dear [Parent Name],\n\nWe cannot confirm a seat for [Child Name] yet. We will update you as soon as we can.\n\n[School] Transport"
+  whatsapp: "Hi [Parent Name], we cannot confirm a seat for [Child Name] yet. We will update you."
+- key: lapse
+  name: "Offer Lapsed"
+  audience: "Applicant"
+  event: "When an offer is not confirmed in time"
+  adjustable: false
+  manual: false
+  subject: "The seat offer for [Child Name] has lapsed"
+  body: "Dear [Parent Name],\n\nThe seat for [Child Name] was not confirmed by [Confirm By], so the offer has lapsed. Contact us if you still need the service.\n\n[School] Transport"
+  whatsapp: "Hi [Parent Name], the seat offer for [Child Name] has lapsed. Contact us if you still need the service."
+- key: rej
+  name: "Not Successful"
+  audience: "Applicant"
+  event: "When rejected"
+  adjustable: false
+  manual: false
+  subject: "Your application for [Child Name]"
+  body: "Dear [Parent Name],\n\nWe are sorry, we cannot offer [Child Name] a seat for AY [AY].\n\n[School] Transport"
+  whatsapp: "Hi [Parent Name], we are sorry, we cannot offer [Child Name] a seat for AY [AY]."
+- key: wel
+  name: "Welcome and Pick-up Details"
+  audience: "Confirmed riders"
+  anchor: start
+  offset_days: -7
+  adjustable: true
+  manual: true
+  subject: "[Child Name]'s pick-up for AY [AY]"
+  body: "Dear [Parent Name],\n\n[Child Name] starts on [Start Date]. Pick-up point: [Stop], at [Pick-up Time].\n\n[School] Transport"
+  whatsapp: "Hi [Parent Name], [Child Name] starts on [Start Date]. Pick-up at [Stop], [Pick-up Time]."

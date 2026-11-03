@@ -70,6 +70,8 @@ class Vehicle < ApplicationRecord
   has_many :insurance_policies, class_name: "VehicleInsurancePolicy", dependent: :destroy
   has_one :current_insurance_policy, -> { current }, class_name: "VehicleInsurancePolicy"
   has_many :maintenance_visits, dependent: :restrict_with_error
+  has_many :tracking_devices, dependent: :nullify
+  has_one :live_position, class_name: "VehicleLivePosition", dependent: :delete
 
   normalizes :plate, with: ->(v) { v.to_s.gsub(/\s+/, "").upcase }
   normalizes :chassis_number, :engine_number, with: ->(v) { v.to_s.strip.upcase.presence }

@@ -17,6 +17,12 @@ A reverse index for front-end developers: find the screen and the button you are
 - [Fleet](#fleet): Vehicles · Drivers · Bus Attendants · External Vehicles · Fuel & Energy · Maintenance · Vehicle Types
 - [Transport Operators](#transport-operators): Managed Operators · Operator Vehicles · Operator Drivers
 - [Clients](#clients): Managed Clients · client record · Client Users
+- [Convoy Admin](#convoy-admin): Transport Companies · Message Terms · Discover · Company Leads
+- [Dashboard](#dashboard)
+- [Reports](#reports): Shuttle Report
+- [School Bus: Schools & Year Setup](#school-bus-schools--year-setup)
+- [Ops Control](#ops-control)
+- [Live Map](#live-map)
 - [Finance](#finance): Client Invoices · Documents · Operator Payments · Vehicle Financials · Finance Settings
 - [HR](#hr): Drivers · Earnings · Pay Schemes · Rate Plans · Bonuses · Points · Rewards · Salary Simulator · Audit Log
 - [Settings](#settings): Company Settings · Users · Calendars
@@ -292,6 +298,49 @@ Rail icon `corporate_fare`. The trip form also uses `/clients` (Client picker, A
 
 ---
 
+## Convoy Admin
+
+Convoy staff only (rail items Discover, Company Leads, Transport Companies; Message Terms in the menu).
+
+| Screen / element | API | Doc |
+| --- | --- | --- |
+| Transport Companies: list, New Company, External Vehicles limit, add-ons | `/companies` | [convoy-admin § 1](convoy-admin.md#1-transport-companies) |
+| Transport Companies: Open | `PATCH /session { company_id }` | [convoy-admin § 1](convoy-admin.md#1-transport-companies) |
+| Message Terms | `/message_terms` | [convoy-admin § 2](convoy-admin.md#2-message-terms) |
+| Discover: advertisers, placements, KPIs, pause / resume / end / duplicate | `/discover/advertisers`, `/discover/placements` | [convoy-admin § 3](convoy-admin.md#3-discover) |
+| Company Leads | `/leads` | [convoy-admin § 4](convoy-admin.md#4-company-leads) |
+| Vehicle type requests (Add Type / Decline), country change requests | `/vehicle_type_requests`, `/country_requests` | [fleet § 5.2](fleet.md#52-request-a-new-type), [settings § 3.3](settings.md#33-request-a-country-change) |
+
+---
+
+## Dashboard
+
+Rail icon `dashboard` (Company Dashboard).
+
+| Screen / element | API | Doc |
+| --- | --- | --- |
+| Widget tray, sections | `GET /dashboard/widgets` | [dashboard § 1](dashboard.md#1-widgets-and-layout) |
+| Pages, drag / resize / add / remove widgets, Save, Reset | `GET` / `PUT` / `DELETE /dashboard/layout` | [dashboard § 1](dashboard.md#1-widgets-and-layout) |
+| Period select, every widget's figures (Open Ops Control Alerts is live) | `GET /dashboard?period=` | [dashboard § 2](dashboard.md#2-figures) |
+| How It Works, ⓘ explainers, charts | FE only | — |
+
+---
+
+## Reports
+
+Rail icon `insert_chart`. Needs `vehicles`, `finance` or `finview`.
+
+| Screen / element | API | Doc |
+| --- | --- | --- |
+| Client, Shuttle Route, Period selects | `GET /reports/shuttle/options` | [reports § 1](reports.md#1-filters) |
+| KPIs, Utilisation by Shuttle Timing, Stop Activity, Monthly Trend, chart | `GET /reports/shuttle?trip_id=&period=` | [reports § 2](reports.md#2-the-report) |
+| Riders per Timing per Day, On Time Report (Month select) | `GET /reports/shuttle/grid?trip_id=&month=` | [reports § 3](reports.md#3-month-grids) |
+| On-time allowance −1 / +1 min | `PATCH /clients/:id { client: { on_time_allowance } }` | [reports § 2](reports.md#2-the-report) |
+| Click a count / time → stop record, Amend Record | `GET /trip_history/:id`, `POST /trip_history/:id/correction` | [reports § 4](reports.md#4-stop-record-and-amend-record) |
+| Export CSV / Export PDF, How It Works | FE only | — |
+
+---
+
 ## Finance
 
 Rail icon `account_balance`. Needs `finance` or `finview`; Finance Settings `finset`; Vehicle Financials `vehfin`.
@@ -450,9 +499,84 @@ Rail footer icon `settings`.
 
 ---
 
+## School Bus: Schools & Year Setup
+
+Rail icon `school`. Read: any company user (their schools). Changes: see [school-bus-setup](school-bus-setup.md).
+
+| Screen / element | API | Doc |
+| --- | --- | --- |
+| Schools list, New School | `GET /schools`, `POST /schools` | [§ 1](school-bus-setup.md#1-schools) |
+| School record header, Route Labels tab | `GET /schools/:id`, `PUT /schools/:id/route_labels` | [§ 1.3](school-bus-setup.md#13-school-record-and-route-labels) |
+| Rider Data tab: lists, check file, Import, Delete | `/schools/:id/rider_datasets` (+ `/preview`) | [§ 2.1](school-bus-setup.md#21-rider-data-tab) |
+| Riders tab: chips, search, paging, Add Rider, Export CSV | `/schools/:id/riders` (+ `/export`) | [§ 2.2](school-bus-setup.md#22-riders-tab) |
+| Year selector, New Academic Year, Terms & Semesters, Save Calendar, Unlock, Delete Year | `/schools/:id/academic_years`, `/academic_years/:id` (+ `/calendar`, `/unlock`) | [§ 3](school-bus-setup.md#3-terms--semesters-academic-years) |
+| Holidays & Special Days, Import Public Holidays | `PUT /academic_years/:id/holidays`, `GET /academic_years/:id/public_holidays` | [§ 4](school-bus-setup.md#4-holidays--special-days) |
+| School Levels | `/schools/:id/levels`, `POST /schools/:id/unlock` | [§ 5](school-bus-setup.md#5-school-levels) |
+| Bus Sessions, Copy AY X Sessions | `/academic_years/:id/sessions` (+ `/copy`) | [§ 6](school-bus-setup.md#6-bus-sessions) |
+| Bus Attendants | `/schools/:id/bus_attendants` | [§ 7](school-bus-setup.md#7-bus-attendants) |
+| Setup strip, Summary | `GET /academic_years/:id/setup` | [§ 8](school-bus-setup.md#8-setup-strip-and-summary) |
+| Bus Fares: wizard, Save & Lock, Copy AY X Fares, fare table | `/academic_years/:id/fares` (+ `/copy`) | [money § 1–2](school-bus-money.md#1-bus-fares) |
+| Extra Charges: list, add / edit / delete, Set End, preview | `/academic_years/:id/extra_charges` (+ `/preview`, `/:id/end`) | [money § 3](school-bus-money.md#3-extra-charges) |
+| Payment & Refund Policy: versions, New Version, Publish | `/schools/:id/policy` | [money § 4](school-bus-money.md#4-payment--refund-policy) |
+| Payment Methods | `/schools/:id/payment_methods` | [money § 5](school-bus-money.md#5-payment-methods) |
+| Operator Pay, Break Month Calculator, BA prices | `/schools/:id/operator_pay` (+ `/calculator`) | [money § 6](school-bus-money.md#6-operator-pay) |
+| Stop Library: list, search, stop detail, add / edit (confirm for shared stops), archive, Nearby | `/stops` (+ `/nearby`) | [stops § 1](school-bus-stops.md#1-stops-stop-library) |
+| Stop Library: Requests tab, Add to the Stop Library, Approve / Keep for School | `/stops/requests`, `/stops/:id/library`, `/stops/:id/review` | [stops § 2](school-bus-stops.md#2-library-membership-and-requests) |
+| Stop Assignment: School Stops / Needs Attention, catchment (postal codes, areas, points off), Browse Library, Import, Unlink | `/schools/:id/stops` (+ `/import`) | [stops § 3](school-bus-stops.md#3-a-schools-stops-and-catchments) |
+| Stop Assignment: riders, candidates, Select Riders / Select Links | `/schools/:id/stop_assignment`, `/schools/:id/rider_links` (+ `/remove`) | [stops § 4](school-bus-stops.md#4-stop-assignment) |
+| PUDO photo, photo requests, Accept / Reject, auto requests | `/stops/:id/points/:point_id/photo`, `/stop_photo_requests` | [stops § 5](school-bus-stops.md#5-photos-and-photo-requests) |
+| Route Plans: Parameters, Priority, Run Routing, run progress | `/routing/settings`, `POST /schools/:id/routing_runs`, `GET /routing_runs/:id` | [routes § 1–2](school-bus-routes.md#1-parameters) |
+| Route Plans: plan list and badges, plan detail (KPIs, unassigned, students, routes), Draw Routes, rename, comments, Compare, delete | `/schools/:id/plans`, `/plans/:id` (+ `/comments`, `/compare`) | [routes § 3](school-bus-routes.md#3-plans) |
+| Route drawer and map tools: stops / riders, New Route, bus type, lock / hide, attendant, delete, Reset, Route Again | `/routes/:id` (+ `/stops`, `/reset`), `/plans/:plan_id/routes`, `/plans/:plan_id/route_again` | [routes § 4](school-bus-routes.md#4-hand-edits-and-route-again) |
+| Adopt Plan, cancel scheduled; Stop Assignment: assigned PUDO, Set as assigned, Move All Riders Here, Notify | `/plans/:id/adopt`, `/plans/:id/cancel_adoption`, `/schools/:id/rider_assignments` (+ `/move`, `/notify`) | [routes § 5](school-bus-routes.md#5-adopt-plan-and-rider-assignments) |
+| Route vehicle history, operator price, Route Charges | `/routes/:id/vehicle`, `/routes/:id/prices`, `/routes/:id/charges`, `/schools/:id/route_charges`, `/route_charges/:id` | [routes § 6](school-bus-routes.md#6-route-bus-and-money) |
+| Feasibility Studies | `/feasibility_studies`, `/feasibility_scenarios/:id` | [routes § 7](school-bus-routes.md#7-feasibility-studies) |
+| How It Works, Year / Week at a Glance, templates, unlock prompt | FE only | — |
+| Families & Riders: list, search, add / rename / delete, guardians, link / unlink riders, Link Existing Rider, CSV import / export | `/schools/:id/families` (+ `/import`, `/export`), `/families/:id` (+ `/guardians`, `/riders`, `/candidates`) | [parents § 1](school-bus-parents.md#1-families--riders) |
+| Bus Service Registration (Year Setup): schedule, who can apply, auto-accept, fees, form, 12 messages, Schedule / Unschedule, Release Now | `/academic_years/:id/registration` (+ `/schedule`, `/unschedule`, `/release`) | [parents § 2](school-bus-parents.md#2-bus-service-registration) |
+| Bus Service Requests: year cards, windows, tiles, tabs, filters, list, drawer, Add Application, Acknowledge, Move Answer Date, Waitlist / Decline, Message | `/schools/:id/bus_requests` (+ `/decide`, `/message`), `/bus_requests/:id` (+ `/open`, `/acknowledge`, `/move_answer`) | [parents § 3–4](school-bus-parents.md#3-bus-service-requests-list-and-detail) |
+| Route Fit / service check, Accept and Send Quote, bulk Accept, auto-accept and cover banners, Re-offer, Record First Invoice Paid | `/bus_requests/:id/accept`, `/schools/:id/bus_requests/accept`, `/bus_requests/:id/reoffer`, `/bus_requests/:id/record_payment` | [parents § 4](school-bus-parents.md#4-new-service-review-accept-first-invoice) |
+| Change of Address / Service / Stop Service tabs, Not Agreed, End Rider | `/bus_requests/:id/confirm_change`, `/confirm_stop`, `/not_agreed`, `/end_rider` | [parents § 5](school-bus-parents.md#5-change-of-address-change-of-service-stop-service) |
+| Bus requests bell, strip (Ops Control, School Live Ops), 08:00 email preview | `GET /bus_requests/alerts`, `GET /bus_requests/digest` | [parents § 6](school-bus-parents.md#6-alerts-and-the-0800-email) |
+| CCA Rides: settings, week, Bus Not Running, No School credit | `/schools/:id/cca_rides` (+ `/not_running`) | [parents § 7](school-bus-parents.md#7-cca-rides) |
+| School Finance (Collections), School Dashboard, Live Ops | **No API yet** | — |
+
+---
+
+## Ops Control
+
+Rail icon `desktop_windows`. Needs `vehicles` or `plans`. Poll the board every 10–15 s.
+
+| Screen / element | API | Doc |
+| --- | --- | --- |
+| KPI tiles, action banner, tabs with counts, client select, search, sort, trip table (status, Driver App, GPS, ETA, timeline, issue) | `GET /ops_control?tab=&client_id=&q=&sort=` | [ops-control § 1](ops-control.md#1-the-board) |
+| Rules card | `meta.rules` (static text) | [ops-control § 2](ops-control.md#2-rules) |
+| Acknowledge (row, banner) | `POST /ops_control/runs/:id/acknowledge` | [ops-control § 3](ops-control.md#3-acknowledge) |
+| Call | `tel:` driver phone | FE only |
+| Alert Log | `GET /ops_control/log` | [ops-control § 4](ops-control.md#4-alert-log) |
+| Alarm Sound, Full Screen, How It Works, ⓘ | FE only | — |
+| Requests banner (School Bus) | **No API yet** | — |
+
+---
+
+## Live Map
+
+Rail icon `map`. Needs `vehicles` or `plans`. Poll the board every 10–15 s.
+
+| Screen / element | API | Doc |
+| --- | --- | --- |
+| Fleet panel: On Trip / Available / Offline counts, search, group by team, rows; bus markers | `GET /live_map?q=&state=&team_id=` | [live-map § 1](live-map.md#1-the-board) |
+| Click a bus: Vehicle and Device window, trip drawer (points, On Board, ETA Last, stops, students) | `GET /live_map/vehicles/:id` | [live-map § 2](live-map.md#2-one-bus) |
+| Trace switch (live) | `GET /live_map/runs/:id/track?since=` | [live-map § 3](live-map.md#3-trace-and-replay) |
+| Replay: date, bus, run, play | `GET /live_map/vehicles/:id/runs?date=`, `GET /live_map/runs/:id/track` | [live-map § 3](live-map.md#3-trace-and-replay) |
+| Themes, Plates / Drivers / Routes, Fit, panel, replay speed | FE only | — |
+| Rain, Traffic, Road, location Check | **No API yet** (hide) | [live-map § 4](live-map.md#4-front-end-only) |
+
+---
+
 ## Not built yet
 
-These rail menus of Convoy OS have **no API yet**: Dashboard, Ops Control, Live Map, School Bus (and Finance > School Bus
-Collections), Clients > Connected Clients, Reports, and the Convoy Admin menus (Discover, Company Leads, Transport Companies).
+These rail menus of Convoy OS have **no API yet**: School Bus › School Finance (Collections), School Dashboard and Live Ops
+(and Finance > School Bus Collections), and Clients > Connected Clients.
 Smaller gaps inside built menus are listed in [trips § 6](trips.md#6-not-built-yet) and
 [fleet § 10](fleet.md#10-not-built-yet), [settings § 5](settings.md#5-not-built-yet), [clients § 7](clients.md#7-not-built-yet), [hr § 10](hr.md#10-not-built-yet) and [finance § 8](finance.md#8-not-built-yet).

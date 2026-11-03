@@ -19,6 +19,218 @@ Rails.application.routes.draw do
       end
       resources :companies, only: %i[index show create update]
 
+      # Convoy Admin
+      resources :message_terms, only: %i[index create update destroy]
+      get "leads", to: "company_leads#index"
+      patch "leads/:id", to: "company_leads#update", as: :lead, constraints: { id: %r{[^/]+} }
+      scope "discover", controller: :discover, as: :discover do
+        get :advertisers
+        post :advertisers, action: :create_advertiser
+        patch "advertisers/:id", action: :update_advertiser, as: :advertiser
+        delete "advertisers/:id", action: :destroy_advertiser
+        get :placements
+        post :placements, action: :create_placement
+        get "placements/:id", action: :placement, as: :placement
+        patch "placements/:id", action: :update_placement
+        delete "placements/:id", action: :destroy_placement
+        post "placements/:id/pause", action: :pause, as: :placement_pause
+        post "placements/:id/resume", action: :resume, as: :placement_resume
+        post "placements/:id/end", action: :end_now, as: :placement_end
+        post "placements/:id/duplicate", action: :duplicate, as: :placement_duplicate
+      end
+
+      # Dashboard
+      get "dashboard", to: "dashboard#show"
+      get "dashboard/widgets", to: "dashboard#widgets"
+      get "dashboard/layout", to: "dashboard#layout"
+      put "dashboard/layout", to: "dashboard#save_layout"
+      delete "dashboard/layout", to: "dashboard#reset_layout"
+
+      # School Bus
+      resources :schools, only: %i[index show create] do
+        put :route_labels, on: :member, action: :update_labels
+        post :unlock, on: :member
+        resource :levels, controller: :school_levels, only: %i[show update]
+        resource :bus_attendants, controller: :school_attendant_policies, only: %i[show update]
+        resource :policy, controller: :school_policies, only: %i[show create]
+        resource :payment_methods, controller: :school_payment_methods, only: %i[show update]
+        resource :operator_pay, controller: :school_operator_pays, only: %i[show update] do
+          post :calculator
+        end
+        resources :stops, controller: :school_stops, only: %i[index update destroy] do
+          post :import, on: :collection
+        end
+        get :stop_assignment, to: "school_stops#assignment"
+        post :routing_runs, to: "routing#run"
+        get :route_charges, to: "route_money#charges"
+        resource :cca_rides, only: %i[show update] do
+          post :not_running
+        end
+        resources :bus_requests, only: %i[index create] do
+          collection do
+            post :accept, action: :accept_many
+            post :decide
+            post :message
+          end
+        end
+        resources :families, only: %i[index create], shallow: true do
+          collection do
+            post :import
+            get :export
+          end
+        end
+        resources :rider_assignments, only: :create do
+          collection do
+            post :move
+            post :notify
+          end
+        end
+        resources :plans, controller: :school_plans, only: %i[index create], shallow: true
+        post :rider_links, to: "school_stops#link"
+        post "rider_links/remove", to: "school_stops#unlink", as: :remove_rider_links
+        resources :rider_datasets, only: %i[index create destroy] do
+          post :preview, on: :collection
+        end
+        resources :riders, controller: :school_riders, only: %i[index create] do
+          get :export, on: :collection
+        end
+        resources :academic_years, only: %i[index create], shallow: true
+      end
+      get "routing/settings", to: "routing#settings"
+      put "routing/settings", to: "routing#save_settings"
+      get "routing_runs/:id", to: "routing#show_run", as: :routing_run
+      resources :bus_requests, only: :show do
+        collection do
+          get :alerts
+          get :digest
+        end
+        member do
+          post :open
+          post :acknowledge
+          post :move_answer
+          post :accept
+          post :reoffer
+          post :record_payment
+          post :confirm_change
+          post :confirm_stop
+          post :not_agreed
+          post :end_rider
+        end
+      end
+      resources :families, only: %i[show update destroy] do
+        member do
+          post :guardians, action: :guardian
+          match "guardians/:guardian_id", action: :guardian, via: %i[patch delete], as: :guardian
+          post :riders, action: :link
+          delete "riders/:rid", action: :unlink, as: :rider
+          get :candidates
+        end
+      end
+      resources :feasibility_studies, only: %i[index show create update destroy] do
+        get :fare_source, on: :collection
+        member do
+          match :rows, via: %i[post delete]
+          post :scenarios, action: :add_scenario
+        end
+      end
+      resources :feasibility_scenarios, controller: :feasibility_studies, only: [] do
+        member do
+          patch "/", action: :update_scenario, as: ""
+          delete "/", action: :destroy_scenario
+          post :run
+          post :use_suggested_fares, action: :use_suggested
+        end
+      end
+      patch "route_charges/:id", to: "route_money#update_charge", as: :route_charge
+      delete "route_charges/:id", to: "route_money#remove_charge"
+      resources :routes, controller: :school_routes, only: %i[update destroy] do
+        member do
+          put :stops, action: :update_stops
+          post :reset
+          post :vehicle, to: "route_money#vehicle"
+          post :prices, to: "route_money#price"
+          post :charges, to: "route_money#add_charge"
+        end
+      end
+      resources :plans, controller: :school_plans, only: %i[show update destroy] do
+        resources :routes, controller: :school_routes, only: :create
+        post :route_again, to: "school_routes#route_again"
+        member do
+          post :comments, action: :comment
+          delete "comments/:comment_id", action: :uncomment, as: :comment
+          get :compare
+          post :adopt
+          post :cancel_adoption
+        end
+      end
+      resources :stop_photo_requests, only: %i[index create destroy] do
+        collection do
+          put :auto
+          post "submissions/:id/accept", action: :accept, as: :accept_submission
+          post "submissions/:id/reject", action: :reject, as: :reject_submission
+        end
+      end
+      resources :stops, only: %i[index show create update destroy] do
+        collection do
+          get :nearby
+          get :requests
+        end
+        member do
+          post :library, action: :ask_library
+          post :review
+          match "points/:point_id/photo", action: :photo, via: %i[post delete], as: :point_photo
+        end
+      end
+      resources :academic_years, only: %i[show destroy] do
+        resource :fares, controller: :fare_tables, only: %i[show update] do
+          get :copy
+        end
+        resources :extra_charges, only: %i[index create update destroy] do
+          post :end, on: :member, action: :end_charge
+          post :preview, on: :collection
+        end
+        resources :sessions, controller: :bus_sessions, only: :index do
+          collection do
+            put "/", action: :update
+            get :copy
+          end
+        end
+        resource :registration, controller: :school_registrations, only: %i[show update] do
+          post :schedule
+          post :unschedule
+          post :release
+        end
+        member do
+          put :calendar, action: :update_calendar
+          put :holidays, action: :update_holidays
+          get :public_holidays
+          get :setup
+          post :unlock
+        end
+      end
+
+      # Ops Control
+      scope "ops_control", controller: :ops_control, as: :ops_control do
+        get "/", action: :index
+        get "log", action: :log
+        post "runs/:id/acknowledge", action: :acknowledge, as: :acknowledge
+      end
+
+      # Live Map
+      scope "live_map", controller: :live_map, as: :live_map do
+        get "/", action: :index
+        get "vehicles/:id", action: :vehicle, as: :vehicle
+        get "vehicles/:id/runs", action: :runs, as: :vehicle_runs
+        get "runs/:id/track", action: :track, as: :run_track
+      end
+
+      # Reports
+      scope "reports", controller: :reports, as: :reports do
+        get "shuttle/options", action: :options, as: :shuttle_options
+        get "shuttle", action: :shuttle
+        get "shuttle/grid", action: :grid, as: :shuttle_grid
+      end
+
       # Finance
       scope "finance", as: "finance" do
         resource :settings, controller: :finance_settings, only: %i[show update] do

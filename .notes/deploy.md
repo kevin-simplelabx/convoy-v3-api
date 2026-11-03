@@ -9,6 +9,7 @@
 | Gì | Ở đâu |
 | --- | --- |
 | App (Puma + Thruster + Solid Queue trong Puma) | container `convoy_v3-web-<version>`, `RAILS_ENV=production` |
+| Routing service (Node, School Bus) | accessory `convoy_v3-routing` (image GHCR `convoy-routing`, build bằng `bin/routing-image`), port 4000 nội bộ; Rails gọi `ROUTING_URL=http://convoy_v3-routing:4000`, secret `ROUTING_SECRET`; OSRM `router.project-osrm.org` |
 | Postgres 17 | accessory `convoy_v3-db`, data ở `~/convoy_v3-db/data` trên server, chỉ mở `127.0.0.1:5432` |
 | 4 DB | `convoy_v3_production` (+ `_cache`, `_queue`, `_cable`), `db:prepare` tự tạo lúc container khởi động |
 | File upload (CarrierWave) | volume docker `convoy_v3_storage` → `/rails/storage` |
@@ -37,6 +38,8 @@ Chạy trong `convoy-v3-api/` (`source ~/.rvm/scripts/rvm && rvm use 3.4.2`). Ka
 | Trạng thái | `bin/kamal details` |
 | Restart Postgres | `bin/kamal accessory reboot db` |
 | Kiểm tra occurrence | `bin/kamal app exec "bin/rails occurrences:verify"` |
+| Routing service (School Bus) lần đầu | `bin/routing-image && bin/kamal accessory boot routing` (cần `.kamal/routing_secret`, đã sinh, gitignored) |
+| Cập nhật routing service | `bin/routing-image && bin/kamal accessory reboot routing` |
 | Mở DB từ Mac (TablePlus...) | `ssh -L 5433:127.0.0.1:5432 convoy-v3-stg` rồi nối `localhost:5433`, user `convoy_v3` |
 
 ## Lưu ý

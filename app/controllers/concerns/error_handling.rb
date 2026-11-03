@@ -14,7 +14,7 @@ module ErrorHandling
                 with: -> { render_error(:conflict, "Someone else changed this just now. Reload and try again") }
     rescue_from ActionController::ParameterMissing, with: ->(e) { render_error(:bad_request, e.message) }
     rescue_from Pundit::NotAuthorizedError, with: :render_forbidden
-    rescue_from ApplicationService::Error, with: ->(e) { render_error(:unprocessable_content, e.message, code: "invalid") }
+    rescue_from ApplicationService::Error, with: ->(e) { render_error(:unprocessable_content, e.message, code: e.code || "invalid", details: e.details) }
     rescue_from ActsAsTenant::Errors::NoTenantSet, with: -> { render_error(:unprocessable_content, "Pick a company first") }
   end
 

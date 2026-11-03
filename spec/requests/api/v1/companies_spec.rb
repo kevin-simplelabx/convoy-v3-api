@@ -50,7 +50,8 @@ RSpec.describe "Companies" do
     end
 
     it "creates a company and sets platform fields" do
-      post api_v1_companies_path, params: { company: { name: "New Co", code: "nc", external_vehicle_cap: 20 } }, as: :json
+      post api_v1_companies_path, params: { company: { name: "New Co", code: "nc", external_vehicle_cap: 20 },
+                                            admin: { name: "Ann", email: "ann@newco.sg", password: "Password1!" } }, as: :json
       expect(response).to have_http_status(:created)
       expect(Company.find(json.dig(:data, :id))).to have_attributes(code: "NC", external_vehicle_cap: 20)
     end
