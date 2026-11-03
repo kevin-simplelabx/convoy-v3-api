@@ -30,6 +30,7 @@ The API docs in this folder are the source of truth. Do not invent endpoints, pa
 | `school-bus-routes.md` | School Bus: Run Routing, plans, hand edits, Adopt, route money, Feasibility Studies | When `screen-map.md` links to it |
 | `school-bus-parents.md` | School Bus: Families, Registration, Bus Service Requests (Route Fit, first invoice, plan versions), alerts, CCA Rides | When `screen-map.md` links to it |
 | `school-bus-finance.md` | School Bus: Family Bills, Collections, Documents, statements, school operator pay runs; Finance › School Bus Collections | When `screen-map.md` links to it |
+| `school-bus-live.md` | School Bus: School Dashboard (Operations, Finance), Live Ops (session, one run) | When `screen-map.md` links to it |
 | `ops-control.md` | Ops Control: board, rules, Acknowledge, Alert Log | When `screen-map.md` links to it |
 | `live-map.md` | Live Map: board, one bus, Trace, Replay | When `screen-map.md` links to it |
 | `finance.md` | Finance: client invoices, documents, operator payments, vehicle financials, finance settings | When `screen-map.md` links to it |
@@ -184,7 +185,8 @@ The prototype's page ids (in `logic/mixins/admin.js`, rail and sub-menus) and wh
 | `livemap` | Live Map | `/live_map`, `/live_map/vehicles/:id`, `/live_map/runs/:id/track` | [screen-map](screen-map.md#live-map) |
 | `cinv`, `cfdocs`, `cfpay`, `vehfin`, `finset` | Finance pages | `/finance/...` | [screen-map](screen-map.md#finance) |
 | `cfcol` | Finance › School Bus Collections | `/finance/school_collections` | [school-bus-finance § 6](school-bus-finance.md#6-company-finance-pages) |
-| `opconn`, `clconn`, and every other page | Connected Operators / Clients, School Dashboard, Live Ops | **No API yet** | [screen-map](screen-map.md#not-built-yet) |
+| `dashboard`, `liveops` | School Bus: School Dashboard, Live Ops | `/schools/:id/dashboard` (+ `/finance`), `/schools/:id/live`, `/schools/:id/live/runs/:id` | [school-bus-live](school-bus-live.md) |
+| `opconn`, `clconn`, and every other page | Connected Operators / Clients | **No API yet** | [screen-map](screen-map.md#not-built-yet) |
 
 ### 5.3 Value formats
 

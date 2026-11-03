@@ -89,6 +89,10 @@ Rails.application.routes.draw do
           end
         end
         get :statement, to: "school_documents#statement"
+        get :live, to: "school_live#index"
+        get "live/runs/:id", to: "school_live#run", as: :live_run
+        get :dashboard, to: "school_dashboard#show"
+        get "dashboard/finance", to: "school_dashboard#finance", as: :dashboard_finance
         post :bill_runs, to: "school_bills#draft"
         post "bill_runs/issue", to: "school_bills#issue", as: :issue_bill_runs
         resources :bus_requests, only: %i[index create] do

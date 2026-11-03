@@ -15,10 +15,17 @@ module SchoolPay
       @last = @month.end_of_month
     end
 
+    # What some routes cost a full month at the prices on a day (School Dashboard: a plan to be adopted against the current).
+    def self.monthly(school, routes, day) = new(school, day).monthly(routes, day)
+
+    def monthly(routes, day)
+      prices!
+      routes.sum(0.to_d) { price(it, day) || 0 }
+    end
+
     def call
       @pay = @school.operator_pay || SchoolOperatorPay.new(school: @school)
-      @rates = @school.bus_size_rates.index_by(&:bus_type)
-      @policy = @school.attendant_policy
+      prices!
       @years = @school.academic_years.includes(:terms, :holidays).to_a
       @ph = PublicHoliday.between(@month, @last).pluck(:date).to_set
       @days = (@month..@last).select { school_day?(it) }
@@ -88,6 +95,11 @@ module SchoolPay
       Row.new(route:, plan:, key: sg[:key], operator: sg[:vehicle]&.operator, vehicle: sg[:vehicle], price: shown, unpriced:,
               amount: rate.zero? ? 0.to_d : (amount * rate * earned).round(2), days: act.size, of: base.size, brk:, earned:, rate:,
               from: act.first, to: act.last, note:)
+    end
+
+    def prices!
+      @rates = @school.bus_size_rates.index_by(&:bus_type)
+      @policy = @school.attendant_policy
     end
 
     # The monthly price on a day: the route's own price, else the school's default for its bus size; plus the attendant.

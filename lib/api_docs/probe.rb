@@ -6,7 +6,7 @@ module ApiDocs
     PASSWORD = "Simple123!"
     MODELS = { "api/v1/occurrences" => "TripOccurrence", "stop_id" => "TripStop", "api/v1/trip_history" => "TripOccurrence",
                "api/v1/live_map" => "Vehicle", "api/v1/routing" => "RoutingRun", "api/v1/route_money" => "RouteCharge",
-               "api/v1/cca_rides" => "CcaRideSetting" }.freeze
+               "api/v1/cca_rides" => "CcaRideSetting", "api/v1/school_live" => "TripOccurrence" }.freeze
 
     def self.call = new.call
 
@@ -48,7 +48,8 @@ module ApiDocs
     def fill(route)
       picked = {}
       route[:path].scan(/:(\w+)/).flatten.each do |name|
-        klass = model_for(name, route[:controller]) or return
+        klass = model_for(name, route[:controller])
+        return unless klass.is_a?(Class) && klass < ActiveRecord::Base
         scope = klass.all
         picked.each { |column, id| scope = scope.where(column => id) if klass.column_names.include?(column) }
         scope = scope.where(date: Date.current) if klass.column_names.include?("date") && scope.where(date: Date.current).exists?

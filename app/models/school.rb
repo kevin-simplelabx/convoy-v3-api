@@ -68,6 +68,7 @@ class School < ApplicationRecord
   has_many :school_documents, dependent: :destroy
   has_many :school_bill_runs, dependent: :delete_all
   has_many :school_payouts, dependent: :destroy
+  has_many :rider_absences, class_name: "SchoolRiderAbsence", dependent: :delete_all
 
   validates :name, presence: true, uniqueness: { scope: :company_id }
   validates :postal, format: { with: /\A\d{6}\z/, message: "must be 6 digits" }, allow_nil: true

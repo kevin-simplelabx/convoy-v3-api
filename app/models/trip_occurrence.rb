@@ -124,6 +124,8 @@ class TripOccurrence < ApplicationRecord
                        dependent: :delete_all
   has_many :ops_alerts, foreign_key: %i[occurrence_id occurrence_date], primary_key: %i[id date], inverse_of: :occurrence,
                         dependent: :delete_all
+  has_many :boardings, class_name: "SchoolRiderBoarding", foreign_key: %i[occurrence_id occurrence_date], primary_key: %i[id date],
+                       inverse_of: :occurrence, dependent: :delete_all
 
   # skipped: the calendar skips the date (public holiday, day off); kept for Trip History, never on the Scheduler.
   enum :status, { scheduled: "scheduled", cancelled: "cancelled", completed: "completed", removed: "removed", skipped: "skipped" },

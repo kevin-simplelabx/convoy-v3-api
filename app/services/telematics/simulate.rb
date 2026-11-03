@@ -6,6 +6,7 @@
 # Ops Control cases: drivers of today's runs are logged in to the app (every 4th with a run soon is not), runs in progress
 # were started by the driver (every 4th started 6 min late, every 5th lost GPS 5 min ago), and for a run starting within
 # 20 min every 3rd bus is on its way (started) while the others wait at the first pick-up, not started.
+# School Bus runs of today get the children's attendance (SchoolLive::Simulate).
 # Running it again redoes the runs in progress from their start, so it is safe to repeat.
 module Telematics
   class Simulate < ApplicationService
@@ -34,6 +35,7 @@ module Telematics
         else park(v, device, list, i)
         end
       end
+      SchoolLive::Simulate.call(now: @now)
     end
 
     private

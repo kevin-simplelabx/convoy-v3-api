@@ -547,7 +547,11 @@ Rail icon `school`. Read: any company user (their schools). Changes: see [school
 | Collections: open a bill, Record Payment, Waive Late Fee, Credit / Debit Note, print | `/school_bills/:id` (+ `/payments`, `/waive_late`, `/notes`) | [finance § 3](school-bus-finance.md#3-one-bill-payments-notes-late-fees) |
 | Documents: list, filters, print, Void receipt, Statement of Account | `/schools/:id/documents`, `/school_documents/:id` (+ `/void`), `/schools/:id/statement` | [finance § 4](school-bus-finance.md#4-documents-and-statements) |
 | Operator Payments (school): month, routes, lines + files, invoice no., Send / Recall / Send Back / Approve / Reopen, Pay, voucher | `/schools/:id/payouts` (+ `/:operator_id/...`), `/school_payouts/:id/voucher` | [finance § 5](school-bus-finance.md#5-operator-payments-pay-runs) |
-| School Dashboard, Live Ops | **No API yet** | — |
+| School Dashboard › Operations: today, sessions, Needs Attention, coming up, next 90 days, students (distance bins, levels) | `GET /schools/:id/dashboard` | [live § 3](school-bus-live.md#3-dashboard--operations) |
+| School Dashboard › Finance: month KPIs, Expected / Billed / Collected, overdue, year chart, money ahead, Needs Attention | `GET /schools/:id/dashboard/finance` | [live § 4](school-bus-live.md#4-dashboard--finance) |
+| Live Ops: session picker, KPIs, Needs Attention, filters, route list, overview map | `GET /schools/:id/live` | [live § 1](school-bus-live.md#1-live-ops-the-session) |
+| Live Ops route: banner, KPIs, boarding methods, crew, log, stops and children, route map | `GET /schools/:id/live/runs/:id`, `GET /live_map/runs/:id/track` | [live § 2](school-bus-live.md#2-live-ops-one-run) |
+| Live Ops weather, traffic, incidents | **No API yet** (hide) | [live § 5](school-bus-live.md#5-not-built-yet) |
 
 ---
 
@@ -584,6 +588,6 @@ Rail icon `map`. Needs `vehicles` or `plans`. Poll the board every 10–15 s.
 
 ## Not built yet
 
-These rail menus of Convoy OS have **no API yet**: School Bus › School Dashboard and Live Ops, and Clients > Connected Clients.
+These rail menus of Convoy OS have **no API yet**: Clients > Connected Clients.
 Smaller gaps inside built menus are listed in [trips § 6](trips.md#6-not-built-yet) and
 [fleet § 10](fleet.md#10-not-built-yet), [settings § 5](settings.md#5-not-built-yet), [clients § 7](clients.md#7-not-built-yet), [hr § 10](hr.md#10-not-built-yet) and [finance § 8](finance.md#8-not-built-yet).

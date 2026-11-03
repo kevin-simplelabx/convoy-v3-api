@@ -58,6 +58,7 @@ class SchoolRoute < ApplicationRecord
   has_many :replacements, -> { order(:starts_on) }, class_name: "SchoolRouteReplacement", dependent: :destroy, inverse_of: :route
   has_many :occurrences, class_name: "TripOccurrence", dependent: :delete_all
   has_many :riders, class_name: "SchoolRouteRider", dependent: :delete_all
+  has_many :boardings, class_name: "SchoolRiderBoarding", dependent: :delete_all
   has_many :prices, -> { order(:effective_from) }, class_name: "SchoolRoutePrice", dependent: :delete_all
   has_many :charges, -> { order(:starts_on, :id) }, class_name: "RouteCharge", dependent: :nullify
 

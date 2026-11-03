@@ -13,11 +13,14 @@ module SchoolBills
   class Draft < ApplicationService
     RULES = %w[prorate full half].freeze
 
-    def initialize(year, index, rule: FinanceSetting.current.school_bill_start_rule)
+    # expected: what the period earns (School Dashboard revenue) — every rider, linked to a family or not, first invoice month
+    # included, on one bill.
+    def initialize(year, index, rule: FinanceSetting.current.school_bill_start_rule, expected: false)
       @year = year
       @school = year.school
       @i = index
       @rule = rule
+      @expected = expected
     end
 
     def call
@@ -67,7 +70,7 @@ module SchoolBills
           lines << line
         end
       end
-      return [ bill("school", nil, lines) ].reject { it[:lines].empty? } if @table.payer == "school"
+      return [ bill("school", nil, lines) ].reject { it[:lines].empty? } if @table.payer == "school" || @expected
 
       @unlinked = lines.count { family_of[it[:rid]].nil? }
       lines.select { family_of[it[:rid]] }.group_by { family_of[it[:rid]] }.map { |fam, ls| bill("family", fam, ls) }.sort_by { it[:family].name }
@@ -157,7 +160,7 @@ module SchoolBills
     # One child's line: the fare, less what is not charged when they join or stop during the period (port of famBills.charge).
     def charge(rider, fare, reqs, join)
       mine = reqs.select { it.school_rider_id == rider.id }
-      first = mine.find { it.kind == "new" && it.first_bill && it.start_on&.beginning_of_month == @month }
+      first = !@expected && mine.find { it.kind == "new" && it.first_bill && it.start_on&.beginning_of_month == @month }
       return skip("#{rider.name}: this month is on the first invoice #{first.first_bill.number}") if first
 
       stop = mine.find { (it.kind == "stop" && %w[Stopping Stopped].include?(it.live_status)) || (it.kind == "adr" && it.status == "Stopped" && it.effective_on) }

@@ -19,6 +19,7 @@ One document per menu of Convoy OS. Each document lists the screen actions and t
 | School Bus › Route Plans & Feasibility Studies | [school-bus-routes.md](school-bus-routes.md) |
 | School Bus › Families & Riders, Bus Service Registration, Bus Service Requests, CCA Rides | [school-bus-parents.md](school-bus-parents.md) |
 | School Bus › School Finance: Collections (Family Bills), Documents, Operator Payments (school pay runs) | [school-bus-finance.md](school-bus-finance.md) |
+| School Bus › School Dashboard and Live Ops | [school-bus-live.md](school-bus-live.md) |
 | Ops Control (rail icon `desktop_windows`): runs in the next 2 hours checked against rules, alerts, Acknowledge, Alert Log | [ops-control.md](ops-control.md) |
 | Live Map (rail icon `map`): every bus now, its device, the run it is on, Trace and Replay | [live-map.md](live-map.md) |
 | Finance (rail icon `account_balance`): Client Invoices, Documents, Operator Payments, Vehicle Financials, Finance Settings | [finance.md](finance.md) |

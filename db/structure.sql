@@ -7253,6 +7253,89 @@ ALTER SEQUENCE public.school_registrations_id_seq OWNED BY public.school_registr
 
 
 --
+-- Name: school_rider_absences; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.school_rider_absences (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    school_id bigint NOT NULL,
+    rid character varying NOT NULL,
+    date date NOT NULL,
+    trip character varying DEFAULT 'both'::character varying NOT NULL,
+    reason character varying DEFAULT 'other'::character varying NOT NULL,
+    note character varying,
+    reported_by character varying,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: school_rider_absences_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.school_rider_absences_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: school_rider_absences_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.school_rider_absences_id_seq OWNED BY public.school_rider_absences.id;
+
+
+--
+-- Name: school_rider_boardings; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.school_rider_boardings (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    occurrence_id bigint NOT NULL,
+    occurrence_date date NOT NULL,
+    school_route_id bigint NOT NULL,
+    rid character varying NOT NULL,
+    state character varying NOT NULL,
+    boarded_at timestamp(6) without time zone,
+    board_method character varying,
+    board_lat double precision,
+    board_lng double precision,
+    alighted_at timestamp(6) without time zone,
+    alight_method character varying,
+    alight_lat double precision,
+    alight_lng double precision,
+    marked_by character varying,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: school_rider_boardings_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.school_rider_boardings_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: school_rider_boardings_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.school_rider_boardings_id_seq OWNED BY public.school_rider_boardings.id;
+
+
+--
 -- Name: school_riders; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -11264,6 +11347,20 @@ ALTER TABLE ONLY public.school_registrations ALTER COLUMN id SET DEFAULT nextval
 
 
 --
+-- Name: school_rider_absences id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_rider_absences ALTER COLUMN id SET DEFAULT nextval('public.school_rider_absences_id_seq'::regclass);
+
+
+--
+-- Name: school_rider_boardings id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_rider_boardings ALTER COLUMN id SET DEFAULT nextval('public.school_rider_boardings_id_seq'::regclass);
+
+
+--
 -- Name: school_riders id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -13145,6 +13242,22 @@ ALTER TABLE ONLY public.school_registrations
 
 
 --
+-- Name: school_rider_absences school_rider_absences_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_rider_absences
+    ADD CONSTRAINT school_rider_absences_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: school_rider_boardings school_rider_boardings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_rider_boardings
+    ADD CONSTRAINT school_rider_boardings_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: school_riders school_riders_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -13790,6 +13903,13 @@ CREATE UNIQUE INDEX idx_on_occurrence_id_occurrence_date_f3ece8f775 ON public.op
 --
 
 CREATE UNIQUE INDEX idx_on_occurrence_id_occurrence_date_position_02f6e5902d ON public.occurrence_stop_events USING btree (occurrence_id, occurrence_date, "position");
+
+
+--
+-- Name: idx_on_occurrence_id_occurrence_date_rid_de574147e6; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_on_occurrence_id_occurrence_date_rid_de574147e6 ON public.school_rider_boardings USING btree (occurrence_id, occurrence_date, rid);
 
 
 --
@@ -16873,6 +16993,48 @@ CREATE UNIQUE INDEX index_school_registrations_on_academic_year_id ON public.sch
 
 
 --
+-- Name: index_school_rider_absences_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_school_rider_absences_on_company_id ON public.school_rider_absences USING btree (company_id);
+
+
+--
+-- Name: index_school_rider_absences_on_school_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_school_rider_absences_on_school_id ON public.school_rider_absences USING btree (school_id);
+
+
+--
+-- Name: index_school_rider_absences_on_school_id_and_date; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_school_rider_absences_on_school_id_and_date ON public.school_rider_absences USING btree (school_id, date);
+
+
+--
+-- Name: index_school_rider_absences_on_school_id_and_rid_and_date; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_school_rider_absences_on_school_id_and_rid_and_date ON public.school_rider_absences USING btree (school_id, rid, date);
+
+
+--
+-- Name: index_school_rider_boardings_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_school_rider_boardings_on_company_id ON public.school_rider_boardings USING btree (company_id);
+
+
+--
+-- Name: index_school_rider_boardings_on_school_route_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_school_rider_boardings_on_school_route_id ON public.school_rider_boardings USING btree (school_route_id);
+
+
+--
 -- Name: index_school_riders_manual_rid; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -19804,6 +19966,14 @@ ALTER TABLE ONLY public.trip_run_groups
 
 
 --
+-- Name: school_rider_boardings fk_rails_13df7286ea; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_rider_boardings
+    ADD CONSTRAINT fk_rails_13df7286ea FOREIGN KEY (school_route_id) REFERENCES public.school_routes(id);
+
+
+--
 -- Name: rider_point_links fk_rails_144f7e6539; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -19993,6 +20163,14 @@ ALTER TABLE ONLY public.school_bill_waivers
 
 ALTER TABLE ONLY public.school_bills
     ADD CONSTRAINT fk_rails_1ef4249f68 FOREIGN KEY (school_id) REFERENCES public.schools(id);
+
+
+--
+-- Name: school_rider_absences fk_rails_1f62c013f9; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_rider_absences
+    ADD CONSTRAINT fk_rails_1f62c013f9 FOREIGN KEY (school_id) REFERENCES public.schools(id);
 
 
 --
@@ -23564,6 +23742,14 @@ ALTER TABLE ONLY public.companies
 
 
 --
+-- Name: school_rider_boardings fk_rails_d904b312b5; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_rider_boardings
+    ADD CONSTRAINT fk_rails_d904b312b5 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
 -- Name: clients fk_rails_db0f958971; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -23617,6 +23803,14 @@ ALTER TABLE ONLY public.client_bookable_vehicle_types
 
 ALTER TABLE ONLY public.school_routes
     ADD CONSTRAINT fk_rails_dd7b14bd9e FOREIGN KEY (school_plan_id) REFERENCES public.school_plans(id);
+
+
+--
+-- Name: school_rider_absences fk_rails_de52047bcc; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_rider_absences
+    ADD CONSTRAINT fk_rails_de52047bcc FOREIGN KEY (company_id) REFERENCES public.companies(id);
 
 
 --
@@ -24370,6 +24564,7 @@ ALTER TABLE public.trip_occurrences
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261103180000'),
 ('20261103170000'),
 ('20261103150000'),
 ('20261103140000'),

@@ -7,7 +7,7 @@
 module ApiDocs
   class OpenApiBuilder
     DOCS = Rails.root.join(".api-documents")
-    MENUS = { "scheduler.md" => "Scheduler", "trips.md" => "Trips", "fleet.md" => "Fleet", "settings.md" => "Settings", "clients.md" => "Clients", "hr.md" => "HR", "finance.md" => "Finance", "reports.md" => "Reports", "live-map.md" => "Live Map", "ops-control.md" => "Ops Control", "school-bus-setup.md" => "School Bus", "school-bus-money.md" => "School Bus", "school-bus-stops.md" => "School Bus", "school-bus-routes.md" => "School Bus", "school-bus-parents.md" => "School Bus", "school-bus-finance.md" => "School Bus", "dashboard.md" => "Dashboard", "convoy-admin.md" => "Convoy Admin",
+    MENUS = { "scheduler.md" => "Scheduler", "trips.md" => "Trips", "fleet.md" => "Fleet", "settings.md" => "Settings", "clients.md" => "Clients", "hr.md" => "HR", "finance.md" => "Finance", "reports.md" => "Reports", "live-map.md" => "Live Map", "ops-control.md" => "Ops Control", "school-bus-setup.md" => "School Bus", "school-bus-money.md" => "School Bus", "school-bus-stops.md" => "School Bus", "school-bus-routes.md" => "School Bus", "school-bus-parents.md" => "School Bus", "school-bus-finance.md" => "School Bus", "school-bus-live.md" => "School Bus", "dashboard.md" => "Dashboard", "convoy-admin.md" => "Convoy Admin",
               "README.md" => "Common" }.freeze
     # Folder = the Convoy OS menu that owns the resource (.notes/data-ownership.md), not the doc that first names it.
     FOLDERS = {
@@ -29,7 +29,8 @@ module ApiDocs
       "School Bus" => %w[schools rider_datasets school_riders academic_years school_levels bus_sessions school_attendant_policies
                         fare_tables extra_charges school_policies school_payment_methods school_operator_pays
                         stops school_stops stop_photo_requests routing school_plans school_routes route_money rider_assignments
-                        feasibility_studies families school_registrations bus_requests cca_rides school_bills school_documents school_payouts],
+                        feasibility_studies families school_registrations bus_requests cca_rides school_bills school_documents school_payouts
+                        school_live school_dashboard],
       "Dashboard" => %w[dashboard],
       "Convoy Admin" => %w[message_terms discover company_leads],
       "Client Portal" => %w[portal/sessions portal/passwords],
