@@ -36,3 +36,5 @@
 /.kamal/db_password
 /.kamal/registry_token
 /.kamal/routing_secret
+
+.notes
