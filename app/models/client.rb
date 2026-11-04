@@ -5,6 +5,10 @@
 #
 #  id                 :bigint           not null, primary key
 #  billing_address    :text
+#  billing_name       :string
+#  brand_color        :string
+#  brand_logo         :string
+#  brand_logo_ratio   :decimal(5, 2)
 #  code               :string           not null
 #  contact_name       :string
 #  default_po         :string
@@ -51,7 +55,11 @@ class Client < ApplicationRecord
   has_many :billing_contacts, -> { order(:position, :id) }, class_name: "ClientBillingContact", as: :billable, dependent: :delete_all
   has_many :bookable_vehicle_types, class_name: "ClientBookableVehicleType", dependent: :delete_all
   has_many :users, class_name: "ClientUser", dependent: :restrict_with_error
+  has_many :teams, class_name: "ClientTeam", dependent: :delete_all
   belongs_to :rate_card, optional: true
+
+  # Client Portal › Logo and Colour: the logo (with its width / height for the strip) and a colour line.
+  mount_uploader :brand_logo, BrandLogoUploader
 
   enum :kind, { company: "company", individual: "individual", transport_company: "transport_company" }, validate: true
 
@@ -61,6 +69,8 @@ class Client < ApplicationRecord
   normalizes :email, with: ->(v) { v.to_s.strip.downcase.presence }
   normalizes :uen, with: ->(v) { Uen.normalize(v) }
   normalizes :name, with: ->(v) { v.to_s.squish }
+  normalizes :billing_name, with: ->(v) { v.to_s.squish.presence }
+  normalizes :brand_color, with: ->(v) { v.to_s.strip.upcase.presence }
 
   validates :name, presence: true, uniqueness: { scope: :company_id, conditions: -> { kept } }
   validates :code, presence: true, uniqueness: { scope: :company_id }
@@ -69,12 +79,18 @@ class Client < ApplicationRecord
   validates :on_time_allowance, numericality: { only_integer: true, in: 0..15 }
   validates :payment_terms_days, numericality: { only_integer: true, in: 0..365 }, allow_nil: true
   validates :late_cancel_hours, numericality: { only_integer: true, in: 0..720 }
+  validates :brand_color, format: { with: /\A#\h{6}\z/, message: "Enter the colour as a hex code like #004F59" }, allow_nil: true
   validate :individual_reachable
+
+  before_save :measure_brand_logo, if: :brand_logo_changed?
 
   def self.ransackable_attributes(_auth = nil) = %w[name code kind email uen]
 
   # Invoice terms (days): set on the client, else 0 for individuals ("Due on receipt") and 30 for others.
   def terms_days = payment_terms_days || (individual? ? 0 : 30)
+
+  # The legal name invoices are billed to (Billing Name in Finance, Legal Name in the Client Portal), else the name.
+  def bill_name = billing_name || name
 
   # Main contractor: the trips we run for them are sub-contracted.
   def main_contractor? = transport_company?
@@ -91,6 +107,10 @@ class Client < ApplicationRecord
 
   def assign_code
     self.code ||= format("CL%05d", CompanySequence.next!(:client_code))
+  end
+
+  def measure_brand_logo
+    self.brand_logo_ratio = brand_logo.present? ? BrandLogoUploader.ratio(brand_logo) : nil
   end
 
   def individual_reachable

@@ -1,16 +1,20 @@
 # Record a booking or save changes from the booking form: the booking, its days and their trips with points, standby
 # areas and vehicles (all sent each time; days and trips matched by id). Approved and rejected trips are locked: they
 # keep their values and can't be removed. Each open trip's estimate is worked out again from the client's rate card.
+# actor: a Convoy OS user (Trips › Bookings) or a client user (Client Portal › New Booking, new bookings only). The
+# portal also needs: the site (one the person covers) when the client has sites, the first day today or later,
+# passengers and enough seats for them, vehicle types the client may book (Bookable Vehicles); no standby areas.
 module Bookings
   class Save < ApplicationService
     BOOKING_FIELDS = %i[client_id client_site_id client_end_customer_id service_for coordinator_name coordinator_org
                         coordinator_email coordinator_phone po_number cost_centre notes].freeze
     PERMIT = [ *BOOKING_FIELDS, { days: [ :id, :date, { trips: [ :id, *TripBuilder::PERMIT ] } ] } ].freeze
 
-    def initialize(booking:, params:, user:, lock_version: nil)
+    def initialize(booking:, params:, actor:, lock_version: nil)
       @booking = booking
       @params = params.to_h.deep_symbolize_keys
-      @user = user
+      @actor = actor
+      @portal = actor.is_a?(ClientUser)
       @lock_version = lock_version
     end
 
@@ -34,6 +38,10 @@ module Bookings
 
     def check_lock
       return if @booking.new_record?
+      if @booking.approval&.waiting?
+        raise Error, "Waiting for #{@booking.client.name}'s own approval in the Client Portal. It can't be changed until then"
+      end
+
       raise ActiveRecord::StaleObjectError.new(@booking, "update") if !@lock_version.nil? && @lock_version.to_i != @booking.lock_version
 
       @booking.updated_at = Time.current
@@ -44,6 +52,7 @@ module Bookings
       raise Error, "Enter the booking coordinator" if @booking.coordinator_name.blank?
       raise Error, "Pick a site of this client" if @booking.client_site && @booking.client_site.client_id != @booking.client_id
       raise Error, "Pick a customer of this client" if @booking.client_end_customer && @booking.client_end_customer.client_id != @booking.client_id
+      check_portal_site if @portal
 
       @booking.service_for = @booking.client_end_customer.name if @booking.client_end_customer && @booking.service_for.blank?
     end
@@ -76,7 +85,7 @@ module Bookings
       trip.day = day
       trip.position = position
       [ trip.points, trip.standbys, trip.vehicles ].each(&:delete_all) if trip.persisted?
-      TripBuilder.call(trip, params)
+      TripBuilder.call(trip, @portal ? params.except(:standby, :return_standby) : params)
       track_changes(trip, before, day) if before
       trip
     end
@@ -88,7 +97,7 @@ module Bookings
 
       trip.mark_changed
       trip.assign_attributes(acknowledged_at: nil, acknowledged_by_name: nil, acknowledged_how: nil)
-      trip.changes_made.build(items:, changed_by: @user)
+      trip.changes_made.build(items:, changed_by: @actor)
     end
 
     def remove_missing
@@ -106,8 +115,9 @@ module Bookings
       raise Error, "Pick the date of each day" if dates.any?(&:nil?)
       raise Error, "Two days have the same date" if dates.uniq.size != dates.size
       raise Error, "Days must be no more than #{Booking::MAX_SPAN_DAYS} days apart" if (dates.max - dates.min).to_i > Booking::MAX_SPAN_DAYS
+      raise Error, "The first day can't be in the past" if @portal && dates.min < Date.current
 
-      types = VehicleType.enabled_for(ActsAsTenant.current_tenant).index_by(&:id)
+      types = bookable_types.index_by(&:id)
       @days.each { |day, trips| trips.reject(&:locked?).each { |t| check_trip(day, t, types) } }
     end
 
@@ -135,6 +145,28 @@ module Bookings
       count = trip.vehicles.sum(&:count)
       raise Error, "#{at}: request at least one vehicle" if count.zero?
       raise Error, "#{at}: no more than #{BookingTrip::MAX_VEHICLES} vehicles a trip" if count > BookingTrip::MAX_VEHICLES
+      check_portal_seats(at, trip, types) if @portal
+    end
+
+    # Vehicle types the company offers; in the portal only those the client may book (none picked = every one offered).
+    def bookable_types
+      types = VehicleType.enabled_for(ActsAsTenant.current_tenant)
+      return types unless @portal
+
+      picked = @booking.client.bookable_vehicle_types.pluck(:vehicle_type_id)
+      picked.empty? ? types : types.where(id: picked)
+    end
+
+    def check_portal_seats(at, trip, types)
+      raise Error, "#{at}: enter the number of passengers" unless trip.pax.to_i.positive?
+
+      seats = trip.vehicles.sum { |v| v.count * types.fetch(v.vehicle_type_id.to_i).seats.to_i }
+      raise Error, "#{at}: #{trip.pax} passengers but #{seats} seats. Add a vehicle or pick a bigger one" if seats < trip.pax
+    end
+
+    def check_portal_site
+      raise Error, "Pick the site this booking is for" if @booking.client_site.nil? && @actor.client_has_sites?
+      raise Error, "Pick one of your sites" if @booking.client_site && !@actor.covers?(@booking.client_site_id)
     end
 
     def estimate
@@ -154,7 +186,8 @@ module Bookings
     def persist
       if @booking.new_record?
         @booking.number = Booking.next_number(ActsAsTenant.current_tenant)
-        @booking.created_by = @user
+        @booking.source = "portal" if @portal
+        @booking.stamp_actor(:created, @actor)
       end
       @booking.save!
       days = @days.map(&:first)

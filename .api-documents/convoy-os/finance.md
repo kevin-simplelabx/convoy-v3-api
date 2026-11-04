@@ -123,9 +123,14 @@ Issue: numbered `INV-2026-000001` (year of the invoice date), `issued_on` = the 
 
 ### 2.3 Billing Details
 
-`{ client_id, name, kind, uen, billing_address, payment_terms_days, terms_days, default_po, late_cancel_hours,
-billing_contacts [{ id, name, email, send_as, attention }] }`. Save body `{ billing: { uen, billing_address, payment_terms_days,
-default_po, late_cancel_hours, billing_contacts: [...] } }` (people rules as Edit Site, [clients § 2.1](clients.md#21-sites)).
+`{ client_id, name, kind, billing_name, bill_name, uen, billing_address, payment_terms_days, terms_days, default_po, late_cancel_hours,
+billing_contacts [{ id, name, email, send_as, attention }] }`. Save body `{ billing: { billing_name, uen, billing_address,
+payment_terms_days, default_po, late_cancel_hours, billing_contacts: [...] } }` (people rules as Edit Site,
+[clients § 2.1](clients.md#21-sites)).
+
+- **Billing Name** (field "Billing Name"): the legal name invoices are billed to; blank = the client's name. `bill_name` is
+  the one used (new invoices' `bill_to_name`). The client can also change it in the Client Portal (Legal Name), with UEN,
+  address, the first person invoices go To and the Attention name.
 
 ## 3. Client Invoices: payments, credit notes, reports
 

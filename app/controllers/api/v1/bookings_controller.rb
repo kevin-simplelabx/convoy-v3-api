@@ -3,8 +3,9 @@
 module Api
   module V1
     class BookingsController < BaseController
-      LIST_INCLUDES = [ :client, :client_site, :days, { trips: :day } ].freeze
+      LIST_INCLUDES = [ :client, :client_site, :days, { trips: :day, approval: ::Portal::Approval::INCLUDES } ].freeze
       FULL_INCLUDES = [ :client, :client_site, :created_by, :attachments, { cancel_requests: %i[booking_trip resolved_by] },
+                        { approval: ::Portal::Approval::INCLUDES },
                         { trips: :day, days: { trips: [ :day, :points, :standbys, :approved_by, :rejected_by, { vehicles: :vehicle_type },
                                                         { changes_made: :changed_by }, { scheduler_trips: [] } ] } } ].freeze
 
@@ -33,13 +34,13 @@ module Api
 
       # POST { booking: {..., days: [{ date, trips: [...] }]} }
       def create
-        booking = Bookings::Save.call(booking: authorize(Booking.new), params: booking_params, user: current_user)
+        booking = Bookings::Save.call(booking: authorize(Booking.new), params: booking_params, actor: current_user)
         render_booking booking, status: :created
       end
 
       # PATCH { booking: {...whole booking, days and trips with ids}, lock_version }
       def update
-        booking = Bookings::Save.call(booking: authorize(find), params: booking_params, user: current_user, lock_version: params[:lock_version])
+        booking = Bookings::Save.call(booking: authorize(find), params: booking_params, actor: current_user, lock_version: params[:lock_version])
         render_booking booking
       end
 

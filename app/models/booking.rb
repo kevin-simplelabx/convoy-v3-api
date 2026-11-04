@@ -6,26 +6,28 @@
 # Table name: bookings
 # Database name: primary
 #
-#  id                     :bigint           not null, primary key
-#  coordinator_email      :string
-#  coordinator_name       :string           not null
-#  coordinator_org        :string
-#  coordinator_phone      :string
-#  cost_centre            :string
-#  estimate_amount        :decimal(12, 2)   default(0.0), not null
-#  lock_version           :integer          default(0), not null
-#  notes                  :text
-#  number                 :string           not null
-#  po_number              :string
-#  service_for            :string
-#  source                 :string           default("console"), not null
-#  created_at             :datetime         not null
-#  updated_at             :datetime         not null
-#  client_end_customer_id :bigint
-#  client_id              :bigint           not null
-#  client_site_id         :bigint
-#  company_id             :bigint           not null
-#  created_by_id          :bigint
+#  id                        :bigint           not null, primary key
+#  coordinator_email         :string
+#  coordinator_name          :string           not null
+#  coordinator_org           :string
+#  coordinator_phone         :string
+#  cost_centre               :string
+#  created_by_name           :string
+#  estimate_amount           :decimal(12, 2)   default(0.0), not null
+#  lock_version              :integer          default(0), not null
+#  notes                     :text
+#  number                    :string           not null
+#  po_number                 :string
+#  service_for               :string
+#  source                    :string           default("console"), not null
+#  created_at                :datetime         not null
+#  updated_at                :datetime         not null
+#  client_end_customer_id    :bigint
+#  client_id                 :bigint           not null
+#  client_site_id            :bigint
+#  company_id                :bigint           not null
+#  created_by_client_user_id :bigint
+#  created_by_id             :bigint
 #
 # Indexes
 #
@@ -35,6 +37,7 @@
 #  index_bookings_on_company_id                 (company_id)
 #  index_bookings_on_company_id_and_created_at  (company_id,created_at)
 #  index_bookings_on_company_id_and_number      (company_id,number) UNIQUE
+#  index_bookings_on_created_by_client_user_id  (created_by_client_user_id)
 #  index_bookings_on_created_by_id              (created_by_id)
 #
 # Foreign Keys
@@ -43,6 +46,7 @@
 #  fk_rails_...  (client_id => clients.id)
 #  fk_rails_...  (client_site_id => client_sites.id)
 #  fk_rails_...  (company_id => companies.id)
+#  fk_rails_...  (created_by_client_user_id => client_users.id)
 #  fk_rails_...  (created_by_id => users.id)
 #
 class Booking < ApplicationRecord
@@ -60,11 +64,14 @@ class Booking < ApplicationRecord
   belongs_to :client_site, optional: true
   belongs_to :client_end_customer, optional: true
   belongs_to :created_by, class_name: "User", optional: true
+  include ActorStamp
+  actor_stamp :created
   has_many :days, -> { order(:date) }, class_name: "BookingDay", dependent: :destroy, inverse_of: :booking
   has_many :trips, class_name: "BookingTrip", dependent: :destroy, inverse_of: :booking
   has_many :attachments, class_name: "BookingAttachment", dependent: :destroy, inverse_of: :booking
   has_many :cancel_requests, -> { order(:requested_at) }, class_name: "BookingCancelRequest", dependent: :destroy, inverse_of: :booking
   has_many :events, class_name: "BookingEvent", dependent: :delete_all, inverse_of: :booking
+  has_one :approval, class_name: "BookingApproval", dependent: :destroy, inverse_of: :booking
 
   enum :source, { console: "console", portal: "portal", app: "app" }, prefix: :from, validate: true
 

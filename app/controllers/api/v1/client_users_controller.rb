@@ -7,7 +7,7 @@ module Api
 
       def index
         authorize ClientUser
-        render_list @client.users.kept.includes(:sites, :created_by, :portal_account).order(:name), ClientUserBlueprint
+        render_list @client.users.kept.includes(:sites, :created_by, :created_by_client_user, :team, :manager, :portal_account).order(:name), ClientUserBlueprint
       end
 
       # GET /client_users/roles

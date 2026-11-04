@@ -335,15 +335,24 @@ Each trip is approved, edited or rejected **on its own** (see [Approve, reject a
 - `status_label` → badge tone: Ready for Approval (info), Pending Client Acknowledgement (warning), Awaiting Client Approval
   (neutral), Unassigned (neutral: an approved trip's Scheduler run has no vehicle yet), Assigned (success), Rejected (danger),
   Cancelled (neutral), Completed (success).
+- `client_approval` (list and details; `null` unless booked in the Client Portal with the client's approval flow on):
+  `{ status, name, current_step, steps_count, waiting_for [{ id, name }], waiting_text, decided_at }`. `status`: `wait`
+  (show "<waiting_text>. <client> approves it in the Client Portal first" under the trips), `ok`, `no`, `none` (no step needed).
+  Read only: the client decides it in the Client Portal.
+- `can_edit`: `false` while the client's approval waits → hide Edit Booking (saving answers `422` "Waiting for <client>'s own
+  approval in the Client Portal. It can't be changed until then").
 
 ### Booking details — `GET /bookings/:id`
+
+`created_by` / `created_by_kind`: who recorded the booking — a Convoy OS user (`user`), or the client user who booked it in
+the Client Portal (`client_user`, with `source: "portal"`).
 
 The list fields plus:
 
 ```json
 { "data": {
   "id": 1, "number": "SD26000001", "lock_version": 0, "client_end_customer_id": null, "service_for": null,
-  "po_number": "PO-GA-2026-131", "cost_centre": null, "notes": null, "created_by": "Ops Admin",
+  "po_number": "PO-GA-2026-131", "cost_centre": null, "notes": null, "created_by": "Ops Admin", "created_by_kind": "user",
   "attachments": [ { "id": 3, "url": "/api/v1/downloads/...", "name": "passengers.xlsx", "size": 10240, "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" } ],
   "days": [
     { "id": 1, "date": "2026-11-05", "trips": [
@@ -443,10 +452,10 @@ Every call below returns the whole booking (as `GET /bookings/:id`). Trip fields
 | Field | Use |
 | --- | --- |
 | `can_approve` | Show the approve button: "Approve & Convert to Trip" (`pending`) or "Approve Without Waiting" (`awaiting_ack`) |
-| `can_reject` | Show Reject (`pending`, `awaiting_ack`, `awaiting_client`) |
+| `can_reject` | Show Reject (`pending`, `awaiting_ack`; not `awaiting_client`: no buttons while the client's own approval waits) |
 | `approval` | `{ at, by, how, note }` → "Approved by X on DD/MM/YYYY. Client approval: Phone, Spoke to Alex" |
-| `acknowledgement` | `{ at, by, how }` → "Client acknowledged DD/MM/YYYY (Email)" |
-| `rejection` | `{ at, by, by_client, reason }` → "Rejected by X: reason" or "Declined by X in the client's approval flow: reason" |
+| `acknowledgement` | `{ at, by, by_kind, how }` → "Client acknowledged DD/MM/YYYY (Email)". `by_kind`: `client_user` (the client in the Client Portal, `how` "Client Portal") or `user` (recorded by us; `by` is the client's person) |
+| `rejection` | `{ at, by, by_kind, by_client, reason }` → "Rejected by X: reason" or "Declined by X in the client's approval flow: reason" (`by_client`) |
 | `changes` | Newest first `[{ at, by, items: ["Pick-up time: 08:00 to 10:30", ...] }]` — the "What changed" toggle |
 | `scheduler_trips` | `[{ id, title, is_return }]`: Open in Scheduler goes to the trip's `date`, Day view |
 | `cancelled_at` | When it was cancelled at the client's request |
@@ -457,8 +466,6 @@ Every call below returns the whole booking (as `GET /bookings/:id`). Trip fields
 | Approve Without Waiting (`awaiting_ack`) | same, plus `"how": "Phone"` (`Phone`, `Email`, `WhatsApp`, `In person`) and optional `"note"` |
 | Reject | `PATCH /booking_trips/:id/reject` `{ "reason": "No bus that day" }` (the client sees it) |
 | Client Acknowledged (stands in for the Client Portal) | `PATCH /booking_trips/:id/acknowledge` `{ "how": "Email", "by_name": "Alex" }` → back to `pending` |
-| Client approval done (`awaiting_client`) | `PATCH /booking_trips/:id/client_approve` `{ "by_name": "Priya" }` → `pending` |
-| Declined in the client's approval | `PATCH /booking_trips/:id/client_decline` `{ "by_name": "Priya", "reason": "Over budget" }` → `rejected` |
 
 Approving creates the Scheduler trip(s) with **no vehicle** (their runs are in the Unassigned tray):
 - Type: One Way / Two Way → Ad Hoc / Charter (Two Way: an outbound and its "(Return)" linked as a pair; return stops = the way back),
@@ -480,7 +487,7 @@ A client asks to cancel the booking or one trip (from the Client Portal later; r
 shows them in `cancel_requests`:
 
 ```json
-"cancel_requests": [ { "id": 2, "booking_trip_id": 7, "trip_date": "2026-11-04", "reason": "Event moved", "requested_by_name": "Alex",
+"cancel_requests": [ { "id": 2, "booking_trip_id": 7, "trip_date": "2026-11-04", "reason": "Event moved", "requested_by_name": "Alex", "requested_by_kind": "user",
                        "requested_at": "...", "status": "open", "resolved_at": null, "resolved_by": null, "resolution_note": null } ]
 ```
 

@@ -10,6 +10,7 @@ module ErrorHandling
     rescue_from ActiveRecord::RecordNotFound, with: -> { render_error(:not_found, "Not found") }
     rescue_from ActiveRecord::RecordInvalid, with: ->(e) { render_invalid(e.record) }
     rescue_from ActiveRecord::RecordNotDestroyed, with: ->(e) { render_invalid(e.record) }
+    rescue_from ActiveRecord::NotNullViolation, with: :render_not_null
     rescue_from ActiveRecord::StaleObjectError,
                 with: -> { render_error(:conflict, "Someone else changed this just now. Reload and try again") }
     rescue_from ActionController::ParameterMissing, with: ->(e) { render_error(:bad_request, e.message) }
@@ -31,8 +32,17 @@ module ErrorHandling
                  details: record.errors.to_hash(true), code: "invalid")
   end
 
+  # Safety net: a required column left empty that no validation caught (a multipart "" is nil) is a 422, not a 500.
+  def render_not_null(exception)
+    Rails.error.report(exception, handled: true)
+    column = exception.cause.try(:result)&.error_field(PG::Result::PG_DIAG_COLUMN_NAME)
+    return render_error(:unprocessable_content, "Fill in the required fields", code: "invalid") unless column
+
+    render_error(:unprocessable_content, "#{column.humanize} can't be empty", code: "invalid", details: { column => [ "can't be empty" ] })
+  end
+
   def render_forbidden(exception)
-    message = current_user&.convoy_admin? && exception.query.to_s != "show?" ?
+    message = current_user.try(:convoy_admin?) && exception.query.to_s != "show?" ?
       "View only. Convoy Admin cannot change company data" : "You do not have access to this"
     render_error(:forbidden, message)
   end

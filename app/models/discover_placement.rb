@@ -77,6 +77,7 @@ class DiscoverPlacement < ApplicationRecord
   enum :status, { draft: "draft", live: "live", paused: "paused" }, validate: true
 
   normalizes :title, :kicker, :subtitle, with: ->(v) { v.to_s.squish.presence }
+  normalizes :cta, with: ->(v) { v.to_s.squish.presence || "Book Now" }, apply_to_nil: true
   normalizes :audiences, with: ->(v) { AUDIENCES.keys & Array(v).map(&:to_s) }
 
   validates :title, presence: { message: "Enter the title" }
@@ -84,8 +85,15 @@ class DiscoverPlacement < ApplicationRecord
   validates :slot, inclusion: { in: %w[std feat] }
   validates :area, inclusion: { in: AREAS.keys }
   validates :school_level, inclusion: { in: LEVELS.keys }
-  validates :price, :child_price, :listing_fee, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
-  validates :commission_pct, numericality: { in: 0..100 }
+  # Empty until given, so a new placement takes the advertiser's terms.
+  attribute :listing_fee, default: nil
+  attribute :commission_pct, default: nil
+
+  before_validation :inherit_advertiser_terms
+
+  validates :price, :child_price, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :listing_fee, numericality: { greater_than_or_equal_to: 0, message: "must be 0 or more" }
+  validates :commission_pct, numericality: { in: 0..100, message: "must be between 0 and 100%" }
   validate :publishable
 
   # draft | scheduled | live | paused | ended
@@ -102,8 +110,15 @@ class DiscoverPlacement < ApplicationRecord
 
   private
 
+  # Listing fee and commission left empty come from the advertiser (0 for Convoy's own news).
+  def inherit_advertiser_terms
+    self.listing_fee = advertiser&.listing_fee || 0 if listing_fee.nil?
+    self.commission_pct = advertiser&.commission_pct || 0 if commission_pct.nil?
+  end
+
   def publishable
     errors.add(:base, "Pick the advertiser") if !kind_news? && advertiser.nil?
+    errors.add(:base, "Pick the start and end dates") unless starts_on && ends_on
     errors.add(:base, "Check the dates: the end is before the start") if starts_on && ends_on && ends_on < starts_on
     errors.add(:base, "Show it on Home, the Discover tab or both") unless show_home || show_discover
     errors.add(:base, "Pick who sees it") if audiences.empty?

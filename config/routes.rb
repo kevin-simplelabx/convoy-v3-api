@@ -17,6 +17,47 @@ Rails.application.routes.draw do
           post :verify
         end
         resource :password, only: :create
+        resource :me, only: :show, controller: :me
+        resources :roles, only: :index
+        resources :users, only: %i[index create update destroy]
+        resources :teams, only: %i[index create update destroy]
+        resources :bookings, only: %i[index show create] do
+          collection do
+            get :form
+            post :estimate
+          end
+          member do
+            post :approve
+            post :decline
+          end
+        end
+        resources :approvals, only: :index
+        get :home, to: "pages#home"
+        get :shuttles, to: "pages#shuttles"
+        get :notices, to: "pages#notices"
+        get :invoices, to: "pages#invoices"
+        get :map, to: "map#show"
+        get "map/runs/:id", to: "map#run", as: :map_run
+        get "map/students", to: "map#students", as: :map_students
+        patch "booking_trips/:id/accept_changes", to: "bookings#accept_changes", as: :accept_changes_booking_trip
+        resources :end_customers, only: :create
+        resources :approval_flows, only: %i[index update], param: :for do
+          post :try, on: :collection, action: :try_booking
+          member do
+            patch :otherwise
+            post "rules", action: :create_rule, as: :rules
+            patch "rules/:id", action: :update_rule, as: :rule
+            delete "rules/:id", action: :destroy_rule
+            post "rules/:id/move", action: :move_rule, as: :move_rule
+          end
+        end
+        scope :settings, controller: :settings, as: :settings do
+          get :sites
+          patch :brand
+          get :billing
+          patch "billing/organisation", action: :organisation_billing, as: :organisation_billing
+          patch "billing/sites/:id", action: :site_billing, as: :site_billing
+        end
       end
 
       # Convoy Driver app (drivers' phones)
@@ -568,8 +609,6 @@ Rails.application.routes.draw do
           post :approve
           patch :reject
           patch :acknowledge
-          patch :client_approve
-          patch :client_decline
         end
       end
       resource :booking_notifications, only: :show do

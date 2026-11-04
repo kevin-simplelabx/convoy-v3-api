@@ -7,7 +7,7 @@ folder with one document per menu, listing the screen actions and the API call b
 | --- | --- |
 | Convoy OS (operator web app) | [`convoy-os/`](convoy-os/) — menus below, screen map in [convoy-os/screen-map.md](convoy-os/screen-map.md); changes the OS front-end must make: [convoy-os/fe-updates.md](convoy-os/fe-updates.md) |
 | Convoy Driver (drivers' phone app) | [`driver/`](driver/) — start with [driver/README.md](driver/README.md) |
-| Client Portal (people at Managed Clients, web) | [`client-portal/`](client-portal/) — start with [client-portal/README.md](client-portal/README.md) (being built) |
+| Client Portal (people at Managed Clients, web) | [`client-portal/`](client-portal/) — start with [client-portal/README.md](client-portal/README.md) |
 
 ## Convoy OS
 
@@ -178,6 +178,9 @@ if someone else saved in between, the API answers `409` and the screen should re
 
 - Upload with `multipart/form-data`. Nested fields use bracket names, for example `vehicle[photo]`,
   `trip[stops_attributes][0][photos_attributes][0][photo]`.
+- Multipart has no `null`: send an empty value (`""`) for an empty field, and the API reads it as `null` (cleared).
+  A field that is never `null` in the response treats empty as "not given" (its default, or unchanged on edit; the menu
+  document says which). An empty required field answers `422` with the field in `details`, never `500`.
 - Files are private. Any file in a response looks like:
 
 ```json

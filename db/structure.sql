@@ -288,6 +288,152 @@ ALTER SEQUENCE public.banks_id_seq OWNED BY public.banks.id;
 
 
 --
+-- Name: booking_approval_acts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.booking_approval_acts (
+    id bigint NOT NULL,
+    booking_approval_id bigint NOT NULL,
+    booking_approval_step_id bigint NOT NULL,
+    client_user_id bigint NOT NULL,
+    act character varying NOT NULL,
+    note text,
+    carried_from integer,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT booking_approval_acts_act CHECK (((act)::text = ANY ((ARRAY['approve'::character varying, 'decline'::character varying])::text[])))
+);
+
+
+--
+-- Name: booking_approval_acts_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.booking_approval_acts_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: booking_approval_acts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.booking_approval_acts_id_seq OWNED BY public.booking_approval_acts.id;
+
+
+--
+-- Name: booking_approval_step_people; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.booking_approval_step_people (
+    id bigint NOT NULL,
+    booking_approval_step_id bigint NOT NULL,
+    client_user_id bigint NOT NULL,
+    reason character varying NOT NULL,
+    CONSTRAINT booking_approval_step_people_reason CHECK (((reason)::text = ANY ((ARRAY['group'::character varying, 'named'::character varying, 'fallback'::character varying])::text[])))
+);
+
+
+--
+-- Name: booking_approval_step_people_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.booking_approval_step_people_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: booking_approval_step_people_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.booking_approval_step_people_id_seq OWNED BY public.booking_approval_step_people.id;
+
+
+--
+-- Name: booking_approval_steps; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.booking_approval_steps (
+    id bigint NOT NULL,
+    booking_approval_id bigint NOT NULL,
+    "position" integer NOT NULL,
+    who character varying[] DEFAULT '{}'::character varying[] NOT NULL,
+    need character varying DEFAULT 'any'::character varying NOT NULL,
+    label character varying NOT NULL,
+    fallback boolean DEFAULT false NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: booking_approval_steps_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.booking_approval_steps_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: booking_approval_steps_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.booking_approval_steps_id_seq OWNED BY public.booking_approval_steps.id;
+
+
+--
+-- Name: booking_approvals; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.booking_approvals (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    booking_id bigint NOT NULL,
+    client_approval_rule_id bigint,
+    flow_kind character varying NOT NULL,
+    name character varying NOT NULL,
+    status character varying NOT NULL,
+    current_step integer DEFAULT 0 NOT NULL,
+    same_person character varying DEFAULT 'once'::character varying NOT NULL,
+    decided_at timestamp(6) without time zone,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT booking_approvals_same_person CHECK (((same_person)::text = ANY ((ARRAY['once'::character varying, 'other'::character varying])::text[]))),
+    CONSTRAINT booking_approvals_status CHECK (((status)::text = ANY ((ARRAY['wait'::character varying, 'ok'::character varying, 'no'::character varying, 'none'::character varying])::text[])))
+);
+
+
+--
+-- Name: booking_approvals_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.booking_approvals_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: booking_approvals_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.booking_approvals_id_seq OWNED BY public.booking_approvals.id;
+
+
+--
 -- Name: booking_attachments; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -298,7 +444,9 @@ CREATE TABLE public.booking_attachments (
     file character varying NOT NULL,
     uploaded_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    uploaded_by_client_user_id bigint,
+    CONSTRAINT booking_attachments_uploaded_by_one CHECK ((num_nonnulls(uploaded_by_id, uploaded_by_client_user_id) <= 1))
 );
 
 
@@ -338,7 +486,10 @@ CREATE TABLE public.booking_cancel_requests (
     resolved_by_id bigint,
     resolution_note text,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    requested_by_id bigint,
+    requested_by_client_user_id bigint,
+    CONSTRAINT booking_cancel_requests_requested_by_one CHECK ((num_nonnulls(requested_by_id, requested_by_client_user_id) <= 1))
 );
 
 
@@ -625,9 +776,13 @@ CREATE TABLE public.booking_trips (
     rejected_at timestamp(6) without time zone,
     rejected_by_id bigint,
     rejected_by_name character varying,
-    rejected_by_client boolean DEFAULT false NOT NULL,
     rejection_reason text,
-    cancelled_at timestamp(6) without time zone
+    cancelled_at timestamp(6) without time zone,
+    acknowledged_by_id bigint,
+    acknowledged_by_client_user_id bigint,
+    rejected_by_client_user_id bigint,
+    CONSTRAINT booking_trips_acknowledged_by_one CHECK ((num_nonnulls(acknowledged_by_id, acknowledged_by_client_user_id) <= 1)),
+    CONSTRAINT booking_trips_rejected_by_one CHECK ((num_nonnulls(rejected_by_id, rejected_by_client_user_id) <= 1))
 );
 
 
@@ -674,7 +829,10 @@ CREATE TABLE public.bookings (
     estimate_amount numeric(12,2) DEFAULT 0.0 NOT NULL,
     lock_version integer DEFAULT 0 NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    created_by_name character varying,
+    created_by_client_user_id bigint,
+    CONSTRAINT bookings_created_by_one CHECK ((num_nonnulls(created_by_id, created_by_client_user_id) <= 1))
 );
 
 
@@ -1223,6 +1381,237 @@ ALTER SEQUENCE public.cca_ride_settings_id_seq OWNED BY public.cca_ride_settings
 
 
 --
+-- Name: client_approval_flows; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.client_approval_flows (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    client_id bigint NOT NULL,
+    client_site_id bigint,
+    "on" boolean DEFAULT false NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: client_approval_flows_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.client_approval_flows_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: client_approval_flows_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.client_approval_flows_id_seq OWNED BY public.client_approval_flows.id;
+
+
+--
+-- Name: client_approval_rule_bookers; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.client_approval_rule_bookers (
+    id bigint NOT NULL,
+    client_approval_rule_id bigint NOT NULL,
+    client_user_id bigint NOT NULL
+);
+
+
+--
+-- Name: client_approval_rule_bookers_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.client_approval_rule_bookers_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: client_approval_rule_bookers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.client_approval_rule_bookers_id_seq OWNED BY public.client_approval_rule_bookers.id;
+
+
+--
+-- Name: client_approval_rule_sites; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.client_approval_rule_sites (
+    id bigint NOT NULL,
+    client_approval_rule_id bigint NOT NULL,
+    client_site_id bigint NOT NULL
+);
+
+
+--
+-- Name: client_approval_rule_sites_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.client_approval_rule_sites_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: client_approval_rule_sites_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.client_approval_rule_sites_id_seq OWNED BY public.client_approval_rule_sites.id;
+
+
+--
+-- Name: client_approval_rule_teams; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.client_approval_rule_teams (
+    id bigint NOT NULL,
+    client_approval_rule_id bigint NOT NULL,
+    client_team_id bigint NOT NULL
+);
+
+
+--
+-- Name: client_approval_rule_teams_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.client_approval_rule_teams_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: client_approval_rule_teams_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.client_approval_rule_teams_id_seq OWNED BY public.client_approval_rule_teams.id;
+
+
+--
+-- Name: client_approval_rules; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.client_approval_rules (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    client_approval_flow_id bigint NOT NULL,
+    "position" integer DEFAULT 0 NOT NULL,
+    otherwise boolean DEFAULT false NOT NULL,
+    name character varying,
+    sites_condition boolean DEFAULT false NOT NULL,
+    booked_by_condition boolean DEFAULT false NOT NULL,
+    trip_kinds character varying[] DEFAULT '{}'::character varying[] NOT NULL,
+    over_amount numeric(12,2),
+    lead_days integer,
+    same_person character varying DEFAULT 'once'::character varying NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT client_approval_rules_same_person CHECK (((same_person)::text = ANY ((ARRAY['once'::character varying, 'other'::character varying])::text[])))
+);
+
+
+--
+-- Name: client_approval_rules_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.client_approval_rules_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: client_approval_rules_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.client_approval_rules_id_seq OWNED BY public.client_approval_rules.id;
+
+
+--
+-- Name: client_approval_step_people; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.client_approval_step_people (
+    id bigint NOT NULL,
+    client_approval_step_id bigint NOT NULL,
+    client_user_id bigint NOT NULL
+);
+
+
+--
+-- Name: client_approval_step_people_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.client_approval_step_people_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: client_approval_step_people_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.client_approval_step_people_id_seq OWNED BY public.client_approval_step_people.id;
+
+
+--
+-- Name: client_approval_steps; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.client_approval_steps (
+    id bigint NOT NULL,
+    client_approval_rule_id bigint NOT NULL,
+    "position" integer DEFAULT 0 NOT NULL,
+    who character varying[] DEFAULT '{}'::character varying[] NOT NULL,
+    need character varying DEFAULT 'any'::character varying NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT client_approval_steps_need CHECK (((need)::text = ANY ((ARRAY['any'::character varying, 'all'::character varying])::text[])))
+);
+
+
+--
+-- Name: client_approval_steps_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.client_approval_steps_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: client_approval_steps_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.client_approval_steps_id_seq OWNED BY public.client_approval_steps.id;
+
+
+--
 -- Name: client_billing_contacts; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1623,6 +2012,40 @@ ALTER SEQUENCE public.client_sites_id_seq OWNED BY public.client_sites.id;
 
 
 --
+-- Name: client_teams; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.client_teams (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    client_id bigint NOT NULL,
+    name character varying NOT NULL,
+    manager_id bigint,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: client_teams_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.client_teams_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: client_teams_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.client_teams_id_seq OWNED BY public.client_teams.id;
+
+
+--
 -- Name: client_user_sites; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1671,6 +2094,9 @@ CREATE TABLE public.client_users (
     discarded_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
+    client_team_id bigint,
+    manager_id bigint,
+    created_by_client_user_id bigint,
     CONSTRAINT client_users_role CHECK (((role)::text = ANY ((ARRAY['super'::character varying, 'adm'::character varying, 'fin'::character varying, 'ssa'::character varying, 'sa'::character varying, 'sfin'::character varying, 'member'::character varying])::text[])))
 );
 
@@ -1716,7 +2142,11 @@ CREATE TABLE public.clients (
     rate_card_id bigint,
     payment_terms_days integer,
     default_po character varying,
-    late_cancel_hours integer DEFAULT 24 NOT NULL
+    late_cancel_hours integer DEFAULT 24 NOT NULL,
+    billing_name character varying,
+    brand_logo character varying,
+    brand_logo_ratio numeric(5,2),
+    brand_color character varying
 );
 
 
@@ -10745,6 +11175,34 @@ ALTER TABLE ONLY public.banks ALTER COLUMN id SET DEFAULT nextval('public.banks_
 
 
 --
+-- Name: booking_approval_acts id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_approval_acts ALTER COLUMN id SET DEFAULT nextval('public.booking_approval_acts_id_seq'::regclass);
+
+
+--
+-- Name: booking_approval_step_people id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_approval_step_people ALTER COLUMN id SET DEFAULT nextval('public.booking_approval_step_people_id_seq'::regclass);
+
+
+--
+-- Name: booking_approval_steps id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_approval_steps ALTER COLUMN id SET DEFAULT nextval('public.booking_approval_steps_id_seq'::regclass);
+
+
+--
+-- Name: booking_approvals id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_approvals ALTER COLUMN id SET DEFAULT nextval('public.booking_approvals_id_seq'::regclass);
+
+
+--
 -- Name: booking_attachments id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -10899,6 +11357,55 @@ ALTER TABLE ONLY public.cca_ride_settings ALTER COLUMN id SET DEFAULT nextval('p
 
 
 --
+-- Name: client_approval_flows id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_approval_flows ALTER COLUMN id SET DEFAULT nextval('public.client_approval_flows_id_seq'::regclass);
+
+
+--
+-- Name: client_approval_rule_bookers id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_approval_rule_bookers ALTER COLUMN id SET DEFAULT nextval('public.client_approval_rule_bookers_id_seq'::regclass);
+
+
+--
+-- Name: client_approval_rule_sites id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_approval_rule_sites ALTER COLUMN id SET DEFAULT nextval('public.client_approval_rule_sites_id_seq'::regclass);
+
+
+--
+-- Name: client_approval_rule_teams id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_approval_rule_teams ALTER COLUMN id SET DEFAULT nextval('public.client_approval_rule_teams_id_seq'::regclass);
+
+
+--
+-- Name: client_approval_rules id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_approval_rules ALTER COLUMN id SET DEFAULT nextval('public.client_approval_rules_id_seq'::regclass);
+
+
+--
+-- Name: client_approval_step_people id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_approval_step_people ALTER COLUMN id SET DEFAULT nextval('public.client_approval_step_people_id_seq'::regclass);
+
+
+--
+-- Name: client_approval_steps id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_approval_steps ALTER COLUMN id SET DEFAULT nextval('public.client_approval_steps_id_seq'::regclass);
+
+
+--
 -- Name: client_billing_contacts id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -10966,6 +11473,13 @@ ALTER TABLE ONLY public.client_pickup_points ALTER COLUMN id SET DEFAULT nextval
 --
 
 ALTER TABLE ONLY public.client_sites ALTER COLUMN id SET DEFAULT nextval('public.client_sites_id_seq'::regclass);
+
+
+--
+-- Name: client_teams id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_teams ALTER COLUMN id SET DEFAULT nextval('public.client_teams_id_seq'::regclass);
 
 
 --
@@ -12489,6 +13003,38 @@ ALTER TABLE ONLY public.banks
 
 
 --
+-- Name: booking_approval_acts booking_approval_acts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_approval_acts
+    ADD CONSTRAINT booking_approval_acts_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: booking_approval_step_people booking_approval_step_people_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_approval_step_people
+    ADD CONSTRAINT booking_approval_step_people_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: booking_approval_steps booking_approval_steps_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_approval_steps
+    ADD CONSTRAINT booking_approval_steps_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: booking_approvals booking_approvals_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_approvals
+    ADD CONSTRAINT booking_approvals_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: booking_attachments booking_attachments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -12665,6 +13211,62 @@ ALTER TABLE ONLY public.cca_ride_settings
 
 
 --
+-- Name: client_approval_flows client_approval_flows_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_approval_flows
+    ADD CONSTRAINT client_approval_flows_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: client_approval_rule_bookers client_approval_rule_bookers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_approval_rule_bookers
+    ADD CONSTRAINT client_approval_rule_bookers_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: client_approval_rule_sites client_approval_rule_sites_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_approval_rule_sites
+    ADD CONSTRAINT client_approval_rule_sites_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: client_approval_rule_teams client_approval_rule_teams_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_approval_rule_teams
+    ADD CONSTRAINT client_approval_rule_teams_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: client_approval_rules client_approval_rules_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_approval_rules
+    ADD CONSTRAINT client_approval_rules_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: client_approval_step_people client_approval_step_people_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_approval_step_people
+    ADD CONSTRAINT client_approval_step_people_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: client_approval_steps client_approval_steps_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_approval_steps
+    ADD CONSTRAINT client_approval_steps_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: client_billing_contacts client_billing_contacts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -12742,6 +13344,14 @@ ALTER TABLE ONLY public.client_pickup_points
 
 ALTER TABLE ONLY public.client_sites
     ADD CONSTRAINT client_sites_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: client_teams client_teams_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_teams
+    ADD CONSTRAINT client_teams_pkey PRIMARY KEY (id);
 
 
 --
@@ -14591,6 +15201,20 @@ CREATE INDEX auditable_index ON public.audits USING btree (auditable_type, audit
 
 
 --
+-- Name: idx_on_booking_approval_id_created_at_abfe2828d0; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_on_booking_approval_id_created_at_abfe2828d0 ON public.booking_approval_acts USING btree (booking_approval_id, created_at);
+
+
+--
+-- Name: idx_on_booking_approval_id_position_0452e598f2; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_on_booking_approval_id_position_0452e598f2 ON public.booking_approval_steps USING btree (booking_approval_id, "position");
+
+
+--
 -- Name: idx_on_booking_trip_id_leg_position_9ccf998ef7; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -14602,6 +15226,20 @@ CREATE UNIQUE INDEX idx_on_booking_trip_id_leg_position_9ccf998ef7 ON public.boo
 --
 
 CREATE UNIQUE INDEX idx_on_booking_trip_id_vehicle_type_id_ca7b84be82 ON public.booking_trip_vehicles USING btree (booking_trip_id, vehicle_type_id);
+
+
+--
+-- Name: idx_on_client_approval_flow_id_position_8a3d7c610a; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_on_client_approval_flow_id_position_8a3d7c610a ON public.client_approval_rules USING btree (client_approval_flow_id, "position");
+
+
+--
+-- Name: idx_on_client_approval_rule_id_position_10238c12fc; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_on_client_approval_rule_id_position_10238c12fc ON public.client_approval_steps USING btree (client_approval_rule_id, "position");
 
 
 --
@@ -14871,6 +15509,55 @@ CREATE UNIQUE INDEX index_banks_on_key ON public.banks USING btree (key);
 
 
 --
+-- Name: index_booking_approval_acts_on_booking_approval_step_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_booking_approval_acts_on_booking_approval_step_id ON public.booking_approval_acts USING btree (booking_approval_step_id);
+
+
+--
+-- Name: index_booking_approval_acts_on_client_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_booking_approval_acts_on_client_user_id ON public.booking_approval_acts USING btree (client_user_id);
+
+
+--
+-- Name: index_booking_approval_step_people_on_client_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_booking_approval_step_people_on_client_user_id ON public.booking_approval_step_people USING btree (client_user_id);
+
+
+--
+-- Name: index_booking_approval_step_people_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_booking_approval_step_people_unique ON public.booking_approval_step_people USING btree (booking_approval_step_id, client_user_id);
+
+
+--
+-- Name: index_booking_approvals_on_booking_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_booking_approvals_on_booking_id ON public.booking_approvals USING btree (booking_id);
+
+
+--
+-- Name: index_booking_approvals_on_client_approval_rule_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_booking_approvals_on_client_approval_rule_id ON public.booking_approvals USING btree (client_approval_rule_id);
+
+
+--
+-- Name: index_booking_approvals_on_company_id_and_status; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_booking_approvals_on_company_id_and_status ON public.booking_approvals USING btree (company_id, status);
+
+
+--
 -- Name: index_booking_attachments_on_booking_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -14882,6 +15569,13 @@ CREATE INDEX index_booking_attachments_on_booking_id ON public.booking_attachmen
 --
 
 CREATE INDEX index_booking_attachments_on_company_id ON public.booking_attachments USING btree (company_id);
+
+
+--
+-- Name: index_booking_attachments_on_uploaded_by_client_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_booking_attachments_on_uploaded_by_client_user_id ON public.booking_attachments USING btree (uploaded_by_client_user_id);
 
 
 --
@@ -14917,6 +15611,20 @@ CREATE INDEX index_booking_cancel_requests_on_company_id ON public.booking_cance
 --
 
 CREATE INDEX index_booking_cancel_requests_on_company_id_and_status ON public.booking_cancel_requests USING btree (company_id, status);
+
+
+--
+-- Name: index_booking_cancel_requests_on_requested_by_client_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_booking_cancel_requests_on_requested_by_client_user_id ON public.booking_cancel_requests USING btree (requested_by_client_user_id);
+
+
+--
+-- Name: index_booking_cancel_requests_on_requested_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_booking_cancel_requests_on_requested_by_id ON public.booking_cancel_requests USING btree (requested_by_id);
 
 
 --
@@ -15039,6 +15747,20 @@ CREATE INDEX index_booking_trip_vehicles_on_vehicle_type_id ON public.booking_tr
 
 
 --
+-- Name: index_booking_trips_on_acknowledged_by_client_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_booking_trips_on_acknowledged_by_client_user_id ON public.booking_trips USING btree (acknowledged_by_client_user_id);
+
+
+--
+-- Name: index_booking_trips_on_acknowledged_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_booking_trips_on_acknowledged_by_id ON public.booking_trips USING btree (acknowledged_by_id);
+
+
+--
 -- Name: index_booking_trips_on_booking_day_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -15064,6 +15786,13 @@ CREATE INDEX index_booking_trips_on_company_id ON public.booking_trips USING btr
 --
 
 CREATE INDEX index_booking_trips_on_company_id_and_status ON public.booking_trips USING btree (company_id, status);
+
+
+--
+-- Name: index_booking_trips_on_rejected_by_client_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_booking_trips_on_rejected_by_client_user_id ON public.booking_trips USING btree (rejected_by_client_user_id);
 
 
 --
@@ -15106,6 +15835,13 @@ CREATE INDEX index_bookings_on_company_id_and_created_at ON public.bookings USIN
 --
 
 CREATE UNIQUE INDEX index_bookings_on_company_id_and_number ON public.bookings USING btree (company_id, number);
+
+
+--
+-- Name: index_bookings_on_created_by_client_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_bookings_on_created_by_client_user_id ON public.bookings USING btree (created_by_client_user_id);
 
 
 --
@@ -15295,6 +16031,76 @@ CREATE UNIQUE INDEX index_cca_off_days_on_school_id_and_date ON public.cca_off_d
 --
 
 CREATE UNIQUE INDEX index_cca_ride_settings_on_school_id ON public.cca_ride_settings USING btree (school_id);
+
+
+--
+-- Name: index_client_approval_flows_on_client_id_and_client_site_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_client_approval_flows_on_client_id_and_client_site_id ON public.client_approval_flows USING btree (client_id, client_site_id) NULLS NOT DISTINCT;
+
+
+--
+-- Name: index_client_approval_rule_bookers_on_client_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_approval_rule_bookers_on_client_user_id ON public.client_approval_rule_bookers USING btree (client_user_id);
+
+
+--
+-- Name: index_client_approval_rule_bookers_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_client_approval_rule_bookers_unique ON public.client_approval_rule_bookers USING btree (client_approval_rule_id, client_user_id);
+
+
+--
+-- Name: index_client_approval_rule_sites_on_client_site_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_approval_rule_sites_on_client_site_id ON public.client_approval_rule_sites USING btree (client_site_id);
+
+
+--
+-- Name: index_client_approval_rule_sites_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_client_approval_rule_sites_unique ON public.client_approval_rule_sites USING btree (client_approval_rule_id, client_site_id);
+
+
+--
+-- Name: index_client_approval_rule_teams_on_client_team_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_approval_rule_teams_on_client_team_id ON public.client_approval_rule_teams USING btree (client_team_id);
+
+
+--
+-- Name: index_client_approval_rule_teams_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_client_approval_rule_teams_unique ON public.client_approval_rule_teams USING btree (client_approval_rule_id, client_team_id);
+
+
+--
+-- Name: index_client_approval_rules_one_otherwise; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_client_approval_rules_one_otherwise ON public.client_approval_rules USING btree (client_approval_flow_id) WHERE otherwise;
+
+
+--
+-- Name: index_client_approval_step_people_on_client_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_approval_step_people_on_client_user_id ON public.client_approval_step_people USING btree (client_user_id);
+
+
+--
+-- Name: index_client_approval_step_people_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_client_approval_step_people_unique ON public.client_approval_step_people USING btree (client_approval_step_id, client_user_id);
 
 
 --
@@ -15536,6 +16342,20 @@ CREATE UNIQUE INDEX index_client_sites_on_school_id ON public.client_sites USING
 
 
 --
+-- Name: index_client_teams_on_client_and_name; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_client_teams_on_client_and_name ON public.client_teams USING btree (client_id, lower((name)::text));
+
+
+--
+-- Name: index_client_teams_on_manager_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_teams_on_manager_id ON public.client_teams USING btree (manager_id);
+
+
+--
 -- Name: index_client_user_sites_on_client_site_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -15557,10 +16377,24 @@ CREATE UNIQUE INDEX index_client_users_on_client_id_and_email ON public.client_u
 
 
 --
+-- Name: index_client_users_on_client_team_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_users_on_client_team_id ON public.client_users USING btree (client_team_id);
+
+
+--
 -- Name: index_client_users_on_company_id_and_client_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX index_client_users_on_company_id_and_client_id ON public.client_users USING btree (company_id, client_id);
+
+
+--
+-- Name: index_client_users_on_created_by_client_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_users_on_created_by_client_user_id ON public.client_users USING btree (created_by_client_user_id);
 
 
 --
@@ -15575,6 +16409,13 @@ CREATE INDEX index_client_users_on_created_by_id ON public.client_users USING bt
 --
 
 CREATE INDEX index_client_users_on_email ON public.client_users USING btree (email);
+
+
+--
+-- Name: index_client_users_on_manager_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_users_on_manager_id ON public.client_users USING btree (manager_id);
 
 
 --
@@ -20817,6 +21658,14 @@ ALTER TABLE ONLY public.school_holidays
 
 
 --
+-- Name: client_approval_rule_sites fk_rails_02475ec6e0; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_approval_rule_sites
+    ADD CONSTRAINT fk_rails_02475ec6e0 FOREIGN KEY (client_approval_rule_id) REFERENCES public.client_approval_rules(id) ON DELETE CASCADE;
+
+
+--
 -- Name: document_reads fk_rails_02d9fe65e2; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -20905,6 +21754,14 @@ ALTER TABLE ONLY public.pay_scheme_volume_tiers
 
 
 --
+-- Name: booking_approval_step_people fk_rails_071d3c015c; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_approval_step_people
+    ADD CONSTRAINT fk_rails_071d3c015c FOREIGN KEY (client_user_id) REFERENCES public.client_users(id);
+
+
+--
 -- Name: booking_trips fk_rails_071d4c78fd; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -20918,6 +21775,14 @@ ALTER TABLE ONLY public.booking_trips
 
 ALTER TABLE ONLY public.school_bills
     ADD CONSTRAINT fk_rails_080cfd4a0f FOREIGN KEY (bus_request_id) REFERENCES public.bus_requests(id) ON DELETE SET NULL;
+
+
+--
+-- Name: booking_approval_acts fk_rails_08e9d68b17; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_approval_acts
+    ADD CONSTRAINT fk_rails_08e9d68b17 FOREIGN KEY (client_user_id) REFERENCES public.client_users(id);
 
 
 --
@@ -20950,6 +21815,14 @@ ALTER TABLE ONLY public.trip_run_times
 
 ALTER TABLE ONLY public.school_bill_payments
     ADD CONSTRAINT fk_rails_09f44aa22b FOREIGN KEY (receipt_id) REFERENCES public.school_documents(id) ON DELETE SET NULL;
+
+
+--
+-- Name: bookings fk_rails_0aff308ed1; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.bookings
+    ADD CONSTRAINT fk_rails_0aff308ed1 FOREIGN KEY (created_by_client_user_id) REFERENCES public.client_users(id);
 
 
 --
@@ -21033,6 +21906,14 @@ ALTER TABLE ONLY public.cca_ride_settings
 
 
 --
+-- Name: booking_approvals fk_rails_10036da54a; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_approvals
+    ADD CONSTRAINT fk_rails_10036da54a FOREIGN KEY (client_approval_rule_id) REFERENCES public.client_approval_rules(id) ON DELETE SET NULL;
+
+
+--
 -- Name: school_bill_waivers fk_rails_105c160524; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -21113,6 +21994,14 @@ ALTER TABLE ONLY public.trip_run_groups
 
 
 --
+-- Name: client_approval_step_people fk_rails_144f3cc0e7; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_approval_step_people
+    ADD CONSTRAINT fk_rails_144f3cc0e7 FOREIGN KEY (client_approval_step_id) REFERENCES public.client_approval_steps(id) ON DELETE CASCADE;
+
+
+--
 -- Name: rider_point_links fk_rails_144f7e6539; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -21158,6 +22047,14 @@ ALTER TABLE ONLY public.school_plans
 
 ALTER TABLE ONLY public.school_route_vehicle_changes
     ADD CONSTRAINT fk_rails_163f861842 FOREIGN KEY (vehicle_id) REFERENCES public.vehicles(id);
+
+
+--
+-- Name: client_teams fk_rails_16800be0e2; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_teams
+    ADD CONSTRAINT fk_rails_16800be0e2 FOREIGN KEY (client_id) REFERENCES public.clients(id) ON DELETE CASCADE;
 
 
 --
@@ -21217,6 +22114,14 @@ ALTER TABLE ONLY public.cca_credits
 
 
 --
+-- Name: client_approval_flows fk_rails_1912b2d1ba; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_approval_flows
+    ADD CONSTRAINT fk_rails_1912b2d1ba FOREIGN KEY (client_id) REFERENCES public.clients(id) ON DELETE CASCADE;
+
+
+--
 -- Name: trip_price_cells fk_rails_1acd52e654; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -21238,6 +22143,14 @@ ALTER TABLE ONLY public.drivers
 
 ALTER TABLE ONLY public.maintenance_invoices
     ADD CONSTRAINT fk_rails_1babfd3bc0 FOREIGN KEY (maintenance_visit_id) REFERENCES public.maintenance_visits(id);
+
+
+--
+-- Name: booking_trips fk_rails_1c4af7f237; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_trips
+    ADD CONSTRAINT fk_rails_1c4af7f237 FOREIGN KEY (acknowledged_by_client_user_id) REFERENCES public.client_users(id);
 
 
 --
@@ -21481,6 +22394,14 @@ ALTER TABLE ONLY public.replacements
 
 
 --
+-- Name: client_approval_flows fk_rails_27a92209f0; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_approval_flows
+    ADD CONSTRAINT fk_rails_27a92209f0 FOREIGN KEY (client_site_id) REFERENCES public.client_sites(id) ON DELETE CASCADE;
+
+
+--
 -- Name: vehicle_financials fk_rails_27c76f39c4; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -21510,6 +22431,14 @@ ALTER TABLE ONLY public.bookings
 
 ALTER TABLE ONLY public.ops_alerts
     ADD CONSTRAINT fk_rails_289112610b FOREIGN KEY (acknowledged_by_id) REFERENCES public.users(id);
+
+
+--
+-- Name: booking_trips fk_rails_2929b11abd; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_trips
+    ADD CONSTRAINT fk_rails_2929b11abd FOREIGN KEY (acknowledged_by_id) REFERENCES public.users(id);
 
 
 --
@@ -21726,6 +22655,14 @@ ALTER TABLE ONLY public.pay_bonus_tiers
 
 ALTER TABLE ONLY public.booking_events
     ADD CONSTRAINT fk_rails_33f1a57bbd FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: booking_approval_step_people fk_rails_34862d844d; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_approval_step_people
+    ADD CONSTRAINT fk_rails_34862d844d FOREIGN KEY (booking_approval_step_id) REFERENCES public.booking_approval_steps(id) ON DELETE CASCADE;
 
 
 --
@@ -22017,6 +22954,14 @@ ALTER TABLE ONLY public.maintenance_visits
 
 
 --
+-- Name: client_approval_rules fk_rails_4007044c35; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_approval_rules
+    ADD CONSTRAINT fk_rails_4007044c35 FOREIGN KEY (client_approval_flow_id) REFERENCES public.client_approval_flows(id) ON DELETE CASCADE;
+
+
+--
 -- Name: replacement_notifications fk_rails_40ebd31033; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -22241,6 +23186,14 @@ ALTER TABLE ONLY public.maintenance_invoices
 
 
 --
+-- Name: booking_attachments fk_rails_4bc31dd3f8; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_attachments
+    ADD CONSTRAINT fk_rails_4bc31dd3f8 FOREIGN KEY (uploaded_by_client_user_id) REFERENCES public.client_users(id);
+
+
+--
 -- Name: routing_runs fk_rails_4c925b4625; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -22305,6 +23258,14 @@ ALTER TABLE ONLY public.rider_assignments
 
 
 --
+-- Name: booking_cancel_requests fk_rails_4e891e5887; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_cancel_requests
+    ADD CONSTRAINT fk_rails_4e891e5887 FOREIGN KEY (requested_by_client_user_id) REFERENCES public.client_users(id);
+
+
+--
 -- Name: stop_points fk_rails_4ea8678acf; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -22361,6 +23322,14 @@ ALTER TABLE ONLY public.trip_run_times
 
 
 --
+-- Name: booking_approval_acts fk_rails_5319068d5b; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_approval_acts
+    ADD CONSTRAINT fk_rails_5319068d5b FOREIGN KEY (booking_approval_step_id) REFERENCES public.booking_approval_steps(id) ON DELETE CASCADE;
+
+
+--
 -- Name: driver_point_lots fk_rails_5338c4769c; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -22406,6 +23375,14 @@ ALTER TABLE ONLY public.trip_price_cells
 
 ALTER TABLE ONLY public.occurrence_report_photos
     ADD CONSTRAINT fk_rails_55680d95df FOREIGN KEY (occurrence_driver_report_id) REFERENCES public.occurrence_driver_reports(id);
+
+
+--
+-- Name: booking_approval_steps fk_rails_55bb7db6de; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_approval_steps
+    ADD CONSTRAINT fk_rails_55bb7db6de FOREIGN KEY (booking_approval_id) REFERENCES public.booking_approvals(id) ON DELETE CASCADE;
 
 
 --
@@ -22473,11 +23450,35 @@ ALTER TABLE ONLY public.trip_standby_photos
 
 
 --
+-- Name: client_approval_rule_sites fk_rails_59130a794f; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_approval_rule_sites
+    ADD CONSTRAINT fk_rails_59130a794f FOREIGN KEY (client_site_id) REFERENCES public.client_sites(id) ON DELETE CASCADE;
+
+
+--
 -- Name: bus_sessions fk_rails_595da3563f; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.bus_sessions
     ADD CONSTRAINT fk_rails_595da3563f FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: client_users fk_rails_596543b029; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_users
+    ADD CONSTRAINT fk_rails_596543b029 FOREIGN KEY (client_team_id) REFERENCES public.client_teams(id) ON DELETE SET NULL;
+
+
+--
+-- Name: client_approval_rule_bookers fk_rails_5a2af92c59; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_approval_rule_bookers
+    ADD CONSTRAINT fk_rails_5a2af92c59 FOREIGN KEY (client_approval_rule_id) REFERENCES public.client_approval_rules(id) ON DELETE CASCADE;
 
 
 --
@@ -22710,6 +23711,14 @@ ALTER TABLE ONLY public.rider_point_links
 
 ALTER TABLE ONLY public.feasibility_rows
     ADD CONSTRAINT fk_rails_6616ee2b7e FOREIGN KEY (feasibility_study_id) REFERENCES public.feasibility_studies(id) ON DELETE CASCADE;
+
+
+--
+-- Name: client_teams fk_rails_6659db2cc8; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_teams
+    ADD CONSTRAINT fk_rails_6659db2cc8 FOREIGN KEY (manager_id) REFERENCES public.client_users(id) ON DELETE SET NULL;
 
 
 --
@@ -23193,6 +24202,14 @@ ALTER TABLE ONLY public.pay_scheme_target_tiers
 
 
 --
+-- Name: booking_approval_acts fk_rails_7f74e3480f; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_approval_acts
+    ADD CONSTRAINT fk_rails_7f74e3480f FOREIGN KEY (booking_approval_id) REFERENCES public.booking_approvals(id) ON DELETE CASCADE;
+
+
+--
 -- Name: vehicle_live_positions fk_rails_7fbadb7b8d; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -23294,6 +24311,14 @@ ALTER TABLE ONLY public.stop_photo_requests
 
 ALTER TABLE ONLY public.operator_pay_batch_lines
     ADD CONSTRAINT fk_rails_830d94e128 FOREIGN KEY (approved_by_id) REFERENCES public.users(id);
+
+
+--
+-- Name: booking_trips fk_rails_83e768deff; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_trips
+    ADD CONSTRAINT fk_rails_83e768deff FOREIGN KEY (rejected_by_client_user_id) REFERENCES public.client_users(id);
 
 
 --
@@ -23889,6 +24914,14 @@ ALTER TABLE ONLY public.cca_bookings
 
 
 --
+-- Name: booking_cancel_requests fk_rails_9eb75b8062; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_cancel_requests
+    ADD CONSTRAINT fk_rails_9eb75b8062 FOREIGN KEY (requested_by_id) REFERENCES public.users(id);
+
+
+--
 -- Name: school_payment_methods fk_rails_9ed5f00bbb; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -24185,6 +25218,14 @@ ALTER TABLE ONLY public.notification_emails
 
 
 --
+-- Name: client_approval_rule_teams fk_rails_ae2b68a6b6; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_approval_rule_teams
+    ADD CONSTRAINT fk_rails_ae2b68a6b6 FOREIGN KEY (client_team_id) REFERENCES public.client_teams(id) ON DELETE CASCADE;
+
+
+--
 -- Name: feasibility_scenarios fk_rails_ae63d6ab93; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -24230,6 +25271,22 @@ ALTER TABLE ONLY public.pay_scheme_route_bands
 
 ALTER TABLE ONLY public.operator_cost_overrides
     ADD CONSTRAINT fk_rails_b01860eee3 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: client_approval_rule_bookers fk_rails_b165ccaf1e; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_approval_rule_bookers
+    ADD CONSTRAINT fk_rails_b165ccaf1e FOREIGN KEY (client_user_id) REFERENCES public.client_users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: client_approval_steps fk_rails_b19cb443a5; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_approval_steps
+    ADD CONSTRAINT fk_rails_b19cb443a5 FOREIGN KEY (client_approval_rule_id) REFERENCES public.client_approval_rules(id) ON DELETE CASCADE;
 
 
 --
@@ -24294,6 +25351,14 @@ ALTER TABLE ONLY public.bus_request_events
 
 ALTER TABLE ONLY public.notices
     ADD CONSTRAINT fk_rails_b525c326d2 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: booking_approvals fk_rails_b58f9ef172; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_approvals
+    ADD CONSTRAINT fk_rails_b58f9ef172 FOREIGN KEY (booking_id) REFERENCES public.bookings(id) ON DELETE CASCADE;
 
 
 --
@@ -24478,6 +25543,14 @@ ALTER TABLE ONLY public.booking_events
 
 ALTER TABLE ONLY public.driver_invites
     ADD CONSTRAINT fk_rails_bd6c59682a FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: client_users fk_rails_bd75c3c07d; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_users
+    ADD CONSTRAINT fk_rails_bd75c3c07d FOREIGN KEY (manager_id) REFERENCES public.client_users(id) ON DELETE SET NULL;
 
 
 --
@@ -24745,6 +25818,14 @@ ALTER TABLE ONLY public.vehicle_loan_payments
 
 
 --
+-- Name: client_approval_rule_teams fk_rails_cca797e2c6; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_approval_rule_teams
+    ADD CONSTRAINT fk_rails_cca797e2c6 FOREIGN KEY (client_approval_rule_id) REFERENCES public.client_approval_rules(id) ON DELETE CASCADE;
+
+
+--
 -- Name: plan_comments fk_rails_ccb4ff077f; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -24985,11 +26066,27 @@ ALTER TABLE ONLY public.vehicle_financials
 
 
 --
+-- Name: booking_approvals fk_rails_d76d469414; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_approvals
+    ADD CONSTRAINT fk_rails_d76d469414 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
 -- Name: pay_bonus_schemes fk_rails_d7a22324db; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.pay_bonus_schemes
     ADD CONSTRAINT fk_rails_d7a22324db FOREIGN KEY (pay_scheme_id) REFERENCES public.pay_schemes(id);
+
+
+--
+-- Name: client_users fk_rails_d82e1cc0f5; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_users
+    ADD CONSTRAINT fk_rails_d82e1cc0f5 FOREIGN KEY (created_by_client_user_id) REFERENCES public.client_users(id) ON DELETE SET NULL;
 
 
 --
@@ -25014,6 +26111,14 @@ ALTER TABLE ONLY public.client_invoice_lines
 
 ALTER TABLE ONLY public.companies
     ADD CONSTRAINT fk_rails_d9035ba026 FOREIGN KEY (country_set_by_id) REFERENCES public.users(id);
+
+
+--
+-- Name: client_teams fk_rails_da8c75357e; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_teams
+    ADD CONSTRAINT fk_rails_da8c75357e FOREIGN KEY (company_id) REFERENCES public.companies(id);
 
 
 --
@@ -25110,6 +26215,14 @@ ALTER TABLE ONLY public.route_list_version_students
 
 ALTER TABLE ONLY public.rate_card_distance_bands
     ADD CONSTRAINT fk_rails_df0e5761d1 FOREIGN KEY (rate_card_id) REFERENCES public.rate_cards(id);
+
+
+--
+-- Name: client_approval_flows fk_rails_dfb8700e2c; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_approval_flows
+    ADD CONSTRAINT fk_rails_dfb8700e2c FOREIGN KEY (company_id) REFERENCES public.companies(id);
 
 
 --
@@ -25625,6 +26738,14 @@ ALTER TABLE ONLY public.families
 
 
 --
+-- Name: client_approval_rules fk_rails_f611b5b69c; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_approval_rules
+    ADD CONSTRAINT fk_rails_f611b5b69c FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
 -- Name: calendars fk_rails_f6ad5c8b19; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -25718,6 +26839,14 @@ ALTER TABLE ONLY public.occurrence_correction_logs
 
 ALTER TABLE ONLY public.driver_pay_months
     ADD CONSTRAINT fk_rails_fbbecf700c FOREIGN KEY (confirmed_by_id) REFERENCES public.users(id);
+
+
+--
+-- Name: client_approval_step_people fk_rails_fd787aaeea; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_approval_step_people
+    ADD CONSTRAINT fk_rails_fd787aaeea FOREIGN KEY (client_user_id) REFERENCES public.client_users(id) ON DELETE CASCADE;
 
 
 --
@@ -25927,6 +27056,13 @@ ALTER TABLE public.trip_occurrences
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261104150000'),
+('20261104140100'),
+('20261104140000'),
+('20261104130000'),
+('20261104120200'),
+('20261104120100'),
+('20261104120000'),
 ('20261104110000'),
 ('20261104100100'),
 ('20261104100000'),

@@ -498,7 +498,7 @@ Rail footer icon `settings`.
 | --- | --- | --- |
 | Trip Tracking page (link shared from the drawer) | `GET /public/tracking/:token` | [scheduler § 16](scheduler.md#16-public-trip-tracking-page) |
 | External Vehicle Share Form: open / send | `GET` / `POST /public/share_forms/:token` | [fleet § 4.4](fleet.md#44-the-public-share-form-page-no-sign-in) |
-| Client Portal sign-in (email, password, one-time code, set password, account picker, sign out) | `/portal/session`, `/portal/password` (own Portal token) | [clients § 5](clients.md#5-client-portal-sign-in) |
+| Client Portal sign-in (email, password, one-time code, set password, account picker, sign out) | `/portal/session`, `/portal/password` (own Portal token) | [client-portal/auth](../client-portal/auth.md) |
 
 ---
 

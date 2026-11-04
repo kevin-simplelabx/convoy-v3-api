@@ -15,12 +15,8 @@ module Api
 
       # PATCH { reason }
       def reject = act(:reject)
-      # PATCH { how, by_name } — the client accepted our changes.
+      # PATCH { how, by_name } — the client accepted our changes (Client Acknowledged, standing in for the Client Portal).
       def acknowledge = act(:acknowledge)
-      # PATCH { by_name } — the client's own approval done (Awaiting Client Approval → Ready for Approval).
-      def client_approve = act(:client_approve)
-      # PATCH { by_name, reason } — declined in the client's approval.
-      def client_decline = act(:client_decline)
 
       private
 
@@ -31,7 +27,7 @@ module Api
 
       def act(action)
         authorize @trip, :"#{action}?"
-        Bookings::TripAction.call(trip: @trip, action:, user: current_user, reason: params[:reason], how: params[:how], by_name: params[:by_name])
+        Bookings::TripAction.call(trip: @trip, action:, actor: current_user, reason: params[:reason], how: params[:how], by_name: params[:by_name])
         render_booking
       end
 

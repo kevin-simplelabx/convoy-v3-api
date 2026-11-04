@@ -5,7 +5,7 @@ module Api
       before_action :set_booking
 
       def create
-        attachment = authorize @booking.attachments.new(file: params.require(:file), uploaded_by: current_user)
+        attachment = authorize @booking.attachments.new(file: params.require(:file)).stamp_actor(:uploaded, current_user)
         attachment.save!
         render json: { data: { id: attachment.id }.merge(attachment.decorate.file_info(:file)) }, status: :created
       end

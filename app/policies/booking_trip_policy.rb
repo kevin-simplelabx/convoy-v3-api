@@ -3,6 +3,4 @@ class BookingTripPolicy < ApplicationPolicy
   def approve? = write?
   def reject? = write?
   def acknowledge? = write?
-  def client_approve? = write?
-  def client_decline? = write?
 end

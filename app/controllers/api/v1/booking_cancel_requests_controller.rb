@@ -8,7 +8,7 @@ module Api
       def create
         authorize BookingCancelRequest
         trip = params[:booking_trip_id].presence && @booking.trips.find(params[:booking_trip_id])
-        Bookings::CancelRequest.record(booking: @booking, trip:, reason: params[:reason],
+        Bookings::CancelRequest.record(booking: @booking, trip:, reason: params[:reason], actor: current_user,
                                        by_name: params[:requested_by_name].presence || @booking.coordinator_name)
         render_booking :created
       end

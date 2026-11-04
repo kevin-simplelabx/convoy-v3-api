@@ -57,7 +57,8 @@ Convoy's own space in the Convoy App (Home banners and the Discover tab). Views,
 | Delete draft | `DELETE /discover/placements/:id` |
 
 Advertiser: `{ id, name, kind (tc Transport Partner, attr Attraction, prog Programme Provider, brand Brand), kind_label, premier,
-country, listing_fee (S$ a month), commission_pct, email, live_count }`. Premier Partner: shown as "From <partner>", not Sponsored.
+country, listing_fee (S$ a month), commission_pct, email, live_count }`. `listing_fee` / `commission_pct` empty: 0 on a new
+advertiser, unchanged on edit. `422` "Listing fee must be 0 or more", "Commission must be between 0 and 100%" (also on placements). Premier Partner: shown as "From <partner>", not Sponsored.
 
 Placement (body = response):
 
@@ -68,11 +69,17 @@ Placement (body = response):
 | What people get | trip: `price` (adult), `child_price`, `seats`, `event_on`, `pickup_points`; prog: `price`, `event_on`, `bus_included`; ad: `link`, `promo_code`; `run_by_company_id` (runs the bus), `sold_to_public` |
 | Where and who | `show_home`, `show_discover`, `push_once`, `slot` (`std` / `feat` Featured), `audiences[]` (`parents`, `staff`, `bookers`, `public`), `area` (`all`, `east`, `west`, `north`, `ne`, `central`), `school_level` (`any`, `pre`, `primary`, `secondary`) |
 | When | `starts_on`, `ends_on`; `status` `draft` (save as draft) or `live` (publish), `paused` |
-| Money | `listing_fee`, `commission_pct` (from the advertiser unless sent), `commission` (price × sold × %), `views`, `taps`, `sold` |
+| Money | `listing_fee`, `commission_pct` (always a number, never `null`), `commission` (price × sold × %), `views`, `taps`, `sold` |
+
+Empty fields (multipart sends `""`):
+- `listing_fee`, `commission_pct` left out or empty: on a new placement, or when `discover_advertiser_id` changes, they come
+  from the advertiser (0 for `news`); otherwise they stay as they are. Send a number (e.g. `0`) to set them.
+- `price`, `child_price`, `seats`, `event_on`, `link`, `promo_code` and the banner texts empty → cleared (`null`).
+- `cta` empty → "Book Now". `starts_on` / `ends_on` empty → `422` "Pick the start and end dates".
 
 `state` (response) = `draft`, `scheduled` (published, not started), `live`, `paused` or `ended` (ended now or past `ends_on`).
 `meta { tab, counts, kpis { live, scheduled, views, taps, tap_rate, sold, revenue, listing_fees, commission }, kinds, audiences, areas, levels }`.
-`422` (`message`): "Pick the advertiser", "Enter the title", "Check the dates: the end is before the start", "Show it on Home, the
+`422` (`message`): "Pick the advertiser", "Enter the title", "Pick the start and end dates", "Check the dates: the end is before the start", "Show it on Home, the
 Discover tab or both", "Pick who sees it"; when publishing also "Enter the price", "Pick the transport company that runs the bus",
 "Add a link or a promo code". Delete: "Only drafts can be deleted. End it instead". Duplicate → a draft "<title> (copy)".
 

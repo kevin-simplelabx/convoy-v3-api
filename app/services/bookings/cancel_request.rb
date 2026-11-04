@@ -3,12 +3,14 @@
 # Scheduler runs not started yet, or the trip itself when it has no runs yet); decline leaves them as they are.
 module Bookings
   class CancelRequest < ApplicationService
-    def self.record(booking:, trip: nil, reason:, by_name:, at: Time.current)
+    # actor: the Convoy OS user recording it for the client (by_name: the client's person), later a client user.
+    def self.record(booking:, reason:, by_name:, actor:, trip: nil, at: Time.current)
       raise Error, "This trip is already #{trip.status_label.downcase}" if trip && (trip.cancelled? || trip.rejected?)
       raise Error, "Say who asked to cancel" if by_name.blank?
 
       BookingCancelRequest.transaction do
-        request = booking.cancel_requests.create!(booking_trip: trip, reason: reason.to_s.squish.presence, requested_by_name: by_name.squish, requested_at: at)
+        request = booking.cancel_requests.new(booking_trip: trip, reason: reason.to_s.squish.presence, requested_at: at)
+        request.stamp_actor(:requested, actor, name: by_name.squish).save!
         what = trip ? "the trip on #{trip.date.strftime('%a %-d/%-m')}" : "the booking"
         Notify.call(booking:, trip:, kind: "cancel_request", actor_name: request.requested_by_name, at:,
                     message: "#{request.requested_by_name} asks to cancel #{what}#{": #{request.reason}" if request.reason}")

@@ -13,9 +13,12 @@ class BookingTripBlueprint < ApplicationBlueprint
   field(:approval) do |t|
     t.approved_at && { at: t.approved_at, by: t.approved_by&.name, how: t.approval_how, note: t.approval_note }
   end
-  field(:acknowledgement) { |t| t.acknowledged_at && { at: t.acknowledged_at, by: t.acknowledged_by_name, how: t.acknowledged_how } }
+  # by_kind: client_user (the client in the Client Portal) or user (us, recording it for them; by = their name).
+  field(:acknowledgement) do |t|
+    t.acknowledged_at && { at: t.acknowledged_at, by: t.acknowledged_by_name, by_kind: t.acknowledged_by_kind, how: t.acknowledged_how }
+  end
   field(:rejection) do |t|
-    t.rejected_at && { at: t.rejected_at, by: t.rejected_by_name, by_client: t.rejected_by_client, reason: t.rejection_reason }
+    t.rejected_at && { at: t.rejected_at, by: t.rejected_by_name, by_kind: t.rejected_by_kind, by_client: t.rejected_by_client?, reason: t.rejection_reason }
   end
   field(:cancelled_at) { |t| t.cancelled_at }
   field(:changes) { |t| t.changes_made.reverse.map { |c| { at: c.created_at, by: c.changed_by&.name, items: c.items } } }

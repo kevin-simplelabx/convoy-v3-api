@@ -29,7 +29,7 @@ RSpec.describe "Client users" do
     add(title: "Director")
     expect(response).to have_http_status(:created), json.inspect
     expect(json[:data]).to include(name: "Ann Tan", title: "Director", role_label: "Super Admin", wide: true, sites: [],
-                                   created_by: { id: staff.id, name: "Rachel Tan" }, portal: { password_set: false, last_sign_in_at: nil })
+                                   created_by: { id: staff.id, name: "Rachel Tan", in_portal: false }, portal: { password_set: false, last_sign_in_at: nil })
 
     add(name: "Ben", email: "ben@brightsteps.sg", role: "sa")
     expect(json.dig(:error, :message)).to eq("Pick at least one site for a Site Admin")

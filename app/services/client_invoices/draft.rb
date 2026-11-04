@@ -36,7 +36,7 @@ module ClientInvoices
       if @site
         { bill_to_name: @site.billing_name, bill_to_uen: @site.billing_uen, bill_to_address: @site.billing_address, attention: }
       else
-        { bill_to_name: @client.name, bill_to_uen: @client.uen, bill_to_address: @client.billing_address, attention: attention || @client.contact_name }
+        { bill_to_name: @client.bill_name, bill_to_uen: @client.uen, bill_to_address: @client.billing_address, attention: attention || @client.contact_name }
       end
     end
 

@@ -34,7 +34,7 @@ class DiscoverAdvertiser < ApplicationRecord
 
   validates :name, presence: { message: "Enter the advertiser's name" }, uniqueness: { conditions: -> { kept }, case_sensitive: false }
   validates :kind, inclusion: { in: KINDS.keys }
-  validates :listing_fee, numericality: { greater_than_or_equal_to: 0 }
-  validates :commission_pct, numericality: { in: 0..100 }
+  validates :listing_fee, numericality: { greater_than_or_equal_to: 0, message: "must be 0 or more" }
+  validates :commission_pct, numericality: { in: 0..100, message: "must be between 0 and 100%" }
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_nil: true
 end

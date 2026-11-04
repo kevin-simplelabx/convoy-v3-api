@@ -95,22 +95,21 @@ RSpec.describe "Booking approval flow and notifications" do
     expect(trip_of(json[:data])[:acknowledgement]).to be_nil
   end
 
-  it "rejects with a reason and records the client's own approval or decline" do
-    data = record([ one_way, one_way("13:00"), one_way("15:00") ])
-    a, b, c = data.dig(:days, 0, :trips)
+  it "rejects with a reason; trips waiting for the client's own approval are only shown" do
+    data = record([ one_way, one_way("13:00") ])
+    a, b = data.dig(:days, 0, :trips)
     patch reject_api_v1_booking_trip_path(a[:id]), params: { reason: " " }, as: :json
     expect(json.dig(:error, :message)).to eq("Enter the reason, the client sees it")
     patch reject_api_v1_booking_trip_path(a[:id]), params: { reason: "No bus that day" }, as: :json
-    expect(trip_of(json[:data])).to include(status: "rejected", rejection: hash_including(by: user.name, by_client: false, reason: "No bus that day"))
-    expect(json[:data][:estimate_amount]).to eq("110.0")
+    expect(trip_of(json[:data])).to include(status: "rejected", rejection: hash_including(by: user.name, by_kind: "user", by_client: false, reason: "No bus that day"))
+    expect(json[:data][:estimate_amount]).to eq("55.0")
 
-    within_tenant(company) { BookingTrip.where(id: [ b[:id], c[:id] ]).update_all(status: "awaiting_client") }
-    patch client_approve_api_v1_booking_trip_path(b[:id]), params: { by_name: "Priya (Finance)" }, as: :json
-    expect(trip_of(json[:data], 1)[:status]).to eq("pending")
-    patch client_decline_api_v1_booking_trip_path(c[:id]), params: { by_name: "Priya (Finance)", reason: "Over budget" }, as: :json
-    expect(trip_of(json[:data], 2)).to include(status: "rejected", rejection: hash_including(by: "Priya (Finance)", by_client: true))
-    patch client_approve_api_v1_booking_trip_path(a[:id]), as: :json
-    expect(json.dig(:error, :message)).to eq("This trip is rejected, so it can't be changed here")
+    # Waiting for the client's own approval (Client Portal): no Approve or Reject here (Convoy OS design: canAct).
+    within_tenant(company) { BookingTrip.where(id: b[:id]).update_all(status: "awaiting_client") }
+    get api_v1_booking_path(data[:id]), as: :json
+    expect(trip_of(json[:data], 1)).to include(status: "awaiting_client", can_approve: false, can_reject: false)
+    patch reject_api_v1_booking_trip_path(b[:id]), params: { reason: "No bus" }, as: :json
+    expect(json.dig(:error, :message)).to eq("This trip is awaiting client approval, so it can't be changed here")
   end
 
   it "records a client's cancellation request, then cancels the trip and its runs when accepted" do
@@ -142,11 +141,10 @@ RSpec.describe "Booking approval flow and notifications" do
 
   it "rings the bell for the events each coordinator wants, and records the emails" do
     data = record([ one_way, one_way("13:00") ])
-    a, b = data.dig(:days, 0, :trips)
+    a, = data.dig(:days, 0, :trips)
     post api_v1_booking_cancel_requests_path(data[:id]), params: { booking_trip_id: a[:id], requested_by_name: "Alex" }, as: :json
     travel 1.hour
-    within_tenant(company) { BookingTrip.where(id: b[:id]).update_all(status: "awaiting_client") }
-    patch client_approve_api_v1_booking_trip_path(b[:id]), params: { by_name: "Priya" }, as: :json
+    within_tenant(company) { Bookings::Notify.call(booking: Booking.find(data[:id]), kind: "client_approved", actor_name: "Priya", message: "Approved by Priya, sent to you") }
 
     get api_v1_booking_notifications_path
     expect(json[:data].pluck(:kind, :message)).to eq([ [ "client_approved", "Approved by Priya, sent to you" ],

@@ -34,10 +34,12 @@ class PortalAccount < ApplicationRecord
 
   def password_set? = password_set_at.present?
 
-  # The client accounts this person can open: client users not removed, of clients not deleted, in any company.
+  # The client accounts this person can open: client users not removed, of clients not deleted, in any company that is
+  # not suspended.
   def accounts
     ActsAsTenant.without_tenant do
-      client_users.kept.joins(:client).merge(Client.kept).includes(client: :company).order("clients.name").to_a
+      client_users.kept.joins(client: :company).merge(Client.kept).merge(Company.active)
+                  .includes(client: :company).order("clients.name").to_a
     end
   end
 

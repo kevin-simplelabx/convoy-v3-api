@@ -8,7 +8,9 @@ module ApiDocs
   class OpenApiBuilder
     DOCS = Rails.root.join(".api-documents")
     MENUS = { "convoy-os/scheduler.md" => "Scheduler", "convoy-os/trips.md" => "Trips", "convoy-os/fleet.md" => "Fleet", "convoy-os/settings.md" => "Settings", "convoy-os/clients.md" => "Clients", "convoy-os/hr.md" => "HR", "convoy-os/finance.md" => "Finance", "convoy-os/reports.md" => "Reports", "convoy-os/live-map.md" => "Live Map", "convoy-os/ops-control.md" => "Ops Control", "convoy-os/school-bus-setup.md" => "School Bus", "convoy-os/school-bus-money.md" => "School Bus", "convoy-os/school-bus-stops.md" => "School Bus", "convoy-os/school-bus-routes.md" => "School Bus", "convoy-os/school-bus-parents.md" => "School Bus", "convoy-os/school-bus-finance.md" => "School Bus", "convoy-os/school-bus-live.md" => "School Bus", "convoy-os/dashboard.md" => "Dashboard", "convoy-os/convoy-admin.md" => "Convoy Admin",
-              "driver/auth.md" => "Driver App", "driver/profile.md" => "Driver App", "driver/runs.md" => "Driver App", "driver/driving.md" => "Driver App", "driver/gps.md" => "Driver App", "driver/disposal.md" => "Driver App", "driver/vehicle.md" => "Driver App", "driver/notifications.md" => "Driver App", "README.md" => "Common" }.freeze
+              "driver/auth.md" => "Driver App", "driver/profile.md" => "Driver App", "driver/runs.md" => "Driver App", "driver/driving.md" => "Driver App", "driver/gps.md" => "Driver App", "driver/disposal.md" => "Driver App", "driver/vehicle.md" => "Driver App", "driver/notifications.md" => "Driver App",
+              "client-portal/auth.md" => "Client Portal", "client-portal/shell.md" => "Client Portal", "client-portal/settings.md" => "Client Portal", "client-portal/approval-flows.md" => "Client Portal", "client-portal/bookings.md" => "Client Portal", "client-portal/approvals.md" => "Client Portal", "client-portal/home.md" => "Client Portal",
+              "client-portal/shuttles.md" => "Client Portal", "client-portal/notices.md" => "Client Portal", "client-portal/invoices.md" => "Client Portal", "client-portal/map.md" => "Client Portal", "README.md" => "Common" }.freeze
     # Folder = the Convoy OS menu that owns the resource (.notes/data-ownership.md), not the doc that first names it.
     FOLDERS = {
       "Common" => %w[sessions downloads document_reads banks],
@@ -33,7 +35,7 @@ module ApiDocs
                         school_live school_dashboard],
       "Dashboard" => %w[dashboard],
       "Convoy Admin" => %w[message_terms discover company_leads],
-      "Client Portal" => %w[portal/sessions portal/passwords],
+      "Client Portal" => %w[portal/sessions portal/passwords portal/me portal/roles portal/users portal/teams portal/settings portal/approval_flows portal/bookings portal/end_customers portal/approvals portal/pages portal/map],
       "Driver App" => %w[driver_app/sessions driver_app/companies driver_app/company driver_app/profiles driver_app/licences driver_app/vehicle driver_app/runs driver_app/positions driver_app/config driver_app/vehicle_handovers driver_app/notifications driver_app/notices],
       "Settings" => %w[users profiles companies countries country_requests calendars calendar_days public_holidays]
     }.flat_map { |folder, names| names.map { [ "api/v1/#{it}", folder ] } }.to_h.freeze

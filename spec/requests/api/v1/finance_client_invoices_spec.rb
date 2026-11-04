@@ -75,6 +75,12 @@ RSpec.describe "Finance client invoices" do
     patch api_v1_finance_billing_path(data[:google]), params: { billing: { payment_terms_days: 14, late_cancel_hours: 48,
                                                                           billing_contacts: [ { name: "AP", email: "ap@google.com" } ] } }, as: :json
     expect(json[:data]).to include(terms_days: 14, late_cancel_hours: 48, billing_contacts: [ hash_including(email: "ap@google.com", send_as: "to") ])
+
+    # Billing Name: the legal name on invoices (blank = the client's name).
+    patch api_v1_finance_billing_path(data[:google]), params: { billing: { billing_name: "Google Asia Pacific Pte. Ltd." } }, as: :json
+    expect(json[:data]).to include(name: "Google", billing_name: "Google Asia Pacific Pte. Ltd.", bill_name: "Google Asia Pacific Pte. Ltd.")
+    post api_v1_finance_invoices_path, params: { client_id: data[:google].id, month: "2026-10" }, as: :json
+    expect(json.dig(:data, :bill_to_name)).to eq("Google Asia Pacific Pte. Ltd.")
   end
 
   it "records payments and a credit note, and reports owed, aging and the statement" do

@@ -9,6 +9,8 @@ module Api
       PLACEMENT_FIELDS = %i[discover_advertiser_id kind kicker title subtitle background image remove_image cta price child_price seats event_on
                             pickup_points run_by_company_id bus_included sold_to_public link promo_code show_home show_discover push_once
                             starts_on ends_on slot area school_level listing_fee commission_pct status].freeze
+      # Left empty (multipart sends ""): from the advertiser on a new placement or a new advertiser, else unchanged.
+      TERMS = %i[listing_fee commission_pct].freeze
 
       def advertisers
         list = DiscoverAdvertiser.kept.order(:name).to_a
@@ -53,15 +55,15 @@ module Api
       # POST /discover/placements (multipart with a picture) { placement: {..., audiences: []} }
       def create_placement
         p = DiscoverPlacement.new(placement_params.merge(created_by: current_user))
-        apply_advertiser_terms(p)
         p.save!
         render json: { data: placement_json(p) }, status: :created
       end
 
       def update_placement
         p = find_placement
-        p.assign_attributes(placement_params)
-        apply_advertiser_terms(p) if p.discover_advertiser_id_changed?
+        attrs = placement_params
+        p.assign_attributes(attrs)
+        p.assign_attributes(TERMS.excluding(attrs.keys.map(&:to_sym)).index_with(nil)) if p.discover_advertiser_id_changed?
         p.save!
         render json: { data: placement_json(p) }
       end
@@ -97,20 +99,16 @@ module Api
         render json: { data: placement_json(p.reload) }
       end
 
-      def advertiser_params = params.expect(advertiser: %i[name kind premier country listing_fee commission_pct email])
+      # Listing fee and commission left empty: 0 on a new advertiser, else unchanged.
+      def advertiser_params = without_blank_terms(params.expect(advertiser: %i[name kind premier country listing_fee commission_pct email]))
 
       def placement_params
-        attrs = params.expect(placement: [ *PLACEMENT_FIELDS, { audiences: [] } ])
+        attrs = without_blank_terms(params.expect(placement: [ *PLACEMENT_FIELDS, { audiences: [] } ]))
         attrs[:discover_advertiser_id] = nil if attrs[:kind] == "news"
         attrs
       end
 
-      # A new advertiser brings its listing fee and commission (they can be changed per placement).
-      def apply_advertiser_terms(p)
-        return unless p.advertiser && !params.dig(:placement, :listing_fee) && !params.dig(:placement, :commission_pct)
-
-        p.assign_attributes(listing_fee: p.advertiser.listing_fee, commission_pct: p.advertiser.commission_pct)
-      end
+      def without_blank_terms(attrs) = attrs.except(*TERMS.select { |k| attrs.key?(k) && attrs[k].blank? })
 
       def kpis(all, live)
         views = live.sum(&:views)

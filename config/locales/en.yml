@@ -29,3 +29,9 @@
 
 en:
   hello: "Hello world"
+  activerecord:
+    attributes:
+      discover_advertiser:
+        commission_pct: "Commission"
+      discover_placement:
+        commission_pct: "Commission"
