@@ -5,6 +5,7 @@ class ClientInvoiceBlueprint < ApplicationBlueprint
   field(:display_status) { |i| i.display_status }
   field(:client_name) { |i| i.client.name }
   field(:balance) { |i| i.invoice? && !i.draft? ? i.balance : nil }
+  field(:invoice_number) { |i| i.invoice&.number } # a credit note's invoice ("For INV-…")
 
   view :detail do
     fields :bill_to_uen, :bill_to_address, :attention, :po, :terms_days, :gst_on, :gst_rate, :gst_mode, :notes, :reason,
@@ -15,12 +16,13 @@ class ClientInvoiceBlueprint < ApplicationBlueprint
       i.lines.map do |l|
         { id: l.id, source: l.source, trip_id: l.trip_id, ref: l.ref, description: l.description, details: l.details,
           period_text: l.period_text, quantity: l.quantity, unit_price: l.unit_price, amount: l.amount,
-          runs: l.runs.map { |r| { id: r.id, occurrence_id: r.occurrence_id, date: r.occurrence_date, start_time: Clock.hm(r.start_time), trip_label: r.trip_label, amount: r.amount, waived: r.waived } } }
+          amount_overridden: l.amount_overridden, runs_amount: (l.runs_amount unless l.from_manual?),
+          runs: l.runs.map { |r| { id: r.id, occurrence_id: r.occurrence_id, date: r.occurrence_date, start_time: Clock.hm(r.start_time), trip_label: r.trip_label, amount: r.amount, waived: r.waived,
+                       cancelled_hours_before: r.cancelled_hours_before } } }
       end
     end
     field(:payments) { |i| i.payments.map { |p| { id: p.id, paid_on: p.paid_on, amount: p.amount, method: p.method, reference: p.reference, by: p.recorded_by&.shown_name } } }
     field(:credit_notes) { |i| i.credit_notes.map { |c| { id: c.id, number: c.number, issued_on: c.issued_on, total: c.total, reason: c.reason, status: c.status } } }
     field(:sends) { |i| i.sends.map { |s| { at: s.created_at, to: s.to_emails, cc: s.cc_emails, by: s.sent_by&.shown_name } } }
-    field(:invoice_number) { |i| i.invoice&.number }
   end
 end

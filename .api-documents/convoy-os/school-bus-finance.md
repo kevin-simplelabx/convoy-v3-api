@@ -247,7 +247,7 @@ From then on, the route pay, the routes and the replacement lines are kept.
 | `POST /schools/:school_id/payouts/:operator_id/lines` | Add a line (multipart for files): `{ month, kind, adj_on, route, amount, reason, paired_operator_id, files: [] }` |
 | `DELETE /schools/:school_id/payouts/:operator_id/lines/:line_id?month=` | Remove a line. Lines added automatically, and lines on a pay run sent to Finance, cannot be removed |
 | `PATCH /schools/:school_id/payouts/:operator_id` | `{ month, invoice_number }`: the operator's invoice number |
-| `POST /schools/:school_id/payouts/:operator_id/send` | Send to Finance |
+| `POST /schools/:school_id/payouts/:operator_id/send` | Send to Finance. The prototype labels this button "Approve and Send to Finance" (month ended) or "Approve Early and Send to Finance" (month not ended): it is this call, shown when `can.send`; it does not approve |
 | `POST /schools/:school_id/payouts/:operator_id/recall` | Recall, back to draft |
 | `POST /schools/:school_id/payouts/:operator_id/send_back` | Send Back to Ops (an approver) |
 | `POST /schools/:school_id/payouts/:operator_id/approve` | Approve (an approver; the maker-checker rule applies) |
@@ -272,7 +272,9 @@ Every action returns the whole month again, like `GET`.
     - `tone`.
   - Documents: `invoice_number`, `voucher: { number, on }`, and `batch: { number, pay_date, notice_number }` when the
     pay run is in an Operator Payments batch.
-  - `routes`: `[{ route, session, plan, bus_type, plate, price, unpriced, days, of, break_month, earned, rate, from, to, amount, note }]`.
+  - `routes`: `[{ route, session, plan, bus_type, plate, price, unpriced, days, of, break_month, earned, rate, from, to, amount, note, attendant }]`.
+    `attendant { amount, by: operator | us }` (or `null`): the monthly bus attendant price inside `price` → "Incl. S$`amount` BA
+    (theirs)" when `by` is `operator`, "(ours)" when `us`. Which sizes need one follows Bus Attendants (statutory / all / selected sizes).
     For example, `days` 11 `of` 21 with the `note` `"Took over from Beta Coaches on 16/11/2026"`.
   - `lines`: `[{ id, kind, sign, adj_on, route, amount, reason, auto, paired_with, by, can_remove, files: [{ id, name, url, size, content_type }] }]`.
   - `history`: newest first: sent, sent back, approved, paid.
@@ -313,12 +315,30 @@ Every action returns the whole month again, like `GET`.
 | `GET /finance/documents?type=&q=&school_id=` | Finance › Documents now also lists School Bus documents (types below) |
 | Operator Payments | `GET /finance/operator_pay/requests` lists school pay runs: `ref: school_payout:<id>`, `source: school` |
 
-**School Bus Collections.** `meta` has:
+**School Bus Collections.** `data` = the bills: each is the Collections row ([§ 2](#2-collections)) plus `school_id` and
+`school` (name). `status=` takes `Due`, `Overdue`, `Part Paid`, `Paid`, `Credited`; `q` matches number, bill to, code and
+school name. `meta` has:
 
-- `kpis`.
+- `kpis` (every bill of the schools, not only the shown ones): `{ bills, billed, collected, outstanding, not_paid, overdue, overdue_bills }`
+  (`not_paid` = bills with something owed, `overdue` = S$ owed past due, `overdue_bills` = how many). No `credited` here.
 - `by_school`: a row per school with `school_id`, `name`, `bills`, `billed`, `collected`, `outstanding`, `not_paid`,
   `overdue` and `overdue_bills`.
-- `counts`, `count`, `shown`, and `schools` for the picker.
+- `counts` `{ all, Due, Overdue, Part Paid, Paid, Credited }`, `count` (bills matching the filters), `shown` (≤ 200 in `data`),
+  and `schools [{ id, name }]` for the picker.
+
+```json
+{ "data": [ { "id": 301, "number": "INV-2026-000301", "kind": "period", "payer": "family", "family_id": 44, "bill_to": "Tan Wei Ming",
+              "bill_to_code": "F0044", "bill_to_email": "weiming.tan@example.com", "children": ["Tan Jia Hui"], "lines_count": 2,
+              "period": "Term 4 2026", "academic_year_id": 2, "period_index": 3, "issued_on": "2026-10-01", "due_on": "2026-10-15",
+              "total": "420.0", "paid": "0.0", "late_fee": "10.0", "late_waived": false, "credited": "0.0", "debited": "0.0",
+              "owed": "430.0", "overdue": true, "days_overdue": 20, "status": "Overdue", "tone": "danger",
+              "school_id": 1, "school": "St. Stephen's School" } ],
+  "meta": { "kpis": { "bills": 182, "billed": "76440.0", "collected": "61200.0", "outstanding": "15240.0", "not_paid": 36, "overdue": "8120.0", "overdue_bills": 19 },
+            "by_school": [ { "school_id": 1, "name": "St. Stephen's School", "bills": 182, "billed": "76440.0", "collected": "61200.0",
+                             "outstanding": "15240.0", "not_paid": 36, "overdue": "8120.0", "overdue_bills": 19 } ],
+            "counts": { "all": 182, "Due": 17, "Overdue": 19, "Part Paid": 4, "Paid": 140, "Credited": 2 }, "count": 182, "shown": 182,
+            "schools": [ { "id": 1, "name": "St. Stephen's School" } ] } }
+```
 
 Opening a bill goes to its school's Collections.
 

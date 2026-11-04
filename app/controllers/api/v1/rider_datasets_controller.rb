@@ -11,6 +11,14 @@ module Api
         render_list list, RiderDatasetBlueprint, date:, in_use: list.in_use_on(date), meta: { date: }
       end
 
+      # GET /schools/:school_id/rider_events?date= — the Plan For calendar: joining / leaving / service change / new rider
+      # list by date, and how many changes come in the 30 days after the date.
+      def events
+        school = authorize find_school, :show?
+        list = RiderEvents.new(school).call
+        render json: { data: list, meta: { date: day, soon: RiderEvents.soon(list, day) } }
+      end
+
       # POST /schools/:school_id/rider_datasets/preview (multipart file)
       def preview
         authorize find_school, :manage_riders?

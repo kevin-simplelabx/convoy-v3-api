@@ -56,6 +56,9 @@ RSpec.describe "School Bus request accept" do
     expect(d[:places]).to eq([ { session: "AM", route_id: f[:route].id, route: "AM 1", kind: "fits", stop: "Blk 101 Bedok North", delta_minutes: "0.0" } ])
     expect(d[:rider]).to include(rid: "M-0001")
     expect(d[:family]).to include(code: "FAM-0001", name: "NG Family")
+    family = d[:family][:id]
+    get api_v1_family_path(family)
+    expect(json.dig(:data, :riders).sole).to include(unpaid: { request_id: f[:same].id, bill_number: "INV-2026-000001", overdue: false }, leave: nil)
     expect(d[:events].first[:text]).to eq("Ng Jun Jie added to the rider list as M-0001 (Unpaid) and linked to NG Family (FAM-0001)")
     expect(d[:events].second[:text]).to eq("Accepted at S$504.00 a semester. First invoice INV-2026-000001 sent. Parent has 48 hours to pay")
 
@@ -65,6 +68,9 @@ RSpec.describe "School Bus request accept" do
     travel_to Time.zone.local(2026, 11, 4, 10, 0)
     sign_in_as(user)
     expect(detail(f[:same])).to include(status: "Lapsed", can: hash_including(reoffer: true, record_payment: true, accept: false))
+    get api_v1_family_path(family) # Lapsed: overdue, and "Remove from Rider List" in the family too
+    expect(json.dig(:data, :riders).sole).to include(unpaid: hash_including(overdue: true),
+                                                     leave: hash_including(request_id: f[:same].id, button: "Remove from Rider List", label: "Offer lapsed"))
     post reoffer_api_v1_bus_request_path(f[:same])
     expect(json[:data]).to include(status: "Accepted", offer_by: "2026-11-06T10:00:00.000+08:00")
     expect(json.dig(:data, :first_bill, :number)).to eq("INV-2026-000001")
@@ -87,6 +93,8 @@ RSpec.describe "School Bus request accept" do
     end
     get api_v1_school_bus_requests_path(f[:school]), params: { academic_year_id: f[:year].id }
     expect(json.dig(:meta, :auto_accept)).to eq(count: 1, ids: [ f[:sib].id ])
+    expect(json.dig(:meta, :service_check)).to eq(none: false, plan: "AM Plan 1 (current)")
+    expect(json[:data].first).to include(lat: be_present, lng: be_present, located: true)
     expect(json[:data].to_h { [ it[:child_name], it.dig(:check, :label) ] }).to eq("Ng Jun Jie" => "Fits", "Ng Xin Yi" => "New Stop", "Tan Ryan" => "New Stop")
     get api_v1_school_bus_requests_path(f[:school]), params: { academic_year_id: f[:year].id, check: "covered" }
     expect(json[:data].size).to eq(1)

@@ -119,14 +119,31 @@ module Api
         links = f.family_riders.to_a
         riders = SchoolRider.where(school_id: links.map(&:school_id).uniq, rid: links.map(&:rid)).index_by { [ it.school_id, it.rid ] }
         rides = rides_of(links)
+        requests = requests_of(riders.values)
         f.slice(:id, :code, :name, :name_mode, :source, :sample, :address, :postal, :registered_at, :school_id).merge(
           guardians: f.guardians.map { guardian_row(it) },
           riders: links.map do |l|
             r = riders[[ l.school_id, l.rid ]]
             { school_id: l.school_id, rid: l.rid, name: r&.name, grade: r&.grade, am: r&.am, pm: r&.pm, cca_days: r&.cca_days, starts_on: r&.starts_on,
-              ends_on: r&.ends_on, on_list: r.present?, applied_at: l.applied_at, accepted_at: l.accepted_at, rides: rides[[ l.school_id, l.rid ]] || [] }
+              ends_on: r&.ends_on, on_list: r.present?, applied_at: l.applied_at, accepted_at: l.accepted_at, rides: rides[[ l.school_id, l.rid ]] || [],
+              **request_lines(requests[r&.id] || []) }
           end
         )
+      end
+
+      # The bus requests of the riders on the list, by rider.
+      def requests_of(riders)
+        BusRequest.where(school_rider_id: riders.map(&:id)).includes(:school_rider, :first_bill).order(:id).group_by(&:school_rider_id)
+      end
+
+      # unpaid: the application's first invoice is not paid ("Unpaid: first invoice INV-… not paid yet / is overdue");
+      # leave: a request that takes the child off the list (the Requests page's End Rider / Remove from Rider List).
+      def request_lines(list)
+        now = Time.current
+        first = list.reverse.find { it.kind == "new" && %w[Accepted Lapsed].include?(it.live_status(now)) && it.first_bill && !it.first_bill.paid? }
+        ending = list.reverse.lazy.filter_map { |q| (e = BusRequests.end_of(q)) && [ q, e ] }.first
+        { unpaid: first && { request_id: first.id, bill_number: first.first_bill.number, overdue: first.live_status(now) == "Lapsed" },
+          leave: ending && { request_id: ending[0].id, button: ending[1][:button], label: ending[1][:label], text: ending[1][:text], ends_on: ending[1][:end] } }
       end
 
       # Where each rider rides now: the route, stop and time in the current plans of their school.

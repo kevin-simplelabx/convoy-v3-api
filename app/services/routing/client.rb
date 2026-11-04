@@ -10,8 +10,18 @@ module Routing
       def current = @current ||= new
     end
 
-    def solve(input) = post("/solve", { input: }, timeout: 150)
+    # key: a name to read the solve's progress by (GET /progress/:key) while it runs.
+    def solve(input, key: nil) = post("/solve", { input:, key: }.compact, timeout: 150)
+
+    # How a solve is going ({ step, frac, run, runs, elapsed, left, work: { phase, i, n, extra, evals }, log }), or nil.
+    def progress(key)
+      parse(conn(2).get("/progress/#{key}"))
+    rescue Unavailable
+      nil
+    end
+
     def retime(payload) = post("/retime", payload, timeout: 60)
+    def optimise(payload) = post("/optimise", payload, timeout: 120)
     def diff(a, b) = post("/diff", { a:, b: }, timeout: 30)
     def meta = Rails.cache.fetch("routing/meta", expires_in: 1.hour) { get("/meta") }
 

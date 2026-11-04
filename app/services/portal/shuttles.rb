@@ -3,7 +3,6 @@
 # people covering every site), with days, dates, status, tags, the runs of each direction and the full timetable.
 module Portal
   class Shuttles < ApplicationService
-    DAY_NAMES = %w[Sun Mon Tue Wed Thu Fri Sat].freeze
     DIRECTIONS = { 1 => "Morning", 2 => "Evening" }.freeze
 
     def initialize(client_user:, today: Date.current)
@@ -25,15 +24,7 @@ module Portal
       groups
     end
 
-    # "Daily", "Mon to Fri", "Mon, Wed, Fri" (0 = Sunday), as the prototype's dayText.
-    def self.days_text(days)
-      d = days.map(&:to_i).uniq.sort
-      return "Daily" if d.size == 7
-      return "Mon to Fri" if d == [ 1, 2, 3, 4, 5 ]
-      return "Mon to Sat" if d == [ 1, 2, 3, 4, 5, 6 ]
-
-      d.slice_when { |a, b| b != a + 1 }.map { |r| r.size >= 3 ? "#{DAY_NAMES[r.first]} to #{DAY_NAMES[r.last]}" : r.map { DAY_NAMES[it] }.join(", ") }.join(", ")
-    end
+    def self.days_text(days) = TripDecorator.days_text(days)
 
     private
 

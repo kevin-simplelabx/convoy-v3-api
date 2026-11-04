@@ -19,12 +19,12 @@ RSpec.describe "Ops Control" do
                                      vehicle: bus, driver:, run_key: "r#{n}", slot_no: n, started_at: started)
         { bus:, occ:, device: TrackingDevice.create!(vehicle: bus, kind: "gps_tracker", name: "Tracker") }
       end
-      ping = ->(r, at, lat, lng) { Telematics::Ping.call(device: r[:device], at:, lat:, lng:) }
+      ping = ->(r, at, lat, lng, speed = nil) { Telematics::Ping.call(device: r[:device], at:, lat:, lng:, speed_kmh: speed) }
 
       waiting = run.(1, "SBA0001A", now + 10.minutes, signed_in: false)  # not logged in, not started, 300 m away
       ping.(waiting, now - 10, pickup[0] + 0.0027, pickup[1])
       far = run.(2, "SBA0002B", now + 5.minutes, started: now - 10.minutes) # started, 10 km away → ETA 20+ min late
-      ping.(far, now - 10, pickup[0] + 0.09, pickup[1])
+      ping.(far, now - 10, pickup[0] + 0.09, pickup[1], 42)
       late = run.(3, "SBA0003C", now - 10.minutes, started: now - 20.minutes) # reached the pick-up 5 min late
       late[:occ].stop_events.create!(company_id: company.id, position: 0, arrived_at: now - 5.minutes)
       ping.(late, now - 10, pickup[0], pickup[1])
@@ -53,7 +53,8 @@ RSpec.describe "Ops Control" do
     expect(r["SBA0001A"][:app]).to include(status: "not_logged_in")
     expect(r["SBA0001A"][:alerts].map { |a| [ a[:kind], a[:severity] ] }).to eq([ [ "login", 2 ], [ "start", 1 ] ])
     expect(r["SBA0001A"][:alerts].last[:message]).to eq("Trip not started. First pick-up in 10 min. Driver is 300 m away but has not started")
-    expect(r["SBA0001A"][:gps]).to include(status: "to_first_pickup", distance_m: 300)
+    expect(r["SBA0001A"][:gps]).to include(status: "to_first_pickup", distance_m: 300, speed_kmh: nil, moving: nil)
+    expect(r["SBA0002B"][:gps]).to include(speed_kmh: 42.0, moving: true)
     expect(r["SBA0002B"][:alerts].map { |a| a[:kind] }).to eq(%w[eta])
     expect(r["SBA0002B"][:eta][:late_minutes]).to be > 5
     expect(r["SBA0003C"]).to include(state: "at_risk", arrived_at: be_present)

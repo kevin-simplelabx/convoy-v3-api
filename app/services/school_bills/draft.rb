@@ -103,18 +103,10 @@ module SchoolBills
     end
 
     def fare_of(rider, sessions, fares, tiers, seats)
-      ti = tier_index(rider, tiers)
+      ti = FareTables::RiderFare.tier_index(@table, @school, rider, tiers)
       row = fares[ti] or return nil
       two = sessions.include?("am") && sessions.include?("pm")
-      pick = lambda do |k|
-        next nil unless k
-
-        case @table.trip
-        when "one" then k[:one]
-        when "ampm" then two ? k[:two] : k[sessions.include?("am") ? :am : :pm]
-        else two ? k[:two] : (k[:one] || k[:two])
-        end
-      end
+      pick = ->(k) { FareTables::RiderFare.pick(@table, k, sessions) }
       std = pick.(row[:std]) or return nil
       bus = ""
       base = if @table.by_size && seats.present?
@@ -134,24 +126,6 @@ module SchoolBills
       tier = tiers[ti]
       amount = FareTables.adjusted(base.to_d, @month, tier.id, @adjustments) + FareTables.one_offs(@month, tier.id, @adjustments)
       { amount: amount.round(2), tier: row[:label], trip: two ? "2-way" : (sessions.include?("am") ? "AM only" : "PM only"), bus: }
-    end
-
-    def tier_index(rider, tiers)
-      if @table.zones?
-        sector = rider.postal.to_s[0, 2]
-        z = tiers.index { |t| t.sectors.include?(sector) || (t.area? && rider.lat && in_area?([ rider.lat, rider.lng ], t.area)) }
-        return z || (tiers.size - 1)
-      end
-      return tiers.size - 1 unless rider.lat && @school.lat
-
-      km = ((Geo.metres([ @school.lat, @school.lng ], [ rider.lat, rider.lng ]) / 1000.0) + 0.05).ceil(1)
-      tiers.index { it.max_km && km <= it.max_km.to_f } || (tiers.size - 1)
-    end
-
-    def in_area?(point, area)
-      add = Array(area["add"] || area[:add]).select { it.size > 2 }
-      sub = Array(area["sub"] || area[:sub]).select { it.size > 2 }
-      add.any? { Geo.inside?(point, it) } && sub.none? { Geo.inside?(point, it) }
     end
 
     def size_column(cols, seats) = cols.index { it.max_seats && seats <= it.max_seats } || (cols.size - 1)

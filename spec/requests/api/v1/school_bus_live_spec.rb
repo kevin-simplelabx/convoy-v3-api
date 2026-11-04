@@ -111,4 +111,17 @@ RSpec.describe "School Bus Live Ops" do
     within_tenant(company) { SchoolLive::Simulate.call }
     expect(within_tenant(company) { OccurrencePassenger.count }).to eq(2)
   end
+
+  it "shows a School Bus run on the Live Map with the school and the children at each stop" do
+    within_tenant(company) { school.riders.find_by!(rid: "S-1").update!(address: "101 Bedok North Ave 4") }
+    sign_in_as(create(:user, company:, permissions: %w[vehicles]))
+    get api_v1_live_map_vehicle_path(f[:bus])
+    run = json.dig(:data, :run)
+    expect(run).to include(school: "St. Stephen's School", kind_name: "School Route")
+    first = run[:stops].find { it[:name] == "Blk 101 Bedok North" }
+    expect(first[:students].map { it.slice(:key, :class_name, :status) })
+      .to eq([ { key: "S-1", class_name: "P1", status: "boarded" }, { key: "S-2", class_name: "P2", status: "not_boarded" },
+               { key: "S-4", class_name: "P4", status: "not_boarding" } ])
+    expect(first[:students].first).to include(name: "Child 1", address: "101 Bedok North Ave 4")
+  end
 end

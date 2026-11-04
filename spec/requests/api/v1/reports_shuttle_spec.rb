@@ -9,7 +9,7 @@ RSpec.describe "Shuttle report" do
       google = create(:client, name: "Google", on_time_allowance: 3)
       bus = create(:vehicle, plate: "PC7475L", seats: 20)
       trip = create(:trip, client: google, title: "MBC Shuttle", start_time: "08:00", end_time: "08:30")
-      trip.update_columns(kind: "corporate_shuttle") # rubocop:disable Rails/SkipsModelValidations
+      trip.update_columns(kind: "corporate_shuttle", days: [ 1, 2, 3, 4, 5 ]) # rubocop:disable Rails/SkipsModelValidations
       trip.stops.each_with_index { |s, i| s.update!(position: i == 0 ? 0 : 2, scheduled_time: i == 0 ? "08:00" : "08:30") }
       trip.stops.create!(position: 1, name: "Labrador MRT", use: "pu", scheduled_time: "08:15")
       make = ->(date, arrive, boarded) do
@@ -25,7 +25,8 @@ RSpec.describe "Shuttle report" do
       { trip:, google:,
         runs: [ make.(Date.new(2026, 10, 5), [ 480, 495, 510 ], [ 8, 4, 0 ]),   # all on time: 12 riders
                 make.(Date.new(2026, 10, 6), [ 480, 501, 520 ], [ 6, 2, 0 ]),   # Labrador 6 late, MBC 10 late
-                make.(Date.new(2026, 9, 7), [ 480, 495, 510 ], [ 5, 0, 0 ]) ] }
+                make.(Date.new(2026, 9, 7), [ 480, 495, 510 ], [ 5, 0, 0 ]),
+                Occurrences::Partitions.ensure!(Date.new(2025, 10, 1), Date.new(2025, 10, 31)).then { make.(Date.new(2025, 10, 6), [ 480, 495, 510 ], [ 4, 0, 0 ]) } ] } # the same month last year
     end
   end
 
@@ -43,7 +44,10 @@ RSpec.describe "Shuttle report" do
   it "works out the month's KPIs against the month before, timings, stop activity and the trend" do
     get api_v1_reports_shuttle_path, params: { trip_id: data[:trip].id, period: "m|2026-10" }
     d = json[:data]
-    expect(d[:kpis]).to include(riders: 20, riders_change: 15, service_days: 2, runs: 2, utilisation: 50.0, on_time: 66.7, seats: 20)
+    expect(d[:kpis]).to include(riders: 20, riders_change: 15, riders_change_ly: 16, service_days: 2, runs: 2, utilisation: 50.0, on_time: 66.7, seats: 20,
+                                on_time_change_ly: -33.3, late: 2, left_early: 0, runs_a_day: 1)
+    expect(d[:trip]).to include(days_text: "Mon to Fri", plate: "PC7475L")
+    expect(d[:period][:last_year]).to eq(from: "2025-10-01", to: "2025-10-31", label: "October 2025")
     expect(d[:timings].first).to include(dep: "08:00", riders: 20, avg: 10.0, max: 12)
     expect(d[:stop_activity].first[:stops]).to eq([ { name: "Changi Airport T3", boarded: 14, pct: 70.0 }, { name: "Labrador MRT", boarded: 6, pct: 30.0 } ])
     expect(d[:trend].last).to include(month: "2026-10", riders: 20, in_period: true)

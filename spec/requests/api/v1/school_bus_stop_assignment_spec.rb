@@ -58,7 +58,7 @@ RSpec.describe "School Bus stop assignment" do
     post api_v1_school_remove_rider_links_path(sss), params: { links: [ { rid: "R1", point_id: f[:s1].points.first.id } ] }, as: :json
     a = assignment
     expect(a["R3"][:candidates]).to contain_exactly(hash_including(pudo_code: "BDSZ03-0002A", how: "manual"))
-    expect(a["R1"]).to include(status: "none")
+    expect(a["R1"]).to include(status: "none", cut_point_ids: [ f[:s1].points.first.id ]) # linking it again restores it
     expect(a["R4"][:candidates].map { |c| c[:pudo_code] }).to eq(%w[BDSZ03-0001A])
 
     get api_v1_school_stops_path(sss)

@@ -50,4 +50,7 @@ class RoutingRun < ApplicationRecord
 
   enum :status, { queued: "queued", running: "running", done: "done", failed: "failed" }, validate: true
   enum :session, SchoolPlan::SESSIONS.keys.index_by(&:itself), prefix: :session, validate: true
+
+  # The name the routing service keeps a run's progress under.
+  def self.progress_key(id) = "routing_run-#{id}"
 end

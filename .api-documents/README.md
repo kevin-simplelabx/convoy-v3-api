@@ -54,10 +54,14 @@ to rebuild from the last recorded examples.
 - All endpoints live under `/api/v1`, for example `GET /api/v1/scheduler`.
 - Request and response bodies are JSON (`Content-Type: application/json`), except file uploads (multipart, see below).
 - Keys are **snake_case**: `start_time`, `vehicle_id`, `trip_label`.
+- **PATCH vs PUT**: updates are documented as `PATCH` (Rails also accepts `PUT` on the same path). A call documented as
+  `PUT` (whole-list saves such as `PUT /academic_years/:id/calendar`, `PUT /vehicle_teams/bulk`) takes **only** `PUT`.
 - Dates are ISO `YYYY-MM-DD`. Times of day are `"HH:MM"` (24-hour) in requests and responses. A trip that ends after
   midnight still returns its end as `"HH:MM"` and sets `ends_next_day: true`.
 - Timestamps (`starts_at`, `created_at`...) are ISO 8601 with the company's offset, for example `2026-11-02T07:45:00+08:00`.
 - **Money, decimals and coordinates come back as strings**: `"price": "76.19"`, `"lat": "1.2722"`. Send them as numbers or strings.
+  Exception: live GPS (Live Map, Trace / Replay, the Driver app's positions, Ops Control `gps`) returns `lat` / `lng` /
+  `speed_kmh` as **numbers** (`"lat": 1.2801`). Treat both forms as numbers on the front end (`Number(x)`).
 - Display formats (company Date Format / Time Format) are the front end's job. The only server-formatted text is human
   sentences such as warnings and summaries, which already follow the company's formats.
 
@@ -104,10 +108,18 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
 }
 ```
 
-- `role`: `convoy_admin` (Convoy staff, **view only**: every write returns `403`), `admin` (every permission), `member` (only `permissions`).
+- `role`: `convoy_admin` (Convoy staff, see below), `admin` (every permission), `member` (only `permissions`).
   `owner` = Super Admin. Show `shown_name` (display name or name) in the top bar. Users and the Profile: [settings.md](convoy-os/settings.md).
 - `company` is `null` for a Convoy Admin until `PATCH /session` picks one (per token: a new sign-in starts with none);
   company data then answers `422 "Pick a company first"`.
+- **What a Convoy Admin may change.** Company operational data (trips, runs, vehicles, drivers, finance, school bus...) is
+  **view only**: every write returns `403 "View only. Convoy Admin cannot change company data"` (saving a Dashboard
+  layout returns `422` with the same message). A Convoy Admin **can** write:
+  - the Convoy Admin pages: Transport Companies (`POST /companies`, `PATCH /companies/:id` for any company, including the
+    Company Settings fields and the platform fields), Message Terms, Discover, Company Leads (company users get `403` there);
+  - Vehicle Types (add / edit / remove; turning a type on or off stays with the company Admin);
+  - approve / decline Vehicle Type Requests and Country Requests;
+  - `PATCH /session` (pick a company), their own Profile and notification preferences.
 - Sample accounts (seed): `ops@simpledrive.sg` / `Simple123!` (Admin), `dispatch@simpledrive.sg` / `Simple123!` (Member, vehicles),
   `admin@convoy.sg` / `Convoy123!` (Convoy Admin).
 
@@ -140,7 +152,7 @@ Lists are paged:
 | --- | --- | --- |
 | 400 | `bad_request` | A required parameter is missing (`message` names it) |
 | 401 | `unauthorized` | No / bad / expired / signed-out token (`"Sign in to continue"`), or wrong email / password |
-| 403 | `forbidden` | Not allowed. Convoy Admin gets `"View only. Convoy Admin cannot change company data"` |
+| 403 | `forbidden` | Not allowed. Convoy Admin writing company data gets `"View only. Convoy Admin cannot change company data"` |
 | 404 | `not_found` | The record does not exist or belongs to another company |
 | 409 | `conflict` | Someone else changed the record (see `lock_version`) |
 | 410 | `gone` | A public tracking link has closed |
@@ -207,6 +219,8 @@ Log cards, insurance papers, workshop invoices, route lists and pasted trip mess
 | `maintenance_invoice` | Maintenance > Record the Work |
 | `route_list` | Trip form (School Run) > Import Route List |
 | `trip_message` | Trip form > Fill from Message (`input_text`) |
+| `fuel_receipt` | Fuel > Drop a Receipt ([fleet § 8.3](convoy-os/fleet.md#83-reading-a-receipt)) |
+| `vehicle_loan_schedule` | Vehicle Financials > Upload the lender's schedule ([finance § 6](convoy-os/finance.md#6-vehicle-financials-purchase-and-loan)) |
 
 ```json
 { "data": { "id": 7, "kind": "log_card", "status": "done", "error": null, "result": { "plate": "PD3318K", "make": "Toyota" },

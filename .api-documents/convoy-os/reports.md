@@ -34,21 +34,26 @@ yet. Add a Corporate Shuttle trip with a timetable in the Scheduler and its repo
 `GET /reports/shuttle?trip_id=12&period=m|2026-10` (no period = last month) →
 
 ```json
-{ "trip": { "id": 12, "title": "MBC Campus Shuttle", "client": "Google Asia Pacific" },
-  "period": { "from": "2026-10-01", "to": "2026-10-31", "label": "October 2026" },
+{ "trip": { "id": 12, "title": "MBC Campus Shuttle", "client": "Google Asia Pacific", "days_text": "Mon to Fri", "plate": "PC7475L" },
+  "period": { "from": "2026-10-01", "to": "2026-10-31", "label": "October 2026",
+              "last_year": { "from": "2025-10-01", "to": "2025-10-31", "label": "October 2025" } },
   "on_time_allowance": 3, "early_minutes": 5, "has_data": true,
   "kpis": { "utilisation": 54.1, "utilisation_change": -0.1, "riders": 2437, "riders_change": 416, "avg_per_day": 110.8,
-            "on_time": 81.3, "on_time_change": -1.6, "service_days": 22, "runs": 196, "seats": 23 },
+            "utilisation_change_ly": 3.2, "riders_change_ly": 512, "on_time": 81.3, "on_time_change": -1.6, "on_time_change_ly": 0.4,
+            "late": 41, "left_early": 6, "service_days": 22, "runs": 196, "runs_a_day": 9, "seats": 23 },
   "timings": [ { "dep": "07:30", "direction": 1, "direction_label": "To MBC Tower 1", "utilisation": 71.2, "riders": 344, "avg": 15.6, "max": 21, "tag": "Busiest" } ],
   "stop_activity": [ { "direction": 1, "label": "To MBC Tower 1", "stops": [ { "name": "Labrador MRT", "boarded": 812, "pct": 60.2 } ] } ],
   "trend": [ { "month": "2026-10", "riders": 2437, "utilisation": 54.1, "on_time": 81.3, "in_period": true } ] }
 ```
 
 - Utilisation = riders ÷ seats offered (each run's bus seats). Percentages to one decimal; `*_change` = against the period
-  before of the same length (points for percentages, riders for riders); `null` when either has no data.
+  before of the same length (points for percentages, riders for riders); `null` when either has no data. `*_change_ly` = against
+  the same period last year (`period.last_year`); `null` for a year period or with no data a year before (hide the second line).
+- Chips: Days `trip.days_text`, Bus `trip.plate` (the bus of the latest run; `null` when none) + `kpis.seats` seats.
+  Service Days sub-line: "`days_text` | `runs_a_day` runs a day"; On-Time sub-line: "`late` late | `left_early` left early" (stops).
 - On time = a stop reached from `early_minutes` (5) before the timetable to `on_time_allowance` minutes after it.
   Early (more than 5 minutes before) still counts on time; **Left Early** (left a pick-up before the timetable) and Late count
-  against; skipped stops are left out. Change the allowance with `PATCH /clients/:id { client: { on_time_allowance } }` (0–15, −1 / +1).
+  against; skipped stops are left out. Change the allowance with `PATCH /clients/:id { client: { on_time_allowance } }` (0–15, −1 / +1); any company user may (no extra permission, as in the prototype), a Convoy Admin gets `403`.
 - `timings`: Utilisation by Shuttle Timing, busiest first (`tag` Busiest / Quietest). `stop_activity`: boardings per pick-up per
   direction (routes with 3 or more stops; the destination is left out). `trend`: the 12 months to the period's end (`in_period` = shaded).
 

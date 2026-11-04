@@ -66,6 +66,23 @@ module OperatorPay
       batch.destroy!
     end
 
+    # Take out of batch: an operator leaves an open batch with all its lines; its items go back to Payment Requests (an
+    # ad hoc extra line too: it is an extra item). The batch goes when no operator is left. Returns the batch, or nil.
+    def remove_operator!(batch, batch_operator)
+      raise Error, "#{batch.number} has gone to the bank or has payments" unless batch.open?
+
+      OperatorPayBatch.transaction do
+        batch.update!(audit_comment: "Took #{batch_operator.operator.name} out of #{batch.number}")
+        batch_operator.destroy!
+        if batch.batch_operators.reload.none?
+          batch.destroy!
+          nil
+        else
+          batch
+        end
+      end
+    end
+
     def pay!(batch_operator, paid_on:, amount:, method:, reference: nil)
       amount = amount.to_d
       raise Error, "Enter the amount paid" unless amount.positive?
@@ -74,12 +91,16 @@ module OperatorPay
       batch_operator.payments.create!(paid_on: paid_on.presence || @today, amount:, method:, reference:, recorded_by: @user)
     end
 
-    def mark_all_paid!(batch)
+    # Mark All Paid: what is left of every operator, paid on the date given; the reference is the PN plus the bank's reference.
+    def mark_all_paid!(batch, paid_on:, reference: nil)
+      raise Error, "Pick the date paid" if paid_on.blank?
+
       OperatorPayBatch.transaction do
         batch.batch_operators.each do |bo|
           next unless bo.left.positive?
 
-          bo.payments.create!(paid_on: @today, amount: bo.left, method: method_of(bo), reference: bo.notice_number, recorded_by: @user)
+          bo.payments.create!(paid_on:, amount: bo.left, method: method_of(bo), reference: [ bo.notice_number, reference.to_s.strip ].compact_blank.join(" "),
+                              recorded_by: @user)
         end
       end
     end
@@ -105,16 +126,18 @@ module OperatorPay
       batch
     end
 
-    # The bank CSV (columns of the prototype).
+    # The bank CSV (columns of the prototype): operators with something left to pay.
     def self.csv(batch)
       require "csv"
       CSV.generate do |csv|
         csv << [ "Value Date", "Payee Name", "Payment Type", "Bank Name", "Bank Code", "Branch Code", "Account Number", "Account Name",
                  "PayNow Proxy Type", "PayNow Proxy", "Amount (SGD)", "Reference", "Payee Email" ]
         batch.batch_operators.each do |bo|
+          next unless bo.left.positive?
+
           op = bo.operator
           paynow = bo.pay_method == "PayNow UEN"
-          csv << [ batch.pay_date.iso8601, op.name, paynow ? "PAYNOW" : batch.transfer_type, (op.bank&.name unless paynow), (op.bank_code unless paynow),
+          csv << [ batch.pay_date.iso8601, op.name, paynow ? "PayNow" : batch.transfer_type, (op.bank&.name unless paynow), (op.bank_code unless paynow),
                    (op.branch_code unless paynow), (op.account_number unless paynow), (op.account_name unless paynow), (paynow ? "UEN" : nil),
                    (op.paynow_uen if paynow), format("%.2f", bo.left), bo.notice_number, op.email ]
         end

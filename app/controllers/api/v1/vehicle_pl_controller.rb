@@ -73,8 +73,8 @@ module Api
       def entry_params = params.expect(entry: %i[kind category entry_on amount repeats_monthly repeat_until note])
 
       def entries_json(v)
-        v.finance_entries.order(entry_on: :desc).map do |e|
-          e.slice(:id, :kind, :category, :entry_on, :amount, :repeats_monthly, :repeat_until, :note)
+        v.finance_entries.includes(:created_by).order(entry_on: :desc).map do |e|
+          e.slice(:id, :kind, :category, :entry_on, :amount, :repeats_monthly, :repeat_until, :note).merge(by: e.created_by&.shown_name)
         end
       end
     end

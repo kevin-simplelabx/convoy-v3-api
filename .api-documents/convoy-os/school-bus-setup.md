@@ -3,12 +3,12 @@
 This guide covers the first part of the School Bus menu (rail icon `school`):
 
 - the Schools page and the school record, with its Riders, Rider Data and Route Labels tabs;
-- these Year Setup steps: School Levels, Terms & Semesters, Bus Sessions and Bus Attendants;
+- these Year Setup steps: School Levels, Terms & Semesters, Bus Sessions and Bus Attendants (Bus Fares, Payment & Refund
+  Policy, Payment Methods and Operator Pay are in [school-bus-money.md](school-bus-money.md));
 - Holidays & Special Days;
 - the setup strip and the Summary.
 
-Fares, Policy, Payment Methods and Operator Pay are still to come in this menu. Conventions are in [README.md](../README.md);
-paths start with `/api/v1`.
+Conventions are in [README.md](../README.md); paths start with `/api/v1`.
 
 **Permissions**
 
@@ -113,13 +113,14 @@ hand**.
 `GET /schools/:id/rider_datasets?date=` returns the lists (oldest first):
 
 ```json
-{ "id": 7, "effective_from": "2026-01-02", "file_name": "SSS riders 2026.csv", "riders_count": 65, "unlocated_count": 0,
+{ "id": 7, "effective_from": "2026-01-02", "file_name": "SSS riders 2026.csv", "riders_count": 65, "checked_count": 65, "unlocated_count": 0,
   "status": "ready", "state": "in_use", "uploaded_by": "Ops Admin", "created_at": "…",
   "file": { "url": "/api/v1/downloads/<token>", "name": "SSS_riders_2026.csv", "size": 4210, "content_type": "text/csv" } }
 ```
 
 - `state` is `in_use`, `scheduled` or `replaced`.
-- `status` is `locating` while homes are being placed on the map, then `ready`.
+- `status` is `locating` while homes are being placed on the map, then `ready`. While locating, poll the list and show
+  "Finding addresses on OneMap: `checked_count` of `riders_count`".
 - `unlocated_count` is the number of riders OneMap did not find (No Location).
 
 **Check a file before importing:** `POST /schools/:id/rider_datasets/preview` (multipart, `file` = CSV or XLSX).
@@ -163,7 +164,8 @@ Value rules:
 - The response (201) is the new list (`status: "locating"`), plus `meta.skipped` (up to 50) and `meta.skipped_count`.
 - Homes are placed in the background. Poll the list until `status` is `ready`.
 - Show "N addresses not found; they show as No Location" from `unlocated_count`.
-- Every row with a problem returns 422.
+- Rows with a problem are **skipped** (listed in `meta.skipped`, counted in `meta.skipped_count`); the good rows are
+  imported. `422` only when no row can be imported (the message lists the problems), with no file, or with no Effective From date.
 
 **Delete:** `DELETE /schools/:id/rider_datasets/:dataset_id`. Ask for confirmation first: "Riders from it will no longer
 be planned".
@@ -207,6 +209,28 @@ POST /schools/:id/riders { rider: { first_name, last_name, name_order: first|las
 
 **Export CSV:** `GET /schools/:id/riders/export?date=` returns the template's columns for the riders on that date.
 
+### 2.3 Plan For calendar (rider changes)
+
+`GET /schools/:id/rider_events?date=2026-11-02` (`date` = the Plan For date) feeds the Plan For date picker of the School
+Bus header:
+
+```json
+{ "data": [ { "date": "2026-10-01", "kind": "list", "rid": null, "name": "SSS riders Oct.csv", "service": null },
+            { "date": "2026-11-20", "kind": "leave", "rid": "S-2", "name": "Lim Jia Hui", "service": "AM" },
+            { "date": "2027-01-02", "kind": "join", "rid": "S-0002", "name": "New Kid", "service": "AM + PM" } ],
+  "meta": { "date": "2026-11-02", "soon": 1 } }
+```
+
+- `kind`: `join` (green dot, Joining), `leave` (red, Leaving), `change` (orange, Service change), `list` (teal, New rider
+  list: `name` is the file name). By date; one event per date, kind and rider.
+- How they are worked out (as the prototype): each rider list starts on its `effective_from` (`list`); against the list
+  before it, a rider new to the list joins (on its start date when later), a rider whose service (`service`: "AM + PM +
+  CCA" or "No service") changed is a `change`, a rider no longer on it leaves; a rider's end date is a `leave`. Riders
+  added by hand join on their start date and leave on their end date.
+- `meta.soon` = changes (not lists) in the 30 days after `date`: the badge "N rider changes in the next 30 days".
+- Day tip: "<date>: 3 joining, 1 leaving, 2 changing service, 1 new rider list"; This Month groups the names by day
+  ("Name (AM + PM), … +k more", 4 names at most).
+
 ## 3. Terms & Semesters (academic years)
 
 An academic year runs for 12 months from its start month.
@@ -241,7 +265,7 @@ An academic year runs for 12 months from its start month.
   "terms": [ { "position": 1, "label": "Term 1", "starts_on": "2027-01-04", "ends_on": "2027-03-12", "school_days": 50,
                "cca_starts_on": "2027-01-04", "cca_ends_on": "2027-03-12" } ],
   "school_days": 200,
-  "holidays": [ { "id": 1, "name": "Chinese New Year", "starts_on": "2027-02-06", "ends_on": "2027-02-06", "public_holiday": true, "operating_days_off": 0 } ],
+  "holidays": [ { "id": 1, "name": "Chinese New Year", "starts_on": "2027-02-06", "ends_on": "2027-02-06", "public_holiday": true, "public_holiday_id": 12, "operating_days_off": 0 } ],
   "operating_days_off": 20,
   "special_days": [ { "id": 3, "date": "2027-03-05", "kind": "early_dismissal", "time": "11:30", "description": "Sports Day" } ] }
 ```
@@ -287,6 +311,7 @@ PUT /academic_years/:id/holidays { holidays: [{ name, starts_on, ends_on, public
                                    special_days: [{ date, kind, time, description }] }
 ```
 
+- Send the list back as you got it: each holiday keeps its `public_holiday_id` (null for the school's own).
 - Holidays need a `name` and `starts_on`. `ends_on` defaults to `starts_on` and must not be before it.
 - Special day `kind` is `early_dismissal`, `late_dismissal`, `early_arrival`, `late_arrival` or `other`. `time` is
   "HH:MM".
@@ -322,7 +347,7 @@ Levels are set per school, not per year.
 - `unknown` lists grades in rider data that are not levels. Each has a one-click Add.
 - `sections` are the "What the School Offers" cards, with their default levels.
 
-**Save & Lock:** `PUT /schools/:id/levels { levels: [{ name, section, final }] }` (send JSON, in order).
+**Save & Lock:** `PATCH /schools/:id/levels { levels: [{ name, section, final }] }` (send JSON, in order).
 
 | Error (422) | Cause |
 | --- | --- |
@@ -381,18 +406,22 @@ Rules (422 messages name the session):
 ```json
 { "needs": "statutory", "sizes": [], "provided_by": "operator", "needed_sizes": ["LARGE_45","LARGE_40"], "saved": true,
   "locked": { "at": "…", "by": "…" },
-  "bus_types": [ { "key": "LARGE_45", "label": "45-seater", "seats": 45, "required_by_law": true }, … ] }
+  "bus_types": [ { "key": "LARGE_45", "label": "45-seater", "seats": 45, "required_by_law": true, "ba_operator": "300.0", "ba_us": "250.0" } ],
+  "routes": [ { "id": 41, "label": "AM 1", "session": "am", "bus_type": "LARGE_45" } ] }
 ```
 
 **Save & Lock:**
 
 ```
-PUT /schools/:id/bus_attendants { needs: statutory|all|selected, sizes: [...], provided_by: operator|us }
+PATCH /schools/:id/bus_attendants { needs: statutory|all|selected, sizes: [...], provided_by: operator|us }
 ```
 
 - With `selected`, at least one size is required, and the sizes required by law are always included.
-- The price table (Their BA / Our BA) comes from Operator Pay, later in this menu.
-- The route count ("x of y routes need a BA") comes with Route Plans.
+- The price table (Their BA / Our BA): `bus_types[].ba_operator` / `ba_us` (S$ a month, from Operator Pay,
+  [school-bus-money.md](school-bus-money.md); `null` = not priced).
+- `routes`: the routes of the plans in use (current and scheduled). Count them against the settings being edited: "x of
+  y routes in current plans need a BA with these settings" (a route needs one when its `bus_type` is required by the
+  settings); "No routes in current plans yet" when empty.
 
 **Unlock:** `POST /schools/:id/unlock { section: "attendants" }`.
 
@@ -403,12 +432,14 @@ PUT /schools/:id/bus_attendants { needs: statutory|all|selected, sizes: [...], p
 ```json
 { "year": "2026", "done": 4, "total": 7, "complete": false,
   "steps": [ { "number": 1, "key": "levels", "label": "School Levels", "scope": "school", "available": true, "done": true, "locked_at": "…", "locked_by": "…" },
-             { "number": 4, "key": "fares", "label": "Bus Fares", "scope": "year", "available": false, "done": false },
+             { "number": 4, "key": "fares", "label": "Bus Fares", "scope": "year", "available": true, "done": false, "locked_at": null, "locked_by": null },
              { "number": 8, "key": "holidays", "label": "Holidays & Special Days", "scope": "year", "available": true, "done": null, "always_editable": true } ] }
 ```
 
 - Show "`done` of `total` done" on the strip.
-- `available: false` marks the steps still to come (Fares, Policy, Operator Pay). Show them as not set up.
+- Steps 1–7 count in `done` / `total` (7). Holidays & Special Days is step `number: 8` with `done: null` and
+  `always_editable: true`: show it on the strip but leave it out of "`done` of `total`".
+- Every step is `available: true` now (`available: false` would mark a step still to come).
 - The Summary page reads each step's own endpoint: §3, §5, §6 and §7.
 
 ## 9. How the Scheduler uses this

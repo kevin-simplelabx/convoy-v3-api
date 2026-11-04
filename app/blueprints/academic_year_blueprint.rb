@@ -20,7 +20,7 @@ class AcademicYearBlueprint < ApplicationBlueprint
     field(:school_days) { |y| y.school_days }
     field(:holidays) do |y|
       y.holidays.map do |h|
-        { id: h.id, name: h.name, starts_on: h.starts_on, ends_on: h.ends_on, public_holiday: h.public_holiday_id.present?,
+        { id: h.id, name: h.name, starts_on: h.starts_on, ends_on: h.ends_on, public_holiday: h.public_holiday_id.present?, public_holiday_id: h.public_holiday_id,
           operating_days_off: (h.starts_on..h.ends_on).count { |d| y.operating_days.include?(d.cwday) } }
       end
     end

@@ -36,7 +36,7 @@ appears.
 
 | Param | Values |
 | --- | --- |
-| `tab` | `needs_action` (default), `all`, `not_started`, `running`, `ended` |
+| `tab` | `needs_action` (default: trips with an alert of severity 1 At Risk or 2 Action Now, i.e. the row's `severity > 0`), `all`, `not_started`, `running`, `ended` |
 | `client_id` | a client from `data.clients` |
 | `q` | plate, driver, trip title, TID or client |
 | `sort` | `asc` (earliest first pick-up first, default) or `desc` |
@@ -60,7 +60,8 @@ appears.
       "first_pickup_at": "2026-11-02T08:10:00+08:00", "ends_at": "2026-11-02T10:00:00+08:00", "timeline_from": "2026-11-02T07:55:00+08:00",
       "state": "action_now", "severity": 2, "arrived_at": null,
       "app": { "status": "not_logged_in", "started_at": null, "ended_at": null, "signed_in_at": null, "last_seen_at": "2026-11-01T18:30:00+08:00" },
-      "gps": { "status": "to_first_pickup", "last_ping_at": "2026-11-02T07:59:50+08:00", "distance_m": 300, "stops_reached": 0, "stops": 2 },
+      "gps": { "status": "to_first_pickup", "last_ping_at": "2026-11-02T07:59:50+08:00", "distance_m": 300, "stops_reached": 0, "stops": 2,
+              "speed_kmh": 24.0, "moving": true },
       "eta": { "at": null, "late_minutes": null },
       "alerts": [ { "id": 21, "kind": "login", "severity": 2, "message": "Driver not logged in to the Convoy Driver app",
                     "raised_at": "2026-11-02T08:00:00+08:00", "acknowledged_at": null, "acknowledged_by": null, "escalated": false },
@@ -116,8 +117,8 @@ Acknowledge. Add "+`more` more in the table below" when `more` > 0. `escalated: 
   | --- | --- |
   | `not_logged_in` | Not Logged In, "Last seen" `last_seen_at`. Red within 20 min of the pick-up. |
   | `not_started` | Not Started |
-  | `started` | Started at `started_at` |
-  | `running` | Running, "Started" `started_at` |
+  | `started` | Started at `started_at` (the driver pressed Start; not at the first pick-up yet) |
+  | `running` | Running, "Started" `started_at` (reached the first pick-up: the trip is under way) |
   | `ended` | Trip Ended |
   | `no_account` | No App: the driver was typed in, with no app account |
 
@@ -129,6 +130,9 @@ Acknowledge. Add "+`more` more in the table below" when `more` > 0. `escalated: 
   | `on_route` | Stop `stops_reached` of `stops` |
   | `no_signal` | No signal, "Last ping N min ago" |
   | `at_drop_off` | At drop-off |
+
+  `gps.speed_kmh` (last report) and `gps.moving` (over 3 km/h; `null` with no speed reported) → "Moving" / "Not moving" on the
+  `to_first_pickup` sub-line.
 
 - `eta` (ETA column):
   - `eta.at` is set once the driver has started.
@@ -205,4 +209,5 @@ The FE handles these without the API:
 - Full Screen, How It Works and the ⓘ explainers.
 - The clock (`meta.now` plus elapsed time) and the company / date header.
 
-Not built yet: the Convoy OS "Requests" banner above Ops Control (School Bus applications) comes with School Bus.
+The Convoy OS "Requests" banner above Ops Control (School Bus applications) is fed by `GET /bus_requests/alerts`
+([school-bus-parents § 6](school-bus-parents.md#6-alerts-and-the-0800-email)).

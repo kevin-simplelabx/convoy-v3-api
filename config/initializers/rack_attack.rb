@@ -3,6 +3,7 @@
 class Rack::Attack
   PORTAL_SESSION = "/api/v1/portal/session".freeze
   DRIVER_SESSION = "/api/v1/driver/session".freeze
+  APP_SESSION = "/api/v1/app/session".freeze
 
   # The email of a sign-in request (JSON or form body), so one person's account is limited from any IP.
   def self.sign_in_email(req)
@@ -52,6 +53,22 @@ class Rack::Attack
   end
   throttle("portal_credentials/email", limit: 5, period: 60) do |req|
     sign_in_email(req) if req.post? && [ PORTAL_SESSION, "#{PORTAL_SESSION}/verify" ].include?(req.path)
+  end
+
+  # Convoy App code steps (sign in, add a mobile / email): 30 per minute per IP. Codes are also limited to 5 an hour per
+  # mobile or email.
+  throttle("app_code/ip", limit: 30, period: 60) do |req|
+    req.ip if req.post? && [ "#{APP_SESSION}/code", "/api/v1/app/identities/code" ].include?(req.path)
+  end
+
+  # Convoy App code checks: 10 per minute per IP, 5 per minute per mobile or email
+  throttle("app_credentials/ip", limit: 10, period: 60) do |req|
+    req.ip if req.post? && [ APP_SESSION, "/api/v1/app/identities/verify" ].include?(req.path)
+  end
+  throttle("app_credentials/person", limit: 5, period: 60) do |req|
+    if req.post? && req.path == APP_SESSION
+      sign_in_field(req, "mobile") || sign_in_field(req, "email")
+    end
   end
 
   # Share Form answers from hired drivers (public): 10 per hour per IP

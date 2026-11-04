@@ -28,7 +28,11 @@ RSpec.describe "School Bus routing runs" do
     expect(input["params"]).to include("session" => "AM", "preset" => "BALANCED", "attendant" => "STATUTORY")
 
     get api_v1_routing_run_path(run[:id])
-    expect(json[:data]).to include(status: "done", ms: 1200)
+    expect(json[:data]).to include(status: "done", ms: 1200, progress: { step: "done", frac: 1, work: { evals: nil } })
+    within_tenant(company) { RoutingRun.find(run[:id]).update_columns(status: "running") } # rubocop:disable Rails/SkipsModelValidations
+    get api_v1_routing_run_path(run[:id]) # while running: the routing service's progress
+    expect(json.dig(:data, :progress)).to include(step: "solving", frac: 0.5, work: hash_including(phase: "Swap and relocate pass", evals: 1200))
+    within_tenant(company) { RoutingRun.find(run[:id]).update_columns(status: "done") } # rubocop:disable Rails/SkipsModelValidations
     within_tenant(company) do
       plan = SchoolPlan.find(json.dig(:data, :plan_id))
       expect(plan).to have_attributes(name: "AM Plan 1", session: "am", source: "engine", in_use: false, priority: "BALANCED")

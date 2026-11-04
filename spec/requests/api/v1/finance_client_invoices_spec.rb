@@ -43,9 +43,24 @@ RSpec.describe "Finance client invoices" do
       .to eq([ [ "trip", "2.0", "120.0", "240.0" ], [ "late_cancel", "1.0", "120.0", "120.0" ] ])
 
     late_run = inv[:lines].second[:runs].first[:id]
+    expect(inv[:lines].second[:runs].first[:cancelled_hours_before]).to eq(2) # 08:00 run cancelled at 06:00
     patch api_v1_finance_invoice_path(inv[:id]), params: { invoice: { waived_run_ids: [ late_run ], po: "PO-77",
-                                                                      manual_lines: [ { description: "ERP charges", amount: 15 } ] } }, as: :json
+                                                                      manual_lines: [ { ref: "ERP-OCT", description: "ERP charges", amount: 15 } ] } }, as: :json
     expect(json[:data]).to include(po: "PO-77", subtotal: "255.0", total: "277.95")
+    expect(json[:data][:lines].last).to include(source: "manual", ref: "ERP-OCT", amount: "15.0")
+
+    trip_line, late_line = inv[:lines].first(2).map { it[:id] }
+    patch api_v1_finance_invoice_path(inv[:id]), params: { invoice: { lines: [ { id: trip_line, ref: "TID-9", description: "Office Shuttle (Oct)", period_text: "Oct 2026",
+                                                                                 details: "Route A", quantity: 1, amount: 200 },
+                                                                               { id: late_line, description: "Late cancel", amount: 999 } ] } }, as: :json
+    lines = json.dig(:data, :lines)
+    expect(lines.first).to include(ref: "TID-9", description: "Office Shuttle (Oct)", period_text: "Oct 2026", details: "Route A", quantity: "1.0",
+                                   amount: "200.0", unit_price: nil, amount_overridden: true, runs_amount: "240.0")
+    expect(lines.second).to include(description: "Late cancel", amount: "0.0", amount_overridden: false) # from runs (waived)
+    expect(json[:data]).to include(subtotal: "215.0")
+    patch api_v1_finance_invoice_path(inv[:id]), params: { invoice: { lines: [ { id: trip_line, amount: "" } ] } }, as: :json # back to the runs
+    expect(json.dig(:data, :lines, 0)).to include(amount: "240.0", unit_price: "120.0", amount_overridden: false)
+    expect(json[:data]).to include(subtotal: "255.0", total: "277.95")
 
     get ready_api_v1_finance_invoices_path, params: { month: "2026-10" }
     expect(json[:data].first).to include(runs: 0, late_cancels: 0, drafts_open: 1)
@@ -103,13 +118,29 @@ RSpec.describe "Finance client invoices" do
     expect(json.dig(:data, :sends, 0)).to include(to: [ "ap@google.com" ], cc: [])
 
     get summary_api_v1_finance_invoices_path
-    expect(json[:data]).to include(owed: "100.0", overdue: "0.0", invoiced: "392.4", collected: "200.0")
+    expect(json[:data]).to include(owed: "100.0", owed_count: 1, overdue: "0.0", overdue_count: 0, invoiced: "392.4", collected: "200.0")
     expect(json.dig(:data, :aging, 0)).to include(key: "current", amount: "100.0", count: 1)
+    within_tenant(company) { ClientInvoice.find(id).update_column(:due_on, Date.new(2026, 11, 1)) } # past its due date
+    get summary_api_v1_finance_invoices_path
+    expect(json[:data]).to include(overdue: "100.0", overdue_count: 1)
+    get clients_api_v1_finance_invoices_path
+    expect(json[:data].sole).to include(name: "Google", balance: "100.0", invoices: 1, overdue: 1)
+    within_tenant(company) { ClientInvoice.find(id).update_column(:due_on, Date.new(2026, 12, 2)) }
 
     get statement_api_v1_finance_invoices_path, params: { client_id: data[:google].id }
-    expect(json.dig(:data, :rows).map { |r| [ r[:type], r[:balance] ] }).to eq([ [ "invoice", "392.4" ], [ "payment", "192.4" ], [ "credit_note", "100.0" ] ])
+    expect(json.dig(:data, :rows).map { |r| r.values_at(:type, :text, :charge, :credit, :balance) })
+      .to eq([ [ "invoice", "Invoice INV-2026-000001", "392.4", "0.0", "392.4" ], [ "payment", "Payment for INV-2026-000001, TX1", "0.0", "200.0", "192.4" ],
+               [ "credit_note", "Credit note CN-2026-000001", "0.0", "92.4", "100.0" ] ])
 
     get api_v1_finance_invoices_path, params: { tab: "credit_notes" }
     expect(json[:meta][:counts]).to include(unpaid: 1, credit_notes: 1)
+    expect(json[:data].sole).to include(number: "CN-2026-000001", invoice_number: "INV-2026-000001")
+
+    get api_v1_finance_documents_path, params: { type: "invoice,school_invoice" }
+    expect(json[:data].map { it[:number] }).to eq([ "INV-2026-000001" ])
+    get api_v1_finance_documents_path, params: { q: "late bus" } # a credit note's reason
+    expect(json[:data].map { it[:number] }).to eq([ "CN-2026-000001" ])
+    get api_v1_finance_documents_path, params: { q: "tx1" } # a payment reference
+    expect(json[:data].map { it[:number] }).to eq([ "INV-2026-000001" ])
   end
 end

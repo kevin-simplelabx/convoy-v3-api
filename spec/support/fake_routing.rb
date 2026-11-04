@@ -10,7 +10,9 @@ class FakeRouting
 
   def meta = { "defaults" => { "session" => "AM", "effort" => "high", "hardCap" => 75 }, "types" => [], "presets" => {}, "effort" => {}, "max_effort" => "high", "engines" => {} }
 
-  def solve(input)
+  def progress(_key) = { "step" => "solving", "frac" => 0.5, "run" => 1, "runs" => 2, "work" => { "phase" => "Swap and relocate pass", "i" => 3, "n" => 9, "evals" => 1200 } }
+
+  def solve(input, key: nil)
     raise Routing::Client::Unavailable, "down" if down
 
     input = input.deep_stringify_keys
@@ -34,6 +36,19 @@ class FakeRouting
     sized = p["type"] ? { "type" => p["type"], "seats" => p["type"] == "SMALL_13" ? 13 : 23 } : {}
     p["base"].merge(sized).merge("stops" => stops, "load" => stops.sum { it["n"].to_i }, "badges" => [ "Edited" ], "startT" => "06:30",
                                  "endT" => Clock.hm(400 + (stops.size * 10)), "span" => 600 + (stops.size * 600))
+  end
+
+  # Best order (stand-in): stops by point id; routes already in that order are left out.
+  def optimise(payload)
+    raise Routing::Client::Unavailable, "down" if down
+
+    p = payload.deep_stringify_keys
+    { "routes" => p["routes"].filter_map do |r|
+      order = r["stops"].each_with_index.sort_by { |s, _| s["pid"].to_i }.map(&:last)
+      next if order == (0...r["stops"].size).to_a
+
+      { "id" => r["id"], "order" => order, "before" => { "span" => 1800, "ride" => 300 }, "after" => { "span" => 1500, "ride" => 240 } }
+    end }
   end
 
   def diff(a, b) = { "routes" => [ a["routes"].size, b["routes"].size ], "moved" => 0 }

@@ -7,13 +7,13 @@ module Api
       INCLUDES = [ :school, :created_by, :rows, :bus_prices, :fare_tiers, :scenarios ].freeze
 
       def index
-        authorize Stop, :index?
+        authorize Stop, :feasibility?
         list = FeasibilityStudy.includes(*INCLUDES).order(updated_at: :desc)
         render json: { data: list.map { summary(it) } }
       end
 
       def show
-        authorize Stop, :index?
+        authorize Stop, :feasibility?
         render json: { data: detail(find) }
       end
 
@@ -58,6 +58,21 @@ module Api
         end
         study.scenarios.where.not(result: nil).update_all(stale: true) # rubocop:disable Rails/SkipsModelValidations
         render json: { data: detail(find), meta: { skipped: skipped || 0 } }
+      end
+
+      # DELETE /feasibility_studies/:id/rows/:row_id — remove one line of students.
+      def destroy_row
+        authorize Stop, :update?
+        study = find
+        study.rows.find(params[:row_id]).destroy!
+        study.scenarios.where.not(result: nil).update_all(stale: true) # rubocop:disable Rails/SkipsModelValidations
+        render json: { data: detail(find) }
+      end
+
+      # POST /feasibility_studies/:id/copy — Copy Study (results are not copied).
+      def copy
+        authorize Stop, :update?
+        render json: { data: detail(find(Feasibility::Copy.call(find, user: current_user).id)) }, status: :created
       end
 
       # POST /feasibility_studies/:id/scenarios { from_id } — Add Scenario (or copy one)
@@ -115,7 +130,7 @@ module Api
 
       # GET /feasibility_studies/fare_source?school_id= — the school's locked distance fares as monthly tiers.
       def fare_source
-        authorize Stop, :index?
+        authorize Stop, :feasibility?
         school = policy_scope(School).find(params.require(:school_id))
         year = school.academic_years.covering(Date.current).first
         table = year&.fare_table

@@ -13,6 +13,18 @@ class TripDecorator < ApplicationDecorator
     days.map { |d| DAY_NAMES[d] }.join(" ")
   end
 
+  # Service days as the prototype's dayText: "Daily", "Mon to Fri", "Mon, Wed, Fri" (0 = Sunday).
+  def self.days_text(days)
+    d = days.map(&:to_i).uniq.sort
+    return "Daily" if d.size == 7
+    return "Mon to Fri" if d == [ 1, 2, 3, 4, 5 ]
+    return "Mon to Sat" if d == [ 1, 2, 3, 4, 5, 6 ]
+
+    d.slice_when { |a, b| b != a + 1 }.map { |r| r.size >= 3 ? "#{DAY_NAMES[r.first]} to #{DAY_NAMES[r.last]}" : r.map { DAY_NAMES[it] }.join(", ") }.join(", ")
+  end
+
+  def days_text = self.class.days_text(days)
+
   def ends_next_day = end_time.to_i >= 1440
 
   # Vehicles required in words: 2 x 23-seater, 1 x 13-seater.

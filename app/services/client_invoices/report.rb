@@ -12,7 +12,8 @@ module ClientInvoices
 
     def call
       open = issued.select { |i| i.balance > 0.005 }
-      { owed: open.sum(0.to_d, &:balance), overdue: open.select { |i| i.due_on && i.due_on < @today }.sum(0.to_d, &:balance),
+      late = open.select { overdue?(it) }
+      { owed: open.sum(0.to_d, &:balance), owed_count: open.size, overdue: late.sum(0.to_d, &:balance), overdue_count: late.size,
         invoiced: issued.select { |i| (@month..@month.end_of_month).cover?(i.issued_on) }.sum(0.to_d, &:total),
         collected: ClientInvoicePayment.joins(:client_invoice).merge(ClientInvoice.where(company_id: ActsAsTenant.current_tenant.id))
                                        .where(paid_on: @month..@month.end_of_month).sum(:amount),
@@ -23,7 +24,7 @@ module ClientInvoices
       issued.group_by { |i| [ i.client_id, i.client_site_id ] }.map do |(client_id, site_id), list|
         first = list.first
         { client_id:, client_site_id: site_id, name: site_id ? "#{first.bill_to_name} | #{first.client_site&.name}" : first.client.name,
-          balance: list.sum(0.to_d, &:balance), invoices: list.size }
+          balance: list.sum(0.to_d, &:balance), invoices: list.size, overdue: list.count { overdue?(it) } }
       end.sort_by { |r| -r[:balance] }
     end
 
@@ -31,16 +32,21 @@ module ClientInvoices
     def statement(client_id:, client_site_id: nil)
       list = issued.select { |i| i.client_id == client_id && i.client_site_id == client_site_id }
       rows = list.flat_map do |i|
-        [ { date: i.issued_on, type: "invoice", number: i.number, charge: i.total, credit: 0 } ] +
-          i.payments.map { |p| { date: p.paid_on, type: "payment", number: i.number, text: [ p.method, p.reference ].compact.join(" "), charge: 0, credit: p.amount } } +
-          i.credit_notes.reject(&:void?).map { |c| { date: c.issued_on, type: "credit_note", number: c.number, text: c.reason, charge: 0, credit: c.total } }
+        [ { date: i.issued_on, type: "invoice", number: i.number, text: "Invoice #{i.number}", charge: i.total, credit: 0.to_d } ] +
+          i.payments.map do |p|
+            { date: p.paid_on, type: "payment", number: i.number, text: [ "Payment for #{i.number}", p.reference.presence ].compact.join(", "),
+              method: p.method, charge: 0.to_d, credit: p.amount }
+          end +
+          i.credit_notes.reject(&:void?).map { |c| { date: c.issued_on, type: "credit_note", number: c.number, text: "Credit note #{c.number}", reason: c.reason, charge: 0.to_d, credit: c.total } }
       end.sort_by { |r| [ r[:date], r[:type] == "invoice" ? 0 : 1 ] }
-      balance = 0.to_d
+      balance = 0.to_d # every amount a decimal, so they all come out as strings
       rows.each { |r| r[:balance] = balance += r[:charge] - r[:credit] }
       { rows:, balance:, aging: aging(list.select { |i| i.balance > 0.005 }) }
     end
 
     private
+
+    def overdue?(invoice) = invoice.balance > 0.005 && invoice.due_on.present? && invoice.due_on < @today
 
     def issued = @issued ||= ClientInvoice.invoice.issued.includes(:client, :client_site, :payments, :credit_notes).to_a
 

@@ -34,6 +34,16 @@ module Api
         render_layout
       end
 
+      # PATCH /dashboard/layout { period, page } — the period picked and the page open (kept without Edit Layout).
+      def update_layout
+        raise ApplicationService::Error, "View only. Convoy Admin cannot change company data" if current_user.convoy_admin?
+
+        r = record
+        r.pages = Dashboard::Catalogue.default_layout(current_user).as_json if r.new_record?
+        r.update!(params.permit(:period, :page).to_h)
+        render_layout
+      end
+
       # DELETE /dashboard/layout — Reset to the default layout.
       def reset_layout
         DashboardLayout.where(user: current_user).delete_all
@@ -46,7 +56,8 @@ module Api
 
       def render_layout
         saved = DashboardLayout.find_by(user: current_user)
-        render json: { data: { pages: saved&.pages || Dashboard::Catalogue.default_layout(current_user), saved: saved.present?, updated_at: saved&.updated_at } }
+        render json: { data: { pages: saved&.pages || Dashboard::Catalogue.default_layout(current_user), period: saved&.period || DashboardLayout::DEFAULT_PERIOD,
+                               page: saved&.page || 0, saved: saved.present?, updated_at: saved&.updated_at } }
       end
     end
   end

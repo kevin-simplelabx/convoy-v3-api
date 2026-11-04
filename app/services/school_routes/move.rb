@@ -41,15 +41,8 @@ module SchoolRoutes
 
     # Cut the dates out of overlapping replacements, then add this one (unless it puts the regular bus back).
     def replace
-      @route.replacements.where("starts_on <= ? AND ends_on >= ?", @to, @from).find_each do |r|
-        before = r.starts_on < @from ? [ r.starts_on, @from - 1 ] : nil
-        after = r.ends_on > @to ? [ @to + 1, r.ends_on ] : nil
-        r.destroy!
-        [ before, after ].compact.each { |a, z| @route.replacements.create!(r.attributes.except("id", "created_at", "updated_at").merge("starts_on" => a, "ends_on" => z)) }
-      end
-      return if @vehicle.id == @route.regular_vehicle_id(@from)
-
-      @route.replacements.create!(vehicle: @vehicle, starts_on: @from, ends_on: @to, created_by: @user, **@rep)
+      Replace.call(route: @route, vehicle: @vehicle, from: @from, to: @to, user: @user, sync: false, arranged_by: @rep[:arranged_by],
+                   daily_rate: @rep[:daily_rate], deduct: @rep[:deduct_from_operator], reason: @rep[:reason])
     end
   end
 end

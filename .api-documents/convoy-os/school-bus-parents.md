@@ -41,7 +41,7 @@ data, and Convoy OS can add an application on a parent's behalf.
 | `GET /families/:id` | One family, with its guardians and its riders (sessions, dates, the routes they ride) |
 | `PATCH /families/:id` | Change the family: `{ family: { code, name, name_mode } }` |
 | `DELETE /families/:id` | Delete the family |
-| `POST /families/:id/guardians` | Add a guardian: `{ guardian: {…} }` |
+| `POST /families/:id/guardians` | Add a guardian: `{ guardian: { first_name, last_name, name_order: first\|last, relationship, phone, email } }` (→ the family) |
 | `PATCH /families/:id/guardians/:guardian_id` | Change a guardian |
 | `DELETE /families/:id/guardians/:guardian_id` | Remove a guardian |
 | `POST /families/:id/riders` | Link riders: `{ school_id, rids: [] }` (a rider leaves any other family at the school) |
@@ -50,11 +50,52 @@ data, and Convoy OS can add an application on a parent's behalf.
 | `POST /schools/:school_id/families/import` | CSV import (`file`, or `text`), with warnings |
 | `GET /schools/:school_id/families/export` | CSV export |
 
+**List row** (`GET /schools/:school_id/families`, paged, `meta { page, limit, count, pages, unlinked_riders }`):
+
+```json
+{ "id": 7, "code": "FAM-0007", "name": "TAN FAMILY", "name_mode": "auto", "source": "app", "sample": true, "guardians": 2,
+  "first_guardian": { "name": "Tan Wei Ming", "relationship": "Father", "phone": "+65 9123 4567" },
+  "children": [ { "rid": "S-1001", "name": "Tan Jia Hui" } ] }
+```
+
+**One family** (`GET /families/:id`):
+
+```json
+{ "id": 7, "code": "FAM-0007", "name": "TAN FAMILY", "name_mode": "auto", "source": "app", "sample": true,
+  "address": "Blk 101 Bedok North Ave 4 #05-12", "postal": "460101", "registered_at": "2026-10-20T19:42:00+08:00", "school_id": 1,
+  "guardians": [ { "id": 15, "first_name": "Wei Ming", "last_name": "Tan", "name_order": "last", "name": "Tan Wei Ming",
+                   "relationship": "Father", "phone": "+65 9123 4567", "email": "weiming.tan@example.com",
+                   "app_joined_at": "2026-10-20T19:42:00+08:00", "app_joined_how": "signup" } ],
+  "riders": [ { "school_id": 1, "rid": "S-1001", "name": "Tan Jia Hui", "grade": "P3", "am": true, "pm": true, "cca_days": [2],
+                "starts_on": "2026-11-02", "ends_on": null, "on_list": true, "applied_at": "2026-10-20T19:50:00+08:00",
+                "accepted_at": "2026-10-22T10:05:00+08:00",
+                "rides": [ { "session": "am", "route": "AM 1", "stop": "Blk 101 Bedok North", "time": "06:35" } ],
+                "unpaid": { "request_id": 31, "bill_number": "INV-2026-000041", "overdue": false },
+                "leave": null } ] }
+```
+
+What the prototype's lines come from:
+
+| Line in the prototype | Fields |
+| --- | --- |
+| "Sample" badge | `sample: true` |
+| "Registered in the Convoy App by <name> on <date>" | `source: "app"`, `registered_at`; `<name>` = the guardian with `app_joined_how: "signup"` |
+| Guardian "Signed up in the app" / "Joined by invite" | `app_joined_how`: `signup` / `invite` (`null` = not in the app), `app_joined_at` |
+| Guardian "Name Shown As" (First Last / Last First) | `name_order`: `first` → "Wei Ming Tan", `last` → "Tan Wei Ming"; `name` = the result |
+| Family home address | `address`, `postal` |
+| Rider "Applied in the Convoy App …, accepted …" | `applied_at`, `accepted_at` |
+| Rider route / stop / time | `rides[]` (plans in use today) |
+| Rider "Unpaid: first invoice INV-… not paid yet" / "… is overdue. Remove the rider if the family is not going ahead" | `unpaid { request_id, bill_number, overdue }` (`null` when paid or none) |
+| Rider leave line + End Rider / Remove from Rider List | `leave { request_id, button, label, text, ends_on }` (`null` = nothing to do) → "`label`. `text`", button `button` calls `POST /bus_requests/:request_id/end_rider` |
+| `relationship` | `Parent`, `Mother`, `Father`, `Guardian`, `Grandparent`, `Relative`, `Helper`, `Other` |
+
+"Reported Issues" (Reply) on the React family page is not in the prototype and has no API: leave it out.
+
 How families work:
 
 - **Codes.** Codes run `FAM-0001`, `FAM-0002` and so on.
 - **Automatic names.** With `name_mode: auto`, the name comes from a guardian's last name: Father first, then Mother, then
-  the first guardian. For example, `TAN Family`.
+  the first guardian, upper case. For example, `TAN FAMILY`.
 - **Add Rider.** `POST /schools/:id/riders` accepts `family_id` to put the new rider in that family.
 
 ## 2. Bus Service Registration
@@ -64,7 +105,7 @@ There is one registration per school academic year.
 | Call | What it does |
 | --- | --- |
 | `GET /academic_years/:id/registration` | The settings. Before a save, these are the defaults (`saved: false`) |
-| `PUT /academic_years/:id/registration` | Save Draft, or Save Changes once scheduled |
+| `PATCH /academic_years/:id/registration` | Save Draft, or Save Changes once scheduled |
 | `POST /academic_years/:id/registration/schedule` | Save and schedule. Takes the same body |
 | `POST /academic_years/:id/registration/unschedule` | Back to draft: messages stop and the form closes to parents |
 | `POST /academic_years/:id/registration/release` | Release Now for a message sent by hand: `{ key: "wel" }` |
@@ -101,7 +142,10 @@ There is one registration per school academic year.
 **Response.** It includes:
 
 - `status` (`draft` or `scheduled`) and `state`: `draft`, `upcoming`, `renewals_open`, `general_upcoming`, `open` or `closed`.
-- `ready[]` and `final_levels`.
+- `ready[]`: the steps Schedule needs, `[{ "id": "calendar", "label": "Terms & Semesters", "ok": true }, { "id": "sessions", "label": "Bus Sessions", "ok": true },
+  { "id": "fares", "label": "Bus Fares", "ok": false }, { "id": "policy", "label": "Payment & Refund Policy", "ok": true }]`.
+- `final_levels`: names of the school's graduating levels (e.g. `["P6"]`), `school_levels`: every level name in order
+  (`levels[]` in the body takes these names).
 - `policy`: the version, the registration fee, the deposit and the agreement text.
 - `messages[]`, with these fields per message:
   - `name`, `audience`.
@@ -172,11 +216,37 @@ There is one registration per school academic year.
 - Links: `rider` (`{ id, rid }`) and `family` (`{ id, code, name }`).
 - Changes: `change` (section 5) and `end_action`.
 
+The parent fields are `parent_name`, `parent_phone`, `parent_email`, `postal`. Also `renew`, `start_when`, `start_on`.
+`last_event` = the latest history line `{ at, by, text }` (or `null`). A row:
+
+```json
+{ "id": 88, "code": "REQ-0088", "kind": "new", "source": "app", "status": "Under Review", "status_label": "Under Review", "tone": "info",
+  "child_name": "Tan Jia Hui", "level": "P3", "am": true, "pm": true, "cca": false, "parent_name": "Tan Wei Ming",
+  "parent_phone": "+65 9123 4567", "parent_email": "weiming.tan@example.com", "postal": "460101", "lat": "1.3305", "lng": "103.9373", "located": true,
+  "submitted_at": "2026-10-20T19:50:00+08:00",
+  "tags": ["New", "From the App"], "renew": false, "start_when": "date", "start_on": "2026-11-16",
+  "start_text": "From 16/11/2026, not earlier (moving house)", "reason": null,
+  "deadline": { "stage": "answer", "by": "2026-11-06", "left": 2, "tone": "soon" },
+  "check": { "code": "covered", "kind": "fits", "label": "Fits", "tone": "success", "current": false, "free": 3, "summary": "AM fits AM 1 | PM fits PM 2" }, "offer_by": null, "quote_amount": null, "hours_left": null,
+  "end_action": null, "change": null, "rider": null, "family": { "id": 7, "code": "FAM-0007", "name": "TAN FAMILY" },
+  "last_event": { "at": "2026-10-21T09:00:00+08:00", "by": "Ops Admin", "text": "Opened" } }
+```
+
+Add Application takes only what the prototype's form has (child, parent, phone, email, level, address, postal, AM / PM,
+start, fee). CCA, the fixed-start reason and the form answers come only from the Convoy App.
+
 **Meta.**
 
-- The tiles (`label`, `count`, `filter`). Mid-Year and Overdue appear only when there are any.
-- `tabs` (`open` counts), `windows` (early and general window state), `years` (cards: This Year, Next Year, Later or Past;
-  `to_review`, `requests`, `registration`) and `levels`.
+- The tiles `[{ label, count, filter }]`. `filter` is the query to send when the tile is clicked, e.g.
+  `{ "status": "Requested" }`, `{ "tag": "Mid-Year" }`, `{ "deadline": "over" }`; `null` = not clickable ("Not Yet Renewed").
+  Mid-Year and Overdue appear only when there are any.
+- `tabs` (`open` counts), `windows` (early and general window state), `years` and `levels`.
+- `service_check`: `{ none: false, plan: "Term 4 AM (current)" }` → "Service check uses <plan>"; `{ none: true, plan: null }` →
+  "No AM route plan with routes yet".
+- Rows carry `lat`, `lng`, `located` (the applicant's home, for the map of applicant homes; `null` until placed). Home
+  locations of children: show them only on that map, never in an export.
+- `years`: `[{ "id": 2, "key": "2027", "tag": "Next Year", "starts_on": "2027-01-04", "ends_on": "2027-11-19", "to_review": 12, "requests": 40, "registration": "open" }]`;
+  `tag` = `This Year`, `Next Year`, `Later` or `Past`; `registration` = the registration `state` (section 2) or `not_set_up`.
 - `mid`: `ack_days`, `plan_weeks`, `service_starts_on`.
 - `auto_accept` and `cover` (section 4).
 
@@ -184,7 +254,12 @@ There is one registration per school academic year.
 
 - The address and the form answers.
 - `ack`: `{ at, by, answer_by, note, moves[] }`.
-- `route_fit` per session, `quote`, `quote_default`, `places[]`, `first_bill` and `planned`.
+- `route_fit` per session, `quote`, `quote_default`, `places[]`, `first_bill` and `planned`:
+  - `quote`: `{ amount, base, unit, note, by, at }` (or `null` before Accept).
+  - `places[]`: the seats kept for the child `[{ session, route_id, route, kind: fits | new, stop, delta_minutes }]`.
+  - `first_bill`: `{ id, number, period, subtotal, gst, total, status: open | paid, issued_on, due_at, paid_at, method }` (or `null`).
+- Also `academic_year`, `address`, `km`, `estimate`, `fix_why`, `fix_note`, `class_name`,
+  `student_no`, `birth_date`, `medical`, `cca_days`, `fee_paid`, `policy_version`, `answer_default`.
 - `events[]`, newest first.
 - `can`: `{ acknowledge, move_answer, waitlist, decline, accept, reoffer, record_payment, confirm_change, confirm_stop, not_agreed, end_rider }`.
 
@@ -195,7 +270,7 @@ There is one registration per school academic year.
 | `POST /schools/:school_id/bus_requests` | Add Application on a parent's behalf |
 | `POST /bus_requests/:id/acknowledge` | Mid-year: `{ answer_by, note }`. Under Review; the parent sees the date and the note |
 | `POST /bus_requests/:id/move_answer` | `{ answer_by, reason }`. The reason is required; every move is kept |
-| `POST /schools/:school_id/bus_requests/decide` | Waitlist or Decline one or many: `{ ids: [], to: Waitlisted \| Declined, reason, note }` |
+| `POST /schools/:school_id/bus_requests/decide` | Waitlist or Decline one or many: `{ ids: [], to: Waitlisted \| Declined, reason, note }`. New Service: both. Change of Address / Service / Stop Service: **Decline only**, while Requested or Under Review. Follow the detail's `can.waitlist` / `can.decline` |
 | `POST /schools/:school_id/bus_requests/message` | `{ ids: [], text }`. Logged on each request (parent accounts are not live) |
 | `POST /bus_requests/:id/accept` | Accept and Send Quote: `{ amount, start_on, note }` |
 | `POST /schools/:school_id/bus_requests/accept` | Accept many at their Bus Fares quotes: `{ ids: [] }`. Also used by the auto-accept and "can now be covered" banners |
@@ -357,13 +432,14 @@ Nothing leaves the list by itself.
 
 **The email** goes to the owner, Admins, and users with the Schools permission who open those schools. It goes at 08:00
 only on days with requests waiting. It is recorded in notification emails and not sent until email sending exists.
+`GET /bus_requests/digest` is a preview with no sent time: show the prototype's fixed "Sent · Today 08:00" text.
 
 ## 7. CCA Rides
 
 | Call | What it does |
 | --- | --- |
 | `GET /schools/:school_id/cca_rides?week_of=YYYY-MM-DD` | Settings and one week. Any day picks its Monday; the default is the next week with rides |
-| `PUT /schools/:school_id/cca_rides` | `{ enabled, price, days: [1..5], seats }` |
+| `PATCH /schools/:school_id/cca_rides` | `{ enabled, price, days: [1..5], seats }` |
 | `POST /schools/:school_id/cca_rides/not_running` | `{ date, reason: school \| weather \| bus \| other \| no_school, note }`. Every ride booked that day becomes credit for its family, once per day |
 
 **Settings.**
@@ -379,7 +455,7 @@ only on days with requests waiting. It is recorded in notification emails and no
 - Seats: `riders`, `taken`, `seats`, `full`.
 - Calendar: `off` (`{ reason, by, at, credit }`), `no_school` (not a school day, with the holiday name) and `calendar`
   (a special day: check the bus time).
-- Actions: `can_not_running`, and `can_no_school_credit` (give credit for rides booked before the calendar changed).
+- Actions: `can_not_running` → Bus Not Running (`POST …/cca_rides/not_running` with the reason picked), and `can_no_school_credit` → "No School credit" (give credit for rides booked before the calendar changed): the same call with `{ date, reason: "no_school" }`.
 - `rows[]`: child, class, family, `paid_on`, `method`, `bill_id`, `late`, `not_riding`.
 
 **Week figures (`kpis`).** `rides`, `collected`, `late`, `not_riding`, `credit_given`.

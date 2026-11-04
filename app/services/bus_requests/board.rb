@@ -29,6 +29,7 @@ module BusRequests
         meta: { page:, limit:, count: rows.size, pages: (rows.size.to_f / limit).ceil, kind: @kind, year: @year&.key,
                 academic_year_id: @year&.id, tiles: (tiles(all, clocks) if @kind == "new"), tabs:, windows:, years:, levels: levels(all),
                 mid: { ack_days: @set.ack_days, plan_weeks: @set.plan_weeks, service_starts_on: @set.start },
+                service_check: (plan = @check.plan_text) ? { none: false, plan: } : { none: true, plan: nil },
                 auto_accept: (ids = auto_ids(all)) && { count: ids.size, ids: },
                 cover: (ids = all.select { it.live_status == "Waitlisted" && @checks[it.id]&.dig(:code) == "covered" }.map(&:id)) && { count: ids.size, ids: } } }
     end

@@ -7,6 +7,7 @@
 #  id                     :bigint           not null, primary key
 #  active                 :boolean          default(TRUE), not null
 #  amount                 :decimal(12, 2)   not null
+#  cancelled_hours_before :integer
 #  occurrence_date        :date             not null
 #  start_time             :integer
 #  trip_label             :string

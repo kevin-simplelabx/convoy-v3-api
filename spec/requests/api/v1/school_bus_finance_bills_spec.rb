@@ -175,4 +175,24 @@ RSpec.describe "School Bus finance bills" do
     expect(json[:data]).to include(status: "Void", void: hash_including(reason: "Cheque bounced"))
     expect(bill(lim.id)).to include(status: "Due", paid: "0.0", owed: "1464.96")
   end
+
+  it "estimates a route plan's month: a year of fares over 12, two-way riders half, To Collect, operator cost" do
+    at Time.zone.local(2027, 1, 5, 9, 0)
+    am = f[:routes].first.plan
+    within_tenant(company) { school.bus_size_rates.create!(bus_type: "MEDIUM_23", monthly: 3000) && am.routes.first.update!(bus_type: "MEDIUM_23") }
+    get estimate_api_v1_plan_path(am), params: { month: "2027-01" }
+    d = json[:data]
+    # R1, R2, R4 on the list in January (R3 joins in March), all AM + PM in the rider data: 1,680 a year two-way, the January bill 840
+    expect(d).to include(title: "Estimate for Jan 2027", paid_month: true, riders: 3, two_way: 3, revenue: "210.0", to_collect: "1260.0",
+                         operator_cost: "3000.0", gross_profit: "-2790.0", unpriced: 0, basis: "distance", no_fare: 0)
+    expect(d[:bands].first).to include(label: "0 to 3 km", riders: 3, two_way: 3, one_way: 0, share: 100.0, revenue: "210.0", to_collect: "1260.0")
+    expect(d[:pl]).to eq(one_way: { riders: 0, amount: "0.0" }, two_way: { riders: 3, total: "420.0", half: "210.0" })
+    expect(d[:notes].last).to eq("Revenue is a year of fares spread over 12 months. To Collect is what is billed in Jan 2027, when a term starts. " \
+                                 "Two-way riders count half here, half in the other session")
+    get estimate_api_v1_plan_path(am), params: { month: "2027-02" }
+    expect(json[:data]).to include(revenue: "210.0", to_collect: "0.0")
+    sign_in_as(create(:user, company:, permissions: %w[plans]))
+    get estimate_api_v1_plan_path(am)
+    expect(response).to have_http_status(:forbidden)
+  end
 end

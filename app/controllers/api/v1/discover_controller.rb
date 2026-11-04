@@ -25,7 +25,7 @@ module Api
       def update_advertiser
         a = DiscoverAdvertiser.kept.find(params[:id])
         a.update!(advertiser_params)
-        render json: { data: advertiser_json(a, 0) }
+        render json: { data: advertiser_json(a, a.placements.count { %w[live paused].include?(it.status_on) }) }
       end
 
       def destroy_advertiser

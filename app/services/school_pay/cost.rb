@@ -7,13 +7,17 @@
 # and paid to the replacement's operator (auto lines). Operator nil = the company's own buses; "none" = no bus.
 module SchoolPay
   class Cost < ApplicationService
-    Row = Struct.new(:route, :plan, :key, :operator, :vehicle, :price, :unpriced, :amount, :days, :of, :brk, :earned, :rate, :from, :to, :note, keyword_init: true)
+    Row = Struct.new(:route, :plan, :key, :operator, :vehicle, :price, :unpriced, :amount, :days, :of, :brk, :earned, :rate, :from, :to, :note, :attendant, keyword_init: true)
 
-    def initialize(school, month)
+    def initialize(school, month, plan: nil)
       @school = school
       @month = month.beginning_of_month
       @last = @month.end_of_month
+      @plan = plan
     end
+
+    # What a plan's routes would cost for the whole month (Plan Estimate, adopted or not).
+    def self.for_plan(plan, month) = new(plan.school, month, plan:).call
 
     # What some routes cost a full month at the prices on a day (School Dashboard: a plan to be adopted against the current).
     def self.monthly(school, routes, day) = new(school, day).monthly(routes, day)
@@ -30,9 +34,9 @@ module SchoolPay
       @ph = PublicHoliday.between(@month, @last).pluck(:date).to_set
       @days = (@month..@last).select { school_day?(it) }
       @earned = OperatorPays::Earned.new(@school, @pay)
-      routes = SchoolRoute.joins(:plan).where(school_plans: { school_id: @school.id, in_use: true })
-                          .where("school_plans.effective_from <= ? AND (school_plans.effective_to IS NULL OR school_plans.effective_to >= ?)", @last, @month)
-                          .includes(:plan, :prices, replacements: { vehicle: :operator }, vehicle_changes: { vehicle: :operator })
+      routes = (@plan ? SchoolRoute.joins(:plan).where(school_plan_id: @plan.id) : SchoolRoute.joins(:plan).where(school_plans: { school_id: @school.id, in_use: true })
+                          .where("school_plans.effective_from <= ? AND (school_plans.effective_to IS NULL OR school_plans.effective_to >= ?)", @last, @month))
+                          .includes(:plan, :prices, :pay_to_operator, replacements: { vehicle: :operator }, vehicle_changes: { vehicle: :operator })
                           .order("school_plans.session", :number).to_a
       rows = []
       auto = Hash.new { |h, k| h[k] = [] }
@@ -53,23 +57,31 @@ module SchoolPay
       y ? y.school_day?(d) : d.on_weekday? && !@ph.include?(d)
     end
 
-    def on?(plan, d) = plan.effective_from <= d && (plan.effective_to.nil? || d <= plan.effective_to)
+    def on?(plan, d) = @plan.present? || (plan.effective_from <= d && (plan.effective_to.nil? || d <= plan.effective_to))
 
     def vehicle_on(route, d) = route.vehicle_changes.select { it.effective_from <= d }.last&.vehicle
-    def key_of(v) = v.nil? ? "none" : (v.operator_id || "own")
+
+    # Who is paid: the bus's operator (own bus: "own"); with no bus, the route's Paid To (set by hand), else "none".
+    def key_of(v, route)
+      return v.operator_id || "own" if v
+      return route.pay_to_operator_id if route.pay_to == "operator"
+
+      route.pay_to == "own" ? "own" : "none"
+    end
+
+    def seg(route, from, v) = { from:, to: @last, vehicle: v, key: key_of(v, route), operator: v ? v.operator : (route.pay_to_operator if route.pay_to == "operator") }
 
     # The route's month split where its regular bus moves to another operator.
     def segments(route)
-      v = vehicle_on(route, @month)
-      out = [ { from: @month, to: @last, vehicle: v, key: key_of(v) } ]
+      out = [ seg(route, @month, vehicle_on(route, @month)) ]
       route.vehicle_changes.select { it.effective_from > @month && it.effective_from <= @last }.each do |c|
         last = out.last
-        if key_of(c.vehicle) == last[:key]
+        if key_of(c.vehicle, route) == last[:key]
           last[:vehicle] = c.vehicle
           next
         end
         last[:to] = c.effective_from - 1
-        out << { from: c.effective_from, to: @last, vehicle: c.vehicle, key: key_of(c.vehicle) }
+        out << seg(route, c.effective_from, c.vehicle)
       end
       out
     end
@@ -91,10 +103,12 @@ module SchoolPay
       shown = price(route, @days.last || @month.change(day: 28))
       note = if segs.size > 1
                i.positive? ? "Took over from #{name_of(segs[i - 1])} on #{fmt(sg[:from])}" : "Moved to #{name_of(segs[i + 1])} from #{fmt(segs[i + 1][:from])}"
+      elsif sg[:vehicle].nil? && route.pay_to.present?
+        "No bus, set by hand"
       end
-      Row.new(route:, plan:, key: sg[:key], operator: sg[:vehicle]&.operator, vehicle: sg[:vehicle], price: shown, unpriced:,
+      Row.new(route:, plan:, key: sg[:key], operator: sg[:operator], vehicle: sg[:vehicle], price: shown, unpriced:,
               amount: rate.zero? ? 0.to_d : (amount * rate * earned).round(2), days: act.size, of: base.size, brk:, earned:, rate:,
-              from: act.first, to: act.last, note:)
+              from: act.first, to: act.last, note:, attendant: attendant_row(route))
     end
 
     def prices!
@@ -116,14 +130,23 @@ module SchoolPay
       base + over + attendant(route)
     end
 
+    # "Incl. S$x BA (ours / theirs)": the monthly attendant price in the route's price and who provides the attendant.
+    def attendant_row(route)
+      amount = attendant(route)
+      amount.positive? ? { amount:, by: attendant_by(route) } : nil
+    end
+
+    # The route's own Bus Attendant settings, else the school's (Bus Attendants) and its price for the bus size.
     def attendant(route)
-      needs = @policy&.needs || "statutory"
-      law = SchoolBus.statutory_sizes.include?(route.bus_type)
-      return 0 unless law || needs == "all" || (needs == "some" && Array(@policy&.sizes).include?(route.bus_type))
+      required = route.attendant_required.nil? ? (@policy || SchoolAttendantPolicy.new).needed_sizes.include?(route.bus_type) : route.attendant_required
+      return 0.to_d unless required
+      return route.attendant_price.to_d if route.attendant_price
 
       rate = @rates[route.bus_type]
-      ((@policy&.provided_by || "operator") == "operator" ? rate&.ba_operator : rate&.ba_us).to_d
+      (attendant_by(route) == "operator" ? rate&.ba_operator : rate&.ba_us).to_d
     end
+
+    def attendant_by(route) = route.attendant_provided_by || @policy&.provided_by || "operator"
 
     # A replacement we arranged at a daily rate: off the regular operator (unless not deducted), to the replacement's operator.
     def replacements(route, segs, auto)
@@ -143,7 +166,7 @@ module SchoolPay
       end
     end
 
-    def name_of(seg) = seg[:vehicle]&.operator&.name || (seg[:vehicle] ? "Our buses" : "Not assigned")
+    def name_of(seg) = seg[:operator]&.name || (seg[:key] == "own" ? "Our buses" : "Not assigned")
     def fmt(d) = d.strftime("%d/%m/%Y")
   end
 end

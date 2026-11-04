@@ -44,6 +44,30 @@ module Api
         render_plan(route.plan)
       end
 
+      # POST /routes/:id/optimise — Optimise: the route's stops re-ordered; meta.message is the toast.
+      def optimise
+        route = find
+        authorize Stop, :update?
+        message = Plans::Edit.new(route.plan).optimise([ route ])
+        render_plan(route.plan, meta: { message: })
+      end
+
+      # POST /plans/:plan_id/optimise — Optimise All (stops inside every route; riders stay on their routes).
+      def optimise_all
+        plan = find_plan
+        authorize Stop, :update?
+        message = Plans::Edit.new(plan).optimise(plan.routes.to_a)
+        render_plan(plan, meta: { message: })
+      end
+
+      # POST /plans/:plan_id/reset — Reset All: every manual edit cleared, routes drawn by hand removed.
+      def reset_all
+        plan = find_plan
+        authorize Stop, :update?
+        message = Plans::Edit.new(plan).reset_all
+        render_plan(plan, meta: { message: })
+      end
+
       # POST /plans/:plan_id/route_again { params: {…}, fleet: { MEDIUM_23: 2, SMALL_13: 0 } }
       def route_again
         plan = find_plan
@@ -76,9 +100,11 @@ module Api
         params.permit(stops: [ :stop_point_id, { riders: [] } ]).to_h.deep_symbolize_keys.fetch(:stops, [])
       end
 
-      def render_plan(plan, status: :ok)
+      def render_plan(plan, status: :ok, meta: nil)
         full = SchoolPlan.includes(*SchoolPlansController::INCLUDES).find(plan.id)
-        render_data full, SchoolPlanBlueprint, view: :detail, status:
+        return render_data(full, SchoolPlanBlueprint, view: :detail, status:) unless meta
+
+        render json: { data: SchoolPlanBlueprint.render_as_hash(present(full), view: :detail), meta: }, status:
       end
     end
   end

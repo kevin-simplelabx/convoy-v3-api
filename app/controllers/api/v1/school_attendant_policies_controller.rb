@@ -31,7 +31,15 @@ module Api
           bus_types: SchoolBus::BUS_TYPES.map do |k, t|
             rate = school.bus_size_rates.find { it.bus_type == k }
             { key: k, label: t[:label], seats: t[:seats], required_by_law: t[:law], ba_operator: rate&.ba_operator, ba_us: rate&.ba_us }
-          end }
+          end, routes: routes(school) }
+      end
+
+      # Routes of the current and scheduled plans: "x of y routes in current plans need a BA with these settings" (the
+      # front end counts them against the settings being edited).
+      def routes(school)
+        SchoolRoute.joins(:plan).merge(school.plans.where(in_use: true).where("school_plans.effective_to IS NULL OR school_plans.effective_to >= ?", Date.current))
+                   .order("school_plans.session", :number).pluck(:id, :label, "school_plans.session", :bus_type)
+                   .map { |id, label, session, bus_type| { id:, label:, session:, bus_type: } }
       end
     end
   end

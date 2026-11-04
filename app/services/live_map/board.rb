@@ -58,7 +58,7 @@ module LiveMap
     end
 
     def brief(o)
-      { id: o.id, trip_label: o.trip_label, title: o.decorate.title, client: o.client&.name }
+      { id: o.id, trip_label: o.trip_label, title: o.decorate.title, client: o.client&.name, school: o.school_route&.plan&.school&.name }
     end
 
     # The run on the board: where the bus is in it (points reached, the next point, ETA there or the time it arrived).
@@ -123,12 +123,31 @@ module LiveMap
       [ ((at - stop[:planned_at]) / 60).round, 0 ].max
     end
 
-    # School Run: the students of each stop (by stop name) with Boarded / Alighted / Absent so far.
+    # School Live statuses in the School Run words of the drawer.
+    SCHOOL_STATUS = { "waiting" => "expected", "on_board" => "boarded", "at_school" => "alighted", "dropped_off" => "alighted",
+                      "no_show" => "not_boarded", "not_required" => "not_boarding" }.freeze
+
+    # The students of each stop (by stop name) with Boarded / Alighted / Absent so far: a School Run's, or a School Bus
+    # route's riders (level, home address) from Live Ops.
     def students(occ)
+      return school_bus_students(occ) if occ.school_route_id
       return {} unless occ.trip&.school_run?
 
       SchoolRuns::Passengers.call(occ)[:stops].to_h do |s|
         [ s[:name], s[:students].map { |st| st.slice(:key, :name, :class_name, :status, :boarded_at, :alighted_at) } ]
+      end
+    end
+
+    def school_bus_students(occ)
+      ActiveRecord::Associations::Preloader.new(records: [ occ ], associations: [ :passenger_marks, { school_route: { stops: :riders } } ]).call
+      school = occ.school_route.plan.school
+      ctx = SchoolLive.context(school, occ.date, [ occ ])
+      run = SchoolLive::Run.new(occ, school:, now: @now, **ctx)
+      run.riders.group_by { it[:stop][:name] }.transform_values do |list|
+        list.map do |r|
+          { key: r[:rid], name: r[:name], class_name: r[:level], address: ctx[:names][r[:rid]]&.address, status: SCHOOL_STATUS[r[:status]],
+            boarded_at: r[:boarded_at], alighted_at: r[:alighted_at] }
+        end
       end
     end
   end

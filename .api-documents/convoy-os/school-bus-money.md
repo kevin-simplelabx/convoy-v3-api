@@ -47,20 +47,20 @@ There is one fare table per academic year. It needs that year's **Terms & Semest
 | Call | What it does |
 | --- | --- |
 | `GET /academic_years/:id/fares` | The table, its billing periods, the worked-out fares and the bus types |
-| `PUT /academic_years/:id/fares` | Save & Lock the whole table, as the wizard's Review step sends it (JSON) |
+| `PATCH /academic_years/:id/fares` | Save & Lock the whole table, as the wizard's Review step sends it (JSON) |
 | `GET /academic_years/:id/fares/copy?from_id=` | "Copy AY X Fares": another year's table as a draft. Nothing is saved. |
 
 `GET` returns:
 
 ```json
-{ "table": { …the table, same shape as the PUT body below; tiers also carry their "id"… } | null,
+{ "table": { …the table, same shape as the PATCH body below; tiers also carry their "id"… } | null,
   "locked": { "at": "…", "by": "…" } | null, "calendar_locked": true,
   "periods": [ { "label": "Term 1", "short": "Term 1", "starts_on": "2026-01-02", "ends_on": "2026-03-13", "school_days": 50, "cca_days": 50 } ],
   "fares": [ …see §2… ],
   "bus_types": [ { "key": "SMALL_13", "label": "13-seater", "seats": 13 } ] }
 ```
 
-The PUT body is the whole table. Send only the parts that apply:
+The PATCH body is the whole table. Send only the parts that apply:
 
 ```json
 { "payer": "parents" | "school" | "bus",
@@ -276,7 +276,7 @@ This sets how parents pay a school's bills in the Convoy App.
 | Call | What it does |
 | --- | --- |
 | `GET /schools/:id/payment_methods` | The current methods and accounts |
-| `PUT /schools/:id/payment_methods { bank: { on, fee_kind, fee }, paynow: {…}, card: {…}, own_account, bank_id, account_number, account_name, paynow_id }` | Save |
+| `PATCH /schools/:id/payment_methods { bank: { on, fee_kind, fee }, paynow: {…}, card: {…}, own_account, bank_id, account_number, account_name, paynow_id }` | Save |
 
 ```json
 { "saved": true, "bank": { "label": "Bank Transfer", "on": true, "fee_kind": "none", "fee": null },
@@ -307,7 +307,7 @@ This is set per school, and only finance users see it.
 | Call | What it does |
 | --- | --- |
 | `GET /schools/:id/operator_pay` | Settings and prices per bus size |
-| `PUT /schools/:id/operator_pay` | Save & Lock |
+| `PATCH /schools/:id/operator_pay` | Save & Lock |
 | `POST /schools/:id/operator_pay/calculator { academic_year_id, start_date, price }` | Break Month Calculator |
 
 ```json
@@ -319,7 +319,7 @@ This is set per school, and only finance users see it.
                "default_mode": "fixed", "ba_operator": null, "ba_us": null } ] }
 ```
 
-The PUT body has the same fields: `rates: [{ bus_type, fixed_on, monthly, rider_on, base_price, riders_included,
+The PATCH body has the same fields: `rates: [{ bus_type, fixed_on, monthly, rider_on, base_price, riders_included,
 per_rider, default_mode, ba_operator, ba_us }]`.
 
 **Settings**
@@ -360,9 +360,10 @@ FE only:
 - CSV export.
 - How It Works.
 
+Route Charges (an extra per AM / PM run when the school pays per bus) are built: [school-bus-routes § 6](school-bus-routes.md#6-route-bus-and-money).
+
 Not built yet:
 
-- **Route Charges** (an extra per AM / PM run when the school pays per bus): this comes with Route Plans.
 - Sending reminders.
 - Payments in the app (PayNow QR, card) and passing on the card fee.
-- Applying the policy to bills: this comes with School Bus finance.
+- (Applying the policy to bills, e.g. late fees and terms, is built in School Finance: [school-bus-finance.md](school-bus-finance.md).)

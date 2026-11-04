@@ -193,10 +193,16 @@ The bus's GPS track for the map comes from Live Map: `GET /live_map/runs/:id/tra
   - `profit`, `margin_pct`.
   - `cost_per_rider`, `riders`.
   - `seats`: `{ riders, seats, routes, pct }`, the riders and seats of the routes running on `reference_day`.
-- `collections`: `{ expected, billed, bills, collected, overdue: { bills, owed } }`:
+- `collections`: `{ expected, billable, billed, bills, collected, overdue: { bills, owed } }`:
+  - `billable`: the bills of the billing periods that start in the month, in full (`null` when `expected` is) → with no bill
+    issued yet: "Expected bills: S$`billable`. Not raised yet".
   - `billed`: the bills issued for the month.
   - `collected`: payments received in the month.
   - `overdue`: the bills overdue today, past their due date with something owed.
+- `route_costs`: Finance › Route Costs and By Transport Operator for the month:
+  `{ total, school_days, priced, routes, rows: [{ route, session, plan, bus_type, plate, operator, price, unpriced, days, of, amount, note, attendant }],
+  by_operator: [{ key, operator_id, name, routes, amount }] }` (the same figures as School Finance › Operator Payments; `operator`
+  "Our buses" / "Not assigned" for own buses / no bus; `attendant { amount, by }` as there).
 - `year`: the academic year's 12 months, `[{ month, revenue, cost, profit }]`, for the revenue against cost chart.
 - `ahead`: up to 8 items in the next 90 days:
   - `plan_adopted`: `revenue_change` (only when the school pays per bus by the plan) and `cost_change`, both a month.

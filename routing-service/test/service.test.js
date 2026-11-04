@@ -31,12 +31,18 @@ test('refuses calls without the secret', async () => {
 });
 
 test('solves, re-times a route and compares plans', { timeout: 60000 }, async () => {
-  const r = await post('/solve', { input: { school, groups, matrix: fakeMatrix(lls), params: { session: 'AM', runs: 1, timeLimit: 5 } } });
+  const r = await post('/solve', { key: 'run-1', input: { school, groups, matrix: fakeMatrix(lls), params: { session: 'AM', runs: 1, timeLimit: 5 } } });
   assert.strictEqual(r.status, 200);
   const res = await r.json();
   assert.ok(res.routes.length >= 1);
   assert.strictEqual(res.summary.assigned, 36);
   assert.ok(res.assign.R00);
+
+  // Progress of a solve sent with a key: done, with the route options checked.
+  const p = await (await fetch(base + '/progress/run-1', { headers: { 'X-Routing-Secret': 'test-secret' } })).json();
+  assert.strictEqual(p.step, 'done');
+  assert.strictEqual(p.frac, 1);
+  assert.ok(p.work.evals > 0);
 
   const route = res.routes[0];
   const t = await (await post('/retime', { base: route, stops: route.stops.slice().reverse(), school, params: res.params })).json();
@@ -46,6 +52,15 @@ test('solves, re-times a route and compares plans', { timeout: 60000 }, async ()
   const small = await (await post('/retime', { base: { id: 'R09', type: 'SMALL_13' }, stops: route.stops.slice(0, 1), school, params: res.params })).json();
   assert.strictEqual(small.cls, 'S');
   assert.strictEqual(small.seats, 13);
+
+  // Optimise: a route turned back to front is re-ordered; one already in its best order is left out.
+  const twisted = route.stops.slice().reverse();
+  if (twisted.length > 1) {
+    const o = await (await post('/optimise', { routes: [{ id: route.id, base: route, stops: twisted }], school, params: res.params })).json();
+    assert.strictEqual(o.routes.length, 1);
+    assert.strictEqual(o.routes[0].order.length, twisted.length);
+    assert.ok(o.routes[0].after.span <= o.routes[0].before.span || o.routes[0].after.ride <= o.routes[0].before.ride);
+  }
 
   const d = await (await post('/diff', { a: res, b: res })).json();
   assert.deepStrictEqual(d.routes, [res.summary.routes, res.summary.routes]);

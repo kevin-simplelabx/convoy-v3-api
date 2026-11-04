@@ -60,11 +60,16 @@ module OpsControl
       { status: app_status, started_at: @occ.started_at, ended_at: @occ.ended_at, signed_in_at: @session&.signed_in_at, last_seen_at: @last_seen }
     end
 
-    # GPS column: at_drop_off (ended), no_signal, on_route (stops reached k of n), or the distance to the first pick-up.
+    MOVING_KMH = 3
+
+    # GPS column: at_drop_off (ended), no_signal, on_route (stops reached k of n), or the distance to the first pick-up;
+    # the last speed and moving ("Moving" / "Not moving": over 3 km/h).
     def gps
       stops = planned.size
       reached = @occ.stop_events.to_a.count { |e| e.arrived_at || e.skipped }
-      { status: gps_status, last_ping_at: ping_at, distance_m: arrived? || done? ? nil : distance_m, stops_reached: reached, stops: }
+      speed = live&.speed_kmh
+      { status: gps_status, last_ping_at: ping_at, distance_m: arrived? || done? ? nil : distance_m, stops_reached: reached, stops:,
+        speed_kmh: speed&.round(1), moving: speed.nil? ? nil : speed > MOVING_KMH }
     end
 
     def route_text

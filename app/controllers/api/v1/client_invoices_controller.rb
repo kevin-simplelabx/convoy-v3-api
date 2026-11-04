@@ -8,7 +8,7 @@ module Api
       # GET /finance/invoices?tab=drafts|unpaid|paid|void|credit_notes&client_id=&q=
       def index
         authorize :finance, :index?
-        list = ClientInvoice.includes(:client, :payments, :credit_notes).order(Arel.sql("COALESCE(issued_on, created_at::date) DESC"), id: :desc)
+        list = ClientInvoice.includes(:client, :invoice, :payments, :credit_notes).order(Arel.sql("COALESCE(issued_on, created_at::date) DESC"), id: :desc)
         list = list.where(client_id: params[:client_id]) if params[:client_id].present?
         list = list.where("number ILIKE :q OR bill_to_name ILIKE :q", q: "%#{ClientInvoice.sanitize_sql_like(params[:q])}%") if params[:q].present?
         rows = list.to_a
@@ -136,7 +136,8 @@ module Api
 
       def invoice_params
         params.expect(invoice: [ *ClientInvoices::Edit::FIELDS, { remove_line_ids: [], waived_run_ids: [] },
-                                 { manual_lines: [ %i[description details period_text quantity unit_price amount] ] } ])
+                                 { manual_lines: [ %i[ref description details period_text quantity unit_price amount] ] },
+                                 { lines: [ %i[id ref description details period_text quantity amount] ] } ])
       end
 
       def ready_row(e, drafts)

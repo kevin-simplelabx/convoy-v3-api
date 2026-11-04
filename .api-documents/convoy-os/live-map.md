@@ -36,7 +36,7 @@ let markers glide between reports on the front end.
       "position": { "lat": 1.2801, "lng": 103.8102, "speed_kmh": 38, "heading": 90, "recorded_at": "2026-11-02T08:19:55+08:00" },
       "last_reported_at": "2026-11-02T08:19:55+08:00", "road": null,
       "device": { "kind": "gps_tracker", "name": "OTW GPS T-8 tracker" },
-      "run": { "id": 492, "trip_label": "TID103716-3", "title": "MBC Campus Shuttle", "client": "Google Asia Pacific",
+      "run": { "id": 492, "trip_label": "TID103716-3", "title": "MBC Campus Shuttle", "client": "Google Asia Pacific", "school": null,
                "date": "2026-11-02", "key": "t8|2026-11-02|2|1|1", "kind": "corporate_shuttle", "kind_name": "Corporate Shuttle",
                "trip_id": 8, "school_route_id": null,
                "starts_at": "2026-11-02T08:15:00+08:00", "ends_at": "2026-11-02T08:30:00+08:00",
@@ -68,6 +68,10 @@ let markers glide between reports on the front end.
     `ETA {next_stop.eta_at}`, or `Arrived {arrived_at}` when `next_stop.at_stop` is true (the chip then reads "Arrived";
     otherwise "On the way"). "Last Point" when `next_stop.last`.
   - **Available:** "Next trip starts {next_run.starts_at}", or `{last_run.title} | ended {last_run.ended_at}`.
+    `next_run`: `{ id, trip_label, title, client, school, starts_at }` (`school` = the school of a School Bus route, else `null`:
+    "School Route | <school>"); `last_run` (only when the bus has no run now; the last run of
+    the day that ended): `{ id, trip_label, title, client, ended_at }` (`ended_at` = when it ended, else its planned end), e.g.
+    `{ "id": 812, "trip_label": "T-0042-AM", "title": "Labrador Park → Google Mapletree", "client": "Google Asia Pacific", "ended_at": "2026-11-02T09:05:00+08:00" }`.
   - **Offline:** "Since {last_reported_at}" plus how long ago.
 - `eta_at` is estimated as a straight line at 30 km/h from the last position. It is the planned time when there is no
   fresh position. `late_minutes` = ETA (or arrival) minus the planned time, never below 0.
@@ -111,7 +115,8 @@ returns the same row plus:
   - Points `points_done` of `points`, `on_board` (boarded minus alighted so far), ETA Last `eta_last`.
   - Stops in travel order. `state` is `done` (reached or skipped), `current` (heading there) or `upcoming`. Show
     `arrived_at` for done stops and `planned_at` for the rest.
-  - `students` is filled only for School Run trips (matched by stop name). `status` is `boarded` / `alighted` / `not_boarded`
+  - `students` is filled for School Run trips and School Bus routes (matched by stop name); School Bus students add `address`
+    (home; show the part before the first comma) and `class_name` is the level. `status` is `boarded` / `alighted` / `not_boarded`
     / `not_boarding` / `expected`. The label depends on the stop:
     - at a pick-up that is done: Picked up / Absent (`not_boarded`, `not_boarding`)
     - at the current stop: Waiting

@@ -77,7 +77,7 @@ RSpec.describe "School Bus routes on the Scheduler" do
 
     it "a date range on an operator's bus we arrange needs the cost per day, and later drops cut it" do
       post move_api_v1_occurrence_path(tue), params: { vehicle_id: f[:c].id, scope: "range", starts_on: "2026-11-03", ends_on: "2026-11-06", arranged_by: "us" }, as: :json
-      expect(json.dig(:error, :message)).to include("Daily rate must be entered")
+      expect(json.dig(:error, :message)).to eq("Enter the cost per day")
 
       post move_api_v1_occurrence_path(tue), params: { vehicle_id: f[:c].id, scope: "range", starts_on: "2026-11-03", ends_on: "2026-11-06",
                                                        arranged_by: "us", daily_rate: 180 }, as: :json

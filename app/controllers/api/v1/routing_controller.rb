@@ -54,7 +54,15 @@ module Api
       def run_row(run)
         { id: run.id, school_id: run.school_id, session: run.session, plan_date: run.plan_date, status: run.status, error: run.error,
           riders: run.input["groups"].sum { it["riders"].size }, stops: run.input["groups"].size, no_stop: run.no_stop_rids, conflicts: run.conflict_rids,
-          ms: run.ms, plan_id: run.plan&.id, created_at: run.created_at, finished_at: run.finished_at }
+          ms: run.ms, plan_id: run.plan&.id, created_at: run.created_at, finished_at: run.finished_at, progress: progress(run) }
+      end
+
+      # The loader: the service's live progress while running; when done, the route options checked.
+      def progress(run)
+        case run.status
+        when "running" then Routing::Client.current.progress(RoutingRun.progress_key(run.id))
+        when "done" then { step: "done", frac: 1, work: { evals: run.result&.dig("search", "evals") } }
+        end
       end
     end
   end

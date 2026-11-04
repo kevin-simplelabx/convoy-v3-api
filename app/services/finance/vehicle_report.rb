@@ -17,9 +17,11 @@ module Finance
 
     def fleet
       pl = lines(@from, @to)
+      runs = billed_runs.group(:vehicle_id).count
       by_vehicle = @vehicles.map do |v|
         rev, cost = totals(pl[v.id].values.flatten)
-        { vehicle_id: v.id, plate: v.plate, seats: v.seats, revenue: rev, cost:, profit: rev - cost }
+        { vehicle_id: v.id, plate: v.plate, seats: v.seats, revenue: rev, cost:, profit: rev - cost, break_even: break_even(pl[v.id], runs[v.id].to_i),
+          categories: categories(pl[v.id].values.flatten, tree: false) }
       end
       rev, cost = totals(pl.values.flat_map { |m| m.values.flatten })
       { period: @period, basis: @basis, from: @from, to: @to, revenue: rev, cost:, profit: rev - cost,
@@ -31,7 +33,7 @@ module Finance
       pl = lines(@from, @to)[v.id]
       rev, cost = totals(pl.values.flatten)
       { vehicle_id: v.id, plate: v.plate, period: @period, basis: @basis, from: @from, to: @to, revenue: rev, cost:, profit: rev - cost,
-        categories: categories(pl.values.flatten), chart: chart(v.id), break_even: break_even(v, pl) }
+        categories: categories(pl.values.flatten), chart: chart(v.id), break_even: break_even(pl, billed_runs.where(vehicle_id: v.id).count) }
     end
 
     # Cost items this month above 1.5 × the median of the six months before (with that cost in 3 of them) and S$100 over it.
@@ -93,9 +95,20 @@ module Finance
 
     def sums(list) = list.select { |l| l[:kind] == "cost" }.group_by { |l| l[:category] }.transform_values { |x| x.sum(0.to_d) { |l| l[:amount] } }
 
-    def categories(list)
-      list.group_by { |l| [ l[:kind], l[:category] ] }.map { |(kind, cat), x| { kind:, category: cat, amount: x.sum(0.to_d) { |l| l[:amount] } } }
-          .sort_by { |c| [ c[:kind] == "revenue" ? 0 : 1, -c[:amount] ] }
+    # By category, biggest first; with tree: the dive under each (children → children), biggest first, as the prototype.
+    def categories(list, tree: true)
+      list.group_by { |l| [ l[:kind], l[:category] ] }.map do |(kind, cat), x|
+        row = { kind:, category: cat, amount: x.sum(0.to_d) { |l| l[:amount] } }
+        tree ? row.merge(children: branch(x.select { it[:path] }, 0)) : row
+      end.sort_by { |c| [ c[:kind] == "revenue" ? 0 : 1, -c[:amount] ] }
+    end
+
+    def branch(list, level)
+      return [] if level > 1
+
+      list.select { it[:path][level] }.group_by { it[:path][level] }.map do |name, x|
+        { name:, amount: x.sum(0.to_d) { |l| l[:amount] } }.merge(level.zero? ? { children: branch(x, 1) } : {})
+      end.sort_by { -it[:amount] }
     end
 
     # The 12 months to the selected month: revenue, cost and profit (one vehicle or the fleet).
@@ -110,14 +123,16 @@ module Finance
       end
     end
 
-    # Runs needed at this period's average trip price to cover the cost not covered by other revenue.
-    def break_even(v, pl)
+    # Runs done in the period (up to today) with a client price.
+    def billed_runs = TripOccurrence.between(@from, [ @to, @today ].min).where.not(status: %w[cancelled removed skipped]).where("price > 0")
+
+    # Runs needed at this period's average trip price to cover the cost not covered by other revenue (none below 0).
+    def break_even(pl, runs)
       list = pl.values.flatten
       rev, cost = totals(list)
       trip_rev = list.select { |l| l[:kind] == "revenue" && l[:category].end_with?("(auto)") }.sum(0.to_d) { |l| l[:amount] }
-      runs = TripOccurrence.where(vehicle_id: v.id).between(@from, [ @to, @today ].min).where.not(status: %w[cancelled removed skipped]).where("price > 0").count
       per = runs.positive? ? (trip_rev / runs).round(2) : nil
-      need = per&.positive? ? ((cost - (rev - trip_rev)) / per).ceil : nil
+      need = per&.positive? ? [ ((cost - (rev - trip_rev)) / per).ceil, 0 ].max : nil
       { revenue: rev, cost:, trip_revenue: trip_rev, runs:, per_run: per, runs_needed: need, gap: cost - rev }
     end
 

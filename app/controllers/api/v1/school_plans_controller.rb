@@ -3,7 +3,7 @@
 module Api
   module V1
     class SchoolPlansController < BaseController
-      INCLUDES = [ :school, :created_by, :comments, { routing_run: [] }, { routes: [ :attendant, :prices, :charges, { vehicle_changes: :vehicle, stops: %i[riders stop stop_point] } ] } ].freeze
+      INCLUDES = [ :school, :created_by, :comments, { routing_run: [] }, { routes: [ :attendant, :charges, :pay_to_operator, { prices: :created_by, vehicle_changes: %i[vehicle created_by], stops: %i[riders stop stop_point] } ] } ].freeze
 
       # GET /schools/:school_id/plans?session=am
       def index
@@ -85,6 +85,16 @@ module Api
         authorize Stop, :update?
         Plans::Adopt.cancel(SchoolPlan.where(school: policy_scope(School)).find(params[:id]))
         render_data find, SchoolPlanBlueprint, view: :detail
+      end
+
+      # GET /plans/:id/estimate?month=2026-11 — the plan's revenue, operator cost and profit for a month (finance / finview).
+      def estimate
+        plan = SchoolPlan.where(school: policy_scope(School)).find(params[:id])
+        authorize plan.school, :money_view?
+        month = params[:month].present? ? Date.strptime(params[:month], "%Y-%m") : Date.current
+        render json: { data: Plans::Estimate.call(plan, month:) }
+      rescue Date::Error
+        raise ApplicationService::Error, "Month must look like 2026-11"
       end
 
       # GET /plans/:id/compare?with=:other_id

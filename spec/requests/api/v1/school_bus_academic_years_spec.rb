@@ -81,6 +81,9 @@ RSpec.describe "School Bus academic years" do
     expect(d[:holidays].map { |h| [ h[:name], h[:public_holiday], h[:operating_days_off] ] })
       .to eq([ [ "Chinese New Year", true, 0 ], [ "June Holidays", false, 20 ] ])
     expect(d[:operating_days_off]).to eq(20)
+    put holidays_api_v1_academic_year_path(year), params: { holidays: d[:holidays], special_days: d[:special_days] }, as: :json # saved as listed: keeps the link
+    expect(json.dig(:data, :holidays).map { |h| [ h[:name], h[:public_holiday], h[:public_holiday_id].present? ] })
+      .to eq([ [ "Chinese New Year", true, true ], [ "June Holidays", false, false ] ])
     expect(d[:special_days]).to eq([ { id: d[:special_days].first[:id], date: "2027-03-05", kind: "early_dismissal", time: "11:30", description: "Sports Day" } ])
 
     put holidays_api_v1_academic_year_path(year), params: { holidays: [ { name: "Bad", starts_on: "2027-03-05", ends_on: "2027-03-01" } ] }, as: :json

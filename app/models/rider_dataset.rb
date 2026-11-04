@@ -6,6 +6,7 @@
 # Database name: primary
 #
 #  id              :bigint           not null, primary key
+#  checked_count   :integer          default(0), not null
 #  effective_from  :date             not null
 #  file            :string
 #  file_name       :string           not null

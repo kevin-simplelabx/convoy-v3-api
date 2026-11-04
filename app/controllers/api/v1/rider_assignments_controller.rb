@@ -1,5 +1,5 @@
-# School Bus › Stop Assignment › assigned PUDO points: Set as assigned (by hand), Move All Riders Here (a point takes the
-# riders assigned to the other points of its stop), and Notify (parents told their assigned PUDO; recorded only).
+# School Bus › Stop Assignment › assigned PUDO points: Set as assigned (by hand), Unassign, Move All Riders Here (a point
+# takes the riders assigned to the other points of its stop), and Notify (parents told their assigned PUDO; recorded only).
 module Api
   module V1
     class RiderAssignmentsController < BaseController
@@ -13,6 +13,19 @@ module Api
 
         rids.each { |rid| upsert(school, rid, point) }
         render json: { data: { assigned: rids.size } }
+      end
+
+      # POST /schools/:school_id/rider_assignments/remove { rids: [] } — Unassign: the riders lose their PUDO.
+      def remove
+        school = find_school
+        authorize Stop, :update?
+        rids = Array(params[:rids]).map(&:to_s)
+        raise ApplicationService::Error, "Pick riders" if rids.empty?
+
+        n = school.rider_assignments.where(rid: rids).destroy_all.size
+        raise ApplicationService::Error, "None of these riders have a PUDO" if n.zero?
+
+        render json: { data: { removed: n } }
       end
 
       # POST /schools/:school_id/rider_assignments/move { stop_point_id }

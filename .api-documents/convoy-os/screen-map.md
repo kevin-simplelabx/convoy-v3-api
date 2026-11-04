@@ -198,7 +198,7 @@ Rail icon `directions_bus`. Writing needs the `vehicles` permission.
 | Record: Log Card / Insurance sections | `GET /vehicles/:vehicle_id/log_cards` / `insurance_policies` | [Edit Vehicle](#edit-vehicle) |
 | Add Vehicle / Edit | Edit Vehicle screen | [Edit Vehicle](#edit-vehicle) |
 | Delete Vehicle | `DELETE /vehicles/:id` | [fleet § 1.4](fleet.md#14-delete-vehicle-delete-vehiclesid) |
-| Record: Financials section | Not built (Finance menu): hide it | [fleet § 10](fleet.md#10-not-built-yet) |
+| Record: Financials section | `financials` of `GET /vehicles/:id` (users with `vehfin`; `null` = hide) | [finance § 6](finance.md#6-vehicle-financials-purchase-and-loan) |
 
 ### Drivers
 
@@ -549,6 +549,7 @@ Rail icon `school`. Read: any company user (their schools). Changes: see [school
 | Operator Payments (school): month, routes, lines + files, invoice no., Send / Recall / Send Back / Approve / Reopen, Pay, voucher | `/schools/:id/payouts` (+ `/:operator_id/...`), `/school_payouts/:id/voucher` | [finance § 5](school-bus-finance.md#5-operator-payments-pay-runs) |
 | School Dashboard › Operations: today, sessions, Needs Attention, coming up, next 90 days, students (distance bins, levels) | `GET /schools/:id/dashboard` | [live § 3](school-bus-live.md#3-dashboard--operations) |
 | School Dashboard › Finance: month KPIs, Expected / Billed / Collected, overdue, year chart, money ahead, Needs Attention | `GET /schools/:id/dashboard/finance` | [live § 4](school-bus-live.md#4-dashboard--finance) |
+| Route Costs (prototype page `costs`) | Not a page of its own: the prototype always opens the School Dashboard (`go('costs')` → dashboard). Use School Dashboard › Finance | [live § 4](school-bus-live.md#4-dashboard--finance) |
 | Live Ops: session picker, KPIs, Needs Attention, filters, route list, overview map | `GET /schools/:id/live` | [live § 1](school-bus-live.md#1-live-ops-the-session) |
 | Live Ops route: banner, KPIs, boarding methods, crew, log, stops and children, route map | `GET /schools/:id/live/runs/:id`, `GET /live_map/runs/:id/track` | [live § 2](school-bus-live.md#2-live-ops-one-run) |
 | Live Ops weather, traffic, incidents | **No API yet** (hide) | [live § 5](school-bus-live.md#5-not-built-yet) |

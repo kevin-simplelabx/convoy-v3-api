@@ -29,7 +29,7 @@ RSpec.describe "School Bus plan adoption" do
     expect(runs).to eq(2)
 
     post adopt_api_v1_plan_path(second), params: { from: "2026-11-01" }
-    expect(json.dig(:error, :message)).to eq("Pick a date after 2 Nov 2026, when the current plan started")
+    expect(json.dig(:error, :message)).to match(/was only adopted on 2 Nov 2026. Pick that day or later\z/)
     post adopt_api_v1_plan_path(second), params: { from: "2026-11-16" }
     expect(json[:data]).to include(state: "scheduled", effective_from: "2026-11-16")
     get api_v1_plan_path(first)
@@ -39,10 +39,20 @@ RSpec.describe "School Bus plan adoption" do
     expect(json[:data]).to include(state: "draft")
     get api_v1_plan_path(first)
     expect(json.dig(:data, :effective_to)).to be_nil
+
+    post adopt_api_v1_plan_path(second), params: { from: "2026-11-02" } # the day the first one started: it never ran
+    expect(json[:data]).to include(state: "current", effective_from: "2026-11-02")
+    get api_v1_plan_path(first)
+    expect(json[:data]).to include(state: "draft", effective_to: nil)
+    perform_enqueued_jobs
+    runs = within_tenant(company) { TripOccurrence.where(school_route_id: SchoolRoute.where(school_plan_id: first).select(:id), date: Date.new(2026, 11, 3)).visible.count }
+    expect(runs).to eq(0)
   end
 
   it "assigns riders' PUDO points from the adopted AM plan, by hand, and records Notify" do
     post adopt_api_v1_plan_path(plans.first), params: { from: "2026-11-02" }
+    get api_v1_school_bus_attendants_path(school) # routes of the plans in use, for "x of y routes need a BA"
+    expect(json.dig(:data, :routes).map { it.slice(:session, :bus_type) }).to eq([ { session: "am", bus_type: "MEDIUM_23" } ] * 2)
     get api_v1_school_stop_assignment_path(school)
     expect(json.dig(:meta, :counts)).to include(assigned: 12, notified: 0)
     r10 = json[:data].find { |r| r[:rid] == "R10" }
@@ -56,6 +66,10 @@ RSpec.describe "School Bus plan adoption" do
     expect(json[:data]).to eq(moved: 3) # R20, R21, R22 from point A of the same stop
     post notify_api_v1_school_rider_assignments_path(school)
     expect(json[:data]).to eq(notified: 12)
+    post remove_api_v1_school_rider_assignments_path(school), params: { rids: %w[R11] }, as: :json # Unassign
+    expect(json[:data]).to eq(removed: 1)
+    post remove_api_v1_school_rider_assignments_path(school), params: { rids: %w[R11] }, as: :json
+    expect(json.dig(:error, :message)).to eq("None of these riders have a PUDO")
 
     get api_v1_school_stop_assignment_path(school)
     expect(json[:data].find { |r| r[:rid] == "R10" }[:assigned]).to include(pudo_code: "BDSZ03-0002B", manual: true, notified_at: be_present)

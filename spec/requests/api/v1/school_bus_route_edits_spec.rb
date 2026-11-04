@@ -51,6 +51,30 @@ RSpec.describe "School Bus route edits" do
     expect(json.dig(:data, :unassigned).last).to include(riders: %w[R40 R41 R42], reason: "Route deleted")
   end
 
+  it "optimises the stop order of a route or of every route, and resets every edit" do
+    get api_v1_plan_path(plan_id)
+    am1 = json.dig(:data, :routes, 0, :id)
+    post optimise_api_v1_route_path(am1)
+    expect(json[:meta]).to eq(message: "AM 1 is already in the best order for its passengers")
+
+    # Stop 2 before Stop 1: the best order (the stand-in engine: by point) puts them back
+    put stops_api_v1_route_path(am1), params: { stops: [ { stop_point_id: points[1], riders: %w[R20 R21 R22] }, { stop_point_id: points[0], riders: %w[R10 R11 R12] } ],
+                                                vias: [ [ [ 1.33, 103.93 ] ], [] ] }, as: :json
+    post optimise_api_v1_route_path(am1)
+    expect(json[:meta][:message]).to eq("AM 1 re-ordered. Journey 30 to 25 min, avg ride 50 to 40 min")
+    expect(routes["AM 1"][:stops].map { |x| x[:name] }).to eq([ "Stop 1", "Stop 2" ])
+    expect(routes["AM 1"][:vias]).to eq([ [], [] ]) # the leg Stop 2 → Stop 1 is gone, so its via points go
+    post api_v1_plan_optimise_path(plan_id)
+    expect(json[:meta][:message]).to eq("Every route is already in its best stop order")
+
+    post api_v1_plan_routes_path(plan_id), params: { bus_type: "SMALL_13", stops: [ { stop_point_id: points[3], riders: %w[R40] } ] }, as: :json
+    post api_v1_plan_reset_path(plan_id) # Reset All
+    expect(json[:meta][:message]).to eq("All manual edits cleared, including routes drawn by hand")
+    expect(routes.keys).to eq([ "AM 1", "AM 2" ])
+    expect(routes.values.map { it[:edited] }).to all(be(false))
+    expect(json.dig(:data, :summary)).to include(assigned: 12, unassigned: 0)
+  end
+
   it "routes again around locked routes" do
     get api_v1_plan_path(plan_id)
     am1 = json.dig(:data, :routes, 0, :id)

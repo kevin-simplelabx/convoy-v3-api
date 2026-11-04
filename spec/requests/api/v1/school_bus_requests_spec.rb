@@ -52,7 +52,7 @@ RSpec.describe "School Bus requests" do
     end
     d = board
     expect(d[:data].map { it[:child_name] }).to eq([ "Tan Wei Ming", "Chua Hui Min", "Ng Jun Jie" ])
-    expect(d[:meta]).to include(year: "2027", count: 3)
+    expect(d[:meta]).to include(year: "2027", count: 3, service_check: { none: true, plan: nil }) # "No AM route plan with routes yet"
     tiles = d[:meta][:tiles].to_h { [ it[:label], it[:count] ] }
     expect(tiles).to include("Requested" => 3, "From the App" => 2, "Renewing" => 1, "New" => 2, "Not Yet Renewed" => 1)
     expect(tiles).not_to have_key("Mid-Year")

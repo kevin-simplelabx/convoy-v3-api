@@ -11,6 +11,12 @@ module BusRequests
       @today = today
     end
 
+    # "Service check uses <plan> (current)", or nil: "No AM route plan with routes yet".
+    def plan_text(date = @today)
+      plan = @routes.for("AM", date)&.dig(:plan) or return nil
+      "#{plan.name}#{' (current)' if plan.state(date) == 'current'}"
+    end
+
     def call(req)
       return unless %w[new adr].include?(req.kind)
 

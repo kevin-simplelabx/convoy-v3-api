@@ -1,5 +1,6 @@
 # School Bus › Stop Library photo requests: ask parents / drivers for photos of a PUDO point through the Convoy App,
-# accept one as the point's photo (credited) or reject it, and the company's automatic requests for points with no photo.
+# close / reopen / remove a request, record photos the office received (Add Received Photos), accept one as the point's
+# photo (credited) or reject it, and the company's automatic requests for points with no photo.
 module StopPhotos
   module_function
 
@@ -28,6 +29,42 @@ module StopPhotos
   end
 
   def reject(sub) = sub.update!(status: "rejected")
+
+  OFFICE_MAX = 3
+
+  def close(req) = req.update!(status: "closed")
+
+  def reopen(req)
+    raise ApplicationService::Error, "Already at the max photos. Raise the max or reject some first" if req.live_count >= req.max_submissions
+
+    req.update!(status: "open")
+  end
+
+  # Add Received Photos: up to 3 photos the office received, as pending submissions ("photo n of m"); stops at the
+  # request's max, and closes the request when it is reached. Returns { added, closed }.
+  def receive(req, photos:, by:, role:, user:, street_view_url: nil)
+    raise ApplicationService::Error, "This request is closed" unless req.status == "open"
+    raise ApplicationService::Error, "Enter who sent it" if by.to_s.strip.empty?
+
+    list = Array(photos).compact_blank.first(OFFICE_MAX)
+    raise ApplicationService::Error, "Choose the photos" if list.empty?
+
+    req.with_lock do
+      live = req.live_count
+      added = 0
+      list.each_with_index do |file, i|
+        break if live >= req.max_submissions
+
+        req.submissions.create!(photo: file, submitted_by_name: by.to_s.strip, role:, street_view_url: street_view_url.presence&.strip,
+                                submitted_at: Time.current, source: "office", batch_index: i + 1, batch_size: list.size, recorded_by: user)
+        live += 1
+        added += 1
+      end
+      closed = live >= req.max_submissions
+      req.update!(status: "closed") if closed
+      { added:, closed: }
+    end
+  end
 
   # Turn automatic requests from drivers / parents on or off: points of stops schools use, with no photo, get an open
   # request; turned off, automatic requests nobody answered go.

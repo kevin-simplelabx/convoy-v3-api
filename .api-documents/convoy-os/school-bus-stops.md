@@ -37,7 +37,7 @@ A Convoy Admin can read but change nothing.
 
 | Call | What it does |
 | --- | --- |
-| `GET /stops?school_id=&q=&status=&not_linked=1&page=` | The list. With `school_id`, the stops as that school sees them; without it, the whole company library |
+| `GET /stops?school_id=&q=&status=&not_linked=1&page=&limit=` | The list. With `school_id`, the stops as that school sees them; without it, the whole company library |
 | `GET /stops/:id?school_id=` | One stop with the schools that use it and the coverage table |
 | `POST /stops` | Add a stop |
 | `PATCH /stops/:id` | Change a stop |
@@ -46,7 +46,10 @@ A Convoy Admin can read but change nothing.
 
 List parameters:
 
-- `q` matches the stop name, the Stop ID, a PUDO ID (such as `0001c`) or an old ID.
+- `q` matches the stop name, the Stop ID, a PUDO ID (such as `0001c`) or an old ID; not postal codes (the prototype's
+  search box is "Search name, Stop ID, PUDO ID or old ID").
+- Paged as every list ([README § Responses](../README.md#responses)): `meta { page, limit, count, pages }` plus
+  `meta.subzones`; default 50, `limit` up to 500.
 - `status` is `approved`, `school` or `pending`.
 - `not_linked=1` (with `school_id`) gives the stops that school does not use yet ("Browse Library").
 
@@ -140,7 +143,7 @@ A rider whose home is inside the catchment may use the stop's points.
 | Call | What it does |
 | --- | --- |
 | `GET /schools/:id/stops?attention=1` | The school's stops (the "School Stops N" / "Needs Attention N" chips) |
-| `PUT /schools/:id/stops/:stop_id` | Add to School / Use Stop (links it if needed) and change the catchment |
+| `PATCH /schools/:id/stops/:stop_id` | Add to School / Use Stop (links it if needed) and change the catchment |
 | `DELETE /schools/:id/stops/:stop_id` | Unlink (the school's hand links to its points go too) |
 | `POST /schools/:id/stops/import { from_school_id, with_catchments }` | Import from Another School: links its stops that this school can see, with or without their catchments. Returns `{ added: n }` |
 
@@ -152,7 +155,7 @@ A rider whose home is inside the catchment may use the stop's points.
 
 `riders` counts today's riders inside the catchment.
 
-The `PUT` body is `{ postal_codes: [...] | "460101, 460102", areas: [{ name, latlngs, exclude, how: lasso|corners|lot }],
+The `PATCH` body is `{ postal_codes: [...] | "460101, 460102", areas: [{ name, latlngs, exclude, how: lasso|corners|lot }],
 off_point_ids: [...] }`. Send only the parts that change. The response is the row plus:
 
 - `meta.invalid`: tokens that are not 6-digit codes. Show "Not added: …" and keep them in the input.
@@ -168,10 +171,11 @@ may use:
 
 ```json
 { "data": [ { "rid": "S-1001", "name": "Tan Wei Ling", "grade": "P3", "postal": "460100", "lat": 1.32, "lng": 103.92,
-              "am": true, "pm": true, "cca_days": [2, 4], "starts_on": null, "status": "one",
+              "am": true, "pm": true, "cca_days": [2, 4], "starts_on": null, "status": "one", "cut_point_ids": [ 33 ],
+              "assigned": { "point_id": 31, "pudo_code": "BDSZ03-0001A", "manual": false, "plan_id": 5, "notified_at": "2026-11-02T08:00:00+08:00" },
               "candidates": [ { "stop_id": 12, "stop_code": "BDSZ03-0001", "point_id": 31, "pudo_code": "BDSZ03-0001A", "usage": "both",
                                 "how": "postal" | "area" | "manual", "manual": false, "metres": 52 } ] } ],
-  "meta": { "date": "2026-11-02", "counts": { "riders": 65, "with_pudo": 65, "conflicts": 0, "no_stop": 0 },
+  "meta": { "date": "2026-11-02", "counts": { "riders": 65, "with_pudo": 65, "conflicts": 0, "no_stop": 0, "assigned": 60, "notified": 58 },
             "stops_changed_at": "…" } }
 ```
 
@@ -181,7 +185,12 @@ may use:
    and not in an exclude area.
 2. Leave out the points turned off for the school.
 3. Add the points linked to the rider or their postal code by hand (`how: "manual"`).
-4. Leave out the points cut off from the rider.
+4. Leave out the points cut off from the rider (`cut_point_ids`: the hidden points; linking the rider to one again with
+   `POST /schools/:id/rider_links` brings it back).
+
+`assigned` is the point the rider is assigned to (from an adopted Route Plan, or set by hand: `manual: true`), or `null`;
+`notified_at` is when **Notify** recorded it (`null` = not yet). `meta.counts.assigned` / `notified` count those riders.
+Set as assigned, Move All Riders Here and Notify: [school-bus-routes § 5](school-bus-routes.md#5-adopt-plan-and-rider-assignments). Out of Date: `out_of_date` on a plan ([routes § 3](school-bus-routes.md#3-plans)).
 
 Rider colours on the map follow `status`:
 
@@ -212,14 +221,17 @@ DELETE /stops/:id/points/:point_id/photo
 
 Both return the point. Use `photo_annotations` with `photo_original` to reopen the editor.
 
-**Photo requests** ask parents or drivers for a photo through the Convoy App. Photos sent from the app are seed data
-until the app exists.
+**Photo requests** ask parents or drivers for a photo through the Convoy App. Until the app sends them, the office adds
+the photos it received (Add Received Photos).
 
 | Call | What it does |
 | --- | --- |
-| `GET /stop_photo_requests?status=open\|closed\|all` | The requests with their photos |
+| `GET /stop_photo_requests?status=open\|review\|closed\|all` | The requests with their photos; tabs Open / To Review (requests with photos to review) / Closed, counts in `meta.counts` |
 | `POST /stop_photo_requests { stop_point_id, audience, school_rider_id, max_submissions }` | Ask for Photos |
-| `DELETE /stop_photo_requests/:id` | Close the request |
+| `POST /stop_photo_requests/:id/close` | Close Request → the request |
+| `POST /stop_photo_requests/:id/reopen` | Reopen a closed request → the request (`422` "Already at the max photos. Raise the max or reject some first") |
+| `DELETE /stop_photo_requests/:id` | **Remove** a closed request with its photos (`204`). A photo already accepted stays the point's photo. Before 04/11/2026 this call closed the request: use `/close` for that |
+| `POST /stop_photo_requests/:id/submissions` (multipart `photos[]`, `submitted_by_name`, `role: parent\|driver`, `street_view_url`) | Add Received Photos (office): up to 3 photos → `201` the request + `meta { added, closed }` |
 | `POST /stop_photo_requests/submissions/:id/accept` | Accept a photo |
 | `POST /stop_photo_requests/submissions/:id/reject` | Reject a photo |
 | `PUT /stop_photo_requests/auto { driver, parent }` | Automatic requests on / off. Returns how many requests changed |
@@ -228,12 +240,19 @@ until the app exists.
 { "data": [ { "id": 4, "stop_id": 12, "stop_point_id": 31, "pudo_code": "BDSZ03-0001A", "stop_name": "…", "audience": "both",
               "parent_of": null, "max_submissions": 4, "status": "open", "auto": false, "created_by": "…", "created_at": "…", "live": 2,
               "submissions": [ { "id": 7, "by": "Mrs Tan Mei Ling", "role": "parent", "status": "pending", "submitted_at": "…",
-                                 "street_view_url": null, "annotations": null, "photo": { "url": "…", "thumb_url": "…" } } ] } ],
-  "meta": { "pending_photos": 2, "auto": { "driver": false, "parent": false } } }
+                                 "street_view_url": null, "source": "app", "n": null, "of": null, "annotations": null,
+                                 "photo": { "url": "…", "thumb_url": "…" } } ] } ],
+  "meta": { "counts": { "open": 3, "review": 1, "closed": 2 }, "pending_photos": 2, "auto": { "driver": false, "parent": false } } }
 ```
 
 - `meta.pending_photos` is the badge on the photo-requests button.
 - `live` counts photos that are not rejected.
+- A photo: `source` is `app` or `office` (Add Received Photos); `n` of `of` = "photo n of m" of the photos added together.
+
+**Add Received Photos** (open requests only): the first 3 `photos[]` are added as pending photos, until the request's
+max; when the max is reached the request closes. Toast: "N photo(s) received", plus ". Max reached, request closed" when
+`meta.closed`. `422`: "This request is closed", "Enter who sent it", "Choose the photos". Defaults on the form (front end):
+Sent By "Driver" for a driver request, else "Parent of <rider>" / "Parent"; Role from the audience.
 
 **Ask for Photos:**
 
@@ -262,6 +281,4 @@ FE only:
 
 Not built yet:
 
-- "Set as assigned", "Move All Riders Here" and **Notify** need Route Plans, so they come with it.
-- Marking plans Out of Date. Until then, use `stops_changed_at` for the "Stops changed since routing" note.
 - The photo upload from the Convoy App.

@@ -18,9 +18,10 @@ module Api
         bo = OperatorPayBatchOperator.includes(:operator, :lines, :payments, :operator_pay_batch).find(params[:id])
         raise ActiveRecord::RecordNotFound unless bo.operator_pay_batch.company_id == ActsAsTenant.current_tenant.id
 
+        pays = bo.notice_number ? { method: bo.pay_method, to: bo.pay_to } : bo.operator.decorate.pays_by.except(:warn)
         render json: { data: { number: bo.notice_number, pay_date: bo.operator_pay_batch.pay_date, batch: bo.operator_pay_batch.number,
                                operator: { id: bo.operator.id, name: bo.operator.name, uen: bo.operator.uen, email: bo.operator.email },
-                               pays_by: { method: bo.pay_method, to: bo.pay_to }, total: bo.total, paid: bo.paid, left: bo.left,
+                               pays_by: pays, total: bo.total, paid: bo.paid, left: bo.left,
                                lines: bo.lines.map { |l| l.slice(:description, :details, :item_on, :amount) },
                                payments: bo.payments.map { |p| p.slice(:paid_on, :amount, :method, :reference) },
                                brand: brand } }

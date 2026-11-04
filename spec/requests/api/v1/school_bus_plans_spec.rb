@@ -31,6 +31,9 @@ RSpec.describe "School Bus route plans" do
     d = json[:data]
     expect(d[:summary]).to include(routes: 2, assigned: 12)
     expect(d[:routing_run]).to include(no_stop: [], conflicts: [])
+    within_tenant(company) { SchoolRoute.find(d.dig(:routes, 0, :id)).update_column(:fill, 0.8696) }
+    get api_v1_plan_path(first)
+    expect(json.dig(:data, :routes, 0, :fill)).to eq(0.8696)
     stop = d.dig(:routes, 0, :stops, 0)
     expect(stop).to include(name: "Stop 1", time: "06:30", stop_code: "BDSZ03-0001", pudo_code: "BDSZ03-0001A", riders: %w[R10 R11 R12])
 

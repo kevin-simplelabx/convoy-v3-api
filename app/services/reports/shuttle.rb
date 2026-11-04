@@ -38,8 +38,11 @@ module Reports
     def summary
       runs = runs(@from, @to)
       before = runs(*previous)
-      { trip: { id: @trip.id, title: @trip.title, client: @trip.client&.name }, period: { from: @from, to: @to, label: @label },
-        on_time_allowance: @late, early_minutes: ShuttleRuns::EARLY, kpis: kpis(runs, before), timings: timings(runs),
+      year_ago = last_year
+      plate = runs.reverse.find { it.occ.vehicle }&.occ&.vehicle&.plate
+      { trip: { id: @trip.id, title: @trip.title, client: @trip.client&.name, days_text: @trip.decorate.days_text, plate: },
+        period: { from: @from, to: @to, label: @label, last_year: year_ago && { from: year_ago[0], to: year_ago[1], label: year_ago[2] } },
+        on_time_allowance: @late, early_minutes: ShuttleRuns::EARLY, kpis: kpis(runs, before, year_ago && runs(year_ago[0], year_ago[1])), timings: timings(runs),
         stop_activity: stop_activity(runs), trend: trend, has_data: runs.any? }
     end
 
@@ -72,12 +75,27 @@ module Reports
       [ @from << months, (@from - 1) ]
     end
 
-    def kpis(runs, before)
+    # The same period a year before (none for a year: the year before is the period before).
+    def last_year
+      return nil if @to - @from > 100
+
+      from = @from << 12
+      [ from, (@to << 12).end_of_month, @label.sub(@from.year.to_s, from.year.to_s) ]
+    end
+
+    # KPI tiles: change on the period before and on the same period last year (`*_change_ly`, nil for a year), the
+    # late / left-early stop counts and how many runs a service day has.
+    def kpis(runs, before, year_ago)
       now = totals(runs)
       prev = totals(before)
-      { utilisation: now[:util], utilisation_change: change(now[:util], prev[:util]), riders: now[:riders], riders_change: change(now[:riders], prev[:riders]),
-        avg_per_day: now[:avg_day], on_time: now[:otp], on_time_change: change(now[:otp], prev[:otp]), service_days: now[:days], runs: runs.size,
-        seats: runs.map(&:seats).max }
+      ly = (totals(year_ago) if year_ago.present?) # nil with no runs a year before, as the prototype hides it
+      counts = status_counts(runs)
+      days = runs.map(&:date).uniq.size
+      { utilisation: now[:util], utilisation_change: change(now[:util], prev[:util]), utilisation_change_ly: ly && change(now[:util], ly[:util]),
+        riders: now[:riders], riders_change: change(now[:riders], prev[:riders]), riders_change_ly: ly && change(now[:riders], ly[:riders]),
+        avg_per_day: now[:avg_day], on_time: now[:otp], on_time_change: change(now[:otp], prev[:otp]), on_time_change_ly: ly && change(now[:otp], ly[:otp]),
+        late: counts["late"], left_early: counts["edep"], service_days: now[:days], runs: runs.size,
+        runs_a_day: days.positive? ? runs.map { it.timing[:key] }.uniq.size : 0, seats: runs.map(&:seats).max }
     end
 
     def totals(runs)

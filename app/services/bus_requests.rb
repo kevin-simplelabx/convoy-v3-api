@@ -107,7 +107,8 @@ module BusRequests
     last = req.events.last
     { id: req.id, code: req.code, kind: req.kind, source: req.source, status: req.live_status, tone: BusRequest::TONES[req.live_status],
       child_name: req.child_name, level: req.level, am: req.am, pm: req.pm, cca: req.cca, parent_name: req.parent_name,
-      parent_phone: req.parent_phone, parent_email: req.parent_email, postal: req.postal, submitted_at: req.submitted_at,
+      parent_phone: req.parent_phone, parent_email: req.parent_email, postal: req.postal, lat: req.lat, lng: req.lng, located: !req.lat.nil?,
+      submitted_at: req.submitted_at,
       tags: tags(req, set), renew: req.renew, start_when: req.start_when, start_on: req.start_on, start_text: start_text(req), reason: req.reason,
       deadline: clock, check: check&.except(:sessions), offer_by: req.offer_by, quote_amount: req.quote_amount,
       hours_left: (req.live_status == "Accepted" && req.offer_by ? [ ((req.offer_by - Time.current) / 3600).ceil, 0 ].max : nil),
@@ -127,7 +128,7 @@ module BusRequests
     st = req.live_status
     can_accept = req.kind == "new" && Accept::ELIGIBLE.include?(st) && st != "Lapsed"
     row(req, set, clock, check).merge(
-      academic_year: req.academic_year&.key, address: req.address, lat: req.lat, lng: req.lng, located: !req.lat.nil?, km: req.km,
+      academic_year: req.academic_year&.key, address: req.address, km: req.km,
       estimate: req.estimate, fix_why: req.fix_why, fix_note: req.fix_note, class_name: req.class_name, student_no: req.student_no,
       birth_date: req.birth_date, medical: req.medical, cca_days: req.cca_days, fee_paid: req.fee_paid, policy_version: req.policy_version,
       ack: req.acked_at && { at: req.acked_at, by: req.acked_by&.name, answer_by: req.answer_by, note: req.ack_note, plan_weeks: req.ack_plan_weeks,

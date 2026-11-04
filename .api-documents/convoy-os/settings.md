@@ -4,7 +4,9 @@ The Settings menu (rail footer icon `settings`): **Company Settings**, **Users**
 dialog of the account menu in the top bar. What is not built yet is listed in [§ 5](#5-not-built-yet).
 
 Conventions (sign-in, errors, paging, files, background reads) are in [README.md](../README.md).
-All paths below start with `/api/v1`. A Convoy Admin can only read.
+All paths below start with `/api/v1`. A Convoy Admin can only read company data here, except: their own Profile (§ 2),
+Company Settings of any company (`can_edit: true`, same as Transport Companies in [convoy-admin.md](convoy-admin.md)),
+and approving / declining Country Requests and Vehicle Type Requests. Full list: [README § Signing in](../README.md#signing-in-bearer-token).
 
 ## Contents
 

@@ -54,6 +54,49 @@ module Plans
       end
     end
 
+    # Optimise / Optimise All: each route's stops in the order that costs least (routing service, as Convoy OS bestOrder);
+    # via points stay on the legs that still join the same stops. Returns the message to show.
+    def optimise(routes)
+      list = routes.select { Array(it.engine_route&.dig("stops")).size >= 2 }
+      out = list.empty? ? [] : Array(Routing::Client.current.optimise(routes: list.map { { id: it.id, base: it.engine_route, stops: it.engine_route["stops"] } },
+                                                                      school: { lat: @school.lat.to_f, lng: @school.lng.to_f }, params:)["routes"])
+      SchoolPlan.transaction do
+        out.each do |o|
+          route = list.find { it.id == o["id"] } or next
+          stops = route.engine_route["stops"].map(&:symbolize_keys)
+          ordered = o["order"].map { stops[it] }
+          retime(route, ordered, vias: keep_vias(stops, ordered, route.vias))
+          route.update!(edited: true, vias: keep_vias(stops, ordered, route.vias))
+        end
+        finish([]) if out.any?
+      end
+      optimise_message(routes, list, out)
+    rescue Routing::Client::Unavailable => e
+      raise ApplicationService::Error, "The routing service is not available (#{e.message})"
+    end
+
+    # Reset All: routes drawn by hand go, every other route goes back to the engine's result, and so does the unassigned list.
+    def reset_all
+      result = @plan.routing_run&.result
+      raise ApplicationService::Error, "This plan was not made by the routing engine, so there is nothing to reset to" unless result
+
+      keys = Array(result["routes"]).map { it["id"] }
+      SchoolPlan.transaction do
+        @plan.routes.reject { !it.manual && keys.include?(it.route_key) }.each { drop(it) }
+        SchoolRouteRider.where(school_route_id: @plan.routes.reload.select(:id)).delete_all
+        by_key = @plan.routes.includes(:stops).index_by(&:route_key)
+        number = @plan.routes.maximum(:number).to_i
+        Array(result["routes"]).each do |er|
+          route = by_key[er["id"]] || @plan.routes.build(number: number += 1, label: Plans.label(@school, @plan.session, number))
+          Plans.write_route(route, er)
+          route.update!(edited: false, vias: [])
+        end
+        @plan.update!(unassigned: result["unassigned"] || [])
+        finish(result["routes"].to_a.flat_map { |er| Array(er["stops"]).flat_map { Array(it["riders"]) } })
+      end
+      "All manual edits cleared, including routes drawn by hand"
+    end
+
     def reset(route)
       original = Array(@plan.routing_run&.result&.dig("routes")).find { it["id"] == route.route_key }
       raise ApplicationService::Error, "#{route.label} was drawn by hand, so there is nothing to reset to" unless original
@@ -71,6 +114,30 @@ module Plans
     end
 
     private
+
+    # Via points of a leg kept when the leg still joins the same two stops (the last leg of a morning route ends at the school).
+    def keep_vias(old, now, vias)
+      return [] if vias.blank?
+
+      key = ->(list, k) { [ list[k][:pid], list[k + 1]&.dig(:pid) || "school" ] }
+      before = old.each_index.to_h { [ key.(old, it), vias[it] ] }
+      now.each_index.map { before[key.(now, it)] || [] }
+    end
+
+    def optimise_message(routes, list, out)
+      if routes.size == 1
+        r = routes.first
+        o = out.first or return "#{r.label} is already in the best order for its passengers"
+        avg = ->(m) { (m.to_f / [ r.riders_count.to_i, 1 ].max).round }
+        "#{r.label} re-ordered. Journey #{(o.dig('before', 'span').to_f / 60).round} to #{(o.dig('after', 'span').to_f / 60).round} min, " \
+          "avg ride #{avg.(o.dig('before', 'ride'))} to #{avg.(o.dig('after', 'ride'))} min"
+      elsif out.empty? then "Every route is already in its best stop order"
+      else
+        saved = out.sum { it.dig("before", "span").to_f - it.dig("after", "span").to_f }
+        labels = out.map { |o| list.find { it.id == o["id"] }&.label }.compact
+        "#{out.size} route#{'s' unless out.size == 1} re-ordered (#{labels.join(', ')}). #{(saved / 60).round} bus-min saved"
+      end
+    end
 
     def engine_stops(entries)
       points = StopPoint.where(id: entries.map { it[:stop_point_id] }, stop: Stop.visible_to(@school)).includes(:stop).index_by(&:id)

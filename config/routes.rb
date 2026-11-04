@@ -4,6 +4,7 @@ Rails.application.routes.draw do
   devise_for :users, skip: :all
   devise_for :portal_accounts, skip: :all
   devise_for :driver_accounts, skip: :all
+  devise_for :app_accounts, skip: :all
 
   namespace :api, defaults: { format: :json } do
     namespace :v1 do
@@ -119,6 +120,22 @@ Rails.application.routes.draw do
       end
       resources :companies, only: %i[index show create update]
 
+      # Convoy App (parents, shuttle staff, people who book buses)
+      namespace :convoy_app, path: "app" do
+        resource :session, only: %i[show create destroy] do
+          post :code
+        end
+        resource :profile, only: %i[show update destroy]
+        resources :identities, only: %i[index destroy] do
+          collection do
+            post :code
+            post :verify
+          end
+        end
+        resource :device, only: %i[update destroy]
+        resources :company_suggestions, only: :create
+      end
+
       # Convoy Admin
       resources :message_terms, only: %i[index create update destroy]
       get "leads", to: "company_leads#index"
@@ -144,6 +161,7 @@ Rails.application.routes.draw do
       get "dashboard/widgets", to: "dashboard#widgets"
       get "dashboard/layout", to: "dashboard#layout"
       put "dashboard/layout", to: "dashboard#save_layout"
+      patch "dashboard/layout", to: "dashboard#update_layout"
       delete "dashboard/layout", to: "dashboard#reset_layout"
 
       # School Bus
@@ -210,6 +228,7 @@ Rails.application.routes.draw do
         end
         resources :rider_assignments, only: :create do
           collection do
+            post :remove
             post :move
             post :notify
           end
@@ -220,6 +239,7 @@ Rails.application.routes.draw do
         resources :rider_datasets, only: %i[index create destroy] do
           post :preview, on: :collection
         end
+        get :rider_events, to: "rider_datasets#events"
         resources :riders, controller: :school_riders, only: %i[index create] do
           get :export, on: :collection
         end
@@ -271,6 +291,8 @@ Rails.application.routes.draw do
         get :fare_source, on: :collection
         member do
           match :rows, via: %i[post delete]
+          delete "rows/:row_id", action: :destroy_row, as: :row
+          post :copy
           post :scenarios, action: :add_scenario
         end
       end
@@ -284,27 +306,42 @@ Rails.application.routes.draw do
       end
       patch "route_charges/:id", to: "route_money#update_charge", as: :route_charge
       delete "route_charges/:id", to: "route_money#remove_charge"
+      delete "route_replacements/:id", to: "route_money#remove_replacement", as: :route_replacement
       resources :routes, controller: :school_routes, only: %i[update destroy] do
         member do
           put :stops, action: :update_stops
           post :reset
+          post :optimise
           post :vehicle, to: "route_money#vehicle"
           post :prices, to: "route_money#price"
+          patch :pay_setup, to: "route_money#pay_setup"
+          get :replacements, to: "route_money#replacements"
+          post :replacements, to: "route_money#add_replacement"
           post :charges, to: "route_money#add_charge"
         end
+        delete "prices/:price_id", to: "route_money#remove_price", as: :price
+        delete "vehicle_changes/:change_id", to: "route_money#remove_vehicle", as: :vehicle_change
       end
       resources :plans, controller: :school_plans, only: %i[show update destroy] do
         resources :routes, controller: :school_routes, only: :create
         post :route_again, to: "school_routes#route_again"
+        post :optimise, to: "school_routes#optimise_all"
+        post :reset, to: "school_routes#reset_all"
         member do
           post :comments, action: :comment
           delete "comments/:comment_id", action: :uncomment, as: :comment
           get :compare
+          get :estimate
           post :adopt
           post :cancel_adoption
         end
       end
       resources :stop_photo_requests, only: %i[index create destroy] do
+        member do
+          post :close
+          post :reopen
+          post :submissions, action: :receive
+        end
         collection do
           put :auto
           post "submissions/:id/accept", action: :accept, as: :accept_submission
@@ -405,6 +442,7 @@ Rails.application.routes.draw do
           get "batches/:id", action: :batch, as: :batch
           patch "batches/:id", action: :update_batch
           delete "batches/:id", action: :cancel_batch
+          delete "batches/:id/operators/:batch_operator_id", action: :remove_operator, as: :batch_operator
           post "batches/:id/payments", action: :pay, as: :batch_payments
           post "batches/:id/mark_paid", action: :mark_paid, as: :batch_mark_paid
           post "batches/:id/bank_file", action: :bank_file, as: :batch_bank_file

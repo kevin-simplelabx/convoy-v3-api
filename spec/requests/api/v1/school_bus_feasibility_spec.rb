@@ -14,6 +14,12 @@ RSpec.describe "School Bus feasibility studies" do
     sign_in_as(create(:user, company:, permissions: %w[plans]))
   end
 
+  it "shows studies (bus prices, break-even) only with the plans permission" do
+    sign_in_as(create(:user, company:, permissions: %w[schools planview]))
+    get api_v1_feasibility_studies_path
+    expect(response).to have_http_status(:forbidden)
+  end
+
   it "plans a scenario and works out its cost and fares" do
     post api_v1_feasibility_studies_path, params: { study: { name: "Siglap Primary bid", school_mode: "prospect", prospect_name: "Siglap Primary", prospect_postal: "455789" } }
     study = json[:data]
@@ -41,6 +47,16 @@ RSpec.describe "School Bus feasibility studies" do
 
     post use_suggested_fares_api_v1_feasibility_scenario_path(sc[:id])
     expect(json.dig(:data, :fare_tiers).first[:fare].to_d).to be > 150
+
+    post copy_api_v1_feasibility_study_path(study[:id]) # Copy: everything but the results
+    copy = json[:data]
+    expect(copy).to include(name: "Siglap Primary bid copy")
+    expect(copy[:rows].size).to eq(3)
+    expect(copy[:scenarios].sole).to include(status: "idle", result: nil)
+
+    row = json.dig(:data, :rows, 0, :id)
+    delete row_api_v1_feasibility_study_path(copy[:id], row)
+    expect(json.dig(:data, :rows).size).to eq(2)
 
     post rows_api_v1_feasibility_study_path(study[:id]), params: { text: "460102" }
     expect(json.dig(:data, :scenarios, 0, :stale)).to be(true)

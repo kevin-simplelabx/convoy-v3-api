@@ -55,6 +55,9 @@ module ClientInvoices
       end
     end
 
+    # Hours before the start the run was cancelled, rounded ("cancelled 3 h before").
+    def self.hours_before(occ) = occ.cancelled_at && [ ((occ.starts_at - occ.cancelled_at) / 3600.0).round, 0 ].max
+
     def late_cancel?(occ)
       occ.cancelled_by_client? && occ.cancelled_at && occ.price.to_d.positive? &&
         (occ.starts_at - occ.cancelled_at) < occ.client.late_cancel_hours.hours

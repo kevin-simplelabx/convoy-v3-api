@@ -9,7 +9,7 @@ class RoutingRunJob < ApplicationJob
     ActsAsTenant.with_tenant(run.company) do
       Time.use_zone(run.company.timezone) do
         run.update!(status: "running", started_at: Time.current)
-        result = Routing::Client.current.solve(run.input)
+        result = Routing::Client.current.solve(run.input, key: RoutingRun.progress_key(run.id))
         if result["status"] == "FAILED"
           errors = Array(result["validation"]).select { it["level"] == "Error" }.map { it["msg"] }
           next run.update!(status: "failed", result:, error: errors.join(". ").presence || "The engine could not plan these riders", finished_at: Time.current)

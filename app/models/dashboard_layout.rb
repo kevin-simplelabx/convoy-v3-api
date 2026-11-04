@@ -5,7 +5,9 @@
 # Database name: primary
 #
 #  id         :bigint           not null, primary key
+#  page       :integer          default(0), not null
 #  pages      :jsonb            not null
+#  period     :string           default("d7"), not null
 #  created_at :datetime         not null
 #  updated_at :datetime         not null
 #  company_id :bigint           not null
@@ -23,8 +25,12 @@
 class DashboardLayout < ApplicationRecord
   include TenantScoped
 
+  DEFAULT_PERIOD = "d7"
+
   belongs_to :user
 
+  validates :period, inclusion: { in: Dashboard::Widgets::PERIODS }
+  validates :page, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validate :pages_shape
 
   private

@@ -1,6 +1,7 @@
 # Stop Library sample for St. Stephen's School: one library stop per AM route stop of the seed (a PUDO point for
 # pick-up and drop-off by the riders' homes), the school's catchment = its riders' postal codes; one stop kept for the
-# school and waiting for the library; a photo request with two photos sent from the app.
+# school and waiting for the library; a photo request with two photos sent from the app, and a closed one with the photos
+# the office received (Add Received Photos).
 with_company("SD") do
   admin = User.find_by!(email: "ops@simpledrive.sg")
   school = School.find_by!(name: "St. Stephen's School")
@@ -30,4 +31,15 @@ with_company("SD") do
   [ [ "Mrs Tan Mei Ling", "parent" ], [ "Kumar s/o Rajan", "driver" ] ].each_with_index do |(name, role), i|
     req.submissions.create!(submitted_by_name: name, role:, submitted_at: Time.current - (i + 1).days, photo: SeedFiles.open("fleet", "bus-#{i + 1}.png"))
   end
+end
+
+with_company("SD") do
+  admin = User.find_by!(email: "ops@simpledrive.sg")
+  school = School.find_by!(name: "St. Stephen's School")
+  point = StopPoint.where(stop: school.school_stops.select(:stop_id), retired_at: nil).order(:id).second
+  next if point.nil? || point.photo_requests.exists?
+
+  req = StopPhotos.ask(point, audience: "driver", user: admin, max: 2)
+  photos = [ 3, 4 ].map { |n| SeedFiles.open("fleet", "bus-#{n}.png") }
+  StopPhotos.receive(req, photos:, by: "Kumar s/o Rajan", role: "driver", user: admin, street_view_url: "https://maps.app.goo.gl/sss-gate")
 end

@@ -74,11 +74,12 @@ module ApiDocs
 
     def routes
       @routes ||= begin
-        all = Rails.application.routes.routes.filter_map do |r|
+        all = Rails.application.routes.routes.flat_map do |r|
           path = r.path.spec.to_s.delete_suffix("(.:format)")
-          next if r.verb.blank? || !path.start_with?("/api/v1/")
+          next [] if r.verb.blank? || !path.start_with?("/api/v1/")
 
-          { verb: r.verb, path:, controller: r.defaults[:controller], action: r.defaults[:action] }
+          # `match via: [...]` gives one route with "PATCH|DELETE": one operation per verb.
+          r.verb.split("|").map { |verb| { verb:, path:, controller: r.defaults[:controller], action: r.defaults[:action] } }
         end.uniq { [ it[:verb], it[:path] ] }
         patches = all.select { it[:verb] == "PATCH" }.map { [ it[:path], it[:action] ] }
         all.reject { it[:verb] == "PUT" && patches.include?([ it[:path], it[:action] ]) }
@@ -326,7 +327,8 @@ module ApiDocs
     # The section that names the endpoint in its heading wins; otherwise the first mention (menu files before README).
     def mention_for(route)
       found = mentions.select { it[:key] == doc_key(route[:verb], route[:path]) }
-      found = mentions.select { it[:key] == doc_key("PATCH", route[:path]) } if found.empty? && route[:verb] == "PUT"
+      other = { "PUT" => "PATCH", "PATCH" => "PUT" }[route[:verb]] # Rails routes both to update; the doc may name either
+      found = mentions.select { it[:key] == doc_key(other, route[:path]) } if found.empty? && other
       found.find { it[:heading] } || found.first
     end
 

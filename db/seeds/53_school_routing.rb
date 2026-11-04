@@ -22,3 +22,14 @@ with_company("SD") do
   study.scenarios.create!(position: 2, name: "Small buses only", sizes: %w[MEDIUM_23 SMALL_13], attendant: "ALL_BUSES", margin_pct: 25,
                           extra_buses: { "AM" => { "SMALL_13" => 1 } })
 end
+
+# Route drawer price card: one route with its own Bus Attendant (ours), and a route with no bus paid to an operator.
+with_company("SD") do
+  school = School.find_by(name: "St. Stephen's School") or next
+  routes = SchoolRoute.joins(:plan).where(school_plans: { school_id: school.id, in_use: true }).order(:id).to_a
+  first = routes.first or next
+  first.update!(attendant_required: true, attendant_provided_by: "us") if first.attendant_required.nil?
+  no_bus = routes.find { it.vehicle_changes.none? }
+  operator = Operator.kept.order(:id).first
+  no_bus.update!(pay_to: "operator", pay_to_operator: operator) if no_bus && operator && no_bus.pay_to.nil?
+end

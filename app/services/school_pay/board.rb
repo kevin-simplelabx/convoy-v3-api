@@ -95,7 +95,8 @@ module SchoolPay
 
     def route_row(r)
       { route: r.route.label, session: r.plan.session, plan: r.plan.name, bus_type: r.route.bus_type, plate: r.vehicle&.plate, price: r.price, unpriced: r.unpriced,
-        days: r.days, of: r.of, break_month: r.brk, earned: r.earned.round(4), rate: r.rate, from: r.from, to: r.to, amount: r.amount, note: r.note }
+        days: r.days, of: r.of, break_month: r.brk, earned: r.earned.round(4), rate: r.rate, from: r.from, to: r.to, amount: r.amount, note: r.note,
+        attendant: r.attendant }
     end
 
     def auto_row(l) = l.slice(:id, :kind, :sign, :adj_on, :route, :amount, :reason).merge(auto: true, can_remove: false)

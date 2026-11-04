@@ -14,7 +14,7 @@ module LiveMap
   def runs_around(vehicle_ids, now)
     TripOccurrence.where(vehicle_id: vehicle_ids, date: (now.to_date - 1)..now.to_date).where.not(status: NOT_DRIVEN)
                   .includes(:client, :driver, :operator_driver, :vehicle, :stop_events, trip: :stops, trip_run: :times,
-                                                                                         school_route: :stops)
+                                                                                         school_route: [ :stops, { plan: :school } ])
                   .order(:starts_at).to_a
   end
 

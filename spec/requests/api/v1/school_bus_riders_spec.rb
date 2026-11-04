@@ -47,7 +47,7 @@ RSpec.describe "School Bus riders" do
     expect(json[:meta]).to include(skipped_count: 3)
 
     get api_v1_school_rider_datasets_path(school)
-    expect(json[:data].first).to include(file_name: "riders.csv", riders_count: 3, unlocated_count: 1, status: "ready", state: "in_use")
+    expect(json[:data].first).to include(file_name: "riders.csv", riders_count: 3, checked_count: 3, unlocated_count: 1, status: "ready", state: "in_use")
     expect(json.dig(:data, 0, :file, :url)).to be_present
 
     get api_v1_school_riders_path(school)
@@ -70,6 +70,13 @@ RSpec.describe "School Bus riders" do
     end
     get api_v1_school_rider_datasets_path(school)
     expect(json[:data].map { |d| d[:state] }).to eq(%w[in_use scheduled])
+
+    get api_v1_school_rider_events_path(school), params: { date: "2026-11-02" } # the Plan For calendar
+    ev = json[:data].map { it.values_at(:date, :kind, :rid) }
+    expect(ev).to include([ "2026-10-01", "list", nil ], [ "2026-11-20", "leave", "S-2" ], [ "2027-01-02", "list", nil ],
+                          [ "2027-01-02", "join", "S-0002" ], [ "2027-01-02", "leave", "S-1" ])
+    expect(json[:data].find { it[:kind] == "list" }).to include(name: "riders.csv")
+    expect(json[:meta]).to eq(date: "2026-11-02", soon: 1) # S-2 leaves on 20 Nov
     get api_v1_school_rider_datasets_path(school), params: { date: "2027-01-05" }
     expect(json[:data].map { |d| d[:state] }).to eq(%w[replaced in_use])
     get api_v1_school_riders_path(school), params: { date: "2027-01-05" }

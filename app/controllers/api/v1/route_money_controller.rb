@@ -15,6 +15,66 @@ module Api
         render json: { data: history(route.reload) }
       end
 
+      # PATCH /routes/:id/pay_setup { attendant_required, attendant_provided_by, attendant_price, pay_to: own|operator|"",
+      # pay_to_operator_id } — BA settings need plans or finance; the BA price needs finance.
+      def pay_setup
+        authorize Stop, :pay_setup?
+        money = policy(Stop).money_setup?
+        route = find_route
+        SchoolRoutes::PaySetup.call(route, params.permit(:attendant_required, :attendant_provided_by, :attendant_price, :pay_to, :pay_to_operator_id).to_h.symbolize_keys,
+                                    money:)
+        render json: { data: SchoolRouteBlueprint.pay_setup(route.reload) }
+      end
+
+      # GET /routes/:id/replacements — Replacement Buses of the route (latest first).
+      def replacements
+        authorize Stop, :index?
+        render json: { data: replacement_rows(find_route) }
+      end
+
+      # POST /routes/:id/replacements { from, to, vehicle_id | plate + (operator_id | company), arranged_by: operator|us,
+      # daily_rate, deduct, reason }
+      def add_replacement
+        authorize Stop, :update?
+        route = find_route
+        p = params.permit(:vehicle_id, :plate, :operator_id, :company, :arranged_by, :daily_rate, :deduct, :reason)
+        vehicle = p[:vehicle_id].present? ? Vehicle.kept.find(p[:vehicle_id]) : nil
+        SchoolRoutes::Replace.call(route:, from: day(:from), to: day(:to), user: current_user, vehicle:, plate: p[:plate], operator_id: p[:operator_id],
+                                   company: p[:company], arranged_by: p[:arranged_by], daily_rate: p[:daily_rate], deduct: p.fetch(:deduct, true), reason: p[:reason])
+        render json: { data: replacement_rows(route.reload) }, status: :created
+      end
+
+      # DELETE /route_replacements/:id — the route's regular bus comes back on those days (runs not started yet).
+      def remove_replacement
+        authorize Stop, :update?
+        rep = SchoolRouteReplacement.where(route: SchoolRoute.where(plan: SchoolPlan.where(school: policy_scope(School)))).find(params[:id])
+        route = rep.route
+        rep.destroy!
+        Occurrences::Sync.call(routes: [ route ], from: [ rep.starts_on, Date.current ].max, to: [ rep.ends_on, Date.current ].max)
+        head :no_content
+      end
+
+      # DELETE /routes/:route_id/vehicle_changes/:change_id — Bus History "Remove this change" (not the first: the route's
+      # bus from the start); the runs follow.
+      def remove_vehicle
+        authorize Stop, :update?
+        route = find_route(params[:route_id])
+        change = route.vehicle_changes.find(params[:change_id])
+        raise ApplicationService::Error, "The first bus of the route cannot be removed. Change it instead" if change == route.vehicle_changes.min_by(&:effective_from)
+
+        change.destroy!
+        Plans.resync(route.plan) if route.plan.in_use
+        render json: { data: history(route.reload) }
+      end
+
+      # DELETE /routes/:route_id/prices/:price_id — remove a price from the history (the one before, or the default, applies).
+      def remove_price
+        authorize Stop, :money_setup?
+        route = find_route(params[:route_id])
+        route.prices.find(params[:price_id]).destroy!
+        render json: { data: history(route.reload) }
+      end
+
       # POST /routes/:id/prices { effective_from, mode: fixed|rider, monthly, base_price, riders_included, per_rider }
       def price
         authorize Stop, :money_setup?
@@ -74,7 +134,9 @@ module Api
 
       private
 
-      def find_route = SchoolRoute.where(plan: SchoolPlan.where(school: policy_scope(School))).includes(:plan, :prices, :charges, vehicle_changes: :vehicle).find(params[:id])
+      def find_route(id = params[:id])
+        SchoolRoute.where(plan: SchoolPlan.where(school: policy_scope(School))).includes(:plan, :charges, :pay_to_operator, prices: :created_by, vehicle_changes: %i[vehicle created_by]).find(id)
+      end
       def find_charge = RouteCharge.where(school: policy_scope(School)).find(params[:id])
 
       def day(key)
@@ -84,8 +146,18 @@ module Api
       end
 
       def history(route)
-        { vehicles: route.vehicle_changes.map { { from: it.effective_from, vehicle_id: it.vehicle_id, plate: it.vehicle&.plate } },
-          prices: route.prices.map { it.slice(:effective_from, :mode, :monthly, :base_price, :riders_included, :per_rider) } }
+        { vehicles: route.vehicle_changes.map { SchoolRouteBlueprint.vehicle_row(it) }, prices: route.prices.map { SchoolRouteBlueprint.price_row(it) } }
+      end
+
+      # A replacement with its school days (for "N school days x S$r = S$t").
+      def replacement_rows(route)
+        years = route.school.academic_years.includes(:terms, :holidays).to_a
+        days = ->(r) { (r.starts_on..r.ends_on).count { |d| (y = years.find { it.starts_on <= d && d <= it.ends_on }) ? y.school_day?(d) : d.on_weekday? } }
+        route.replacements.includes(:created_by, vehicle: :operator).sort_by { [ -it.starts_on.jd, -it.id ] }.map do |r|
+          { id: r.id, starts_on: r.starts_on, ends_on: r.ends_on, vehicle: { id: r.vehicle_id, plate: r.vehicle.plate, seats: r.vehicle.seats },
+            company: r.vehicle.operator&.name, arranged_by: r.arranged_by, daily_rate: r.daily_rate, deduct_from_operator: r.deduct_from_operator,
+            reason: r.reason, school_days: days.(r), by: r.created_by&.shown_name, created_at: r.created_at }
+        end
       end
 
       def run_row(route, rates, date)

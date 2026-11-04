@@ -79,7 +79,7 @@ Put the base URL in environment config, never hard-code it. Staging accepts brow
 | `ops@simpledrive.sg` | `Simple123!` | Admin (every permission, company owner) |
 | `dispatch@simpledrive.sg` | `Simple123!` | Member (only some permissions: test hidden / disabled actions with it) |
 | `finance@simpledrive.sg` | `Simple123!` | Member with finance (HR, but can't Unlock / Reopen Month) |
-| `admin@convoy.sg` | `Convoy123!` | Convoy Admin (Convoy staff: picks a company, **view only**, every write is `403`) |
+| `admin@convoy.sg` | `Convoy123!` | Convoy Admin (Convoy staff: picks a company; company data is view only, see [README § Signing in](README.md#signing-in-bearer-token)) |
 | `priya.raman@google.com` | `Portal123!` | **Client Portal** only (`/portal/session`): user of two clients (account picker) |
 
 ---
@@ -150,7 +150,9 @@ The prototype's JS uses short internal names and display values (`t.stby`, `t.sc
 
 ### 5.2 Prototype pages → API
 
-The prototype's page ids (in `logic/mixins/admin.js`, rail and sub-menus) and where their API is:
+The prototype's page ids (in `logic/mixins/admin.js`, rail and sub-menus) and where their API is. The first column is a
+**page id, not a permission** (e.g. `feas` is the Feasibility page; its permission is `plans`; the prototype's `costs`
+page always opens the School Dashboard, so Route Costs live on the School Dashboard's Finance tab):
 
 | Prototype page id | Screen | API resource | Doc |
 | --- | --- | --- | --- |

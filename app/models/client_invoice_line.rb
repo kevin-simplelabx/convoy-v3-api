@@ -7,6 +7,7 @@
 #
 #  id                :bigint           not null, primary key
 #  amount            :decimal(12, 2)   default(0.0), not null
+#  amount_overridden :boolean          default(FALSE), not null
 #  description       :string           not null
 #  details           :text
 #  period_text       :string
@@ -31,6 +32,8 @@
 #  fk_rails_...  (trip_id => trips.id)
 #
 class ClientInvoiceLine < ApplicationRecord
+  audited associated_with: :client_invoice
+
   belongs_to :client_invoice, inverse_of: :lines
   belongs_to :trip, optional: true
   has_many :runs, -> { order(:occurrence_date, :start_time) }, class_name: "ClientInvoiceLineRun", dependent: :delete_all, inverse_of: :line
@@ -40,10 +43,13 @@ class ClientInvoiceLine < ApplicationRecord
   validates :description, presence: true
   validates :amount, numericality: true
 
-  def refresh_amount!
-    return if from_manual?
+  # The runs billed on the line and their total (what a trip line comes to unless its amount was typed on the draft).
+  def billed_runs = runs.to_a.reject(&:waived)
+  def runs_amount = billed_runs.sum(0.to_d, &:amount)
 
-    billed = runs.to_a.reject(&:waived)
-    update!(amount: billed.sum(0.to_d, &:amount), quantity: billed.length)
+  def refresh_amount!
+    return if from_manual? || amount_overridden?
+
+    update!(amount: runs_amount, quantity: billed_runs.length)
   end
 end

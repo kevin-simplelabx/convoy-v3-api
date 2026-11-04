@@ -1,6 +1,7 @@
 # Adopt Plan from a date (the 1st of this month or later, not before the current plan's start). The plan runs on the
 # Scheduler from that date — Current when the date has come, Scheduled before — and the plan of the session in use then
-# ends the day before (an earlier scheduled plan of the session is cancelled). Adopting an AM plan assigns its riders'
+# ends the day before (an earlier scheduled plan of the session is cancelled); from the very day the current plan started,
+# that plan is taken out of use, as if it never ran. Adopting an AM plan assigns its riders'
 # PUDO points (Stop Assignment), keeping the ones set by hand. Route Charges of the plan it replaces move to the
 # best-matching new routes (status check). Cancel: a scheduled plan goes back to draft and the
 # plan it would replace runs on.
@@ -20,10 +21,11 @@ module Plans
 
       siblings = @plan.school.plans.where(session: @plan.session, in_use: true).where.not(id: @plan.id).to_a
       running = siblings.find { it.state == "current" }
-      if running && @from <= running.effective_from
-        raise Error, "Pick a date after #{running.effective_from.strftime('%-d %b %Y')}, when the current plan started"
+      if running && @from < running.effective_from
+        raise Error, "#{running.name} was only adopted on #{running.effective_from.strftime('%-d %b %Y')}. Pick that day or later"
       end
       current = siblings.find { it.effective_from < @from && (it.effective_to.nil? || it.effective_to >= @from) }
+      replaced = running if running&.effective_from == @from
 
       touched = []
       SchoolPlan.transaction do
@@ -35,8 +37,12 @@ module Plans
           touched << current
           current.update!(effective_to: @from - 1)
         end
+        if replaced
+          touched << replaced
+          replaced.update!(in_use: false, effective_to: nil, adopted_at: nil, adopted_by: nil)
+        end
         @plan.update!(in_use: true, effective_from: @from, effective_to: nil, adopted_at: Time.current, adopted_by: @user)
-        RouteCharges.carry(current, @plan, @from) if current
+        (current || replaced)&.then { RouteCharges.carry(it, @plan, @from) }
         assign_riders if @plan.session_am?
       end
       Plans.resync(@plan, *touched)

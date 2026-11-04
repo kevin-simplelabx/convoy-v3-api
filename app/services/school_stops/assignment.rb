@@ -44,7 +44,7 @@ module SchoolStops
       stops = list.map { it[:stop_id] }.uniq.size
       a = @assigned[r.rid]
       { rid: r.rid, name: r.name, grade: r.grade, postal: r.postal, lat: r.lat&.to_f, lng: r.lng&.to_f, am: r.am, pm: r.pm, cca_days: r.cca_days,
-        starts_on: r.starts_on, candidates: list, status: stops.zero? ? "none" : (stops == 1 ? "one" : "conflict"),
+        starts_on: r.starts_on, candidates: list, cut_point_ids: (@cut[r.rid] || []).map(&:stop_point_id), status: stops.zero? ? "none" : (stops == 1 ? "one" : "conflict"),
         assigned: a && { point_id: a.stop_point_id, pudo_code: a.stop_point.pudo_code, manual: a.manual, plan_id: a.school_plan_id, notified_at: a.notified_at } }
     end
   end

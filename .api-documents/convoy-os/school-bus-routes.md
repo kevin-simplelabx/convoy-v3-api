@@ -61,8 +61,21 @@ run. Poll `GET /routing_runs/:id` until `status` is `done` or `failed` (it takes
 
 ```json
 { "id": 9, "school_id": 3, "session": "am", "plan_date": "2026-11-02", "status": "queued" | "running" | "done" | "failed",
-  "error": null, "riders": 65, "stops": 7, "no_stop": ["S-1044"], "conflicts": [], "ms": 41250, "plan_id": 21, … }
+  "error": null, "riders": 65, "stops": 7, "no_stop": ["S-1044"], "conflicts": [], "ms": 41250, "plan_id": 21,
+  "progress": { "step": "solving", "frac": 0.42, "run": 2, "runs": 4, "elapsed": 18400, "left": 31600,
+                "work": { "phase": "Swap and relocate pass", "i": 3, "n": 9, "extra": "Best 12,345 pts", "evals": 184230 },
+                "log": [ { "run": 1, "phase": "Sweep start angle", "i": 24, "n": 24 } ] }, … }
 ```
+
+**Loader** (poll about every second): `progress` while `running` (`null` when the routing service cannot tell, e.g.
+restarted; keep polling), `{ step: "done", frac: 1, work: { evals } }` when done, `null` otherwise.
+
+- `step`: `queued`, `matrix` → "Step 1 of 2 | Loading road travel times" (bar 4 %), `solving` → "Step 2 of 2 | Searching for
+  the best routes | Run `run` of `runs` | `elapsed`/1000 s" (bar 10 + 90 × `frac` %).
+- Time left: from `frac` > 0.04, min(elapsed / frac × (1 − frac), `left`) → "About N s left", "Almost done" at 1 s or less,
+  else "Estimating time left" (ms values).
+- "Route options checked: `work.evals`"; the current phase "`work.phase` `work.i` of `work.n`" + `work.extra`; `log` = the
+  last 4 phases ("Run k | phase", "i of n").
 
 **What the engine is given:**
 
@@ -92,7 +105,7 @@ run. Poll `GET /routing_runs/:id` until `status` is `done` or `failed` (it takes
 | `PATCH /plans/:id { plan: { name, effective_from, effective_to } }` | Rename, or change the run dates |
 | `DELETE /plans/:id` | Delete a draft (only drafts) |
 | `POST /plans/:id/comments { body }` / `DELETE /plans/:id/comments/:comment_id` | Comments |
-| `GET /plans/:id/compare?with=:other_id` | Compare Plans: the engine's comparison, with names `a` / `b` |
+| `GET /plans/:id/compare?with=:other_id` | Compare Plans: the engine's comparison, with names `a` (this plan) / `b` (`with`) |
 
 ```json
 { "id": 21, "name": "AM Plan 3", "session": "am", "source": "engine" | "manual", "priority": "BALANCED", "state": "draft" | "scheduled" | "current" | "replaced",
@@ -102,15 +115,27 @@ run. Poll `GET /routing_runs/:id` until `status` is `done` or `failed` (it takes
   "params": {…}, "unassigned": [ { "riders": ["S-1001"], "n": 1, "reason": "…", "label": "…" } ],
   "routing_run": { "id": 9, "no_stop": [], "conflicts": [], "ms": 41250 },
   "routes": [ { "id": 51, "number": 1, "label": "AM 1", "route_key": "R01", "bus_type": "MEDIUM_23", "seats": 23, "student_seats": 23, "capacity": 20,
-                "floor": 12, "fill": "0.8", "span_seconds": 2700, "ride_minutes": 420, "badges": ["Buffer used"], "locked": false, "hidden": false,
+                "floor": 12, "fill": 0.8, "span_seconds": 2700, "ride_minutes": 420, "badges": ["Buffer used"], "locked": false, "hidden": false,
                 "edited": false, "manual": false, "vias": [], "riders_count": 18, "start_time": "06:35", "end_time": "07:20",
-                "attendant": null, "regular_vehicle_id": 12, "vehicles": [ { "from": "2026-11-02", "vehicle_id": 12, "plate": "PD6604E" } ],
+                "attendant": null, "regular_vehicle_id": 12, "vehicles": [ { "id": 3, "from": "2026-11-02", "vehicle_id": 12, "plate": "PD6604E", "by": "Marcus Lim" } ],
                 "prices": [], "charges": [],
                 "stops": [ { "id": 301, "position": 0, "name": "Blk 101 Bedok North", "lat": 1.3204, "lng": 103.9203, "time": "06:35",
                              "riders_count": 9, "dwell_seconds": 75, "stop_id": 12, "stop_code": "BDSZ03-0001", "stop_point_id": 31,
                              "pudo_code": "BDSZ03-0001A", "riders": ["S-1001", "…"] } ] } ],
   "comments": [ { "id": 1, "body": "…", "by": "…", "at": "…" } ] }
 ```
+
+**Compare Plans** response. Pairs are `[a, b]` (this plan, the other one):
+
+```json
+{ "data": { "a": "AM Plan 3", "b": "AM Plan 2",
+            "byType": [ { "type": "MEDIUM_23", "a": 3, "b": 4 }, { "type": "SMALL_13", "a": 1, "b": 0 } ],
+            "routes": [4, 4], "avg": [38.2, 41.0], "max": [52.4, 55.1], "cost": [412.6, 430.0], "fill": [0.71, 0.66], "unassigned": [0, 2],
+            "moved": 6, "shifted": 11, "movedList": ["S-1001", "S-1014"] } }
+```
+
+`avg` / `max` = journey minutes, `cost` = the engine's cost figure, `fill` = average fill (0–1), `moved` = riders on another
+stop, `shifted` = riders whose time changes by more than 5 minutes. `503`-like `422` "The routing service is not available (…)".
 
 **State badges:**
 
@@ -129,6 +154,56 @@ run. Poll `GET /routing_runs/:id` until `status` is `done` or `failed` (it takes
 - The Students list: each route's `stops[].riders` (rider IDs) with the stop and time.
 - The Unassigned list is `unassigned` with each entry's `reason`.
 
+**Route fields:**
+
+- `badges`: strings from the engine, shown as chips: `Edited`, `Over capacity`, `Buffer used`, `Over max journey`,
+  `Over soft cap`, `Underfilled`, `Loop-back` (AM) / `Not inside-out` (PM) and the like.
+- `attendant`: the Bus Attendant on the route `{ id, name, phone }`, or `null`.
+- `vehicles`: the regular bus history `[{ from, vehicle_id, plate }]` (`vehicle_id: null` = no bus from that date).
+- `prices` (the operator's monthly price history, [§ 6](#6-route-bus-and-money)):
+  `[{ "id": 8, "effective_from": "2026-11-01", "mode": "fixed", "monthly": "1500.0", "base_price": null, "riders_included": null, "per_rider": null, "by": "Marcus Lim" }]`
+  or `mode: "rider"` with `base_price`, `riders_included`, `per_rider` (`monthly: null`). Empty = the school's default for the bus size.
+- `pay_setup`: `{ "attendant_required": null, "attendant_provided_by": null, "attendant_price": null, "pay_to": null, "pay_to_operator": null }`.
+  `null` = the school's default (Bus Attendants: `needed_sizes`, `provided_by`, and the BA prices per bus size): show "School
+  default", else "Changed for this route". Sending the school's default value saves `null`; changing BA Provided By clears
+  the BA price; an empty BA price = the default price for the size and provider. The BA price is added to the route's
+  monthly price (operator pay, "Incl. S$x BA (ours / theirs)"); it does not change school or family bills.
+  Paid To (only for a route with **no bus**; with a bus, the bus's operator is paid: "<Operator> | owns <plate>"): `pay_to`
+  `own` ("<Company> (own buses)", not paid), `operator` (+ `pay_to_operator { id, name }`), or `null` ("Not assigned"); the
+  pay run shows "No bus, set by hand". These values go with the routes when a plan is copied from a date.
+- `charges` (Route Charges on this route): `[{ "id": 4, "starts_on": "2026-11-02", "kind": "amt", "value": "150.0", "reason": "Long route", "note": null, "status": "ok" }]`;
+  `kind` `amt` (S$) / `pct` (% of the rate), `status` `ok` / `check` (carried from an old plan, to confirm).
+
+### Plan Estimate
+
+`GET /plans/:id/estimate?month=2026-11` (`month` = the Plan For month; `finance` or `finview`, else `403`: hide the line) →
+the plan card's Est. Revenue / Operator Cost / Gross Profit and the Details dialog "Estimate for <Mon YYYY>":
+
+```json
+{ "month": "2027-01-01", "title": "Estimate for Jan 2027", "sub": "Term 1 AM | Jan 2027", "paid_month": true,
+  "riders": 3, "operator_cost": "3000.0", "unpriced": 0,
+  "routes": [ { "route_id": 41, "label": "AM 1", "bus_type": "MEDIUM_23", "amount": "3000.0" } ],
+  "revenue": "210.0", "to_collect": "1260.0", "gross_profit": "-2790.0", "margin_pct": -1328.6,
+  "basis": "distance", "two_way": 3, "no_fare": 0,
+  "bands": [ { "label": "0 to 3 km", "tier_id": 7, "riders": 3, "one_way": 0, "two_way": 3, "share": 100.0, "revenue": "210.0", "to_collect": "1260.0" } ],
+  "pl": { "one_way": { "riders": 0, "amount": "0.0" }, "two_way": { "riders": 3, "total": "420.0", "half": "210.0" } },
+  "notes": [ "Revenue is a year of fares spread over 12 months. To Collect is what is billed in Jan 2027, when a term starts. Two-way riders count half here, half in the other session" ] }
+```
+
+- A month Operator Pay does not pay: `{ paid_month: false, note: "<Mon YYYY> is not a paid month" }` (cards show it).
+- Operator Cost = every route of the plan for the whole month at its price (`routes[].amount`; `null` = "Not priced";
+  `unpriced` routes add the note "N routes not priced, so cost is low").
+- Revenue (as the prototype): each rider of the plan on the rider list pays their Bus Fares fare (tier by straight-line
+  distance or zone; two-way when the rider data has both AM and PM): Revenue = the yearly fare / 12 (+ the month's one-off
+  charges), To Collect = what is billed in the month. Two-way riders count half (the other half is on the plan of the
+  other session). `null` with `revenue_none`: "No academic year covers <Mon>", "Bus Fares for AY <key> not saved yet",
+  "School is billed per bus for the whole fleet, so revenue is on the Dashboard".
+- `bands` = "Riders by Distance" / "Riders by Zone" (`basis`): Band, Riders, Share (%), Fare Type ("`two_way` two-way |
+  `one_way` one-way"), Revenue, To Collect (this plan's share); a "No fare set" band (`no_fare: true`) for riders with no
+  fare. `pl` = the Profit and Loss lines: "Fares from N one-way riders, in full", "Half of the two-way fares from N riders
+  (S$total in total)" (+ `half`).
+- `margin_pct` = gross profit ÷ revenue (`null` when revenue is 0).
+
 ## 4. Hand edits and Route Again
 
 Each edit is re-timed by the engine on the server. Every call returns the whole plan, with the route's new times,
@@ -141,6 +216,9 @@ Each edit is re-timed by the engine on the server. Every call returns the whole 
 | `PATCH /routes/:id { route: { bus_type, locked, hidden, attendant_id } }` | Bus Type, Lock, Hide, Attendant |
 | `DELETE /routes/:id` | Delete a route |
 | `POST /routes/:id/reset` | Reset Route to the engine's version |
+| `POST /routes/:id/optimise` | Optimise: re-order the route's stops to cut passenger ride time and journey (disabled under 2 stops) |
+| `POST /plans/:plan_id/optimise` | Optimise All: re-order the stops inside every route (riders stay on their routes) |
+| `POST /plans/:plan_id/reset` | Reset All: routes drawn by hand go, every route goes back to the engine's result, and so does the unassigned list |
 | `POST /plans/:plan_id/route_again { params: {…}, fleet: { MEDIUM_23: 2, SMALL_13: 0 } }` | Route Again |
 
 Rules:
@@ -151,6 +229,16 @@ Rules:
 - A route drawn by hand cannot be reset.
 - Routes of an **adopted** plan can be edited (their runs on the Scheduler follow) but not deleted ("Make a new plan to
   remove a route").
+
+**Optimise / Optimise All / Reset All** return the plan and `meta.message`, the toast as the prototype words it:
+"AM 1 re-ordered. Journey 30 to 25 min, avg ride 6 to 5 min", "AM 1 is already in the best order for its passengers",
+"2 routes re-ordered (AM 1, AM 3). 9 bus-min saved", "Every route is already in its best stop order", "All manual edits
+cleared, including routes drawn by hand". The best order is the one that costs least for the bus and its passengers (up
+to 7 stops every order is tried); re-ordered routes are marked edited; via points stay only on legs that still join the
+same stops. On an adopted plan the runs follow (runs already started stay). Reset All needs an engine result (`422` "This
+plan was not made by the routing engine, so there is nothing to reset to"); on an adopted plan a route drawn by hand cannot
+be removed (`422` "… is in an adopted plan and runs on the Scheduler. Make a new plan to remove a route"). Undo is not
+in the API yet.
 
 **Route Again** plans again every rider not on a locked route. Its result replaces the unlocked routes of the same plan.
 
@@ -167,15 +255,17 @@ Rules:
 
 **Adopt rules:**
 
-- `from` must be the 1st of this month or later, and after the current plan's start.
+- `from` must be the 1st of this month or later, and not before the current plan's start.
 - The plan runs on the **Scheduler** from that date: `scheduled` before the date, `current` from it.
 - The plan of the same session in use on that date ends the day before. A plan scheduled after the date is cancelled.
+- From the very day the current plan started, the current plan is taken out of use as if it never ran: it goes back to
+  `draft` (its Route Charges move to the new plan, its runs leave the Scheduler; runs already started stay).
 - Runs are re-synced in the background.
 
 | Error (422) | Cause |
 | --- | --- |
 | "Pick a date from the 1st of this month" | `from` before the 1st of this month |
-| "Pick a date after 2 Nov 2026, when the current plan started" | `from` not after the current plan's start |
+| "AM Plan 1 was only adopted on 2 Nov 2026. Pick that day or later" | `from` before the current plan's start |
 | "The plan has no routes" | Empty plan |
 | "This plan is already adopted" | Plan already in use |
 
@@ -186,6 +276,7 @@ Riders set by hand keep their point.
 | Call | Tool |
 | --- | --- |
 | `POST /schools/:id/rider_assignments { rids: [], stop_point_id }` | Set as assigned (by hand) |
+| `POST /schools/:id/rider_assignments/remove { rids: [] }` | Unassign: the riders lose their PUDO. Returns `{ removed }`; `422` "None of these riders have a PUDO" |
 | `POST /schools/:id/rider_assignments/move { stop_point_id }` | Move All Riders Here: the riders assigned to the other points of that stop move to this one. Returns `{ moved }` |
 | `POST /schools/:id/rider_assignments/notify` | Notify: returns `{ notified: n }`. Show "Assigned PUDO sent to N riders". Recorded only; sending comes with the app |
 
@@ -193,7 +284,13 @@ Riders set by hand keep their point.
 
 | Call | What it does |
 | --- | --- |
-| `POST /routes/:id/vehicle { vehicle_id, from }` | The regular bus from a date (empty `vehicle_id` = no bus). The history is in route `vehicles`. One-day or date-range replacements stay on the Scheduler |
+| `POST /routes/:id/vehicle { vehicle_id, from }` | The regular bus from a date (empty `vehicle_id` = no bus). The history is in route `vehicles`. Short-term replacement buses: the drawer's Replacement Buses (below), or drag the run on the Scheduler (`POST /occurrences/:id/move`, `scope: range`, [scheduler § 3.2](scheduler.md#32-confirm-post-occurrencesidmove)) |
+| `GET /routes/:id/replacements` | Replacement Buses: `[{ id, starts_on, ends_on, vehicle { id, plate, seats }, company, arranged_by: operator\|us, daily_rate, deduct_from_operator, reason, school_days, by, created_at }]`, latest first |
+| `POST /routes/:id/replacements { from, to, vehicle_id \| plate + (operator_id \| company), arranged_by: operator\|us, daily_rate, deduct, reason }` | Add Replacement → `201` the list. "Bus not in our list": `plate` with a Transport Operator (`operator_id`: the bus joins its fleet) or a company typed in (`company`: added as an External Vehicle, within the external vehicle limit); a plate the company already has is that bus. `422`: "Pick the start date", "End date is before the start date", "Enter the replacement bus plate", "Enter the company that owns the bus", "Enter the cost per day" (arranged by us) |
+| `DELETE /route_replacements/:id` | Remove a replacement (`204`); the regular bus comes back on runs not started yet |
+| `PATCH /routes/:id/pay_setup { attendant_required, attendant_provided_by: operator\|us, attendant_price, pay_to: own\|operator\|"", pay_to_operator_id }` | The price card's Bus Attendant Required / BA Provided By / BA Price and, for a route with no bus, Paid To (plans or finance; `attendant_price` needs finance: `422` "Needs the Fares & Billing permission"). Returns `pay_setup` |
+| `DELETE /routes/:route_id/vehicle_changes/:id` | Bus History "Remove this change" (not the first one: `422` "The first bus of the route cannot be removed. Change it instead"); returns `{ vehicles, prices }`, the runs follow |
+| `DELETE /routes/:route_id/prices/:id` | Remove a price from the history (`finance`); returns `{ vehicles, prices }` |
 | `POST /routes/:id/prices { effective_from, mode: fixed\|rider, monthly \| base_price + riders_included + per_rider }` | The operator's monthly price from a date (`finance`). The history is in route `prices`. With no price, the school's default for the bus size applies (Operator Pay) |
 | `GET /schools/:id/route_charges?date=` | Route Charges (when the school pays per bus): each AM / PM run of the adopted plans |
 | `POST /routes/:id/charges { starts_on, kind: amt\|pct, value, reason, note }` | A charge change from a date (the 1st of this month or later; it can be mid-month). `value: 0` ends the charge. `reason`: Long route, Peak timing, ERP cover, Extra stop or Other |
@@ -215,22 +312,44 @@ with `status: "check"`. A charge with no match is listed in `unmatched` ("Charge
 
 ## 7. Feasibility Studies
 
-Feasibility Studies are a sandbox: nothing touches real riders, stops or plans.
+Feasibility Studies are a sandbox: nothing touches real riders, stops or plans. Permission: **`plans`** (the menu's page
+id is `feas`, see [integration.md](../integration.md); the permission is `plans`). Reading needs it too, since studies hold
+bus prices and break-even: without `plans` every call is `403` (hide the menu).
 
 | Call | What it does |
 | --- | --- |
 | `GET /feasibility_studies` | The studies: `id`, `name`, `school`, `students`, `scenarios`, `updated_at`, `best` (fewest runs: `buses`, `runs`, `total`, `break_even`) |
 | `POST /feasibility_studies { study: { name, school_mode: existing\|prospect, school_id \| prospect_name + prospect_postal, pickup: door\|lib, walk_m } }` | New study. A prospect's postal code is placed on OneMap. The study starts with "Scenario 1" |
 | `GET /feasibility_studies/:id` | The study, with its scenarios worked out (below) |
+| `DELETE /feasibility_studies/:id` | Delete the study (`204`) |
 | `PATCH /feasibility_studies/:id { study: {…}, bus_prices: [{ bus_type, monthly, attendant }], fare_tiers: [{ max_km, fare, one_way_fare }] }` | Change the study, its bus prices (monthly per bus size plus the attendant add-on) or its fare tiers (monthly; the last tier has no `max_km`) |
 | `POST /feasibility_studies/:id/rows { text }` | Paste or upload students |
 | `DELETE /feasibility_studies/:id/rows` | Clear the students |
+| `DELETE /feasibility_studies/:id/rows/:row_id` | Remove one line of students (results go stale); returns the study |
+| `POST /feasibility_studies/:id/copy` | Copy Study: "<name> copy" with its students, bus prices, fare tiers and scenarios, without results (`201`, the new study) |
 | `POST /feasibility_studies/:id/scenarios { from_id }` | Add Scenario, or copy one |
 | `PATCH /feasibility_scenarios/:id { scenario: { name, sizes: ["MEDIUM_23"], attendant: STATUTORY\|ALL_BUSES, hard_cap, target_cap, margin_pct, extra_buses: { AM: { SMALL_13: 1 } }, params: {…} } }` | Change a scenario. `params` blank = company parameters |
 | `DELETE /feasibility_scenarios/:id` | Delete a scenario (keep at least one) |
 | `POST /feasibility_scenarios/:id/run` | Plans AM and PM in the background (202). Poll the study until the scenario's `status` is `done` or `failed` (with `error`) |
 | `POST /feasibility_scenarios/:id/use_suggested_fares` | The study's tiers take the suggested fares |
 | `GET /feasibility_studies/fare_source?school_id=` | A school's locked distance fares as monthly tiers ("Use the school's fares") |
+
+**The study (`GET /feasibility_studies/:id`)** = the list row plus:
+
+```json
+{ "id": 2, "name": "Tampines prospect", "school": "Tampines Primary", "students": 44, "scenarios": 2, "updated_at": "…",
+  "best": { "buses": 2, "runs": 4, "total": "12400.0", "break_even": "295.24" },
+  "school_mode": "prospect", "school_id": null, "prospect_name": "Tampines Primary", "prospect_postal": "529426",
+  "place": { "name": "Tampines Primary", "short": "Tampines Primary", "lat": 1.3496, "lng": 103.9437 },
+  "pickup": "door", "walk_m": 300,
+  "rows": [ { "id": 11, "postal": "460101", "riders": 3, "session": "both", "level": "P4" } ],
+  "bus_prices": [ { "bus_type": "MEDIUM_23", "monthly": "3000.0", "attendant": "450.0" } ],
+  "fare_tiers": [ { "max_km": "3.0", "fare": "150.0", "one_way_fare": "100.0" }, { "max_km": null, "fare": "220.0", "one_way_fare": "150.0" } ],
+  "scenarios": [ "…each scenario, below…" ] }
+```
+
+`place` is `null` until the school (or the prospect's postal code) has a location. Addresses of the students are not
+stored per row: the engine places each postal code when a scenario runs (no "found / not found" per row yet).
 
 **Students (`rows`):**
 

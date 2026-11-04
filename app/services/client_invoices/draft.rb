@@ -63,7 +63,8 @@ module ClientInvoices
                                    description: source == "trip" ? "#{trip.title} (#{trip.kind_name})" : "Late cancellation: #{trip.title}",
                                    details: [ t.route_text.presence, t.vehicles_required_text.presence ].compact.join(" | "))
       runs.each do |o|
-        line.runs.create!(occurrence_id: o.id, occurrence_date: o.date, start_time: o.start_time, trip_label: o.trip_label, amount: o.price)
+        line.runs.create!(occurrence_id: o.id, occurrence_date: o.date, start_time: o.start_time, trip_label: o.trip_label, amount: o.price,
+                          cancelled_hours_before: source == "late_cancel" ? ClientInvoices::Billable.hours_before(o) : nil)
       end
     end
   end

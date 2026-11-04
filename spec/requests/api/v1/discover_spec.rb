@@ -37,6 +37,8 @@ RSpec.describe "Discover" do
     get api_v1_discover_placements_path, params: { tab: "live" }
     expect(json[:meta][:counts]).to include(live: 1, scheduled: 1)
     expect(json[:meta][:kpis]).to include(live: 1, views: 1000, taps: 50, tap_rate: 5.0, sold: 10, commission: "46.4", revenue: "846.4")
+    patch api_v1_discover_advertiser_path(adv), params: { advertiser: { email: "ads@mandai.com" } }, as: :json
+    expect(json[:data]).to include(live_count: 1)
 
     post api_v1_discover_placement_duplicate_path(live)
     expect(json[:data]).to include(title: "Mandai Zoo day trip (copy)", state: "draft", views: 0)

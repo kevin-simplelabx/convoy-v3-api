@@ -31,7 +31,7 @@ module SchoolDashboard
                 operator_cost: cost[:total].round(2), profit:, margin_pct: exp&.positive? ? (profit * 100 / exp).round(1) : nil,
                 cost_per_rider: riders.positive? ? (cost[:total] / riders).round(2) : nil, riders:,
                 seats: { riders: load, seats:, routes:, pct: seats.positive? ? (load * 100.0 / seats).round(1) : nil } },
-        collections: collections(rev), year: year_chart(year), ahead: Ahead.new(@school, @today, SchoolDashboard.year_on(@school, @today)).fin,
+        collections: collections(rev), route_costs: route_costs(cost), year: year_chart(year), ahead: Ahead.new(@school, @today, SchoolDashboard.year_on(@school, @today)).fin,
         attention: attention(year, cost) }
     end
 
@@ -51,7 +51,8 @@ module SchoolDashboard
       (month..month.end_of_month).find { year&.school_day?(it) } || (month + 14)
     end
 
-    # Revenue expected in a month: { expected, billed (bills raised in the month at those fares), riders, key } or { error }.
+    # Revenue expected in a month: { expected, billable (the bills of the periods billed in the month, in full: "Expected
+    # bills: S$x. Not raised yet"), riders, key } or { error }.
     def revenue(month)
       year = year_of(month + 14)
       return { error: "No academic year covers #{month.strftime('%b %Y')}" } unless year
@@ -61,8 +62,13 @@ module SchoolDashboard
 
       periods, bill_months = @periods[year.id] ||= [ FareTables.periods(year, table), FareTables.bill_months(year, table) ]
       expected = 0.to_d
+      billable = 0.to_d
       riders = Set.new
       periods.each_with_index do |p, i|
+        if bill_months[i] == month
+          d = draft(year, i)
+          billable += d[:bills].sum(0.to_d) { it[:amount] } unless d[:error]
+        end
         share = if table.cycle == "month" then bill_months[i] == month ? 1 : 0
         else
                   days = p[:school_days].to_i
@@ -77,7 +83,7 @@ module SchoolDashboard
         expected += d[:bills].sum(0.to_d) { it[:amount] } * share
         d[:bills].each { |b| b[:lines].each { riders << it[:rid] if it[:rid] } }
       end
-      { expected: expected.round(2), riders: riders.size, key: year.key, basis: table.per_bus? ? "bus" : "rider" }
+      { expected: expected.round(2), billable: billable.round(2), riders: riders.size, key: year.key, basis: table.per_bus? ? "bus" : "rider" }
     end
 
     def year_of(day)
@@ -97,8 +103,21 @@ module SchoolDashboard
       bills = SchoolBill.issued.where(school: @school, billing_month: @month)
       paid = SchoolBillPayment.joins(:school_bill).where(school_bills: { school_id: @school.id }, voided_at: nil, paid_on: @month..@month.end_of_month)
       over = SchoolBills::Collections.call(@school, today: @today)[:rows].select(&:overdue)
-      { expected: rev[:error] ? nil : rev[:expected], billed: bills.sum(:total).to_d.round(2), bills: bills.count,
+      { expected: rev[:error] ? nil : rev[:expected], billable: rev[:billable], billed: bills.sum(:total).to_d.round(2), bills: bills.count,
         collected: paid.sum(:amount).to_d.round(2), overdue: { bills: over.size, owed: over.sum(0.to_d, &:owed).round(2) } }
+    end
+
+    # Finance › Route Costs: each route's cost this month (operator, price, days run) and the total by transport operator.
+    def route_costs(cost)
+      name = ->(key, op) { op&.name || (key == "own" ? "Our buses" : "Not assigned") }
+      { total: cost[:total].round(2), school_days: cost[:school_days], priced: cost[:priced], routes: cost[:routes],
+        rows: cost[:rows].map do |r|
+          { route: r.route.label, session: r.plan.session, plan: r.plan.name, bus_type: r.route.bus_type, plate: r.vehicle&.plate,
+            operator: name.(r.key.to_s, r.operator), price: r.price, unpriced: r.unpriced, days: r.days, of: r.of, amount: r.amount, note: r.note,
+            attendant: r.attendant }
+        end,
+        by_operator: cost[:by_operator].map { |key, v| { key: key.to_s, operator_id: v[:operator]&.id, name: name.(key.to_s, v[:operator]), routes: v[:routes], amount: v[:amount].round(2) } }
+                                       .sort_by { -it[:amount] } }
     end
 
     # The academic year's 12 months: revenue expected and operator cost.

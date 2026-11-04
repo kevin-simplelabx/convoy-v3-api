@@ -3,7 +3,7 @@
 module Api
   module V1
     class OperatorPaymentsController < BaseController
-      BATCH_INCLUDES = { batch_operators: [ { operator: { bank: :branches } }, :lines, :payments ] }.freeze
+      BATCH_INCLUDES = [ :created_by, :bank_file_by, { batch_operators: [ { operator: { bank: :branches } }, :lines, { payments: :recorded_by } ] } ].freeze
 
       # GET /finance/operator_pay/requests
       def requests
@@ -17,12 +17,17 @@ module Api
         render json: { data: groups, meta: kpis(items) }
       end
 
-      # PUT /finance/operator_pay/costs { ref: "run:<id>:<date>", amount }
+      # PUT /finance/operator_pay/costs { ref: "run:<id>:<date>", amount } (empty amount: back to the cost worked out)
       def set_cost
         authorize :finance, :update?
         _, id, date = params.require(:ref).to_s.split(":")
         occ = TripOccurrence.find_by!(id:, date:)
-        OperatorCostOverride.find_or_initialize_by(occurrence_id: occ.id, occurrence_date: occ.date).update!(amount: params.require(:amount), set_by: current_user)
+        cost = OperatorCostOverride.find_or_initialize_by(occurrence_id: occ.id, occurrence_date: occ.date)
+        if params[:amount].blank? # an empty cost removes the one set by hand
+          cost.destroy! if cost.persisted?
+        else
+          cost.update!(amount: params[:amount], set_by: current_user)
+        end
         head :no_content
       end
 
@@ -84,6 +89,15 @@ module Api
         head :no_content
       end
 
+      # DELETE /finance/operator_pay/batches/:id/operators/:batch_operator_id — Take out of batch → the batch, or 204 when
+      # it had no other operator (the batch is gone).
+      def remove_operator
+        authorize :finance, :update?
+        batch = find_batch
+        left = service.remove_operator!(batch, batch.batch_operators.find(params[:batch_operator_id]))
+        left ? render_batch(left) : head(:no_content)
+      end
+
       # POST /finance/operator_pay/batches/:id/payments { batch_operator_id, paid_on, amount, method, reference }
       def pay
         authorize :finance, :update?
@@ -92,9 +106,10 @@ module Api
         render_batch find_batch
       end
 
+      # POST /finance/operator_pay/batches/:id/mark_paid { paid_on, reference }
       def mark_paid
         authorize :finance, :update?
-        service.mark_all_paid!(find_batch)
+        service.mark_all_paid!(find_batch, paid_on: params[:paid_on], reference: params[:reference])
         render_batch find_batch
       end
 

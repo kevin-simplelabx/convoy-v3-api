@@ -1,7 +1,8 @@
 require "rails_helper"
 
 # School Bus › Stop Library › photo requests: Ask for Photos (one open request per point), accept a photo from the app
-# (becomes the point's photo, credited, Street View kept), reject, close, and automatic requests.
+# (becomes the point's photo, credited, Street View kept), reject, close / reopen / remove, photos the office received, and
+# automatic requests.
 RSpec.describe "School Bus stop photo requests" do
   let(:company) { create(:company) }
   let!(:f) do
@@ -49,9 +50,39 @@ RSpec.describe "School Bus stop photo requests" do
     expect(json.dig(:data, 0, :submissions).map { |s| s[:status] }).to eq(%w[accepted rejected])
     expect(json.dig(:data, 0, :live)).to eq(1)
 
-    delete api_v1_stop_photo_request_path(req[:id])
+    post close_api_v1_stop_photo_request_path(req[:id])
+    expect(json[:data]).to include(status: "closed")
     get api_v1_stop_photo_requests_path
     expect(json[:data]).to be_empty
+    expect(json.dig(:meta, :counts)).to eq(open: 0, review: 0, closed: 1)
+    post reopen_api_v1_stop_photo_request_path(req[:id])
+    expect(json[:data]).to include(status: "open")
+
+    delete api_v1_stop_photo_request_path(req[:id]) # Remove: gone, the point keeps the accepted photo
+    get api_v1_stop_photo_requests_path, params: { status: "all" }
+    expect(json[:data]).to be_empty
+    expect(within_tenant(company) { f[:a].reload.photo.url }).to be_present
+  end
+
+  it "records photos the office received, up to the max, and closes the request when it is reached" do
+    post api_v1_stop_photo_requests_path, params: { stop_point_id: f[:b].id, audience: "driver", max_submissions: 2 }
+    id = json.dig(:data, :id)
+    photo = -> { fixture_file_upload("photo.png", "image/png") }
+    post submissions_api_v1_stop_photo_request_path(id), params: { photos: [ photo.() ], submitted_by_name: "", role: "driver" }
+    expect(json.dig(:error, :message)).to eq("Enter who sent it")
+    post submissions_api_v1_stop_photo_request_path(id), params: { photos: [ photo.(), photo.(), photo.() ], submitted_by_name: "Kumar", role: "driver",
+                                                                   street_view_url: "https://maps.app.goo.gl/x" }
+    expect(response).to have_http_status(:created)
+    expect(json[:meta]).to eq(added: 2, closed: true)
+    expect(json[:data]).to include(status: "closed", live: 2)
+    expect(json.dig(:data, :submissions).map { it.slice(:by, :source, :n, :of, :status) })
+      .to eq([ { by: "Kumar", source: "office", n: 1, of: 3, status: "pending" }, { by: "Kumar", source: "office", n: 2, of: 3, status: "pending" } ])
+    get api_v1_stop_photo_requests_path, params: { status: "review" }
+    expect(json[:data].map { it[:id] }).to eq([ id ])
+    post reopen_api_v1_stop_photo_request_path(id)
+    expect(json.dig(:error, :message)).to eq("Already at the max photos. Raise the max or reject some first")
+    post submissions_api_v1_stop_photo_request_path(id), params: { photos: [ photo.() ], submitted_by_name: "Kumar", role: "driver" }
+    expect(json.dig(:error, :message)).to eq("This request is closed")
   end
 
   it "opens automatic requests for points with no photo and removes unanswered ones when turned off" do

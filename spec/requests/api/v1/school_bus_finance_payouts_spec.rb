@@ -122,4 +122,40 @@ RSpec.describe "School Bus finance payouts" do
     get api_v1_finance_documents_path, params: { type: "payment_voucher" }
     expect(json[:data].sole).to include(number: "PV-2026-000001", to: "Alpha Bus", school: "St. Stephen's School", amount: "5000.0")
   end
+
+  it "shows the attendant included in a route's price and who provides the attendant" do
+    within_tenant(company) do
+      school.bus_size_rates.sole.update!(ba_operator: 400, ba_us: 350)
+      school.create_attendant_policy!(needs: "selected", sizes: %w[MEDIUM_23], provided_by: "us")
+    end
+    at Time.zone.local(2026, 12, 2, 9, 0)
+    a = row(board, "Alpha Bus")
+    expect(a[:routes].first).to include(route: "AM 1", price: "4550.0", amount: "4550.0", attendant: { amount: "350.0", by: "us" })
+  end
+
+  it "takes a route's own Bus Attendant settings and pays the operator picked for a route with no bus" do
+    route, extra = within_tenant(company) do
+      school.bus_size_rates.sole.update!(ba_operator: 400, ba_us: 350)
+      am1 = SchoolRoute.find_by!(label: "AM 1")
+      [ am1, am1.plan.routes.create!(number: 3, label: "AM 3", start_time: "07:00", end_time: "07:30", bus_type: "MEDIUM_23") ]
+    end
+    at Time.zone.local(2026, 12, 2, 9, 0)
+    sign_in_as(create(:user, company:, permissions: %w[plans]))
+    patch pay_setup_api_v1_route_path(route), params: { attendant_required: true, attendant_provided_by: "us", attendant_price: 300 }, as: :json
+    expect(json.dig(:error, :message)).to eq("Needs the Fares & Billing permission")
+    patch pay_setup_api_v1_route_path(route), params: { attendant_required: true, attendant_provided_by: "us" }, as: :json
+    expect(json[:data]).to include(attendant_required: true, attendant_provided_by: "us", attendant_price: nil) # school: statutory, by the operator
+    patch pay_setup_api_v1_route_path(extra), params: { pay_to: "operator", pay_to_operator_id: f[:b].id }, as: :json
+    expect(json[:data]).to include(pay_to: "operator", pay_to_operator: { id: f[:b].id, name: "Beta Coaches" })
+
+    sign_in_as(ops)
+    d = board
+    a = row(d, "Alpha Bus")[:routes].find { it[:route] == "AM 1" }
+    expect(a).to include(price: "4550.0", attendant: { amount: "350.0", by: "us" })
+    b = row(d, "Beta Coaches")[:routes].find { it[:route] == "AM 3" }
+    expect(b).to include(plate: nil, amount: "4200.0", note: "No bus, set by hand")
+
+    patch pay_setup_api_v1_route_path(route), params: { attendant_required: false }, as: :json # same as the school: back to the default
+    expect(json[:data]).to include(attendant_required: nil)
+  end
 end
