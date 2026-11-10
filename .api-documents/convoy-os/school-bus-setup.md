@@ -285,7 +285,7 @@ Send JSON. Error messages:
 | Error (422) | Cause |
 | --- | --- |
 | "Pick at least one operating day" | No operating days |
-| "Period count must be 2" (or "3 or 4") | `period_count` does not fit `structure` |
+| "Period count must be 2" (or "Period count must be 3 or 4") | `period_count` does not fit `structure` |
 | "Term 1 needs a start and an end" | Missing date |
 | "Term 2 must start after Term 1 ends" | Terms out of order or overlapping |
 | "Term 4 must be inside AY 2027 (1 Jan 2027 to 31 Dec 2027)" | Term outside the year |
@@ -418,7 +418,8 @@ PATCH /schools/:id/bus_attendants { needs: statutory|all|selected, sizes: [...],
 
 - An empty body is `422` "Send needs, sizes or provided_by" and nothing is saved or locked.
 - `routes[].bus_type` is `null` for a route that has none (a hand-made route, old data): it needs no attendant. Routes from the routing engine always have one.
-- With `selected`, at least one size is required, and the sizes required by law are always included.
+- With `selected`, at least one size is required (`422` "Pick at least one bus size"; `sizes: []` is not filled in with the
+  required ones), and the sizes required by law are always included in what is saved.
 - The price table (Their BA / Our BA): `bus_types[].ba_operator` / `ba_us` (S$ a month, from Operator Pay,
   [school-bus-money.md](school-bus-money.md); `null` = not priced).
 - `routes`: the routes of the plans in use (current and scheduled). Count them against the settings being edited: "x of
@@ -429,14 +430,26 @@ PATCH /schools/:id/bus_attendants { needs: statutory|all|selected, sizes: [...],
 
 ## 8. Setup strip and Summary
 
-`GET /academic_years/:id/setup`:
+`GET /academic_years/:id/setup`, or `GET /schools/:id/setup` when no year is picked yet (it shows the year running today, else the
+next one to start, else the latest; `?academic_year_id=` picks one; a school with no year at all answers `"year": null` and the
+year steps not done):
 
 ```json
 { "year": "2026", "done": 4, "total": 7, "complete": false,
-  "steps": [ { "number": 1, "key": "levels", "label": "School Levels", "scope": "school", "available": true, "done": true, "locked_at": "…", "locked_by": "…" },
-             { "number": 4, "key": "fares", "label": "Bus Fares", "scope": "year", "available": true, "done": false, "locked_at": null, "locked_by": null },
-             { "number": 8, "key": "holidays", "label": "Holidays & Special Days", "scope": "year", "available": true, "done": null, "always_editable": true } ] }
+  "steps": [ { "number": 1, "key": "levels", "label": "School Levels", "scope": "school", "available": true, "done": true,
+               "detail": "6 levels, P1 to P6", "locked_at": "…", "locked_by": "…" },
+             { "number": 4, "key": "fares", "label": "Bus Fares", "scope": "year", "available": true, "done": false,
+               "detail": "Not set up yet", "locked_at": null, "locked_by": null },
+             { "number": 8, "key": "holidays", "label": "Holidays & Special Days", "scope": "year", "available": true, "done": null,
+               "always_editable": true, "detail": "3 holidays, 1 special days" } ] }
 ```
+
+- `detail` is the strip's sub-line, with the prototype's words: "6 levels, P1 to P6" / "Saved, not locked" / "Not set up yet";
+  "Locked 02/11/2026" / "Year setup not saved" / "Not started"; "Needs the calendar first"; "Locked 02/11/2026. Parents pay"
+  (also "School pays per bus" / "School pays per rider"); "Version 2 from 01/01/2027"; "Locked …. Statutory only" / "All buses" /
+  "3 bus sizes"; "N holidays, M special days". Dates in `detail` are `dd/mm/yyyy`; format `locked_at` yourself if the user picked another format.
+- Step 5 (Payment & Refund Policy) is `done` only when a version is **in use today** (`effective_on` today or earlier), the same
+  rule Registration uses (prototype `polCur`). A version that starts later does not count yet.
 
 - Show "`done` of `total` done" on the strip.
 - Steps 1–7 count in `done` / `total` (7). Holidays & Special Days is step `number: 8` with `done: null` and

@@ -34,10 +34,11 @@ class SchoolAttendantPolicy < ApplicationRecord
 
   validates :needs, inclusion: { in: NEEDS }
   validates :provided_by, inclusion: { in: PROVIDERS }
-  validates :sizes, length: { minimum: 1, message: "pick at least one bus size" }, if: -> { needs == "selected" }
+  validate { errors.add(:base, "Pick at least one bus size") if needs == "selected" && sizes.empty? }
   validate { errors.add(:sizes, "has an unknown bus size") unless (sizes - SchoolBus::BUS_TYPES.keys).empty? }
 
-  before_validation { self.sizes = (sizes | SchoolBus.statutory_sizes).sort if needs == "selected" }
+  # The sizes the law requires are always ticked; an empty pick stays empty so validation can reject it.
+  before_validation { self.sizes = (sizes | SchoolBus.statutory_sizes).sort if needs == "selected" && sizes.any? }
 
   # Bus sizes that need an attendant.
   def needed_sizes

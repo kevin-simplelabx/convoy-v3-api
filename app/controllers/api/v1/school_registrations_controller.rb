@@ -17,16 +17,27 @@ module Api
       def schedule = save("scheduled")
 
       # POST /academic_years/:academic_year_id/registration/unschedule — back to draft: messages stop, the form closes.
-      def unschedule = save("draft")
+      def unschedule
+        year = find_year
+        authorize year.school, :setup?
+        raise ApplicationService::Error, "Registration is already a draft" unless year.registration&.scheduled?
+
+        save("draft")
+      end
 
       # POST /academic_years/:academic_year_id/registration/release { key } — Release Now for a message sent by hand (welcome with pick-up details).
       def release
         year = find_year
         authorize year.school, :setup?
         reg = year.registration or raise ApplicationService::Error, "Save the registration first"
+        raise ApplicationService::Error, "Schedule the registration before releasing a message" unless reg.scheduled?
+
         msg = reg.messages.find_by!(key: params.require(:key))
-        raise ApplicationService::Error, "#{msg.preset[:name]} goes out by itself" unless msg.preset[:manual]
-        raise ApplicationService::Error, "#{msg.preset[:name]} is off" unless msg.enabled
+        name = msg.preset[:name]
+        raise ApplicationService::Error, "#{name} goes out by itself" unless msg.preset[:manual]
+        raise ApplicationService::Error, "#{name} is off" unless msg.enabled
+        raise ApplicationService::Error, "#{name} is sent automatically by date" if msg.scheduled
+        raise ApplicationService::Error, "#{name} was already released" if msg.released_at
 
         msg.update!(released_at: Time.current)
         render json: { data: SchoolRegistrations.present(reg.reload) }

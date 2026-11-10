@@ -168,6 +168,7 @@ Rails.application.routes.draw do
       resources :schools, only: %i[index show create] do
         put :route_labels, on: :member, action: :update_labels
         post :unlock, on: :member
+        get :setup, on: :member
         resource :levels, controller: :school_levels, only: %i[show update]
         resource :bus_attendants, controller: :school_attendant_policies, only: %i[show update]
         resource :policy, controller: :school_policies, only: %i[show create]

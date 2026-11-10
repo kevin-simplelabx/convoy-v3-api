@@ -4,6 +4,23 @@ Changes to existing Convoy OS endpoints made while building other apps (Convoy D
 on (renamed, removed or changed fields and endpoints). New optional fields are not listed here; they are in the menu
 documents. Newest first. Each item: what changed, before → after, and what the front-end has to do.
 
+## 10/11/2026 — Setup / Registration / Policy / Operator Pay (API-ISSUES §22 items A1–A3, A9, A11, §14 item 8 and 11, phase Q5)
+
+Docs: [school-bus-setup.md § 2, 7, 8](school-bus-setup.md#8-setup-strip-and-summary), [school-bus-money.md § 3, 5](school-bus-money.md),
+[school-bus-parents.md § 2](school-bus-parents.md#2-bus-service-registration). Class: **BE bug** (fixed), **Doc gap**, **FE answer**.
+**B** = breaking. 8 rows: 7 BE bugs (1 breaking: 6), 1 FE answer.
+
+| # | Where | Your claim | Class | Answer / what changed | Front-end |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Registration (item 8) | Scheduling needs the policy in use, the strip does not agree | BE bug + FE answer | Registration needing the policy **in use today** is as the prototype (`ayReady` / `polCur`): a version that starts later does not count. The strip was the part that differed (any version counted): `GET …/setup` step 5 `done` now uses the same rule (`SchoolPolicyVersion.current_for`) | Nothing |
+| 2 | Strip sub-lines (item 8) | No "6 levels, P1 to P6", "Version N published" | BE bug | Every step has `detail` with the prototype's words (e.g. "Version 2 from 01/01/2027", "Locked 02/11/2026. Parents pay"); step 8 too ("N holidays, M special days") | Show `detail` under each step |
+| 3 | Period count (A1) | "must be 3 and 4" | BE bug | "Period count must be 3 or 4" (semester: "must be 2") | Nothing |
+| 4 | Bus Attendants (A2) | `selected` with `sizes: []` accepted | BE bug | `422` "Pick at least one bus size", nothing saved or locked. Before, the sizes the law requires were filled in and the empty pick passed | Show the message |
+| 5 | Setup without a year (A3) | No setup endpoint without a year | BE bug (new endpoint) | `GET /schools/:id/setup` (optional `?academic_year_id=`): the running, next or latest year; `year: null` and the year steps not done for a school with no year | Use it when no year is picked |
+| 6 | Operator Pay calculator (A9) | `rate` is the number `0` for an unpaid month; notes differ from the prototype | BE bug **B** | `rate` / `earned` are always decimal strings (`"0.0"`). Notes as the prototype: "Not a paid month under the Pay Scheme", "Route not started yet" (both `pct: 0`, `amount: "0.0"`), grace-period and "less N days" notes. `400` without `start_date` stays (a required field) | Parse `rate` as a decimal string |
+| 7 | Policy `collection` (A11) | `null` when no year covers the current calendar year | BE bug | Falls back: running year, else the next to start, else the latest year. `null` only when the school has no year or that year has no fares | Nothing |
+| 8 | Release Now / Unschedule (11) | Release works on a draft, a message sent by date, or twice; Unschedule works on a draft | BE bug | `release` is `422` when the registration is not scheduled, the message is sent automatically by date (`scheduled: true`) or was already released. `unschedule` is `422` "Registration is already a draft" on a draft | Show Release Now only for a manual message with `scheduled: false` and no `released_at`, in a scheduled registration; show Unschedule only when `status` is `scheduled` |
+
 ## 10/11/2026 — Feasibility Studies (API-ISSUES §23 Feasibility, items B6–B8, phase Q4)
 
 Doc: [school-bus-routes.md § 7](school-bus-routes.md#7-feasibility-studies). Class: **BE bug** (fixed), **Doc gap**, **FE answer**,

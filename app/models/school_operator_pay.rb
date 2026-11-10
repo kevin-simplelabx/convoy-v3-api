@@ -46,10 +46,10 @@ class SchoolOperatorPay < ApplicationRecord
   validates :earn_by, inclusion: { in: %w[terms days] }
   validates :part_pct, numericality: { in: 0..100 }
 
-  # Share of a month's price paid under the scheme (1, part_pct / 100 or 0).
+  # Share of a month's price paid under the scheme (1, part_pct / 100 or 0) as a decimal.
   def rate(month)
-    return 1 if scheme == "all" || paid_months.include?(month)
+    return 1.to_d if scheme == "all" || paid_months.include?(month)
 
-    scheme == "part" ? part_pct.to_d / 100 : 0
+    scheme == "part" ? part_pct.to_d / 100 : 0.to_d
   end
 end

@@ -69,4 +69,32 @@ RSpec.describe "School Bus registration settings" do
     post unschedule_api_v1_academic_year_registration_path(year), as: :json
     expect(json[:data]).to include(status: "draft", state: "draft")
   end
+
+  it "only releases a manual message of a scheduled registration once, and only unschedules a scheduled one" do
+    within_tenant(company) do
+      %w[calendar sessions fares].each { SchoolSetup.lock!(school: year.school, year:, section: it, user:) }
+      Policies::Publish.call(year.school, Policies.default.merge(effective_on: Date.current), user:)
+    end
+    post unschedule_api_v1_academic_year_registration_path(year), as: :json
+    expect(response).to have_http_status(:unprocessable_content)
+    expect(json.dig(:error, :message)).to eq("Registration is already a draft")
+
+    put api_v1_academic_year_registration_path(year), params: { messages: [ { key: "wel" } ] }, as: :json
+    post release_api_v1_academic_year_registration_path(year), params: { key: "wel" }, as: :json
+    expect(response).to have_http_status(:unprocessable_content)
+    expect(json.dig(:error, :message)).to eq("Schedule the registration before releasing a message")
+
+    post schedule_api_v1_academic_year_registration_path(year), as: :json
+    expect(response).to have_http_status(:ok)
+    post release_api_v1_academic_year_registration_path(year), params: { key: "wel" }, as: :json
+    expect(response).to have_http_status(:ok)
+    post release_api_v1_academic_year_registration_path(year), params: { key: "wel" }, as: :json
+    expect(json.dig(:error, :message)).to end_with("was already released")
+
+    put api_v1_academic_year_registration_path(year), params: { messages: [ { key: "wel", scheduled: true } ] }, as: :json
+    post release_api_v1_academic_year_registration_path(year), params: { key: "wel" }, as: :json
+    expect(json.dig(:error, :message)).to end_with("is sent automatically by date")
+    post release_api_v1_academic_year_registration_path(year), params: { key: "rem" }, as: :json
+    expect(json.dig(:error, :message)).to end_with("goes out by itself")
+  end
 end

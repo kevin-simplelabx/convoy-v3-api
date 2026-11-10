@@ -51,6 +51,20 @@ RSpec.describe "School Bus operator pay" do
     expect(json.dig(:data, :steps).find { |s| s[:key] == "operator_pay" }).to include(done: true, available: true)
   end
 
+  it "answers unpaid months and months before the start with a decimal rate and the prototype's note" do
+    put api_v1_school_operator_pay_path(school), params: settings.merge(scheme: "some"), as: :json
+    post calculator_api_v1_school_operator_pay_path(school), params: { academic_year_id: f[:year].id, start_date: "2027-12-15", price: 2000 }
+    expect(json[:data].map { |r| [ r[:month], r[:rate], r[:pct], r[:amount], r[:note] ] })
+      .to eq([ [ "2027-06", "0.0", 0, "0.0", "Not a paid month under the Pay Scheme" ], [ "2027-12", "0.0", 0, "0.0", "Not a paid month under the Pay Scheme" ] ])
+
+    post unlock_api_v1_school_path(school), params: { section: "operator_pay" }, as: :json
+    put api_v1_school_operator_pay_path(school), params: settings.merge(scheme: "part"), as: :json
+    post calculator_api_v1_school_operator_pay_path(school), params: { academic_year_id: f[:year].id, start_date: "2027-12-15", price: 2000 }
+    expect(json[:data].first).to include(month: "2027-06", rate: "0.5", pct: 0, amount: "0.0", note: "Route not started yet")
+    post calculator_api_v1_school_operator_pay_path(school), params: { academic_year_id: f[:year].id, start_date: "2027-12-15" }
+    expect(json[:data].first).to include(amount: nil)
+  end
+
   it "is hidden without finance or finview" do
     sign_in_as(create(:user, company:, permissions: %w[plans]))
     get api_v1_school_operator_pay_path(school)

@@ -56,6 +56,12 @@ class AcademicYear < ApplicationRecord
 
   scope :covering, ->(date) { where(starts_on: ..date, ends_on: date..) }
 
+  # The year a screen without a year picker shows: the one running on the date, else the next to start, else the latest.
+  def self.default_for(school, date = Date.current)
+    years = school.academic_years
+    years.covering(date).first || years.where(starts_on: date..).first || years.reorder(starts_on: :desc).first
+  end
+
   def self.key_for(year, month) = month == 1 ? year.to_s : "#{year}/#{(year + 1).to_s[-2..]}"
 
   def period_label = structure == "semester" ? "Semester" : "Term"
@@ -89,6 +95,6 @@ class AcademicYear < ApplicationRecord
   end
 
   def period_count_fits
-    errors.add(:period_count, "must be #{STRUCTURES[structure].to_sentence(last_word_connector: ' or ')}") unless STRUCTURES[structure]&.include?(period_count)
+    errors.add(:period_count, "must be #{STRUCTURES[structure].to_sentence(two_words_connector: ' or ', last_word_connector: ' or ')}") unless STRUCTURES[structure]&.include?(period_count)
   end
 end

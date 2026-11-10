@@ -283,7 +283,8 @@ The policy is set per school and published as versions. Each version applies fro
 - `state` is `scheduled`, `in_use` or `replaced`.
 - `draft` starts from the scheduled version if there is one, otherwise the current one, otherwise the Convoy defaults.
 - "Collection cycle" and the school-pays banner ("Due dates, late fees and reminders apply to the school bill…") come from
-  `collection`.
+  `collection`. They come from the year running today, else the next one to start, else the latest year; `collection` is `null` only
+  when the school has no year (or that year has no fares yet).
 
 **Fields (publish body)**
 
@@ -394,6 +395,12 @@ or terms before (terms less than 21 days apart count together).
 [ { "month": "2027-06", "label": "Jun 2027", "rate": "0.5", "earned": "0.5", "pct": 25, "amount": "500.0",
     "note": "Ran in 1 of 2 halves of the term, at 50% part pay" } ]
 ```
+
+- `rate` and `earned` are always decimal strings (an unpaid month is `"0.0"`, not the number `0`); `amount` is `null` when no `price` is sent.
+- `note` follows the prototype: "Not a paid month under the Pay Scheme" (rate 0), "Route not started yet" (the route starts after the
+  month; both rows have `pct: 0` and `amount: "0.0"`), "Full pay for any route on contract", "No earlier term in the calendar, so paid in full",
+  "Ran N of M school days" (+ ", less D days" when days are deducted), "Started on school day N, inside the G-day grace period",
+  "Ran in N of 2 halves of the term", "Ran in N of M terms", each with ", at P% part pay" when the rate is below 100%.
 
 ## 7. Front-end only and not built yet
 

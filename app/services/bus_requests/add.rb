@@ -30,7 +30,7 @@ module BusRequests
           parent_email: @params[:parent_email].to_s.strip.presence, level: @params[:level].presence,
           address: @params[:address].to_s.strip.presence || hit&.dig(:address), lat: hit&.dig(:lat), lng: hit&.dig(:lng),
           start_on: @params[:start_on].presence || SchoolRegistrations.first_day(@year), fee_paid: fee,
-          policy_version: school.policy_versions.select { it.effective_on <= now.to_date }.max_by { [ it.effective_on, it.version ] }&.version
+          policy_version: SchoolPolicyVersion.current_for(school.policy_versions, now.to_date)&.version
         )
         req.log!("Added by #{@user.name} on the parent's behalf. Registration fee #{fee ? 'received' : 'not yet received'}", by: @user, at: now)
         req

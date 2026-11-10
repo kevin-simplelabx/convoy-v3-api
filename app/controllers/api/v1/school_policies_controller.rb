@@ -24,9 +24,9 @@ module Api
         versions = school.policy_versions.to_a
         today = Date.current
         scheduled = versions.select { it.effective_on > today }.min_by(&:effective_on)
-        current = versions.select { it.effective_on <= today }.max_by { [ it.effective_on, it.version ] }
+        current = SchoolPolicyVersion.current_for(versions, today)
         base = scheduled || current
-        year = school.academic_years.covering(today).first || school.academic_years.where("starts_on > ?", today).first
+        year = AcademicYear.default_for(school, today)
         fares = year&.fare_table
         {
           versions: versions.sort_by { [ -it.effective_on.jd, -it.version ] }.map do |v|

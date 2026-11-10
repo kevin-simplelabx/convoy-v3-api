@@ -42,6 +42,7 @@ RSpec.describe "School Bus request alerts" do
     end
 
     put api_v1_academic_year_registration_path(f[:year]), params: { messages: [ { key: "wel", enabled: true } ] }, as: :json
+    within_tenant(company) { f[:year].reload.registration.update!(status: "scheduled") }
     post release_api_v1_academic_year_registration_path(f[:year]), params: { key: "inv" }, as: :json
     expect(json.dig(:error, :message)).to eq("#{RegistrationMessage::PRESETS['inv'][:name]} goes out by itself")
     post release_api_v1_academic_year_registration_path(f[:year]), params: { key: "wel" }, as: :json

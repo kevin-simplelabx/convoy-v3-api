@@ -107,8 +107,8 @@ There is one registration per school academic year.
 | `GET /academic_years/:id/registration` | The settings. Before a save, these are the defaults (`saved: false`) |
 | `PATCH /academic_years/:id/registration` | Save Draft, or Save Changes once scheduled |
 | `POST /academic_years/:id/registration/schedule` | Save and schedule. Takes the same body |
-| `POST /academic_years/:id/registration/unschedule` | Back to draft: messages stop and the form closes to parents |
-| `POST /academic_years/:id/registration/release` | Release Now for a message sent by hand: `{ key: "wel" }` |
+| `POST /academic_years/:id/registration/unschedule` | Back to draft: messages stop and the form closes to parents. `422` "Registration is already a draft" when it is not scheduled (show the button only when `status` is `scheduled`) |
+| `POST /academic_years/:id/registration/release` | Release Now for a message sent by hand: `{ key: "wel" }`. `422` when the registration is not scheduled ("Schedule the registration before releasing a message"), the message is not a manual one ("… goes out by itself"), is off, is sent automatically by date (`scheduled: true`: "… is sent automatically by date") or was already released (`released_at` set) |
 
 **Body fields (all optional).**
 

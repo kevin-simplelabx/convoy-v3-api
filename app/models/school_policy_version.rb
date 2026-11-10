@@ -76,9 +76,13 @@ class SchoolPolicyVersion < ApplicationRecord
   # The version in use on a date.
   def self.in_use_on(date = Date.current) = where(effective_on: ..date).order(effective_on: :desc, version: :desc).first
 
+  # The version in use on a date among a school's versions (any Enumerable, so a preloaded list works): the latest that
+  # has started, nil when none has (HTML polCur). Registration and strip step 5 need this one.
+  def self.current_for(versions, date = Date.current) = versions.select { it.effective_on <= date }.max_by { [ it.effective_on, it.version ] }
+
   def state(versions, today = Date.current)
     return "scheduled" if effective_on > today
 
-    versions.select { it.effective_on <= today }.max_by { [ it.effective_on, it.version ] } == self ? "in_use" : "replaced"
+    self.class.current_for(versions, today) == self ? "in_use" : "replaced"
   end
 end

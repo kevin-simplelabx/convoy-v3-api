@@ -28,6 +28,13 @@ module Api
         render_data school, SchoolBlueprint, view: :record
       end
 
+      # GET /schools/:id/setup[?academic_year_id=] — the Year Setup steps for the strip; no year needed (the running, next or latest one).
+      def setup
+        school = authorize find, :show?
+        year = params[:academic_year_id].present? ? school.academic_years.find(params[:academic_year_id]) : AcademicYear.default_for(school)
+        render json: { data: SchoolSetup::Steps.new(year, school:).call }
+      end
+
       # POST /schools/:id/unlock { section: levels | attendants }
       def unlock
         section = params.require(:section)

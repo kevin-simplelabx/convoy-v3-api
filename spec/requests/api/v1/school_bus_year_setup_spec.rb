@@ -77,6 +77,54 @@ RSpec.describe "School Bus year setup" do
     expect(json[:data]).to include(saved: false, locked: nil)
   end
 
+  it "rejects a Bus Attendants pick with no bus size" do
+    put api_v1_school_bus_attendants_path(school), params: { needs: "selected", sizes: [] }, as: :json
+    expect(response).to have_http_status(:unprocessable_content)
+    expect(json.dig(:error, :message)).to eq("Pick at least one bus size")
+    get api_v1_school_bus_attendants_path(school)
+    expect(json[:data]).to include(saved: false, locked: nil)
+  end
+
+  it "shows the setup strip of a school without a year and counts a policy only once it is in use" do
+    other = within_tenant(company) { School.create!(name: "No Year School") }
+    get setup_api_v1_school_path(other)
+    expect(response).to have_http_status(:ok)
+    steps = json.dig(:data, :steps).index_by { it[:key] }
+    expect(json[:data]).to include(year: nil, done: 0, total: 7)
+    expect(steps.values_at("levels", "calendar", "sessions", "holidays").pluck(:detail))
+      .to eq([ "Not set up yet", "Not started", "Needs the calendar first", "Needs the calendar first" ])
+
+    within_tenant(company) { Policies::Publish.call(school, Policies.default.merge(effective_on: Date.new(2027, 1, 1)), user: nil) }
+    get setup_api_v1_school_path(school)
+    expect(json[:data]).to include(year: "2026")
+    expect(json.dig(:data, :steps).find { it[:key] == "policy" }).to include(done: false, detail: "Not set up yet")
+    get setup_api_v1_academic_year_path(year)
+    expect(json.dig(:data, :steps).find { it[:key] == "policy" }).to include(done: false)
+
+    travel_to Time.zone.local(2027, 1, 2, 9, 0)
+    sign_in_as(create(:user, company:, permissions: %w[plans]))
+    get setup_api_v1_school_path(school)
+    expect(json.dig(:data, :steps).find { it[:key] == "policy" }).to include(done: true, detail: "Version 1 from 01/01/2027")
+  end
+
+  it "describes each step of the strip like the prototype" do
+    within_tenant(company) do
+      school.levels.create!(name: "P1", position: 0)
+      school.levels.create!(name: "P6", position: 1)
+      SchoolSetup.lock!(school:, section: "levels", user: nil)
+      SchoolSetup.lock!(school:, year:, section: "calendar", user: nil)
+      SchoolSetup.lock!(school:, section: "attendants", user: nil)
+    end
+    put api_v1_school_bus_attendants_path(school), params: { needs: "all" }, as: :json
+    get setup_api_v1_academic_year_path(year)
+    d = json.dig(:data, :steps).index_by { it[:key] }
+    expect(d["levels"][:detail]).to eq("2 levels, P1 to P6")
+    expect(d["calendar"][:detail]).to eq("Locked 02/11/2026")
+    expect(d["sessions"][:detail]).to eq("Not set up yet")
+    expect(d["fares"][:detail]).to eq("Not set up yet")
+    expect(d["holidays"][:detail]).to eq("0 holidays, 0 special days")
+  end
+
   it "sets which buses need an attendant and shows the setup steps" do
     put api_v1_school_bus_attendants_path(school), params: { needs: "selected", sizes: [ "MEDIUM_23" ], provided_by: "us" }, as: :json
     expect(json[:data]).to include(needs: "selected", sizes: %w[LARGE_40 LARGE_45 MEDIUM_23], provided_by: "us", saved: true)

@@ -21,7 +21,7 @@ module SchoolRegistrations
   def ready(year, today = Date.current)
     locks = year.setup_locks.map(&:section)
     { "calendar" => locks.include?("calendar") && year.terms.any?, "sessions" => locks.include?("sessions"),
-      "fares" => locks.include?("fares"), "policy" => year.school.policy_versions.any? { it.effective_on <= today } }
+      "fares" => locks.include?("fares"), "policy" => SchoolPolicyVersion.current_for(year.school.policy_versions, today).present? }
   end
 
   def messages(reg)
@@ -47,7 +47,7 @@ module SchoolRegistrations
 
   def present(reg, today = Date.current)
     year = reg.academic_year
-    policy = year.school.policy_versions.select { it.effective_on <= today }.max_by { [ it.effective_on, it.version ] }
+    policy = SchoolPolicyVersion.current_for(year.school.policy_versions, today)
     ready = ready(year, today)
     reg.slice(*FIELDS - %i[run_at]).symbolize_keys.merge(
       id: reg.id, year: year.key, status: reg.status, state: reg.state(today), run_at: reg.run_at_hm, saved: reg.persisted?,

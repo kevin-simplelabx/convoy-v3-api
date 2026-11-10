@@ -36,6 +36,15 @@ RSpec.describe "School Bus policy and payment methods" do
     expect(d[:draft]).to include(late_type: "none", effective_on: "2027-02-01")
   end
 
+  it "shows the collection of the latest year when none runs now or later" do
+    within_tenant(company) do
+      year = AcademicYears::Create.call(school:, start_year: 2025, start_month: 1)
+      FareTable.create!(academic_year: year, payer: "bus")
+    end
+    get api_v1_school_policy_path(school)
+    expect(json.dig(:data, :collection)).to include(year: "2025", payer: "bus")
+  end
+
   it "saves payment methods against the company's or the school's own account" do
     get api_v1_school_payment_methods_path(school)
     expect(json[:data]).to include(saved: false, account_bank: nil, own_account: false)

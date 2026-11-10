@@ -26,6 +26,8 @@ RSpec.describe "School Bus academic years" do
     put calendar_api_v1_academic_year_path(year[:id]), params: { structure: "term", period_count: 4, operating_days: [ 1, 2, 3, 4, 5 ],
                                                                 terms: terms.values_at(1, 0, 2, 3) }
     expect(json.dig(:error, :message)).to eq("Term 2 must start after Term 1 ends")
+    put calendar_api_v1_academic_year_path(year[:id]), params: { structure: "term", period_count: 5, operating_days: [ 1 ], terms: }
+    expect(json.dig(:error, :message)).to eq("Period count must be 3 or 4")
     put calendar_api_v1_academic_year_path(year[:id]), params: { structure: "term", period_count: 3, operating_days: [], terms: }
     expect(json.dig(:error, :message)).to eq("Pick at least one operating day")
     put calendar_api_v1_academic_year_path(year[:id]), params: { structure: "term", period_count: 4, operating_days: [ 1, 2, 3, 4, 5 ],
