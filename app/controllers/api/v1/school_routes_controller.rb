@@ -68,10 +68,12 @@ module Api
         render_plan(plan, meta: { message: })
       end
 
-      # POST /plans/:plan_id/route_again { params: {…}, fleet: { MEDIUM_23: 2, SMALL_13: 0 } }
+      # POST /plans/:plan_id/route_again { params: {…}, fleet: { MEDIUM_23: 2, SMALL_13: 0 } } — a draft plan only.
       def route_again
         plan = find_plan
         authorize Stop, :update?
+        raise ApplicationService::Error, Plans::MergeAgain::BLOCKED if plan.in_use
+
         keep = plan.routes.where(locked: true).joins(:riders).pluck("school_route_riders.rid").to_set
         overrides = params.fetch(:params, {}).permit!.to_h
         builder = Routing::Input.new(plan.school, plan.session, plan.effective_from, params: (plan.params || {}).merge(overrides))

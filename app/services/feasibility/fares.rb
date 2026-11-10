@@ -12,7 +12,7 @@ module Feasibility
       return nil unless cost
 
       tiers = study.fare_tiers.to_a.presence || DEFAULT_TIERS.map { FeasibilityFareTier.new(max_km: it) }
-      geo = PostalGeocode.where(country: "SG", postal: study.rows.map(&:postal).uniq, found: true).index_by(&:postal)
+      geo = study.geocodes.select { |_, g| g.found }
       served = sc.result&.dig("sv")
       src = served.present? ? served.map { |k, n| pc, ses = k.split("|"); { postal: pc, session: ses, n: } } : study.rows.map { { postal: it.postal, session: it.session, n: it.riders } }
       rows = tiers.map { { n2: 0, n1: 0 } }

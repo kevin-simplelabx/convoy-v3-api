@@ -1,10 +1,11 @@
 # School Bus › Feasibility Studies: studies (school or prospect, pick-up, walk, bus prices, fare tiers), students pasted by
-# postal code, scenarios (add / copy / change / delete / run in the background) with their cost and fares, Use
-# Suggested Fares, and a school's real fare table as tiers.
+# postal code (each found on OneMap in the background; Check Again), scenarios (add / copy / change / delete / run in the
+# background) with their cost and fares, Use Suggested Fares, and a school's real fare table as tiers.
 module Api
   module V1
     class FeasibilityStudiesController < BaseController
       INCLUDES = [ :school, :created_by, :rows, :bus_prices, :fare_tiers, :scenarios ].freeze
+      STALE_STUDY_FIELDS = %w[school_mode school_id prospect_lat prospect_lng pickup walk_m].freeze
 
       def index
         authorize Stop, :feasibility?
@@ -22,6 +23,7 @@ module Api
         authorize Stop, :update?
         study = FeasibilityStudy.new(created_by: current_user)
         save(study)
+        Feasibility::DEFAULT_PRICES.each { |type, p| study.bus_prices.create!(bus_type: type, **p) } unless params.key?(:bus_prices)
         study.scenarios.create!(position: 1, name: "Scenario 1", sizes: SchoolBus::BUS_TYPES.keys) if study.scenarios.empty?
         render json: { data: detail(find(study.id)) }, status: :created
       end
@@ -56,8 +58,18 @@ module Api
           end
           skipped = bad
         end
-        study.scenarios.where.not(result: nil).update_all(stale: true) # rubocop:disable Rails/SkipsModelValidations
+        mark_stale(study)
+        FeasibilityGeocodeJob.perform_later(study.id) unless request.delete?
         render json: { data: detail(find), meta: { skipped: skipped || 0 } }
+      end
+
+      # POST /feasibility_studies/:id/geocode — Check Again: look up the postal codes OneMap has not answered yet (202; poll
+      # the study, each row is found / not_found / pending).
+      def geocode
+        authorize Stop, :update?
+        study = find
+        FeasibilityGeocodeJob.perform_later(study.id)
+        render json: { data: detail(study) }, status: :accepted
       end
 
       # DELETE /feasibility_studies/:id/rows/:row_id — remove one line of students.
@@ -65,7 +77,7 @@ module Api
         authorize Stop, :update?
         study = find
         study.rows.find(params[:row_id]).destroy!
-        study.scenarios.where.not(result: nil).update_all(stale: true) # rubocop:disable Rails/SkipsModelValidations
+        mark_stale(study)
         render json: { data: detail(find) }
       end
 
@@ -93,7 +105,9 @@ module Api
         p = params.require(:scenario).permit(:name, :attendant, :hard_cap, :target_cap, :margin_pct, sizes: [], extra_buses: {}, params: {})
         p[:extra_buses] = params[:scenario][:extra_buses].permit!.to_h if params[:scenario][:extra_buses]
         p[:params] = params[:scenario][:params].permit!.to_h if params[:scenario][:params]
-        sc.update!(p.to_h.merge(stale: sc.result.present? && p.keys.intersect?(%w[sizes attendant hard_cap target_cap params])))
+        sc.assign_attributes(p.to_h)
+        sc.stale = true if sc.result.present? && sc.run_changed? # only the planning's inputs; a result never becomes fresh again by editing
+        sc.save!
         render json: { data: detail(find(sc.feasibility_study_id)) }
       end
 
@@ -110,6 +124,7 @@ module Api
       def run
         authorize Stop, :update?
         sc = find_scenario
+        Feasibility::Run.check!(sc) # a 422 now, not a "failed" scenario after the 202
         sc.update!(status: "running", error: nil)
         FeasibilityRunJob.perform_later(sc.id)
         render json: { data: { id: sc.id, status: sc.status } }, status: :accepted
@@ -156,7 +171,8 @@ module Api
         FeasibilityStudy.transaction do
           study.assign_attributes(p)
           study.school = policy_scope(School).find(p[:school_id]) if p[:school_id].present?
-          locate(study) if study.school_mode == "prospect" && study.prospect_postal_changed? && study.prospect_postal.present?
+          study.validate! # every field's mistake at once, before OneMap is asked about the postal code
+          locate(study) if study.school_mode == "prospect" && study.prospect_postal_changed?
           study.save!
           if params.key?(:bus_prices)
             study.bus_prices.delete_all
@@ -166,14 +182,24 @@ module Api
             study.fare_tiers.delete_all
             params[:fare_tiers].each.with_index(1) { |t, i| study.fare_tiers.create!(t.permit(:max_km, :fare, :one_way_fare).merge(position: i)) }
           end
-          study.scenarios.where.not(result: nil).update_all(stale: true) if study.saved_change_to_pickup? || study.saved_change_to_walk_m? # rubocop:disable Rails/SkipsModelValidations
+          mark_stale(study) if (study.saved_changes.keys & STALE_STUDY_FIELDS).any?
         end
       end
 
+      # Results of every scenario that ran are out of date (the prototype's stale(Sx)): the students, the school's place,
+      # how students are picked up or the walk changed.
+      def mark_stale(study)
+        study.scenarios.where.not(result: nil).update_all(stale: true) # rubocop:disable Rails/SkipsModelValidations
+      end
+
+      # Places a prospect school by its postal code (cleared when the postal code is).
       def locate(study)
+        return study.assign_attributes(prospect_lat: nil, prospect_lng: nil, prospect_address: nil) if study.prospect_postal.blank?
+
         point = Geo::OneMap.lookup(study.prospect_postal) or raise ApplicationService::Error, "Postal code not found on OneMap"
         study.prospect_lat = point[:lat]
         study.prospect_lng = point[:lng]
+        study.prospect_address = point[:address]
       rescue Geo::OneMap::Unavailable
         raise ApplicationService::Error, "OneMap cannot be reached. Try again in a moment"
       end
@@ -184,14 +210,26 @@ module Api
           best: best&.slice(:buses, :runs, :total, :break_even) }
       end
 
+      # A student line with what OneMap said about its postal code: found (address, lat, lng), not_found, or pending.
+      def row_json(row, study)
+        g = study.geocodes[row.postal]
+        found = g&.found ? { address: g.address, lat: g.lat.to_f, lng: g.lng.to_f } : { address: nil, lat: nil, lng: nil }
+        row.slice(:id, :postal, :riders, :session, :level).merge(status: g ? (g.found ? "found" : "not_found") : "pending", **found)
+      end
+
+      def geocode_counts(study)
+        postals = study.rows.map(&:postal).uniq
+        { postals: postals.size, pending: postals.count { !study.geocodes.key?(it) }, not_found: postals.count { study.geocodes[it]&.found == false } }
+      end
+
       def detail(s)
         summary(s).merge(
           school_mode: s.school_mode, school_id: s.school_id, prospect_name: s.prospect_name, prospect_postal: s.prospect_postal, place: s.place,
-          pickup: s.pickup, walk_m: s.walk_m, rows: s.rows.map { it.slice(:id, :postal, :riders, :session, :level) },
+          pickup: s.pickup, walk_m: s.walk_m, ran_at: s.ran_at, rows: s.rows.map { row_json(it, s) }, geocode: geocode_counts(s),
           bus_prices: s.bus_prices.map { it.slice(:bus_type, :monthly, :attendant) }, fare_tiers: s.fare_tiers.map { it.slice(:max_km, :fare, :one_way_fare) },
           scenarios: s.scenarios.map do |sc|
             cost = Feasibility::Cost.call(s, sc)
-            sc.slice(:id, :name, :sizes, :attendant, :hard_cap, :target_cap, :margin_pct, :extra_buses, :params, :status, :stale, :error, :result)
+            sc.slice(:id, :name, :sizes, :attendant, :hard_cap, :target_cap, :margin_pct, :extra_buses, :params, :status, :stale, :error, :ran_at, :result)
               .merge(cost:, fares: Feasibility::Fares.call(s, sc, cost))
           end
         )

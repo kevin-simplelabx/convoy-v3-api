@@ -11,7 +11,7 @@ with_company("SD") do
   next if FeasibilityStudy.exists?
 
   PostalGeocode.find_or_create_by!(country: "SG", postal: "449144") { |g| g.assign_attributes(found: true, lat: 1.3065, lng: 103.9142, address: "2 Mountbatten Road", looked_up_at: Time.current) }
-  study = FeasibilityStudy.create!(name: "Mountbatten Primary bid", school_mode: "prospect", prospect_name: "Mountbatten Primary", prospect_postal: "449144",
+  study = FeasibilityStudy.create!(name: "Mountbatten Primary bid", school_mode: "prospect", prospect_name: "Mountbatten Primary", prospect_postal: "449144", prospect_address: "2 Mountbatten Road",
                                    prospect_lat: 1.3065, prospect_lng: 103.9142, pickup: "lib", walk_m: 400, created_by: admin)
   study.rows.create!([ { postal: "460100", riders: 9 }, { postal: "460137", riders: 8 }, { postal: "460174", riders: 6, session: "AM" },
                        { postal: "460211", riders: 11 }, { postal: "460248", riders: 10, session: "PM", level: "P3" } ])

@@ -84,16 +84,18 @@ module Api
         render json: { data: history(route.reload) }
       end
 
-      # GET /schools/:school_id/route_charges?date= — runs of the school's adopted plans with their bus rate and charges.
+      # GET /schools/:school_id/route_charges?date= — runs of the school's adopted plans with their bus rate and charges;
+      # only when the school is billed per bus that day (locked Bus Fares, payer bus), else per_bus false and empty lists.
       def charges
         authorize Stop, :index?
         school = policy_scope(School).find(params[:school_id])
         date = day(:date) || Date.current
-        year = school.academic_years.covering(date).includes(fare_table: :bus_rates).first
-        rates = year&.fare_table&.per_bus? ? year.fare_table.bus_rates.to_h { [ it.bus_type, it.rate ] } : {}
+        bill = RouteCharges.billing(school, date)
+        return render json: { data: { per_bus: false, runs: [], unmatched: [], to_check: 0 } } unless bill[:per_bus]
+
         routes = SchoolRoute.joins(:plan).merge(school.plans.where(in_use: true, session: %w[am pm])).where("school_plans.effective_to IS NULL OR school_plans.effective_to >= ?", date)
                             .includes(:plan, :charges).order("school_plans.session", :number)
-        render json: { data: { per_bus: rates.any?, runs: routes.map { run_row(it, rates, date) },
+        render json: { data: { per_bus: true, runs: routes.map { run_row(it, bill[:rates], date) },
                                unmatched: school.route_charges_without_route.map { charge_row(it) },
                                to_check: RouteCharge.where(school:, status: "check").count } }
       end
@@ -102,21 +104,16 @@ module Api
       def add_charge
         authorize Stop, :money_setup?
         route = find_route
-        from = day(:starts_on) or raise ApplicationService::Error, "Pick the start date"
-        raise ApplicationService::Error, "Pick a date from the 1st of this month" if from < Date.current.beginning_of_month
-
-        RouteCharge.create!(school: route.school, school_route: route, starts_on: from, kind: params[:kind] || "amt", value: params.require(:value),
-                            reason: params.require(:reason), note: params[:note], created_by: current_user)
+        RouteCharges.add(route, { starts_on: day(:starts_on), kind: params[:kind], value: params.require(:value), reason: params.require(:reason), note: params[:note] },
+                         user: current_user)
         render json: { data: route.reload.charges.map { charge_row(it) } }, status: :created
       end
 
-      # PATCH /route_charges/:id { school_route_id, status: "ok" } — confirm a carried charge, or move it to another run.
+      # PATCH /route_charges/:id { school_route_id, status: "ok" } — confirm a carried charge, or move it to another run
+      # (school_route_id = the route id of a plan in use, same session).
       def update_charge
         authorize Stop, :money_setup?
-        charge = find_charge
-        route_id = params[:school_route_id].presence
-        route = route_id && SchoolRoute.where(plan: SchoolPlan.where(school: charge.school)).find(route_id)
-        charge.update!(school_route: route || charge.school_route, status: params[:status] == "ok" ? "ok" : charge.status)
+        charge = RouteCharges.update(find_charge, route_id: params[:school_route_id], status: params[:status])
         render json: { data: charge_row(charge) }
       end
 

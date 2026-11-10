@@ -7,7 +7,7 @@ class FeasibilityRunJob < ApplicationJob
     company = sc.feasibility_study.company
     ActsAsTenant.with_tenant(company) do
       result = Feasibility::Run.call(sc)
-      sc.update!(status: "done", result:, stale: false, error: nil)
+      sc.update!(status: "done", result:, stale: false, error: nil, ran_at: Time.current)
     rescue ApplicationService::Error => e
       sc.update!(status: "failed", error: e.message)
     end

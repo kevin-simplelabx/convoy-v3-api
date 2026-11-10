@@ -30,10 +30,7 @@ module Api
 
         date = params[:date].present? ? Date.iso8601(params[:date]) : Date.current
         builder = Routing::Input.new(school, session, date, params: params.fetch(:params, {}).permit!.to_h)
-        input = builder.call
-        raise ApplicationService::Error.new("Routing blocked: no rider of this session has a stop", code: "routing_blocked",
-                                            details: { no_stop: builder.no_stop.size, conflicts: builder.conflicts.size }) if input[:groups].empty?
-
+        input = builder.call # with no rider at a stop the engine still runs: a plan with no routes, every rider unassigned (Convoy OS)
         run = RoutingRun.create!(school:, session:, plan_date: date, params: input[:params], input:, no_stop_rids: builder.no_stop,
                                  conflict_rids: builder.conflicts, created_by: current_user)
         RoutingRunJob.perform_later(run.id)
@@ -45,7 +42,7 @@ module Api
       # GET /routing_runs/:id
       def show_run
         authorize Stop, :index?
-        run = RoutingRun.where(school: policy_scope(School)).includes(:plan).find(params[:id])
+        run = RoutingRun.where(school: policy_scope(School)).includes(:plan, :school).find(params[:id])
         render json: { data: run_row(run) }
       end
 
@@ -53,7 +50,8 @@ module Api
 
       def run_row(run)
         { id: run.id, school_id: run.school_id, session: run.session, plan_date: run.plan_date, status: run.status, error: run.error,
-          riders: run.input["groups"].sum { it["riders"].size }, stops: run.input["groups"].size, no_stop: run.no_stop_rids, conflicts: run.conflict_rids,
+          riders: run.input["groups"].sum { it["riders"].size }, stops: run.input["groups"].size,
+          no_stop: Routing.rider_list(run.school, run.no_stop_rids), conflicts: Routing.rider_list(run.school, run.conflict_rids),
           ms: run.ms, plan_id: run.plan&.id, created_at: run.created_at, finished_at: run.finished_at, progress: progress(run) }
       end
 

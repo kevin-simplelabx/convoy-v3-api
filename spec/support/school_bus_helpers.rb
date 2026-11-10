@@ -15,6 +15,13 @@ module SchoolBusHelpers
       school
     end
   end
+
+  # A draft plan from a routing run planned by FakeRouting (call within the tenant).
+  def engine_plan(school, session = "am")
+    input = Routing::Input.new(school, session, Date.current).call
+    run = RoutingRun.create!(school:, session:, plan_date: Date.current, params: input[:params], input:, result: fake_routing.solve(input), status: "done")
+    Plans::FromResult.call(run)
+  end
 end
 
 RSpec.configure { it.include SchoolBusHelpers }

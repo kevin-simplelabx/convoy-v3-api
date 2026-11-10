@@ -4297,7 +4297,8 @@ CREATE TABLE public.feasibility_scenarios (
     stale boolean DEFAULT false NOT NULL,
     error text,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    ran_at timestamp(6) without time zone
 );
 
 
@@ -4338,7 +4339,8 @@ CREATE TABLE public.feasibility_studies (
     walk_m integer DEFAULT 400 NOT NULL,
     created_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    prospect_address character varying
 );
 
 
@@ -8380,7 +8382,8 @@ CREATE TABLE public.school_plans (
     adopted_at timestamp with time zone,
     routing_run_id bigint,
     adopted_by_id bigint,
-    created_by_id bigint
+    created_by_id bigint,
+    riders_assigned_at timestamp(6) without time zone
 );
 
 
@@ -27745,6 +27748,10 @@ ALTER TABLE public.trip_occurrences
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261110130100'),
+('20261110130000'),
+('20261110120100'),
+('20261110120000'),
 ('20261110100000'),
 ('20261105100200'),
 ('20261105100100'),

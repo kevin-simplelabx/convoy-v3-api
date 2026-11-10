@@ -12,7 +12,7 @@ module Feasibility
         copy = @study.dup.tap { it.assign_attributes(name: "#{@study.name} copy", created_by: @user) }
         copy.save!
         %i[rows bus_prices fare_tiers].each { |list| @study.public_send(list).each { copy.public_send(list) << it.dup } }
-        @study.scenarios.each { copy.scenarios << it.dup.tap { |s| s.assign_attributes(result: nil, stale: false, status: "idle", error: nil) } }
+        @study.scenarios.each { copy.scenarios << it.dup.tap { |s| s.assign_attributes(result: nil, stale: false, status: "idle", error: nil, ran_at: nil) } }
         copy
       end
     end

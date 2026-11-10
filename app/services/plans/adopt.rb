@@ -1,10 +1,10 @@
 # Adopt Plan from a date (the 1st of this month or later, not before the current plan's start). The plan runs on the
 # Scheduler from that date — Current when the date has come, Scheduled before — and the plan of the session in use then
 # ends the day before (an earlier scheduled plan of the session is cancelled); from the very day the current plan started,
-# that plan is taken out of use, as if it never ran. Adopting an AM plan assigns its riders'
-# PUDO points (Stop Assignment), keeping the ones set by hand. Route Charges of the plan it replaces move to the
-# best-matching new routes (status check). Cancel: a scheduled plan goes back to draft and the
-# plan it would replace runs on.
+# that plan is taken out of use, as if it never ran. An AM plan gives its riders their PUDO points (Plans::AssignRiders)
+# when it starts: at once from today or earlier, else the daily job on its start day (Convoy OS: promotePlan writes
+# them, schedAdopt does not). Route Charges of the plan it replaces move to the best-matching new routes (status
+# check). Cancel: a scheduled plan goes back to draft and the plan it would replace runs on (nothing to undo).
 module Plans
   class Adopt < ApplicationService
     def initialize(plan, from:, user:)
@@ -41,9 +41,9 @@ module Plans
           touched << replaced
           replaced.update!(in_use: false, effective_to: nil, adopted_at: nil, adopted_by: nil)
         end
-        @plan.update!(in_use: true, effective_from: @from, effective_to: nil, adopted_at: Time.current, adopted_by: @user)
+        @plan.update!(in_use: true, effective_from: @from, effective_to: nil, adopted_at: Time.current, adopted_by: @user, riders_assigned_at: nil)
         (current || replaced)&.then { RouteCharges.carry(it, @plan, @from) }
-        assign_riders if @plan.session_am?
+        AssignRiders.call(@plan) if @from <= Date.current
       end
       Plans.resync(@plan, *touched)
       @plan
@@ -59,20 +59,6 @@ module Plans
       end
       Plans.resync(plan, before)
       plan
-    end
-
-    private
-
-    def assign_riders
-      school = @plan.school
-      rows = SchoolRouteRider.joins(:stop).where(school_route_id: @plan.routes.select(:id)).pluck(:rid, "school_route_stops.stop_point_id")
-      manual = school.rider_assignments.where(manual: true).pluck(:rid).to_set
-      school.rider_assignments.where(manual: false).delete_all
-      now = Time.current
-      fresh = rows.reject { |rid, pid| manual.include?(rid) || pid.nil? }.map do |rid, pid|
-        { company_id: school.company_id, school_id: school.id, rid:, stop_point_id: pid, school_plan_id: @plan.id, manual: false, created_at: now, updated_at: now }
-      end
-      RiderAssignment.insert_all!(fresh) if fresh.any?
     end
   end
 end

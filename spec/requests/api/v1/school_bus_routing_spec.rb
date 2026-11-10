@@ -1,7 +1,8 @@
 require "rails_helper"
 
 # School Bus › Route Plans › Run Routing: the engine input from Stop Assignment (riders with one stop, grouped), the
-# background run in the routing service, its draft plan, and the run's failures; the company's parameters.
+# background run in the routing service, its draft plan, riders with no stop ({ rid, name }), and the run's failures; the
+# company's parameters.
 RSpec.describe "School Bus routing runs" do
   include ActiveJob::TestHelper
 
@@ -20,12 +21,13 @@ RSpec.describe "School Bus routing runs" do
     end
     expect(response).to have_http_status(:accepted)
     run = json[:data]
-    expect(run).to include(status: "queued", riders: 12, stops: 4, no_stop: [ "X1" ], conflicts: [])
+    expect(run).to include(status: "queued", riders: 12, stops: 4, no_stop: [ { rid: "X1", name: "Far away" } ], conflicts: [])
 
     input = fake_routing.inputs.last
     expect(input["school"]).to include("lat" => 1.3138, "short" => "SSS")
     expect(input["groups"].first).to include("stopId" => "BDSZ03-0001", "riders" => %w[R10 R11 R12])
     expect(input["params"]).to include("session" => "AM", "preset" => "BALANCED", "attendant" => "STATUTORY")
+    expect(input["noStop"]).to eq([ { "rid" => "X1", "name" => "Far away" } ]) # the engine labels its unassigned riders with these
 
     get api_v1_routing_run_path(run[:id])
     expect(json[:data]).to include(status: "done", ms: 1200, progress: { step: "done", frac: 1, work: { evals: nil } })
@@ -42,10 +44,13 @@ RSpec.describe "School Bus routing runs" do
       expect(route.stops.map(&:name)).to eq([ "Stop 1", "Stop 2" ])
       expect(route.stops.first.riders.map(&:rid)).to eq(%w[R10 R11 R12])
       expect(route.stops.first.stop_point).to be_present
+      expect(plan.unassigned).to eq([ { "gid" => nil, "riders" => [ "X1" ], "n" => 1, "reason" => "RIDER_NO_STOP", "label" => "Far away" } ])
     end
+    get api_v1_plan_path(json.dig(:data, :plan_id))
+    expect(json.dig(:data, :routing_run)).to include(no_stop: [ { rid: "X1", name: "Far away" } ], conflicts: [])
   end
 
-  it "fails the run when the engine or the service cannot plan, and is blocked without stops" do
+  it "fails the run when the engine or the service cannot plan, and still runs with no rider at a stop" do
     fake_routing.fail = true
     perform_enqueued_jobs { post api_v1_school_routing_runs_path(school), params: { session: "pm" } }
     get api_v1_routing_run_path(json.dig(:data, :id))
@@ -57,8 +62,11 @@ RSpec.describe "School Bus routing runs" do
     get api_v1_routing_run_path(json.dig(:data, :id))
     expect(json.dig(:data, :error)).to start_with("The routing service is not available")
 
-    post api_v1_school_routing_runs_path(school), params: { session: "asa" }
-    expect(json[:error]).to include(code: "routing_blocked", details: { no_stop: 0, conflicts: 0 })
+    fake_routing.down = false
+    perform_enqueued_jobs { post api_v1_school_routing_runs_path(school), params: { session: "asa" } } # Convoy OS runs it too
+    expect(response).to have_http_status(:accepted)
+    get api_v1_routing_run_path(json.dig(:data, :id))
+    expect(json[:data]).to include(status: "done", stops: 0, plan_id: Integer)
   end
 
   it "keeps the company's engine parameters" do

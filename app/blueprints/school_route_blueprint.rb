@@ -1,7 +1,8 @@
 # A route of a plan with the engine's figures, hand-edit flags, regular bus today, attendant and stops with riders.
 class SchoolRouteBlueprint < ApplicationBlueprint
-  fields :number, :label, :route_key, :bus_type, :seats, :student_seats, :capacity, :floor, :span_seconds, :ride_minutes, :badges,
+  fields :number, :label, :route_key, :bus_type, :seats, :student_seats, :capacity, :floor, :span_seconds, :ride_minutes,
          :locked, :hidden, :edited, :manual, :vias, :riders_count
+  field(:badges) { |r| r.shown_badges }
   field(:fill) { |r| r.fill&.to_f } # a ratio, a number like the plan summary's avgFill
   field(:start_time) { |r| r.start_time_hm }
   field(:end_time) { |r| r.end_time_hm }

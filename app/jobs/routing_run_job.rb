@@ -1,6 +1,6 @@
 # Runs one routing run in the routing service and makes its draft plan (Plans::FromResult), or for Route Again replaces
-# the plan's unlocked routes (Plans::MergeAgain). A run the engine could not
-# plan (validation errors, no road times) or the service could not finish is failed with the reason.
+# the plan's unlocked routes (Plans::MergeAgain). A run the engine could not plan (validation errors, no road times), the
+# service could not finish, or whose plan was adopted meanwhile (Route Again) is failed with the reason.
 class RoutingRunJob < ApplicationJob
   queue_as :default
 
@@ -21,5 +21,7 @@ class RoutingRunJob < ApplicationJob
     end
   rescue Routing::Client::Unavailable => e
     run&.update_columns(status: "failed", error: "The routing service is not available: #{e.message}", finished_at: Time.current) # rubocop:disable Rails/SkipsModelValidations
+  rescue ApplicationService::Error => e
+    run&.update_columns(status: "failed", error: e.message, finished_at: Time.current) # rubocop:disable Rails/SkipsModelValidations
   end
 end

@@ -1,6 +1,6 @@
 # The routing engine's input for a school's session on a plan date (port of engInput in Convoy OS): riders on that date
 # who ride the session, grouped by their one stop (Stop Assignment); riders with no stop or with more than one are left
-# out and listed. Each group carries the stop's points this school uses. The current plan of the session (as the engine
+# out and listed as { rid, name } (the engine labels its unassigned riders with them). Each group carries the stop's points this school uses. The current plan of the session (as the engine
 # shaped it) lets Keep Current stay close to it. Parameters: the company's, the priority preset, the session, and the
 # school's bus attendant rule.
 module Routing
@@ -17,19 +17,21 @@ module Routing
     def call
       assignment = SchoolStops::Assignment.new(@school, date: @date)
       groups = {}
-      @no_stop = []
-      @conflicts = []
+      no_stop = []
+      conflicts = []
       assignment.riders.each do |r|
         next unless rides?(r)
 
         stops = r[:candidates].map { it[:stop_id] }.uniq
-        if stops.empty? then @no_stop << r[:rid]
-        elsif stops.size > 1 then @conflicts << r[:rid]
+        if stops.empty? then no_stop << r.slice(:rid, :name)
+        elsif stops.size > 1 then conflicts << r.slice(:rid, :name)
         else (groups[stops.first] ||= []) << r[:rid]
         end
       end
+      @no_stop = no_stop.pluck(:rid)
+      @conflicts = conflicts.pluck(:rid)
       { school: { lat: @school.lat.to_f, lng: @school.lng.to_f, name: @school.name, short: @school.short },
-        groups: groups.map { |stop_id, rids| group(stop_id, rids) }, noStop: @no_stop, conflicts: @conflicts,
+        groups: groups.map { |stop_id, rids| group(stop_id, rids) }, noStop: no_stop, conflicts:,
         current: current, params: params }
     end
 

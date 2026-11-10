@@ -25,14 +25,16 @@ module Api
         render json: { data: routes.map { running_route(it, date) } }
       end
 
-      # POST /schools/:school_id/plans { session } — Draw Routes: an empty plan to draw routes on.
+      # POST /schools/:school_id/plans { session, date } — Draw Routes: an empty plan for the Plan For date (default today),
+      # every rider of the session unassigned.
       def create
         school = find_school
         authorize Stop, :update?
-        session = params.require(:session)
-        plan = school.plans.create!(name: Plans.next_name(school, session), session:, effective_from: Date.current, in_use: false, source: "manual",
-                                    created_by: current_user)
+        date = params[:date].present? ? Date.iso8601(params[:date]) : Date.current
+        plan = Plans::Draw.call(school, session: params.require(:session), date:, user: current_user)
         render_data find(plan.id), SchoolPlanBlueprint, view: :detail, status: :created
+      rescue Date::Error
+        raise ApplicationService::Error, "Date must look like 2026-11-02"
       end
 
       def show
@@ -45,7 +47,10 @@ module Api
         authorize Stop, :update?
         plan = find
         plan.update!(params.expect(plan: %i[name effective_from effective_to]))
-        AcademicYears.resync(plan.school) if plan.in_use && plan.saved_changes.keys.intersect?(%w[effective_from effective_to])
+        if plan.in_use && plan.saved_changes.keys.intersect?(%w[effective_from effective_to])
+          AcademicYears.resync(plan.school)
+          Plans::AssignRiders.call(plan) # a scheduled AM plan moved to today or earlier starts now
+        end
         render_data find, SchoolPlanBlueprint, view: :detail
       end
 

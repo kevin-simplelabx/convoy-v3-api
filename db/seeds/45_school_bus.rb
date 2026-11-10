@@ -13,6 +13,8 @@ with_company("SD") do
     vehicle = Vehicle.find_by(id: r.regular_vehicle_id(Date.current)) or next
     r.update_columns(bus_type: size.(vehicle))
   end
+  # Plans seeded in use have their PUDO points (Stop Assignment is seeded on its own), so the daily job leaves them.
+  school.plans.where(session: "am", in_use: true, riders_assigned_at: nil).where(effective_from: ..Date.current).update_all(riders_assigned_at: Time.current)
   next if school.plans.exists?
 
   term = Date.current.beginning_of_month - 1.month
@@ -26,7 +28,8 @@ with_company("SD") do
               [ "13:45", "14:25", "PD2030P", [ [ "Blk 860 Tampines", "14:10", 9 ], [ "Blk 640 Tampines", "14:25", 12 ] ] ] ]
   }
   plans.each do |session, routes|
-    plan = school.plans.create!(name: "Term 4 #{session.upcase}", session:, effective_from: term, in_use: true)
+    plan = school.plans.create!(name: "Term 4 #{session.upcase}", session:, effective_from: term, in_use: true,
+                                riders_assigned_at: (Time.current if session == "am"))
     routes.each_with_index do |(start, finish, plate, stops), i|
       route = plan.routes.create!(bus_type: size.(bus.(plate)), number: i + 1, label: "#{session == 'am' ? 'AM' : 'PM'} #{i + 1}", start_time: start, end_time: finish,
                                   riders_count: stops.sum(&:last), attendant: attendants[i % attendants.size])

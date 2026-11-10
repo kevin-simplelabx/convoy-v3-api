@@ -1,10 +1,13 @@
 # Hand edits on a plan (route drawer and map tools), each re-timed by the routing service (/retime) as Convoy OS does:
 # a route's stops in travel order with their riders (reorder, move a stop or a rider here, add or remove riders, via
 # points), a new route from stops (locked, manual), a route's bus type, deleting a route, resetting a route to the
-# engine's. A rider placed on a route leaves any other route of the plan and the unassigned list; a rider taken off
-# goes to the unassigned list. The plan's summary follows; runs of an adopted plan are re-synced.
+# engine's (the bus size stays). A rider placed on a route leaves any other route of the plan and the unassigned list;
+# a rider taken off goes to the unassigned list on their own (ADMIN_REMOVED, labelled with their name, as Convoy OS).
+# The plan's summary follows; runs of an adopted plan are re-synced.
 module Plans
   class Edit
+    BUS_KEYS = %w[type label cls seats attendant studentSeats cap floor].freeze # what Change Bus sets on a route
+
     def initialize(plan)
       @plan = plan
       @school = plan.school
@@ -21,7 +24,7 @@ module Plans
         take_from_others(route, placed)
         retime(route, stops, vias:, type:)
         route.update!(edited: true, vias: vias || route.vias)
-        unassign(before - placed, "Removed by hand")
+        unassign(before - placed)
         finish(placed)
       end
       route
@@ -48,7 +51,7 @@ module Plans
 
     def remove_route(route)
       SchoolPlan.transaction do
-        unassign(route.riders.pluck(:rid), "Route deleted")
+        unassign(route.riders.pluck(:rid))
         drop(route)
         finish([])
       end
@@ -75,7 +78,8 @@ module Plans
       raise ApplicationService::Error, "The routing service is not available (#{e.message})"
     end
 
-    # Reset All: routes drawn by hand go, every other route goes back to the engine's result, and so does the unassigned list.
+    # Reset All: routes drawn by hand go, every other route goes back to the engine's result (keeping its bus size), and so
+    # does the unassigned list.
     def reset_all
       result = @plan.routing_run&.result
       raise ApplicationService::Error, "This plan was not made by the routing engine, so there is nothing to reset to" unless result
@@ -88,7 +92,7 @@ module Plans
         number = @plan.routes.maximum(:number).to_i
         Array(result["routes"]).each do |er|
           route = by_key[er["id"]] || @plan.routes.build(number: number += 1, label: Plans.label(@school, @plan.session, number))
-          Plans.write_route(route, er)
+          Plans.write_route(route, with_bus(er, route))
           route.update!(edited: false, vias: [])
         end
         @plan.update!(unassigned: result["unassigned"] || [])
@@ -105,15 +109,24 @@ module Plans
         before = route.riders.pluck(:rid)
         rids = Array(original["stops"]).flat_map { it["riders"] }
         take_from_others(route, rids)
-        Plans.write_route(route, original)
+        Plans.write_route(route, with_bus(original, route))
         route.update!(edited: false, vias: [])
-        unassign(before - rids, "Taken off by Reset Route")
+        unassign(before - rids)
         finish(rids)
       end
       route
     end
 
     private
+
+    # The engine's route with the bus size the route has now: Change Bus edits the result itself, so Reset keeps it
+    # (Convoy OS setBusType / resetRoute). Times stay the engine's.
+    def with_bus(original, route)
+      now = route.engine_route
+      return original if now.blank? || now["type"] == original["type"]
+
+      original.merge(now.slice(*BUS_KEYS)).merge("cost" => (original["cost"] || {}).merge("fixed" => now.dig("cost", "fixed")).compact)
+    end
 
     # Via points of a leg kept when the leg still joins the same two stops (the last leg of a morning route ends at the school).
     def keep_vias(old, now, vias)
@@ -181,14 +194,15 @@ module Plans
     def drop(route)
       raise ApplicationService::Error, "#{route.label} is in an adopted plan and runs on the Scheduler. Make a new plan to remove a route" if @plan.in_use
 
-      [ SchoolRouteRider, SchoolRouteStop, SchoolRouteVehicleChange, SchoolRouteReplacement ].each { it.where(school_route_id: route.id).delete_all }
-      SchoolRoute.where(id: route.id).delete_all
+      DropRoute.call(route)
     end
 
-    def unassign(rids, reason)
+    # One entry per rider taken off by hand (Convoy OS: gid rm:<rid>, reason ADMIN_REMOVED, label = the rider's name).
+    def unassign(rids)
       return if rids.empty?
 
-      @plan.unassigned = Array(@plan.unassigned) + [ { "riders" => rids, "n" => rids.size, "reason" => reason, "label" => reason } ]
+      names = Routing.rider_names(@school, rids)
+      @plan.unassigned = Array(@plan.unassigned) + rids.map { { "gid" => "rm:#{it}", "riders" => [ it ], "n" => 1, "reason" => "ADMIN_REMOVED", "label" => names[it] || it } }
     end
 
     def finish(placed)

@@ -30,7 +30,10 @@ module Geo
       res = Faraday.get(URL, { searchVal: postal, returnGeom: "Y", getAddrDetails: "Y", pageNum: 1 }) { it.options.timeout = 8 }
       raise Unavailable, "OneMap answered #{res.status}" unless res.success?
 
-      row = Array(JSON.parse(res.body)["results"]).find { it["POSTAL"] == postal }
+      body = JSON.parse(res.body)
+      raise Unavailable, "OneMap refused the request: #{body['error']}" if body["error"].present? # not "postal code not found": never cached as that
+
+      row = Array(body["results"]).find { it["POSTAL"] == postal }
       row && { lat: row["LATITUDE"].to_f, lng: row["LONGITUDE"].to_f, address: [ row["BLK_NO"], row["ROAD_NAME"] ].compact_blank.join(" ") }
     rescue Faraday::Error, JSON::ParserError => e
       raise Unavailable, e.message

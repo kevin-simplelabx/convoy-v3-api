@@ -30,13 +30,17 @@ RSpec.describe "School Bus plan adoption" do
 
     post adopt_api_v1_plan_path(second), params: { from: "2026-11-01" }
     expect(json.dig(:error, :message)).to match(/was only adopted on 2 Nov 2026. Pick that day or later\z/)
+    pudo_plans = -> { within_tenant(company) { school.rider_assignments.distinct.pluck(:school_plan_id) } }
+    expect(pudo_plans.()).to eq([ first ])
     post adopt_api_v1_plan_path(second), params: { from: "2026-11-16" }
     expect(json[:data]).to include(state: "scheduled", effective_from: "2026-11-16")
+    expect(pudo_plans.()).to eq([ first ]) # a scheduled plan writes its PUDO points on its start day (daily job)
     get api_v1_plan_path(first)
     expect(json[:data]).to include(state: "current", effective_to: "2026-11-15")
 
     post cancel_adoption_api_v1_plan_path(second)
     expect(json[:data]).to include(state: "draft")
+    expect(pudo_plans.()).to eq([ first ]) # nothing to undo
     get api_v1_plan_path(first)
     expect(json.dig(:data, :effective_to)).to be_nil
 

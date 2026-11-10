@@ -88,4 +88,7 @@ class SchoolRoute < ApplicationRecord
   def regular_vehicle_id(date) = vehicle_changes.select { |c| c.effective_from <= date }.last&.vehicle_id
 
   def replacement_on(date) = replacements.reverse.find { |r| (r.starts_on..r.ends_on).cover?(date) }
+
+  # The badges shown: a route drawn by hand leads with "Manual" instead of "Edited" (Convoy OS res()).
+  def shown_badges = manual ? [ "Manual", *(badges - %w[Edited Manual]) ] : badges
 end

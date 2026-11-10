@@ -293,6 +293,7 @@ Rails.application.routes.draw do
           match :rows, via: %i[post delete]
           delete "rows/:row_id", action: :destroy_row, as: :row
           post :copy
+          post :geocode
           post :scenarios, action: :add_scenario
         end
       end

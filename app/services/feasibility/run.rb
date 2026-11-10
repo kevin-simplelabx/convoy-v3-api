@@ -9,11 +9,17 @@ module Feasibility
       @study = scenario.feasibility_study
     end
 
-    def call
-      place = @study.place or raise Error, "Set the school location first"
-      raise Error, "Add student postal codes first" if @study.rows.empty?
-      raise Error, "Pick at least one bus size" if @sc.sizes.empty?
+    # What must be true before a run starts (the controller checks it before answering 202, the run again before planning).
+    def self.check!(scenario)
+      study = scenario.feasibility_study
+      study.place or raise Error, "Set the school location first"
+      raise Error, "Add student postal codes first" unless study.rows.exists?
+      raise Error, "Pick at least one bus size" if scenario.sizes.empty?
+    end
 
+    def call
+      self.class.check!(@sc)
+      place = @study.place
       geo = locate
       students = @study.rows.flat_map { |r| Array.new(r.riders) { { postal: r.postal, session: r.session } } }.each_with_index.map { |s, i| s.merge(rid: "fz#{i + 1}") }
       near = @study.pickup == "lib" ? nearest_points(geo) : {}
@@ -35,19 +41,13 @@ module Feasibility
 
     def ids(out, se) = Array(out.dig(se, "ids")).to_set
 
+    # postal => point, or nil when OneMap does not know the code (those students have no stop).
     def locate
-      postals = @study.rows.map(&:postal).uniq
-      missing = 0
-      geo = postals.to_h do |pc|
-        point = Geo::OneMap.lookup(pc)
-        [ pc, point ]
-      rescue Geo::OneMap::Unavailable
-        missing += 1
-        [ pc, :unknown ]
-      end
-      raise Error, "#{missing} postal code#{'s' unless missing == 1} could not be checked on OneMap. Run again in a moment" if missing.positive?
+      found = Geocode.call(@study)
+      n = found[:unreachable].size
+      raise Error, "#{n} postal code#{'s' unless n == 1} could not be checked on OneMap. Use Check Again, then run" if n.positive?
 
-      geo
+      found[:points]
     end
 
     def nearest_points(geo)
@@ -77,13 +77,14 @@ module Feasibility
 
       postal = list.to_h { [ it[:rid], it[:postal] ] }
       { "ids" => res["assign"].keys,
+        "road" => !!res["road"],
         "summary" => res["summary"].slice("routes", "assigned", "unassigned", "avgJourney", "maxJourney", "avgFill"),
         "routes" => res["routes"].map do |r|
           { "id" => r["id"], "type" => r["type"], "label" => r["label"], "attendant" => !!r["attendant"], "load" => r["load"], "seats" => r["studentSeats"],
             "minutes" => (r["span"].to_f / 60).round, "startT" => r["startT"], "endT" => r["endT"],
             "stops" => r["stops"].map { |z| { "ll" => z["ll"], "n" => z["n"], "time" => z["time"], "name" => z["name"], "postals" => postals_of(z["riders"], postal) } } }
         end,
-        "unassigned" => Array(res["unassigned"]).map { it.slice("n", "reason", "label") } }
+        "unassigned" => Array(res["unassigned"]).map { it.slice("n", "reason", "label").merge("riders" => Array(it["riders"]).compact) } }
     rescue Routing::Client::Unavailable => e
       raise Error, "The routing service is not available (#{e.message})"
     end
@@ -92,10 +93,27 @@ module Feasibility
       Array(rids).filter_map { postal[it] }.tally.map { |pc, n| n > 1 ? "#{pc} x#{n}" : pc }.join(", ")
     end
 
+    # Company parameters, the scenario's overrides, then what the scenario sets itself. As the prototype (fzPar, fzRun):
+    # a changed AM Arrival / PM Dismissal moves its window around it, Seat Buffer replaces every bus size's buffer.
     def params(se)
-      base = (RoutingSetting.first&.params || {}).merge(@sc.params.compact_blank)
-      types = Array(base["types"].presence || Routing::Client.current.meta["types"]).map { it.merge("on" => @sc.sizes.include?(it["type"])) }
+      mine = @sc.params
+      base = (RoutingSetting.first&.params || {}).merge(mine)
+      base["amWin"] = window(mine["amTarget"], -5, 10) if mine["amTarget"]
+      base["pmWin"] = window(mine["pmTarget"], -15, 0) if mine["pmTarget"]
+      types = Array(base["types"].presence || engine_types).map do |t|
+        t.merge("on" => @sc.sizes.include?(t["type"])).merge(mine.key?("headroom") ? { "headroom" => mine["headroom"] } : {})
+      end
       base.merge("session" => se, "attendant" => @sc.attendant, "attSizes" => [], "hardCap" => @sc.hard_cap, "targetCap" => @sc.target_cap, "types" => types)
+    end
+
+    def engine_types
+      meta = Routing::Client.current.meta
+      meta.dig("defaults", "types").presence || meta["types"]
+    end
+
+    def window(target, from, to)
+      t = Clock.minutes(target)
+      [ Clock.hm([ t + from, 0 ].max), Clock.hm(t + to) ]
     end
   end
 end

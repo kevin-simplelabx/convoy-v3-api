@@ -3,27 +3,28 @@
 # Table name: school_plans
 # Database name: primary
 #
-#  id             :bigint           not null, primary key
-#  adopted_at     :timestamptz
-#  days           :integer          default([1, 2, 3, 4, 5]), not null, is an Array
-#  effective_from :date             not null
-#  effective_to   :date
-#  in_use         :boolean          default(TRUE), not null
-#  name           :string           not null
-#  params         :jsonb
-#  priority       :string
-#  session        :string           not null
-#  source         :string           default("manual"), not null
-#  stale          :boolean          default(FALSE), not null
-#  summary        :jsonb
-#  unassigned     :jsonb            not null
-#  created_at     :datetime         not null
-#  updated_at     :datetime         not null
-#  adopted_by_id  :bigint
-#  company_id     :bigint           not null
-#  created_by_id  :bigint
-#  routing_run_id :bigint
-#  school_id      :bigint           not null
+#  id                 :bigint           not null, primary key
+#  adopted_at         :timestamptz
+#  days               :integer          default([1, 2, 3, 4, 5]), not null, is an Array
+#  effective_from     :date             not null
+#  effective_to       :date
+#  in_use             :boolean          default(TRUE), not null
+#  name               :string           not null
+#  params             :jsonb
+#  priority           :string
+#  riders_assigned_at :datetime
+#  session            :string           not null
+#  source             :string           default("manual"), not null
+#  stale              :boolean          default(FALSE), not null
+#  summary            :jsonb
+#  unassigned         :jsonb            not null
+#  created_at         :datetime         not null
+#  updated_at         :datetime         not null
+#  adopted_by_id      :bigint
+#  company_id         :bigint           not null
+#  created_by_id      :bigint
+#  routing_run_id     :bigint
+#  school_id          :bigint           not null
 #
 # Indexes
 #

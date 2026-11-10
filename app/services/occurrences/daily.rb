@@ -1,5 +1,5 @@
 # Daily upkeep for every company: partitions for the next 3 months, the horizon pushed one day (rows for the new last
-# day), and runs that ended marked completed.
+# day), runs that ended marked completed, and AM plans that start today give their riders their PUDO points.
 module Occurrences
   class Daily < ApplicationService
     def call
@@ -11,6 +11,7 @@ module Occurrences
             Sync.call(trips: Trip.kept.active_between(Sync.horizon - 1, Sync.horizon).pluck(:id), routes: SchoolRoutes.running_ids,
                       from: Sync.horizon - 1, to: Sync.horizon)
             Complete.call
+            Plans::AssignRiders.due
             TrackingLink.where(expires_at: ...7.days.ago).delete_all
             SchoolRuns::Purge.call
           end

@@ -1,6 +1,7 @@
 require "rails_helper"
 
-# School Bus › Route Plans: list and detail of plans made by routing runs, Draw Routes, rename, comments, Compare, delete
+# School Bus › Route Plans: list and detail of plans made by routing runs, Draw Routes (every rider unassigned, summary,
+# params, Plan For date), rename, comments, Compare, delete
 # a draft (not an adopted plan), Out of Date after the stops change.
 RSpec.describe "School Bus route plans" do
   include ActiveJob::TestHelper
@@ -45,8 +46,15 @@ RSpec.describe "School Bus route plans" do
     get compare_api_v1_plan_path(first), params: { with: second }
     expect(json[:data]).to include(routes: [ 2, 2 ], a: "AM Term 1 draft", b: "AM Plan 2")
 
-    post api_v1_school_plans_path(school), params: { session: "am" }
-    expect(json[:data]).to include(name: "AM Plan 3", source: "manual", routes_count: 0, state: "draft")
+    within_tenant(company) { school.riders.create!(rid: "X1", name: "Far away", postal: "469999", lat: 1.4, lng: 103.99, source: "manual") }
+    post api_v1_school_plans_path(school), params: { session: "am", date: "2026-11-09" } # Draw Routes for the Plan For date
+    expect(json[:data]).to include(name: "AM Plan 3", source: "manual", routes_count: 0, state: "draft", effective_from: "2026-11-09", unassigned_count: 13)
+    expect(json.dig(:data, :unassigned).first).to include(riders: %w[R10 R11 R12], n: 3, reason: "NOT_ROUTED", label: "BDSZ03-0001")
+    expect(json.dig(:data, :unassigned).last).to eq(gid: "ns:X1", riders: [ "X1" ], n: 1, reason: "RIDER_NO_STOP", label: "Far away")
+    expect(json.dig(:data, :summary)).to include(routes: 0, riders: 13, assigned: 0, unassigned: 13, total: 0.0, slots: {})
+    expect(json.dig(:data, :params)).to include(session: "AM", hardCap: 75, attendant: "STATUTORY")
+    post api_v1_school_plans_path(school), params: { session: "am", date: "9 Nov" }
+    expect(json.dig(:error, :message)).to eq("Date must look like 2026-11-02")
 
     within_tenant(company) { SchoolPlan.find(second).update!(in_use: true) }
     delete api_v1_plan_path(second)

@@ -6,20 +6,21 @@
 # Table name: feasibility_studies
 # Database name: primary
 #
-#  id              :bigint           not null, primary key
-#  name            :string           not null
-#  pickup          :string           default("door"), not null
-#  prospect_lat    :decimal(10, 7)
-#  prospect_lng    :decimal(10, 7)
-#  prospect_name   :string
-#  prospect_postal :string
-#  school_mode     :string           default("prospect"), not null
-#  walk_m          :integer          default(400), not null
-#  created_at      :datetime         not null
-#  updated_at      :datetime         not null
-#  company_id      :bigint           not null
-#  created_by_id   :bigint
-#  school_id       :bigint
+#  id               :bigint           not null, primary key
+#  name             :string           not null
+#  pickup           :string           default("door"), not null
+#  prospect_address :string
+#  prospect_lat     :decimal(10, 7)
+#  prospect_lng     :decimal(10, 7)
+#  prospect_name    :string
+#  prospect_postal  :string
+#  school_mode      :string           default("prospect"), not null
+#  walk_m           :integer          default(400), not null
+#  created_at       :datetime         not null
+#  updated_at       :datetime         not null
+#  company_id       :bigint           not null
+#  created_by_id    :bigint
+#  school_id        :bigint
 #
 # Indexes
 #
@@ -45,15 +46,26 @@ class FeasibilityStudy < ApplicationRecord
   validates :name, presence: true
   validates :school_mode, inclusion: { in: %w[existing prospect] }
   validates :pickup, inclusion: { in: %w[door lib] }
+  validates :prospect_postal, format: { with: /\A\d{6}\z/, message: "must be 6 digits" }, allow_blank: true
+  validates :walk_m, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
 
-  # Where the school is: { name, short, lat, lng } or nil.
+  # Where the school is: { name, short, address, lat, lng } or nil.
   def place
     if school_mode == "existing"
-      school&.lat ? { name: school.name, short: school.short, lat: school.lat.to_f, lng: school.lng.to_f } : nil
+      school&.lat ? { name: school.name, short: school.short, address: school.address, lat: school.lat.to_f, lng: school.lng.to_f } : nil
     elsif prospect_lat
-      { name: prospect_name.presence || "Prospect school", short: prospect_name.presence || "Prospect", lat: prospect_lat.to_f, lng: prospect_lng.to_f }
+      { name: prospect_name.presence || "Prospect school", short: prospect_name.presence || "Prospect", address: prospect_address, lat: prospect_lat.to_f, lng: prospect_lng.to_f }
     end
   end
 
   def students = rows.sum(&:riders)
+
+  # When the latest scenario was planned.
+  def ran_at = scenarios.filter_map(&:ran_at).max
+
+  # What OneMap said about each student postal code (kept in postal_geocodes): postal => PostalGeocode. A code that was
+  # never looked up, or not found a week ago, has no entry that counts (the row is "pending").
+  def geocodes
+    @geocodes ||= PostalGeocode.where(country: "SG", postal: rows.map(&:postal).uniq).reject(&:stale?).index_by(&:postal)
+  end
 end

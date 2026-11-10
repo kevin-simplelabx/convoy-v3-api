@@ -1,4 +1,4 @@
-# Delete a draft plan with its routes, stops and riders in a few statements (a draft has no runs on the Scheduler).
+# Delete a draft plan with its routes and all that hangs on them (Plans::DropRoute; a route whose runs are history stays).
 module Plans
   class Destroy < ApplicationService
     def initialize(plan)
@@ -9,9 +9,7 @@ module Plans
       raise Error, "Only a draft plan can be deleted" unless @plan.state == "draft"
 
       SchoolPlan.transaction do
-        ids = @plan.routes.pluck(:id)
-        [ SchoolRouteRider, SchoolRouteStop, SchoolRouteVehicleChange, SchoolRouteReplacement ].each { it.where(school_route_id: ids).delete_all }
-        SchoolRoute.where(id: ids).delete_all
+        DropRoute.call(@plan.routes.to_a)
         @plan.reload.destroy!
       end
     end

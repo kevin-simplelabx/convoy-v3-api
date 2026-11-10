@@ -1,5 +1,6 @@
 # A stand-in for the routing service: plans every group, two stops a route (23-seaters), times from 06:30 (AM) or 14:00;
-# retime keeps the stops' order and marks the route Edited; down = unreachable; fail = the engine refuses.
+# retime keeps the stops' order and marks the route Edited; riders with no stop or in conflict come back unassigned (as
+# the engine labels them); down = unreachable; fail = the engine refuses.
 class FakeRouting
   attr_reader :inputs
   attr_accessor :down, :fail
@@ -22,7 +23,9 @@ class FakeRouting
     am = input.dig("params", "session") == "AM"
     routes = input["groups"].each_slice(2).with_index.map { |gs, i| route("R%02d" % (i + 1), gs, am ? 390 + (i * 5) : 840) }
     assign = routes.flat_map { |r| r["stops"].flat_map { |s| s["riders"].map { |rid| [ rid, { "uid" => s["uid"], "pid" => s["pid"], "route" => r["id"], "time" => s["time"] } ] } } }.to_h
-    { "status" => "COMPLETED", "road" => true, "validation" => [], "routes" => routes, "assign" => assign, "unassigned" => [],
+    unassigned = Array(input["noStop"]).map { { "gid" => nil, "riders" => [ it["rid"] ], "n" => 1, "reason" => "RIDER_NO_STOP", "label" => it["name"] } } +
+                 Array(input["conflicts"]).map { { "gid" => nil, "riders" => [ it["rid"] ], "n" => 1, "reason" => "RIDER_IN_CONFLICT", "label" => it["name"] } }
+    { "status" => "COMPLETED", "road" => true, "validation" => [], "routes" => routes, "assign" => assign, "unassigned" => unassigned,
       "summary" => { "riders" => assign.size, "assigned" => assign.size, "unassigned" => 0, "routes" => routes.size, "byType" => { "MEDIUM_23" => routes.size },
                      "avgJourney" => 40.0, "maxJourney" => 45.0, "avgFill" => 0.5, "total" => 100.0 },
       "params" => input["params"].merge("preset" => input.dig("params", "preset") || "FEWEST_BUSES"), "ms" => 1200 }
@@ -63,7 +66,8 @@ class FakeRouting
     end
     load = stops.sum { it["n"] }
     { "id" => id, "type" => "MEDIUM_23", "label" => "23-seater", "cls" => "M", "seats" => 23, "studentSeats" => 23, "cap" => 20, "floor" => 12, "load" => load,
-      "fill" => load / 23.0, "span" => 2400, "startT" => Clock.hm(start), "endT" => Clock.hm(start + 40), "badges" => load < 12 ? [ "Underfilled" ] : [],
+      "fill" => load / 23.0, "span" => 2400, "start" => start * 60, "end" => (start + 40) * 60, "startT" => Clock.hm(start), "endT" => Clock.hm(start + 40),
+      "badges" => load < 12 ? [ "Underfilled" ] : [], "cost" => { "fixed" => 480, "run" => 20.0, "ride" => 1.5, "overtime" => 0.0, "floor" => 0, "stability" => 0 },
       "rideMin" => load * 20, "stops" => stops }
   end
 end

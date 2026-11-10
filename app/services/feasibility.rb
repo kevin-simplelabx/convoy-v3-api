@@ -3,6 +3,12 @@
 module Feasibility
   LEVEL = /\A(p|k|n|sec|s|gr|grade|y|year|primary|secondary|g)\.?\d{1,2}[a-z]?\z/i
 
+  # Monthly price per bus (SGD) and the attendant add-on a new study starts with, until the user types the operator's own.
+  DEFAULT_PRICES = {
+    "LARGE_45" => { monthly: 5200, attendant: 900 }, "LARGE_40" => { monthly: 4800, attendant: 900 },
+    "MEDIUM_23" => { monthly: 3600, attendant: 450 }, "SMALL_13" => { monthly: 2400, attendant: 450 }, "SMALL_9" => { monthly: 2000, attendant: 450 }
+  }.freeze
+
   module_function
 
   # Lines like "460101, 3, AM, P4" in any order → [{ postal, riders, session, level }] (same postal + session + level add

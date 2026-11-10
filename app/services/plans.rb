@@ -15,17 +15,27 @@ module Plans
     OccurrenceSyncJob.perform_later(plans.first.company_id, [], Date.current.iso8601, nil, routes) if routes.any?
   end
 
-  # A plan's figures from its routes (after hand edits or Route Again), as the engine's summary.
+  # A plan's figures from its routes (after hand edits, Route Again or Draw Routes), as the engine's summarize: counts,
+  # journeys, fill, the optimisation score by part (each route's engine cost) and total, and buses per 5-minute slot
+  # (arrival at school for AM, departure for the others). Nothing is kept from an older summary.
   def summary(plan, unassigned = plan.unassigned)
     routes = plan.routes.to_a
     spans = routes.map { it.span_seconds.to_f / 60 }
     riders = routes.sum(&:riders_count)
     left = Array(unassigned).sum { it["n"] || Array(it["riders"]).size }
-    (plan.summary || {}).merge(
-      "routes" => routes.size, "byType" => routes.group_by(&:bus_type).transform_values(&:size), "assigned" => riders, "unassigned" => left,
-      "riders" => riders + left, "avgJourney" => spans.any? ? spans.sum / spans.size : 0, "maxJourney" => spans.max || 0,
-      "avgFill" => routes.any? ? routes.sum { it.fill.to_f } / routes.size : 0
-    )
+    cost = ->(k) { routes.sum(0.0) { it.engine_route&.dig("cost", k).to_f } }
+    s = { "riders" => riders + left, "assigned" => riders, "unassigned" => left, "routes" => routes.size,
+          "byType" => routes.group_by(&:bus_type).transform_values(&:size), "avgJourney" => spans.any? ? spans.sum / spans.size : 0,
+          "maxJourney" => spans.max || 0, "avgFill" => routes.any? ? routes.sum { it.fill.to_f } / routes.size : 0,
+          "fixed" => cost.("fixed"), "run" => cost.("run"), "overtime" => cost.("overtime"), "floor" => cost.("floor"), "stability" => cost.("stability"),
+          "slots" => routes.map { slot(it, plan.session_am?) }.tally }
+    s.merge("total" => s["fixed"] + s["run"] + s["overtime"] + s["floor"])
+  end
+
+  # "07:25": the 5-minute slot a route reaches school (AM) or leaves it, as the engine keys slots.
+  def slot(route, am)
+    sec = route.engine_route&.dig(am ? "end" : "start") || ((am ? route.end_time : route.start_time).to_i * 60)
+    Clock.hm((sec.to_i / 300 * 300) / 60)
   end
 
   # Writes an engine route (as the engine shapes it) into a plan route and its stops and riders.

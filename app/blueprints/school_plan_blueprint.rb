@@ -14,7 +14,10 @@ class SchoolPlanBlueprint < ApplicationBlueprint
 
   view :detail do
     fields :summary, :params, :unassigned
-    field(:routing_run) { |p| p.routing_run && { id: p.routing_run_id, no_stop: p.routing_run.no_stop_rids, conflicts: p.routing_run.conflict_rids, ms: p.routing_run.ms } }
+    field(:routing_run) do |p|
+      r = p.routing_run
+      r && { id: r.id, no_stop: Routing.rider_list(p.school, r.no_stop_rids), conflicts: Routing.rider_list(p.school, r.conflict_rids), ms: r.ms }
+    end
     field(:routes) { |p| SchoolRouteBlueprint.render_as_hash(p.routes) }
     field(:comments) { |p| p.comments.map { { id: it.id, body: it.body, by: it.user&.name, at: it.created_at } } }
   end
