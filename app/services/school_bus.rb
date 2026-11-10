@@ -9,6 +9,9 @@ module SchoolBus
 
   module_function
 
+  # The label of a bus type code ("45-seater"); an unknown code is returned as is.
+  def label(key) = BUS_TYPES.dig(key, :label) || key
+
   def statutory_sizes = BUS_TYPES.select { |_, t| t[:law] }.keys
 
   # The bus type nearest to a seat count (routes made before they had a type): shown only, prices still use the route's own type.

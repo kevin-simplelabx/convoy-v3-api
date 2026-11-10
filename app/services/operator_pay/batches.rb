@@ -85,6 +85,7 @@ module OperatorPay
 
     def pay!(batch_operator, paid_on:, amount:, method:, reference: nil)
       amount = amount.to_d
+      raise Error, "#{batch_operator.operator.name} has nothing to pay (deductions only)" if batch_operator.status == "nothing_to_pay"
       raise Error, "Enter the amount paid" unless amount.positive?
       raise Error, "Amount is more than the #{money(batch_operator.left)} left to pay" if amount > batch_operator.left + 0.005
 
@@ -94,6 +95,7 @@ module OperatorPay
     # Mark All Paid: what is left of every operator, paid on the date given; the reference is the PN plus the bank's reference.
     def mark_all_paid!(batch, paid_on:, reference: nil)
       raise Error, "Pick the date paid" if paid_on.blank?
+      raise Error, "#{batch.number} has nothing to pay (deductions only)" if batch.nothing_to_pay?
 
       OperatorPayBatch.transaction do
         batch.batch_operators.each do |bo|
@@ -108,6 +110,7 @@ module OperatorPay
     # The bank file: checks every operator can be paid (details, FAST limit), issues payment notices (PN) and locks the batch.
     def bank_file!(batch, transfer_type:)
       raise Error, "Pick FAST or GIRO" unless %w[FAST GIRO].include?(transfer_type)
+      raise Error, "#{batch.number} has nothing to pay (deductions only)" if batch.nothing_to_pay?
 
       batch.batch_operators.each do |bo|
         pays = bo.operator.decorate.pays_by

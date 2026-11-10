@@ -50,7 +50,7 @@ class DriverAccount < ApplicationRecord
   has_many :jwts, class_name: "DriverJwt", dependent: :delete_all
   has_many :licences, -> { order(:created_at, :id) }, class_name: "DriverLicence", dependent: :destroy, inverse_of: :driver_account
 
-  normalizes :phone, with: ->(v) { Phonelib.parse(v).then { |p| p.valid? ? p.e164 : v.to_s.gsub(/[^\d+]/, "") } }
+  normalizes :phone, with: PhoneNormalizer
   normalizes :email, with: ->(v) { v.to_s.strip.downcase.presence }
   normalizes :name, with: ->(v) { v.to_s.squish.presence }
 

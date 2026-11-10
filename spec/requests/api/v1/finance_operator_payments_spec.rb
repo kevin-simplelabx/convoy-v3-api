@@ -49,7 +49,7 @@ RSpec.describe "Finance operator payments" do
     post api_v1_finance_operator_pay_approve_path, params: { refs:, pay_date: "2026-11-10" }, as: :json
     expect(response).to have_http_status(:created)
     batch = json[:data]
-    expect(batch).to include(number: "PB-2026-000001", status: "scheduled", total: "155.0", open: true,
+    expect(batch).to include(number: "PB-2026-000001", status: "scheduled", total: "155.00", open: true,
                              created_by: { id: approver.id, name: "Marcus Lim" }, bank_file_by: nil)
     get api_v1_finance_payment_notice_path(batch.dig(:operators, 0, :id)) # before the bank file: no number, pays by the operator's details
     expect(json[:data]).to include(number: nil, pays_by: { method: "PayNow UEN", to: "199801234D" })
@@ -65,7 +65,7 @@ RSpec.describe "Finance operator payments" do
     post api_v1_finance_operator_pay_batch_mark_paid_path(batch[:id])
     expect(json.dig(:error, :message)).to eq("Pick the date paid")
     post api_v1_finance_operator_pay_batch_mark_paid_path(batch[:id]), params: { paid_on: "2026-11-10", reference: " DBS-7781 " }, as: :json
-    expect(json[:data]).to include(status: "paid", paid: "155.0")
+    expect(json[:data]).to include(status: "paid", total: "155.00", paid: "155.00")
     expect(within_tenant(company) { OperatorPayBatchOperator.find(bo).payments.sole.slice(:paid_on, :reference) })
       .to eq("paid_on" => Date.new(2026, 11, 10), "reference" => "PN-2026-000001 DBS-7781")
     expect(within_tenant(company) { OperatorPay::Batches.csv(OperatorPayBatch.find(batch[:id])) }.lines.size).to eq(1) # nothing left to pay
@@ -81,7 +81,7 @@ RSpec.describe "Finance operator payments" do
     expect(json.dig(:data, :lines).size).to eq(3)
   end
 
-  it "gives manual items their id, and a batch of deductions only is not Paid" do
+  it "gives manual items their id, and a batch of deductions only is nothing_to_pay, with money as 2-decimal strings" do
     post api_v1_finance_operator_pay_items_path, params: { operator_id: data[:hup].id, description: "Late arrival", item_on: "2026-10-07", amount: 30, sign: "deduct" }, as: :json
     get api_v1_finance_operator_pay_requests_path
     items = json.dig(:data, 0, :items)
@@ -91,8 +91,32 @@ RSpec.describe "Finance operator payments" do
 
     post api_v1_finance_operator_pay_approve_path, params: { refs: [ item[:ref] ], pay_date: "2026-11-10" }, as: :json
     batch = json[:data]
-    expect(batch).to include(total: "-30.0", paid: "0.0", status: "scheduled")
-    expect(batch[:operators].sole).to include(total: "-30.0", paid: "0.0", left: "0.0", status: "nothing_to_pay")
+    expect(batch).to include(total: "-30.00", paid: "0.00", status: "nothing_to_pay", open: true)
+    expect(batch[:operators].sole).to include(total: "-30.00", paid: "0.00", left: "0.00", status: "nothing_to_pay")
+
+    travel_to Time.zone.local(2026, 11, 11, 9, 0) # past the pay date: still nothing to pay, not overdue
+    get api_v1_finance_operator_pay_batches_path
+    expect(json[:data].sole).to include(status: "nothing_to_pay", total: "-30.00")
+
+    post api_v1_finance_operator_pay_batch_payments_path(batch[:id]), params: { batch_operator_id: batch[:operators].sole[:id], amount: 10, method: "PayNow" }, as: :json
+    expect(response).to have_http_status(:unprocessable_content)
+    expect(json.dig(:error, :message)).to eq("Hup Seng has nothing to pay (deductions only)")
+    post api_v1_finance_operator_pay_batch_mark_paid_path(batch[:id]), params: { paid_on: "2026-11-11" }, as: :json
+    expect(json.dig(:error, :message)).to match(/has nothing to pay/)
+    post api_v1_finance_operator_pay_batch_bank_file_path(batch[:id]), params: { transfer_type: "FAST" }, as: :json
+    expect(json.dig(:error, :message)).to match(/has nothing to pay/)
+  end
+
+  it "keeps a mixed batch (one operator to pay, one deductions only) on the pay date rule" do
+    within_tenant(company) do
+      batch = OperatorPayBatch.create!(pay_date: Date.new(2026, 11, 10), number: "PB-2026-000099")
+      [ [ data[:hup], 50 ], [ create(:operator, name: "Other"), -30 ] ].each do |op, amount|
+        bo = batch.batch_operators.create!(operator: op)
+        bo.lines.create!(ref: "item:#{amount}", source: "item", description: "x", item_on: Date.new(2026, 10, 7), amount:)
+      end
+      expect(batch.status).to eq("scheduled")
+      expect(batch.status(Date.new(2026, 11, 11))).to eq("overdue")
+    end
   end
 
   it "takes an operator out of an open batch: its items go back to the requests, and the empty batch goes" do

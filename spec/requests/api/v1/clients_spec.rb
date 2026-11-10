@@ -25,4 +25,11 @@ RSpec.describe "Clients" do
     get api_v1_clients_path, params: { q: { name_i_cont: "goo" } }
     expect(json[:data].pluck(:name)).to eq(%w[Google])
   end
+
+  it "ignores a bare q string instead of failing" do
+    within_tenant(company) { %w[Google DBS].each { |n| create(:client, name: n) } }
+    get api_v1_clients_path, params: { q: "Google" }
+    expect(response).to have_http_status(:ok)
+    expect(json[:data].pluck(:name)).to eq(%w[DBS Google])
+  end
 end

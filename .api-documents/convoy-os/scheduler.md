@@ -86,7 +86,8 @@ How to draw it:
 
 - **Block position**: `vehicle_id` (row / lane), `date`, `start_time` / `end_time` (`ends_next_day` when it crosses midnight).
 - **Colour / pattern**: `grid_status` — `ok`, `live` (running now), `done`, `unassigned`, `cancel`, `cancel_unassigned`,
-  `replacement` (moved by a replacement).
+  `replacement` (moved to another bus by a replacement: Vehicle Down, Crew Swap, Handover). A driver-only replacement
+  (Driver Unavailable) stays `ok`; use `replacement_id` and `driver` to show it.
 - **Ghost of a replaced run**: when `original_vehicle_id` is set, also draw a ghost block on that vehicle's row.
 - **Link lines**: teal between runs with the same `group_key` (Runs That Move Together); orange from the ghost
   (`original_vehicle_id`) to the run; purple from a run to the run of `pair_trip_id` (two-way trips, `is_return` on the way back).
@@ -652,10 +653,10 @@ Response: the replacement:
 { "data": { "id": 4, "kind": "drv", "kind_name": "Driver Unavailable", "scope": "run", "trip_id": 8, "school_route_id": null,
             "run_date": "2026-11-04", "trip_run_id": 1, "slot_no": 1, "original_vehicle_id": 14, "original_plate": "PD3318K",
             "starts_on": "2026-11-04", "ends_on": "2026-11-04", "vehicle_id": null, "plate": null, "new_driver": "Ah Kow",
-            "driver_name": "Ah Kow", "driver_phone": "91112222", "handover_stop": null, "handover_time": null,
+            "driver_name": "Ah Kow", "driver_phone": "+6591112222", "handover_stop": null, "handover_time": null,
             "pay_split": null, "original_share": null, "arranged_by": "operator", "deduction": null, "premium": null,
             "eta": null, "reason": null, "status_label": "Coming Up",
-            "summary": "Ah Kow (91112222) drives PD3318K. This trip on 04/11/2026.",
+            "summary": "Ah Kow (+6591112222) drives PD3318K. This trip on 04/11/2026.",
             "pay_text": "Trip value goes to Ah Kow, the replacement driver",
             "notifications": [ { "audiences": ["guests"], "channels": ["email"], "message": "...", "at": "...", "by": "..." } ],
             "created_by": "SimpleDrive Ops", "created_at": "..." } }

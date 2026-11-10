@@ -44,10 +44,14 @@ class OperatorPayBatch < ApplicationRecord
   def paid = batch_operators.sum(0.to_d, &:paid)
   def open? = bank_file_at.nil? && paid.zero?
 
-  # paid | part_paid | overdue | sent_to_bank | scheduled
+  # Deductions only: every operator is nothing_to_pay, so there is no payment to make (see OperatorPayBatchOperator#status).
+  def nothing_to_pay? = batch_operators.any? && batch_operators.all? { |bo| bo.status == "nothing_to_pay" }
+
+  # paid | part_paid | nothing_to_pay | overdue | sent_to_bank | scheduled
   def status(today = Date.current)
     return "paid" if total.positive? && paid >= total
     return "part_paid" if paid.positive?
+    return "nothing_to_pay" if nothing_to_pay?
     return "overdue" if pay_date < today
     return "sent_to_bank" if bank_file_at
 

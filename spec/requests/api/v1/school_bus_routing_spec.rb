@@ -63,10 +63,38 @@ RSpec.describe "School Bus routing runs" do
     expect(json.dig(:data, :error)).to start_with("The routing service is not available")
 
     fake_routing.down = false
-    perform_enqueued_jobs { post api_v1_school_routing_runs_path(school), params: { session: "asa" } } # Convoy OS runs it too
+    expect { perform_enqueued_jobs { post api_v1_school_routing_runs_path(school), params: { session: "asa" } } } # Convoy OS runs it too
+      .not_to(change { fake_routing.inputs.size })
     expect(response).to have_http_status(:accepted)
     get api_v1_routing_run_path(json.dig(:data, :id))
     expect(json[:data]).to include(status: "done", stops: 0, plan_id: Integer)
+  end
+
+  it "is done with an empty plan and every rider unassigned when no rider has a stop, without calling the engine" do
+    lone = within_tenant(company) do
+      School.create!(name: "Lone School", short_name: "LS", postal: "455788", lat: 1.3138, lng: 103.9283).tap do |s|
+        s.riders.create!(rid: "X1", name: "Far away", postal: "469999", lat: 1.4, lng: 103.99, source: "manual")
+        s.riders.create!(rid: "X2", name: "Further", postal: "469998", lat: 1.41, lng: 103.99, source: "manual")
+      end
+    end
+    expect { perform_enqueued_jobs { post api_v1_school_routing_runs_path(lone), params: { session: "am", params: { preset: "BALANCED" } }, as: :json } }
+      .not_to(change { fake_routing.inputs.size }) # no stop point = no road times: the routing service is not asked
+    get api_v1_routing_run_path(json.dig(:data, :id))
+    expect(json[:data]).to include(status: "done", error: nil, riders: 0, stops: 0, ms: 0, plan_id: Integer,
+                                   no_stop: [ { rid: "X1", name: "Far away" }, { rid: "X2", name: "Further" } ])
+
+    within_tenant(company) do
+      run = RoutingRun.find(json.dig(:data, :id))
+      expect(run.result).to include("status" => "COMPLETED_WITH_UNASSIGNED", "road" => false, "routes" => [], "assign" => {}, "dir" => "pickup",
+                                    "validation" => [ { "code" => "RIDER_NO_STOP", "level" => "Warning", "msg" => "2 riders have no stop. Excluded from this run" } ])
+      expect(run.result["params"]).to include("session" => "AM", "preset" => "BALANCED", "effort" => "high", "hardCap" => 75) # engine defaults + the run's
+      plan = run.plan
+      expect(plan).to have_attributes(source: "engine", in_use: false, priority: "BALANCED", effective_from: Date.current)
+      expect(plan.routes).to be_empty
+      expect(plan.unassigned).to eq([ { "gid" => nil, "riders" => [ "X1" ], "n" => 1, "reason" => "RIDER_NO_STOP", "label" => "Far away" },
+                                     { "gid" => nil, "riders" => [ "X2" ], "n" => 1, "reason" => "RIDER_NO_STOP", "label" => "Further" } ])
+      expect(plan.summary).to include("riders" => 2, "assigned" => 0, "unassigned" => 2, "routes" => 0, "total" => 0)
+    end
   end
 
   it "keeps the company's engine parameters" do

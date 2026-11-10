@@ -32,7 +32,7 @@ module Api
 
         date = params[:date].present? ? Date.iso8601(params[:date]) : Date.current
         builder = Routing::Input.new(school, session, date, params: params.fetch(:params, {}).permit!.to_h)
-        input = builder.call # with no rider at a stop the engine still runs: a plan with no routes, every rider unassigned (Convoy OS)
+        input = builder.call # with no rider at a stop the run is still done: a plan with no routes, every rider unassigned (RoutingRunJob)
         run = RoutingRun.create!(school:, session:, plan_date: date, params: input[:params], input:, no_stop_rids: builder.no_stop,
                                  conflict_rids: builder.conflicts, created_by: current_user)
         RoutingRunJob.perform_later(run.id)

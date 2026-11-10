@@ -48,7 +48,7 @@ RSpec.describe "Replacements" do
     id = create_trip
     r = replace(occurrence_id: run_id(id, "2026-11-04"), kind: "drv", driver_name: "Ah Kow", driver_phone: "91112222")
     expect(response).to have_http_status(:created)
-    expect(r[:data]).to include(summary: "Ah Kow (91112222) drives PD3318K. This trip on 04/11/2026.",
+    expect(r[:data]).to include(summary: "Ah Kow (+6591112222) drives PD3318K. This trip on 04/11/2026.",
                                 pay_text: "Trip value goes to Ah Kow, the replacement driver")
 
     day = runs(id, "2026-11-03", "2026-11-04")
@@ -56,6 +56,25 @@ RSpec.describe "Replacements" do
 
     delete api_v1_replacement_path(r.dig(:data, :id))
     expect(runs(id, "2026-11-04", "2026-11-04").first.dig(:driver, :name)).to eq("Kumar")
+  end
+
+  it "normalises the replacement driver's phone to E.164 (Singapore default); an invalid number keeps its digits" do
+    id = create_trip
+    r = replace(occurrence_id: run_id(id, "2026-11-04"), kind: "drv", driver_name: "Ah Kow", driver_phone: "9111 2222")
+    expect(r.dig(:data, :driver_phone)).to eq("+6591112222")
+    delete api_v1_replacement_path(r.dig(:data, :id))
+
+    r = replace(occurrence_id: run_id(id, "2026-11-04"), kind: "drv", driver_name: "Ah Kow", driver_phone: "12-34")
+    expect(r.dig(:data, :driver_phone)).to eq("1234")
+  end
+
+  it "a driver-only replacement keeps grid_status ok (same as the HTML); only a bus change is a replacement" do
+    id = create_trip
+    replace(occurrence_id: run_id(id, "2026-11-04"), kind: "drv", driver_name: "Ah Kow", driver_phone: "91112222")
+    row = runs(id, "2026-11-04", "2026-11-04").first
+    expect(row).to include(grid_status: "ok")
+    expect(row[:replacement_id]).to be_present
+    expect(runs(id, "2026-11-03", "2026-11-03").first[:grid_status]).to eq("ok")
   end
 
   it "Vehicle Down for a date range moves the bus's runs with their own driver, leaving a ghost" do

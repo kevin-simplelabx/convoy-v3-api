@@ -18,7 +18,9 @@ module Paginated
     render json: { data: blueprint.render_as_hash(present(scope), **options), meta: }
   end
 
+  # Only q[field_pred]=value hashes filter; a bare ?q=text (String) is ignored.
   def ransack_params
-    params.fetch(:q, {}).permit!.to_h
+    q = params[:q]
+    q.is_a?(ActionController::Parameters) ? q.permit!.to_h : {}
   end
 end

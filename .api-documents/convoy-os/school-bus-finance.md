@@ -275,7 +275,7 @@ Every action returns the whole month again, like `GET` (adding a line and paying
     - `tone`.
   - Documents: `invoice_number`, `voucher: { number, on }`, and `batch: { number, pay_date, notice_number }` when the
     pay run is in an Operator Payments batch.
-  - `routes`: `[{ route, session, plan, bus_type, plate, price, unpriced, days, of, break_month, earned, rate, from, to, amount, note, attendant }]`.
+  - `routes`: `[{ route, session, plan, bus_type (code, e.g. `LARGE_40`), bus_type_label (e.g. `40-seater`; show this), plate, price, unpriced, days, of, break_month, earned, rate, from, to, amount, note, attendant }]`.
     `attendant { amount, by: operator | us }` (or `null`): the monthly bus attendant price inside `price` → "Incl. S$`amount` BA
     (theirs)" when `by` is `operator`, "(ours)" when `us`. Which sizes need one follows Bus Attendants (statutory / all / selected sizes).
     For example, `days` 11 `of` 21 with the `note` `"Took over from Beta Coaches on 16/11/2026"`.

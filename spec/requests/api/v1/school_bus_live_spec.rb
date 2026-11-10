@@ -88,7 +88,7 @@ RSpec.describe "School Bus Live Ops" do
     id = within_tenant(company) { f[:r1].occurrences.find_by!(date: Date.new(2026, 11, 3)).id }
     get api_v1_school_live_run_path(school, id)
     d = json[:data]
-    expect(d).to include(label: "AM 1", session: "am", bus: { plate: "PD6604E", type: "40-seater", seats: 40, operator: "Own fleet" }, on_board: 1)
+    expect(d).to include(label: "AM 1", session: "am", bus: { plate: "PD6604E", type: "40-seater", bus_type: "LARGE_40", bus_type_label: "40-seater", seats: 40, operator: "Own fleet" }, on_board: 1)
     expect(d[:alert]).to include(kind: "late", tone: "danger")
     expect(d[:methods]).to eq(tick: 0, qr: 1, card: 0, palm: 0)
     expect(d[:crew]).to eq([ { role: "Driver", name: "Kumar", phone: "+6591234567", photo: nil }, { role: "Bus Attendant", name: "Mdm Rosnah", phone: "+6591112233", photo: nil } ])
@@ -143,7 +143,7 @@ RSpec.describe "School Bus Live Ops" do
     end
     id2 = within_tenant(company) { f[:r2].occurrences.find_by!(date: day).id }
     get api_v1_school_live_run_path(school, id2)
-    expect(json.dig(:data, :bus)).to include(type: "23-seater", seats: 23) # the bus's 23 seats
+    expect(json.dig(:data, :bus)).to include(type: "23-seater", bus_type: "MEDIUM_23", bus_type_label: "23-seater", seats: 23) # the bus's 23 seats
     expect(json.dig(:data, :stops, 0)).to include(name: "Kembangan MRT", address: "Bus stop opposite Kembangan MRT")
 
     id1 = within_tenant(company) { f[:r1].occurrences.find_by!(date: day).id }

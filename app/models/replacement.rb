@@ -86,6 +86,8 @@ class Replacement < ApplicationRecord
   enum :pay_split, { original: "original", new: "new", both: "both", split: "split" }, prefix: :pay_to, validate: { allow_nil: true }
   enum :arranged_by, { operator: "operator", us: "us" }, prefix: :arranged_by, validate: true
 
+  normalizes :driver_phone, with: PhoneNormalizer
+
   minute_time :handover_time
 
   before_validation :dates_from_run, if: :for_run?

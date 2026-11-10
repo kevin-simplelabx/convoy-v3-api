@@ -91,10 +91,19 @@ restarted; keep polling), `{ step: "done", frac: 1, work: { evals } }` when done
 
 | Result | Meaning |
 | --- | --- |
-| `done`, plan with no routes | No rider of the session has a stop: the run still goes (as the prototype) and every rider is in `unassigned` |
+| `done`, plan with no routes | No rider of the session has a stop (`stops: 0`): see below |
 | `failed` with the engine's message | The engine refused, for example no road times |
 | `failed` with "The routing service is not available…" | The routing service could not be reached |
 | `done` | `plan_id` is the new **draft** plan |
+
+**No rider with a stop** (`stops: 0`, `riders: 0`): there is nothing to route, so the routing service is not called and
+no road times are loaded. The run still ends `done` (it never fails with "Road travel times could not be loaded…"),
+usually within a second, `ms: 0`, `progress` `{ step: "done", frac: 1, work: { evals: null } }`. `plan_id` is a new draft
+plan with no routes, the engine's parameters (`params`, `priority` = `params.preset`), the summary of no routes
+(`riders` = `unassigned` = the riders listed, everything else `0`) and every rider of `no_stop` / `conflicts` in
+`unassigned` exactly as a normal run lists them (`{ gid: null, riders: [rid], n: 1, reason: "RIDER_NO_STOP" |
+"RIDER_IN_CONFLICT", label: name }`). Show the empty plan with "N riders need a stop", as for any other run. A session
+with no riders at all gives the same: a plan with no routes and an empty `unassigned`.
 
 ## 3. Plans
 

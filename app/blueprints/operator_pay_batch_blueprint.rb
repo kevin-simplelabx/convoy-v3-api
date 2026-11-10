@@ -3,8 +3,8 @@ class OperatorPayBatchBlueprint < ApplicationBlueprint
 
   field(:status) { |b| b.status }
   field(:open) { |b| b.open? }
-  field(:total) { |b| b.total }
-  field(:paid) { |b| b.paid }
+  field(:total) { |b| format("%.2f", b.total) }
+  field(:paid) { |b| format("%.2f", b.paid) }
   field(:operators_count) { |b| b.batch_operators.size }
   # "Created by … on … | Bank file (FAST) by … on …"
   field(:created_by) { |b| b.created_by && { id: b.created_by.id, name: b.created_by.shown_name } }
@@ -15,7 +15,7 @@ class OperatorPayBatchBlueprint < ApplicationBlueprint
       b.batch_operators.sort_by { |x| x.operator.name }.map do |bo|
         pays = bo.notice_number ? { method: bo.pay_method, to: bo.pay_to, warn: false } : bo.operator.decorate.pays_by
         { id: bo.id, operator: { id: bo.operator.id, name: bo.operator.name }, pays_by: pays, notice_number: bo.notice_number, can_remove: b.open?,
-          total: bo.total, paid: bo.paid, left: bo.left, status: bo.status,
+          total: format("%.2f", bo.total), paid: format("%.2f", bo.paid), left: format("%.2f", bo.left), status: bo.status,
           lines: bo.lines.map { |l| l.slice(:id, :ref, :source, :description, :details, :item_on, :amount) },
           payments: bo.payments.map { |p| { id: p.id, paid_on: p.paid_on, amount: p.amount, method: p.method, reference: p.reference, by: p.recorded_by&.shown_name } } }
       end

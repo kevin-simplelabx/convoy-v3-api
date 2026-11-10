@@ -1,6 +1,7 @@
 # A stand-in for the routing service: plans every group, two stops a route (23-seaters), times from 06:30 (AM) or 14:00;
 # retime keeps the stops' order and marks the route Edited; riders with no stop or in conflict come back unassigned (as
-# the engine labels them); down = unreachable; fail = the engine refuses.
+# the engine labels them); no groups = no road times, refused as the real engine does (RoutingRunJob must not send it);
+# down = unreachable; fail = the engine refuses.
 class FakeRouting
   attr_reader :inputs
   attr_accessor :down, :fail
@@ -18,7 +19,7 @@ class FakeRouting
 
     input = input.deep_stringify_keys
     @inputs << input
-    return { "status" => "FAILED", "validation" => [ { "level" => "Error", "msg" => "Road travel times could not be loaded" } ] } if fail
+    return { "status" => "FAILED", "validation" => [ { "level" => "Error", "msg" => "Road travel times could not be loaded" } ] } if fail || input["groups"].empty?
 
     am = input.dig("params", "session") == "AM"
     routes = input["groups"].each_slice(2).with_index.map { |gs, i| route("R%02d" % (i + 1), gs, am ? 390 + (i * 5) : 840) }

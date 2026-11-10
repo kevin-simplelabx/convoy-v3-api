@@ -5,6 +5,20 @@ module Routing
 
   module_function
 
+  # The engine's default parameters (cached from the routing service); none when it cannot be reached.
+  def defaults
+    Client.current.meta["defaults"] || {}
+  rescue Client::Unavailable
+    {}
+  end
+
+  # The engine's bus types (cached from the routing service); none when it cannot be reached.
+  def types
+    Client.current.meta["types"] || []
+  rescue Client::Unavailable
+    []
+  end
+
   # { rid => name } of a school's riders (the latest row of a rid that is in several lists).
   def rider_names(school, rids)
     return {} if rids.blank?

@@ -114,7 +114,7 @@ module SchoolDashboard
       name = ->(key, op) { op&.name || (key == "own" ? "Our buses" : "Not assigned") }
       { total: cost[:total].round(2), school_days: cost[:school_days], priced: cost[:priced], routes: cost[:routes],
         rows: cost[:rows].map do |r|
-          { route: r.route.label, session: r.plan.session, plan: r.plan.name, bus_type: r.route.bus_size(r.vehicle), plate: r.vehicle&.plate,
+          { route: r.route.label, session: r.plan.session, plan: r.plan.name, bus_type: (size = r.route.bus_size(r.vehicle)), bus_type_label: size && SchoolBus.label(size), plate: r.vehicle&.plate,
             operator: name.(r.key.to_s, r.operator), price: r.price, unpriced: r.unpriced, days: r.days, of: r.of, amount: r.amount, note: r.note,
             attendant: r.attendant }
         end,

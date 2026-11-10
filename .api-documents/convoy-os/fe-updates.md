@@ -4,6 +4,56 @@ Changes to existing Convoy OS endpoints made while building other apps (Convoy D
 on (renamed, removed or changed fields and endpoints). New optional fields are not listed here; they are in the menu
 documents. Newest first. Each item: what changed, before → after, and what the front-end has to do.
 
+## 10/11/2026 — API-ISSUES fixes: clients search with a text `q`, stop times on Live (§25, §14)
+
+- **`GET /clients?q=Google`** (any list that takes `q`): a `q` that is text, not `q[field]=value`, is now ignored and the list returns unfiltered. Before: `500`. Use `q[name_i_cont]=Google` to search by name, as the doc says. Applies to every list endpoint that uses the `Paginated` concern.
+  Front-end: nothing; search on `q[...]` only.
+- **Live run `stops[]`** `arrived_at`, `departed_at`, `late_minutes` were already sent once a stop is reached or left; no change. The doc already says so (`school-bus-live.md`, stops). Front-end: read them on a `done` stop too.
+
+## 10/11/2026 — Run Routing with no rider at a stop ends `done` with an empty plan (B)
+
+`POST /schools/:id/routing_runs`, then `GET /routing_runs/:id` — when no rider of the session has a stop (`stops: 0`), the run now ends `status: "done"` with `plan_id` = a new draft plan with no routes and every `no_stop` / `conflicts` rider in the plan's `unassigned` (`reason` `RIDER_NO_STOP` / `RIDER_IN_CONFLICT`, `label` = name). Before: `status: "failed"`, `plan_id: null`, `error: "Road travel times could not be loaded from the routing server. Nothing was planned. Try again in a minute"`. The routing service is not called for such a run (`ms: 0`, `progress.work.evals: null`). Runs with at least one stop are unchanged.
+
+Front-end: for `stops: 0`, do not show the "road times" error or a retry; open the plan like any `done` run and show "N riders need a stop" from `no_stop`. See `school-bus-routes.md` § 2.
+
+## 10/11/2026 — School Bus: one bus type form (`bus_type` code + `bus_type_label`) in Dashboard, Payouts and Live (not breaking)
+
+Dashboard `route_costs.rows[]`, Payouts `routes[]` and Live run detail `bus` now all send the same pair: `bus_type` (code, `LARGE_40`) and `bus_type_label` (`40-seater`). Live `bus` also gets `bus_type`; its old `type` is kept and equals `bus_type_label`. No existing value changed.
+
+Front-end: show `bus_type_label` everywhere a bus size is displayed; use `bus_type` only as a key. Move off Live `bus.type` when convenient.
+
+## 10/11/2026 — School Dashboard Finance: `month` accepts a full date (doc only, no API change)
+
+`GET /schools/:school_id/dashboard/finance?month=` — `month=YYYY-MM`; a full date such as `2026-11-01` is read as its month (it returns `200`, not `422`). An invalid value (e.g. `abc`) → `422` "Month must look like 2026-11".
+
+Front-end: nothing to change. Send `YYYY-MM`; a full date also works.
+
+## 10/11/2026 — Replacements: `driver_phone` is stored as E.164
+
+`POST /replacements`, `PATCH /replacements/:id` (and every response that shows the replacement driver's phone: the replacement `driver_phone`, the occurrence `driver.phone` for a trip-only driver, the replacement `summary`) — `driver_phone` is now normalised like the other driver phones (Singapore +65 by default): `"91112222"` or `"9111 2222"` → `"+6591112222"`. A number that is not valid keeps only its digits and `+` (`"12-34"` → `"1234"`). Before: stored as typed.
+
+Applies to **new and updated rows only**; replacements saved before this change keep the text they were typed with.
+
+Front-end: nothing is required. Show the phone as returned (format it for display if you like) and do not compare it with the typed text.
+
+## 10/11/2026 — Scheduler: `grid_status` after "Replace Driver" stays `ok` (answer, no API change)
+
+`GET /occurrences`, `GET /scheduler` — a run with a driver-only replacement (`kind: "drv"`, same bus) has `grid_status: "ok"`, not `replacement`. This is intended and matches the prototype (`schSt()`: only replacements that change the bus are `repl`). `replacement` is for Vehicle Down, Crew Swap and Handover (`original_vehicle_id` is set).
+
+Front-end: nothing to change in the status colour. To show that the driver was replaced, use `replacement_id` and `driver` (the drawer reason is "Driver for this trip only").
+
+## 10/11/2026 — Year Setup strip: Policy step `detail` for a scheduled version (wording only)
+
+`GET /schools/:id/setup`, `GET /academic_years/:id/setup` — step 5 (`policy`): when no version is in use today but one starts later, `detail` is now `"Version 1 from 04/01/2027 (scheduled)"` (before: `"Not set up yet"`). `done` is unchanged (`false` until a version is in use). No version at all still says `"Not set up yet"`.
+
+Front-end: nothing, unless you match this text; the prototype has no scheduled wording.
+
+## 10/11/2026 — Operator Payments batch: `nothing_to_pay` status and 2-decimal money (API-ISSUES §25 B2, B3)
+
+**B (breaking)** — `GET /finance/operator_pay/batches`, `GET /finance/operator_pay/batches/:id` and every call that returns a batch:
+- `status` has a **new enum value `nothing_to_pay`**: a batch whose operators are all `nothing_to_pay` (deductions only, nothing paid). Before: `scheduled` / `overdue`. Now: `nothing_to_pay` (not `overdue` after the pay date). Add the chip ("Nothing to pay") and hide Pay / Mark All Paid / Bank File for it; the API answers 422 `has nothing to pay (deductions only)` if called.
+- Batch `total`, `paid` and each operator's `total`, `paid`, `left` are now strings with 2 decimals: `"155.00"`, `"-30.00"`, `"0.00"` (before `"155.0"`, `"-30.0"`, `"0.0"`). Other Finance endpoints (payment notices, documents, `meta`) are unchanged.
+
 ## 10/11/2026 — Answers to the rest of API-ISSUES (Convoy OS, phase R2)
 
 This section answers every API-ISSUES item not already answered above. Items marked **Open** are not finished (see the end).
@@ -295,7 +345,7 @@ No breaking changes (**B** = none).
 | 1 | Scheduler grid, drawer | `driver.photo` (thumb link or `null`) on `vehicles[].driver` and run `driver` | Show the photo on each row and in the drawer; stop reading `GET /drivers` for it |
 | 2 | Scheduler grid | `client_name` on every run (was only in the Trips list) | Card line "TID \| client"; stop looking it up in `GET /clients` |
 | 3 | Trip form | `GET /trips/next_number` → `{ data: { trip_id } }`, reserves nothing | New Trip header; informational, use the create answer's `trip_id` |
-| 4 | Drawer "Replace Driver" / "Use Regular Driver" | No API change: `POST /replacements` kind `drv`, scope `run` (`trip_id`, `run_date`, `slot_no`, `driver_name`, `driver_phone`); delete it to use the regular driver | Post the run-scope replacement from the drawer. A run replacement has no dates; "Temporary driver dd/mm to dd/mm" is a range replacement on the bus |
+| 4 | Drawer "Replace Driver" / "Use Regular Driver" | No API change. **Correction (10/11/2026):** the first answer for this row was wrong. Send `POST /replacements` `{ occurrence_id, replacement: { kind: "drv", driver_name, driver_phone } }`; the server sets `scope: "run"` and the run comes from `occurrence_id`, so leave out `scope`, `trip_id`, `run_date` and `slot_no`. The FE's earlier body (scope `run` with `trip_id`, `run_date`, `slot_no`) gave `422` "Starts on can't be blank". Delete it to use the regular driver (`DELETE /replacements/:id`) | Post `occurrence_id` + `replacement` from the drawer. A run replacement has no dates; "Temporary driver dd/mm to dd/mm" is a range replacement on the bus |
 | 5 | Scheduler grid | `route_stops: [{ name, address }]` on every run, in travel order (`[]` for School Bus route runs); `route_text` unchanged | Build "A > +N > B" with `routeSum` / `street(name, address)`; the BE has no street field |
 
 ## 04/11/2026 — Prototype features added to the API (phase 5)

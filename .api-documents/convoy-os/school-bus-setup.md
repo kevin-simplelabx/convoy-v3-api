@@ -456,10 +456,10 @@ year steps not done):
 
 - `detail` is the strip's sub-line, with the prototype's words: "6 levels, P1 to P6" / "Saved, not locked" / "Not set up yet";
   "Locked 02/11/2026" / "Year setup not saved" / "Not started"; "Needs the calendar first"; "Locked 02/11/2026. Parents pay"
-  (also "School pays per bus" / "School pays per rider"); "Version 2 from 01/01/2027"; "Locked …. Statutory only" / "All buses" /
+  (also "School pays per bus" / "School pays per rider"); "Version 2 from 01/01/2027" (a version in use today) / "Version 2 from 01/01/2027 (scheduled)" (none in use yet, one starts later); "Locked …. Statutory only" / "All buses" /
   "3 bus sizes"; "N holidays, M special days". Dates in `detail` are `dd/mm/yyyy`; format `locked_at` yourself if the user picked another format.
 - Step 5 (Payment & Refund Policy) is `done` only when a version is **in use today** (`effective_on` today or earlier), the same
-  rule Registration uses (prototype `polCur`). A version that starts later does not count yet.
+  rule Registration uses (prototype `polCur`). A version that starts later does not count yet; its `detail` ends with "(scheduled)".
 
 - Show "`done` of `total` done" on the strip.
 - Steps 1–7 count in `done` / `total` (7). Holidays & Special Days is step `number: 8` with `done: null` and

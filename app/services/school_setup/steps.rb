@@ -47,10 +47,18 @@ module SchoolSetup
       when "calendar" then lock && calendar_ok ? locked(lock) : @year ? "Year setup not saved" : "Not started"
       when "sessions" then lock ? locked(lock) : calendar_ok ? "Not set up yet" : "Needs the calendar first"
       when "fares" then lock ? "#{locked(lock)}. #{PAYER[@year.fare_table&.payer || 'parents']}" : calendar_ok ? "Not set up yet" : "Needs the calendar first"
-      when "policy" then policy ? "Version #{policy.version} from #{policy.effective_on.strftime('%d/%m/%Y')}" : "Not set up yet"
+      when "policy" then policy_detail(policy)
       when "attendants" then lock ? "#{locked(lock)}. #{attendants}" : "Not set up yet"
       when "operator_pay" then lock ? locked(lock) : "Not set up yet"
       end
+    end
+
+    # No version in use today but one is scheduled: say so (the step stays not done, the Registration rule).
+    def policy_detail(policy)
+      return "Version #{policy.version} from #{policy.effective_on.strftime('%d/%m/%Y')}" if policy
+
+      next_version = @school.policy_versions.select { it.effective_on > @today }.min_by { [ it.effective_on, it.version ] }
+      next_version ? "Version #{next_version.version} from #{next_version.effective_on.strftime('%d/%m/%Y')} (scheduled)" : "Not set up yet"
     end
 
     def levels(lock)

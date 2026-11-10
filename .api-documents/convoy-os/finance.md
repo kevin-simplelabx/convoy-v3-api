@@ -250,7 +250,7 @@ Ad hoc: "Describe the extra line", "The payment must be more than S$0".
 
 Batch: `{ id, number (PB-2026-000001), kind: batch | adhoc, pay_date, transfer_type, bank_file_at, status, open, total, paid, operators_count,
 created_at, created_by { id, name }, bank_file_by { id, name } | null }` ("Created by … on `created_at` | Bank file (`transfer_type`) by … on `bank_file_at`"),
-`status`: `scheduled`, `sent_to_bank`, `overdue`, `part_paid`, `paid`. `open` = no bank file and nothing paid (new approvals
+`status`: `scheduled`, `sent_to_bank`, `overdue`, `part_paid`, `paid`, `nothing_to_pay` (new: every operator in the batch is `nothing_to_pay`, e.g. deductions only; never `overdue`; Pay, Mark All Paid and Bank File answer 422 "… has nothing to pay (deductions only)"). `total` and `paid` are decimal strings with 2 decimals (`"-30.00"`, `"0.00"`). `open` = no bank file and nothing paid (new approvals
 for its date join it). A batch adds `operators [{ id, operator, pays_by, notice_number, total, paid, left, status, lines, payments }]`;
 operator `status`: `to_pay` (nothing paid), `part_paid`, `paid`, `nothing_to_pay` (the operator's total is 0 or less and nothing is paid, e.g. deductions only: nothing to pay, nothing to mark paid); `total`, `paid`, `left` are always decimal strings (`"0.00"` when zero); `can_remove` = the batch is still open (show "Take out of
 batch"; approvers only). Taken out, every item of the operator goes back to the requests (an ad hoc extra line as an extra item). `lines [{ id, ref, source, description, details, item_on, amount }]`,

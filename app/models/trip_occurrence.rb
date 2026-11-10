@@ -164,7 +164,7 @@ class TripOccurrence < ApplicationRecord
   # Identity used by Sync: one row per trip (or school route), date, run, slot and part.
   def identity = [ trip_id, school_route_id, date, trip_run_id, slot_no, part ]
 
-  # Status shown on the grid: cancelled, done, live, unassigned, replaced or on time.
+  # Status shown on the grid: cancelled, done, live, unassigned, replaced (bus change only; a driver-only replacement stays ok, as in the HTML) or on time.
   def grid_status(now = Time.current)
     return vehicle_id ? "cancel" : "cancel_unassigned" if cancelled?
     return "done" if completed? || ended_at || ends_at <= now

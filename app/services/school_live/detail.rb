@@ -13,10 +13,9 @@ module SchoolLive
       occ = r.occ
       v = occ.vehicle
       size = r.route.bus_size(v)
-      type = SchoolBus::BUS_TYPES[size]
       boarded = r.riders.select { it[:boarded_at] }
       { occurrence_id: occ.id, route_id: r.route.id, label: r.route.label, session: r.route.plan.session, date: occ.date,
-        bus: { plate: v&.plate, type: type&.dig(:label) || size, seats: r.route.seats || v&.seats, operator: v && (v.operator&.name || "Own fleet") },
+        bus: { plate: v&.plate, type: size && SchoolBus.label(size), bus_type: size, bus_type_label: size && SchoolBus.label(size), seats: r.route.seats || v&.seats, operator: v && (v.operator&.name || "Own fleet") },
         status: r.status, alert: alert, late_minutes: r.late_minutes, points: r.points, points_done: r.points_done, counts: r.counts,
         on_board: r.counts["on_board"], stops_count: r.stops.size,
         next_stop: (n = r.next_stop) && { index: n[:index], name: n[:name], at_stop: r.at_stop&.dig(:index) == n[:index], expected_at: r.expected_at(n) },

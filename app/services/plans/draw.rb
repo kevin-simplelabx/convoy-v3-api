@@ -19,7 +19,7 @@ module Plans
                    input[:conflicts].map { entry("cf:#{it[:rid]}", [ it[:rid] ], "RIDER_IN_CONFLICT", it[:name]) }
       SchoolPlan.transaction do
         plan = @school.plans.create!(name: Plans.next_name(@school, @session), session: @session, effective_from: @date, in_use: false, source: "manual",
-                                     params: defaults.merge(input[:params]), unassigned:, created_by: @user)
+                                     params: Routing.defaults.merge(input[:params]), unassigned:, created_by: @user)
         plan.update!(summary: Plans.summary(plan, unassigned))
         plan
       end
@@ -28,12 +28,5 @@ module Plans
     private
 
     def entry(gid, rids, reason, label) = { "gid" => gid, "riders" => rids, "n" => rids.size, "reason" => reason, "label" => label }
-
-    # The engine's defaults (cached from the routing service); none when it cannot be reached, the plan is still made.
-    def defaults
-      Routing::Client.current.meta["defaults"] || {}
-    rescue Routing::Client::Unavailable
-      {}
-    end
   end
 end

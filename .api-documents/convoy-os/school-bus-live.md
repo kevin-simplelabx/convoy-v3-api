@@ -100,7 +100,7 @@ The map's traffic layer, weather card and road incidents are not built (see § 5
 `GET /schools/:school_id/live/runs/:id` (`id` = `occurrence_id`)
 
 - `occurrence_id`, `route_id`, `label`, `session`, `date`.
-- `bus`: `{ plate, type, seats, operator }`. `type` is the label of the bus size (for example `"40-seater"`); `operator`
+- `bus`: `{ plate, type, bus_type, bus_type_label, seats, operator }`. `bus_type` is the bus size code (`"LARGE_40"`) and `bus_type_label` its label (`"40-seater"`), the same pair as Finance › Route Costs. `type` is the same as `bus_type_label` (kept; use `bus_type_label`); `operator`
   is `"Own fleet"` for our buses. A route made without a bus size shows the size nearest its seats (or the bus's seats);
   `null` only when neither is known.
 - `status`, `alert`, `late_minutes`, `points`, `points_done`, `counts`, `on_board`, `stops_count`, `next_stop`
@@ -182,7 +182,7 @@ The bus's GPS track for the map comes from Live Map: `GET /live_map/runs/:id/tra
 
 ## 4. Dashboard › Finance
 
-`GET /schools/:school_id/dashboard/finance?month=YYYY-MM` (default this month; a bad value → `422` "Month must look like 2026-11"). `data`:
+`GET /schools/:school_id/dashboard/finance?month=YYYY-MM` (default this month; `month=YYYY-MM`; a full date such as `2026-11-01` is read as its month. An invalid value → `422` "Month must look like 2026-11"). `data`:
 
 - `month` (`"2026-11"`), `state`:
   - `closed`: a past month.
@@ -207,7 +207,7 @@ The bus's GPS track for the map comes from Live Map: `GET /live_map/runs/:id/tra
   - `collected`: payments received in the month.
   - `overdue`: the bills overdue today, past their due date with something owed.
 - `route_costs`: Finance › Route Costs and By Transport Operator for the month:
-  `{ total, school_days, priced, routes, rows: [{ route, session, plan, bus_type (the route's size, else the one nearest its seats; display only, prices use the route's own), plate, operator, price, unpriced, days, of, amount, note, attendant }],
+  `{ total, school_days, priced, routes, rows: [{ route, session, plan, bus_type (the size code: the route's own, else the one nearest its seats; display only, prices use the route's own), bus_type_label (its label, e.g. "40-seater"; show this), plate, operator, price, unpriced, days, of, amount, note, attendant }],
   by_operator: [{ key, operator_id, name, routes, amount }] }` (the same figures as School Finance › Operator Payments; `operator`
   "Our buses" / "Not assigned" for own buses / no bus; `attendant { amount, by }` as there).
 - `year`: the academic year's 12 months, `[{ month ("2026-10"), revenue, cost, profit }]`, for the revenue against cost chart.

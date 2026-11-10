@@ -77,6 +77,8 @@ RSpec.describe "School Bus Dashboard" do
     expect(fin[:route_costs]).to include(total: "4200.0")
     expect(fin[:route_costs][:rows].sum { it[:amount].to_d }).to eq(4200)
     expect(fin[:route_costs][:rows].pluck(:bus_type)).to include("LARGE_40")
+    expect(fin[:route_costs][:rows].pluck(:bus_type, :bus_type_label)).to include([ "LARGE_40", "40-seater" ])
+    expect(fin[:route_costs][:rows]).to all(satisfy { SchoolBus.label(it[:bus_type]) == it[:bus_type_label] })
     expect(fin[:route_costs][:by_operator].sum { it[:amount].to_d }).to eq(4200)
     expect(fin[:collections]).to include(billed: "0.0", collected: "0.0", overdue: { bills: 0, owed: "0.0" })
     expect(fin[:year].size).to eq(12)
@@ -86,5 +88,16 @@ RSpec.describe "School Bus Dashboard" do
 
     get api_v1_school_dashboard_finance_path(school), params: { month: "2026-12" }
     expect(json[:data]).to include(month: "2026-12", state: "forecast")
+  end
+
+  it "reads a full date as its month and rejects an invalid month with 422" do
+    sign_in_as(create(:user, company:, permissions: %w[finview]))
+    get api_v1_school_dashboard_finance_path(school), params: { month: "2026-11-15" }
+    expect(response).to have_http_status(:ok)
+    expect(json[:data]).to include(month: "2026-11")
+
+    get api_v1_school_dashboard_finance_path(school), params: { month: "abc" }
+    expect(response).to have_http_status(:unprocessable_content)
+    expect(json[:error]).to include(code: "invalid", message: "Month must look like 2026-11")
   end
 end

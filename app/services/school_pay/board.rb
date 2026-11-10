@@ -94,7 +94,7 @@ module SchoolPay
     end
 
     def route_row(r)
-      { route: r.route.label, session: r.plan.session, plan: r.plan.name, bus_type: r.route.bus_size(r.vehicle), plate: r.vehicle&.plate, price: r.price, unpriced: r.unpriced,
+      { route: r.route.label, session: r.plan.session, plan: r.plan.name, bus_type: (size = r.route.bus_size(r.vehicle)), bus_type_label: size && SchoolBus.label(size), plate: r.vehicle&.plate, price: r.price, unpriced: r.unpriced,
         days: r.days, of: r.of, break_month: r.brk, earned: r.earned.round(4), rate: r.rate, from: r.from, to: r.to, amount: r.amount, note: r.note,
         attendant: r.attendant }
     end

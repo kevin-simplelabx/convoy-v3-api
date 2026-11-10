@@ -37,7 +37,7 @@ module InvitedDriver
       event(:reinvite) { transitions from: %i[declined past], to: :pending, after: :mark_invited }
     end
 
-    normalizes :phone, with: ->(v) { Phonelib.parse(v).then { |p| p.valid? ? p.e164 : v.to_s.gsub(/[^\d+]/, "") } }
+    normalizes :phone, with: PhoneNormalizer
 
     validates :name, :phone, presence: true
     validates :phone, phone: { possible: true, allow_blank: true }

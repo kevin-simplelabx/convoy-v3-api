@@ -42,6 +42,7 @@ RSpec.describe "School Bus finance payouts" do
     d = board
     a = row(d, "Alpha Bus")
     expect(a).to include(status: "To Check", routes_count: 2, base: "6400.0", deductions: "300.0", net: "6100.0", payable: true)
+    expect(a[:routes].pluck(:bus_type, :bus_type_label).uniq).to eq([ [ "MEDIUM_23", "23-seater" ] ])
     expect(a[:routes].map { [ it[:route], it[:days], it[:of], it[:amount], it[:note] ] }).to eq([ [ "AM 1", 21, 21, "4200.0", nil ],
                                                                                                 [ "AM 2", 11, 21, "2200.0", "Took over from Beta Coaches on 16/11/2026" ] ])
     expect(a[:lines].sole).to include(kind: "Replacement bus we arranged", amount: "300.0", auto: true, reason: "PB2002B (Beta Coaches), 2 days at S$150.00/day. Aircon broke")

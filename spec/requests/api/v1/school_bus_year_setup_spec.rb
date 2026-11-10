@@ -94,11 +94,12 @@ RSpec.describe "School Bus year setup" do
     expect(json[:data]).to include(year: nil, done: 0, total: 7)
     expect(steps.values_at("levels", "calendar", "sessions", "holidays").pluck(:detail))
       .to eq([ "Not set up yet", "Not started", "Needs the calendar first", "Needs the calendar first" ])
+    expect(steps["policy"]).to include(done: false, detail: "Not set up yet")
 
     within_tenant(company) { Policies::Publish.call(school, Policies.default.merge(effective_on: Date.new(2027, 1, 1)), user: nil) }
     get setup_api_v1_school_path(school)
     expect(json[:data]).to include(year: "2026")
-    expect(json.dig(:data, :steps).find { it[:key] == "policy" }).to include(done: false, detail: "Not set up yet")
+    expect(json.dig(:data, :steps).find { it[:key] == "policy" }).to include(done: false, detail: "Version 1 from 01/01/2027 (scheduled)")
     get setup_api_v1_academic_year_path(year)
     expect(json.dig(:data, :steps).find { it[:key] == "policy" }).to include(done: false)
 
