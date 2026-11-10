@@ -110,7 +110,7 @@ hand**.
 
 ### 2.1 Rider Data tab
 
-`GET /schools/:id/rider_datasets?date=` returns the lists (oldest first):
+`GET /schools/:id/rider_datasets?date=` returns the lists (oldest first) in `data`, with `meta.date`:
 
 ```json
 { "id": 7, "effective_from": "2026-01-02", "file_name": "SSS riders 2026.csv", "riders_count": 65, "checked_count": 65, "unlocated_count": 0,
@@ -165,9 +165,10 @@ Value rules:
 - Homes are placed in the background. Poll the list until `status` is `ready`.
 - Show "N addresses not found; they show as No Location" from `unlocated_count`.
 - Rows with a problem are **skipped** (listed in `meta.skipped`, counted in `meta.skipped_count`); the good rows are
-  imported. `422` only when no row can be imported (the message lists the problems), with no file, or with no Effective From date.
+  imported. `422` only when no row can be imported (the message lists the problems), `Choose a CSV or XLSX file` with no
+  file, or `Pick the Effective From date` with no date.
 
-**Delete:** `DELETE /schools/:id/rider_datasets/:dataset_id`. Ask for confirmation first: "Riders from it will no longer
+**Delete:** `DELETE /schools/:id/rider_datasets/:dataset_id` (`204`). Ask for confirmation first: "Riders from it will no longer
 be planned".
 
 The CSV and XLSX templates are built by the FE, as in the prototype.
@@ -200,14 +201,15 @@ POST /schools/:id/riders { rider: { first_name, last_name, name_order: first|las
                                     am, pm, cca_days: "Mon;Wed" | [..], starts_on, ends_on, parent_name, parent_contact, remarks } }
 ```
 
-- `first_name` or `last_name` is required.
-- The postal code must have 6 digits.
-- At least one of AM, PM or CCA is required.
-- An empty `rid` becomes `M-0001`, `M-0002`, and so on.
+- `first_name` or `last_name` is required (`422` "Enter a first name or last name").
+- The postal code must have 6 digits (`422` "Postal must be 6 digits").
+- At least one of AM, PM or CCA is required (`422` "Pick at least one of AM, PM or CCA").
+- An empty `rid` becomes `M-0001`, `M-0002`, and so on. The answer is the rider (`201`).
 - The home is placed now. When OneMap does not know the postal code, the rider is saved with `located: false`. Show
   "Postal code not found, so they have no map location".
 
-**Export CSV:** `GET /schools/:id/riders/export?date=` returns the template's columns for the riders on that date.
+**Export CSV:** `GET /schools/:id/riders/export?date=` returns the template's columns for the riders on that date. The file
+name is in `Content-Disposition` (CORS exposes it).
 
 ### 2.3 Plan For calendar (rider changes)
 
@@ -243,10 +245,10 @@ An academic year runs for 12 months from its start month.
 | Call | What it does |
 | --- | --- |
 | `GET /schools/:id/academic_years` | The years, oldest first (the year selector) |
-| `POST /schools/:id/academic_years { start_year, start_month, copy_from_id }` | New Academic Year (see below) |
+| `POST /schools/:id/academic_years { start_year, start_month, copy_from_id }` | New Academic Year (see below): `201` the year |
 | `GET /academic_years/:id` | One year with its terms, holidays and special days |
-| `PUT /academic_years/:id/calendar` | Save Calendar: validates, saves and **locks** |
-| `POST /academic_years/:id/unlock { section: "calendar" }` | Unlock to Edit |
+| `PUT /academic_years/:id/calendar` | Save Calendar: validates, saves and **locks**; answers the year |
+| `POST /academic_years/:id/unlock { section: "calendar" }` | Unlock to Edit; answers the year |
 | `DELETE /academic_years/:id` | Delete Year |
 
 **New Academic Year:**
@@ -365,7 +367,7 @@ Bus Sessions belong to an academic year and need that year's calendar to be lock
 | --- | --- |
 | `GET /academic_years/:id/sessions` | `data` = the sessions; `meta.locked` and `meta.calendar_locked` |
 | `GET /academic_years/:id/sessions/copy?from_id=` | "Copy AY X Sessions": another year's sessions as a draft (not saved); days that are not operating days are dropped |
-| `PUT /academic_years/:id/sessions { sessions: [...] }` | Save & Lock (send JSON) |
+| `PUT /academic_years/:id/sessions { sessions: [...] }` | Save & Lock (send JSON); answers the list as `GET` |
 | `POST /academic_years/:id/unlock { section: "sessions" }` | Unlock |
 
 ```json

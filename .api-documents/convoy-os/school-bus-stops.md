@@ -91,6 +91,7 @@ PATCH /stops/:id { stop: { name, points: [{ id, … }] }, school_id, confirmed }
   letter. A point left out is removed (retired).
 - Exactly one point is primary. If none is marked, the first point is.
 - `street_view_url` must be a Google Maps link.
+- The answer is the stop: `201` when created, `200` when changed.
 - On the Library page, send no `school_id` (or `in_library: true`). The stop is then `approved`.
 - From a school's screen, send `school_id` and `in_library: false`. The stop belongs to that school
   (`library_status: "school"`) and is linked to it. Then ask "Add to the Stop Library?" (§2).
@@ -204,7 +205,7 @@ Rider colours on the map follow `status`:
 
 | Call | Tool |
 | --- | --- |
-| `POST /schools/:id/rider_links { stop_point_id, rids: [...], postals: [...] }` | Select Riders (S): link the picked riders or postal codes to a point as an alternative |
+| `POST /schools/:id/rider_links { stop_point_id, rids: [...], postals: [...] }` | Select Riders (S): link the picked riders or postal codes to a point as an alternative. Answers `204` |
 | `POST /schools/:id/rider_links/remove { links: [{ rid, point_id }] }` | Select Links (L) › Remove: a hand link is deleted; a link from the catchment is cut off for that rider. A rider assigned to a removed point is unassigned. Answers `200 { data: { unassigned: n } }` |
 
 Reload the assignment after either call.
@@ -226,15 +227,15 @@ the photos it received (Add Received Photos).
 
 | Call | What it does |
 | --- | --- |
-| `GET /stop_photo_requests?status=open\|review\|closed\|all` | The requests with their photos; tabs Open / To Review (requests with photos to review) / Closed, counts in `meta.counts`. To Review overlaps Open: it is the open requests that have a photo waiting (as in the prototype), so the Open count includes them |
-| `POST /stop_photo_requests { stop_point_id, audience, school_rider_id, max_submissions }` | Ask for Photos (`404` for a point of an archived stop: an archived stop is out of the library) |
+| `GET /stop_photo_requests?status=open\|review\|closed\|all` | The requests with their photos; tabs Open / To Review (requests with photos to review) / Closed, counts in `meta.counts`. To Review = requests of any status with a photo waiting (a closed one can be in it; an open one is also in Open) |
+| `POST /stop_photo_requests { stop_point_id, audience, school_rider_id, max_submissions }` | Ask for Photos (`201` the request; `404` for a point of an archived stop: an archived stop is out of the library) |
 | `POST /stop_photo_requests/:id/close` | Close Request → the request |
 | `POST /stop_photo_requests/:id/reopen` | Reopen a closed request → the request (`422` "Already at the max photos. Raise the max or reject some first") |
 | `DELETE /stop_photo_requests/:id` | **Remove** a closed request with its photos (`204`). A photo already accepted stays the point's photo. Before 04/11/2026 this call closed the request: use `/close` for that |
 | `POST /stop_photo_requests/:id/submissions` (multipart `photos[]`, `submitted_by_name`, `role: parent\|driver`, `street_view_url`) | Add Received Photos (office): up to 3 photos → `201` the request + `meta { added, closed }` |
-| `POST /stop_photo_requests/submissions/:id/accept` | Accept a photo |
-| `POST /stop_photo_requests/submissions/:id/reject` | Reject a photo |
-| `PUT /stop_photo_requests/auto { driver, parent }` | Automatic requests on / off. Returns how many requests changed |
+| `POST /stop_photo_requests/submissions/:id/accept` | Accept a photo → the point |
+| `POST /stop_photo_requests/submissions/:id/reject` | Reject a photo (`204`) |
+| `PUT /stop_photo_requests/auto { driver, parent }` | Automatic requests on / off. Answers `{ data: { driver, parent, changed } }`, `changed` = the points whose request changed |
 
 ```json
 { "data": [ { "id": 4, "stop_id": 12, "stop_point_id": 31, "pudo_code": "BDSZ03-0001A", "stop_name": "…", "audience": "both",

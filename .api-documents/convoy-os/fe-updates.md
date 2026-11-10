@@ -4,6 +4,23 @@ Changes to existing Convoy OS endpoints made while building other apps (Convoy D
 on (renamed, removed or changed fields and endpoints). New optional fields are not listed here; they are in the menu
 documents. Newest first. Each item: what changed, before → after, and what the front-end has to do.
 
+## 10/11/2026 — Answers to API-ISSUES §14–§24 with no API change (Convoy OS, phase Q9)
+
+These items are answers, not changes: the API is right as it is (same as the prototype), or the feature is not built yet.
+**B** = none. Items that were fixed are in the sections below.
+
+| # | Where | Your claim | Answer | Front-end |
+| --- | --- | --- | --- | --- |
+| 1 | Dashboard › Export (§14) | No call or doc | Export is a CSV built in the browser from `route_costs.rows` (as the prototype's `costVals.export`). No endpoint | Build the CSV on the client |
+| 2 | Dashboard › Overdue Families (§14) | Counts bills, not families | As the prototype: the tile counts overdue bills | Nothing; label it "bills" if you want to be exact |
+| 3 | Dashboard › `duty` (§15) | On duty / On leave / On MC / Rest day: no source | No duty roster exists in the system; not built (backlog) | Hide the duty figures or show "—" |
+| 4 | Live Map › trip km (§16); Live Ops route km (§24) | No field | The routing engine has no distances; the prototype shows sample data. Not built | Hide the km figures |
+| 5 | Live Map › student photo (§16) | No field | Not built (backlog: no photo source for students) | Show initials |
+| 6 | Reports › utilisation AM / PM (§16) | Seats per run for AM / PM | Utilisation = riders / (seats × runs a day), as the prototype; the prototype has no AM / PM split | Use the field as it is |
+| 7 | Vehicle Financials › loan preview (§20) | No server preview of the auto loan | No endpoint: the prototype computes it in the browser (`logic/vehicle-loan.js`); use the same formula | Compute in the browser as the prototype does |
+| 8 | Year Setup › Lock / Unlock (§22) | "Lock Again" cannot relock | Unlock is saved on the call, so send it only from Save (the prototype unlocks on Save) | Unlock on Save, not on the toggle |
+| 9 | School Finance › Collections (§24) | No academic-year picker | The server picks the default year (running → next → latest); send `academic_year_id` to choose another | Send `academic_year_id` when a year is picked |
+
 ## 10/11/2026 — St. Stephen's seed data (API-ISSUES §14 item 17, §22–§24 "Seed data", phase Q8)
 
 Seed data only, no endpoint or field changes. After a reset + reseed, the St. Stephen's Term 4 plans (AM and PM) have the

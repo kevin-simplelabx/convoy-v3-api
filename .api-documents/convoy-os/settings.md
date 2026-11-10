@@ -152,7 +152,7 @@ company[ops_phone], company[ops_hours], company[ops_whatsapp], company[ops_email
 ```
 
 Needs the `users` permission (`403` otherwise). `name` is ignored for company users. `422` details per field
-(for example `theme_color: ["Theme color is invalid"]`).
+(for example `theme_color: ["is invalid"]`).
 
 ### 3.2 Countries: `GET /countries`
 

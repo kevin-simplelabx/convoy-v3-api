@@ -46,7 +46,7 @@ Billing periods come from the year's locked Bus Fares: one per term or semester,
 | `GET /schools/:school_id/bill_runs?academic_year_id=&period_index=&q=` | The Family Bills card. See below |
 | `POST /schools/:school_id/bill_runs` | Draft Now / Draft Again: `{ academic_year_id, period_index }`. Bills already issued stay as they are; every other payer gets a fresh draft. `meta.drafted` = drafts now |
 | `POST /schools/:school_id/bill_runs/issue` | Issue: `{ academic_year_id, period_index, bill_ids: [] }`. Leave out `bill_ids` to issue every draft. `meta.issued` = count |
-| `PATCH /school_bills/settings` | `{ draft_days, start_rule: prorate \| full \| half }`. These are company-wide and apply to the next drafts |
+| `PATCH /school_bills/settings` | `{ draft_days, start_rule: prorate \| full \| half }`. These are company-wide and apply to the next drafts. `422`: "Enter the days before the due date", "Pick how a child who starts mid-period is charged" |
 
 When `academic_year_id` is left out, the call uses the year covering today that has locked Bus Fares, or else the
 latest year with locked Bus Fares. When `period_index` is left out, it uses the first period billed from next month, or
@@ -54,7 +54,7 @@ else from this month, or else the last period.
 
 **The card (`data`):**
 
-- `on`: false (with `error`) until the year's Bus Fares are locked. `GET` answers `200 { on: false, error }` also when **no** year of the school has locked fares (before: `422`); `POST` Draft / Issue still answer `422` then.
+- `on`: false (with `error`) until the year's Bus Fares are locked. `GET` answers `200 { on: false, error }` also when **no** year of the school has locked fares (before: `422`); `POST` Draft / Issue still answer `422` then. The messages are "Lock the Bus Fares for a year first" (no year) and "Lock the Bus Fares for this year first" (the year asked for).
 - `payer`: `family`, `school` or `bus`.
 - `periods`: `[{ index, label, month }]`. The label is `"Semester 1 | billed Jan 2027"`, or `"Jan 2027"` for monthly bills.
 - `due_on`: the due date of the period's bills.
@@ -157,7 +157,7 @@ refunded or carried to the next bill. Each row has:
 | Call | What it does |
 | --- | --- |
 | `GET /school_bills/:id` | The bill (see below) |
-| `POST /school_bills/:id/payments` | `{ paid_on, amount, method, reference }`. One receipt; cannot be more than is owed today. `meta.receipt` = its number |
+| `POST /school_bills/:id/payments` | `{ paid_on, amount, method, reference }`. One receipt; cannot be more than is owed today. `meta.receipt` = its number. `422`: "Pick the date received", "Enter the amount received", "Pick how it was paid" (one of `meta.methods`), "Amount is more than the S$x owed on INV-…" |
 | `POST /school_bills/:id/waive_late` | `{ amount, reason }`. Up to the late fee owed |
 | `POST /school_bills/:id/notes` | `{ doc_type: cn \| dn, description, amount, reason, credit_use, issued_on, method, reference }`. `meta.number` |
 
@@ -192,8 +192,8 @@ For printing, the title is `Tax Invoice` when GST is on, and `Invoice` otherwise
 | --- | --- |
 | `GET /schools/:school_id/documents?type=&payer=&q=` | Invoices, credit notes, debit notes, receipts and payment vouchers, newest first (latest 300) |
 | `GET /school_documents/:id` | A credit note, debit note or receipt to print |
-| `POST /school_documents/:id/void` | `{ reason }`. Only a receipt can be made void. Its payments are voided too, so the bills it paid are owed again |
-| `GET /schools/:school_id/statement?payer=` | Statement of Account |
+| `POST /school_documents/:id/void` | `{ reason }`. Only a receipt can be made void. Its payments are voided too, so the bills it paid are owed again. `422`: "Enter why the receipt is void" |
+| `GET /schools/:school_id/statement?payer=` | Statement of Account. `422` "No bills for this payer" |
 
 **The list.**
 
@@ -205,7 +205,7 @@ For printing, the title is `Tax Invoice` when GST is on, and `Invoice` otherwise
     `Paid`; or `Void`.
   - `tone`.
   - `links`: for example `"Pays INV-…"`, `"For INV-…"`, or `"Paid S$…, RCP-…, CN-…"`.
-  - `can_void`.
+  - `can_void` (receipts only).
 - `meta` has `counts` (per type, plus `all`), `payers: [{ key, name }]`, `types`, `count` and `shown`.
 
 To open each type:
@@ -252,10 +252,10 @@ From then on, the route pay, the routes and the replacement lines are kept.
 | `POST /schools/:school_id/payouts/:operator_id/send_back` | Send Back to Ops (an approver) |
 | `POST /schools/:school_id/payouts/:operator_id/approve` | Approve (an approver; the maker-checker rule applies) |
 | `POST /schools/:school_id/payouts/:operator_id/reopen` | Reopen an approved run that has no payment and is not in a batch |
-| `POST /schools/:school_id/payouts/:operator_id/payments` | Pay: `{ month, paid_on, amount, method, reference }`. Up to what is left. The first payment numbers the Payment Voucher |
+| `POST /schools/:school_id/payouts/:operator_id/payments` | Pay: `{ month, paid_on, amount, method, reference }`. Up to what is left. The first payment numbers the Payment Voucher. `422`: "Pick the date paid", "Enter the amount paid", "Pick how it was paid" (one of `methods`), "Amount is more than the S$x left to pay" |
 | `GET /school_payouts/:id/voucher` | The Payment Voucher to print |
 
-Every action returns the whole month again, like `GET`.
+Every action returns the whole month again, like `GET` (adding a line and paying answer `201`). A send, recall, approve or reopen that the state does not allow is a `422` in Operator Pay's words, for example "Only an open pay run can be sent to Finance".
 
 **The month (`data`).**
 
@@ -276,8 +276,8 @@ Every action returns the whole month again, like `GET`.
     `attendant { amount, by: operator | us }` (or `null`): the monthly bus attendant price inside `price` → "Incl. S$`amount` BA
     (theirs)" when `by` is `operator`, "(ours)" when `us`. Which sizes need one follows Bus Attendants (statutory / all / selected sizes).
     For example, `days` 11 `of` 21 with the `note` `"Took over from Beta Coaches on 16/11/2026"`.
-  - `lines`: `[{ id, kind, sign, adj_on, route, amount, reason, auto, paired_with, by, can_remove, files: [{ id, name, url, size, content_type }] }]`.
-  - `history`: newest first: sent, sent back, approved, paid. "Approved for S$…" is the **net** (route pay plus additions less deductions), as the prototype's `runNet`.
+  - `lines`: `[{ id, kind, sign, adj_on, route, amount, reason, auto, paired_with, by, can_remove, files: [{ id, name, url, size, content_type }] }]`. Auto lines (`auto: true`) carry only `id`, `kind`, `sign`, `adj_on`, `route`, `amount`, `reason`, `auto` and `can_remove`.
+  - `history`: newest first, with `kind` `sent`, `returned` (sent back to Ops), `approved` or `paid`. "Approved for S$…" is the **net** (route pay plus additions less deductions), as the prototype's `runNet`.
   - `can: { edit, send, recall, send_back, approve, reopen, pay, need_other }`.
   - `note`: shown for `own` and `none`.
 

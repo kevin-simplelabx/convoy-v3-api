@@ -58,6 +58,7 @@ The `GET` response:
 
 `POST /schools/:id/routing_runs { session: am|pm|asa, date, params: { preset, effort, … } }` returns **202** with the
 run. Poll `GET /routing_runs/:id` until `status` is `done` or `failed` (it takes up to the effort time: 15–120 s).
+The school must be on the map first (`422` "Place the school on the map first (postal code)").
 
 ```json
 { "id": 9, "school_id": 3, "session": "am", "plan_date": "2026-11-02", "status": "queued" | "running" | "done" | "failed",
@@ -104,7 +105,7 @@ restarted; keep polling), `{ step: "done", frac: 1, work: { evals } }` when done
 | `GET /schools/:id/routes?date=` | The routes of the plans in use that day (default today), AM / PM / CCA by number: `[{ id, label, session, plan_id, riders_count, start_time, end_time, vehicle_plate }]`. A light list for pickers (School route notices, [scheduler.md § 12](scheduler.md#12-notice-form)) |
 | `POST /schools/:id/plans { session, date }` | **Draw Routes** (prototype `createManualPlan`): an empty plan (`source: "manual"`) for the Plan For `date` (default today, `effective_from`). Every rider of the session is in `unassigned`: riders at a stop by stop (`NOT_ROUTED`, `label` = stop code), riders with no stop / more than one on their own (`RIDER_NO_STOP` / `RIDER_IN_CONFLICT`, `label` = name). `summary` (no routes, all riders unassigned) and `params` (engine defaults + the company's + session) are set. `422` "Date must look like 2026-11-02" |
 | `PATCH /plans/:id { plan: { name, effective_from, effective_to } }` | Rename, or change the run dates |
-| `DELETE /plans/:id` | Delete a draft (only drafts) |
+| `DELETE /plans/:id` | Delete a draft (only drafts; `422` "Only a draft plan can be deleted") |
 | `POST /plans/:id/comments { body }` / `DELETE /plans/:id/comments/:comment_id` | Comments |
 | `GET /plans/:id/compare?with=:other_id` | Compare Plans: the engine's comparison, with names `a` (this plan) / `b` (`with`) |
 
@@ -238,7 +239,7 @@ Rules:
 - A rider placed on a route leaves any other route of the plan. A route left without riders goes.
 - A rider taken off a route (removed from its stops, route deleted, Reset Route) goes to `unassigned` on their own:
   `{ gid: "rm:<rid>", riders: [rid], n: 1, reason: "ADMIN_REMOVED", label: <rider name> }`.
-- A route drawn by hand cannot be reset.
+- A route drawn by hand cannot be reset (`422` "<Route> was drawn by hand, so there is nothing to reset to").
 - Reset Route and Reset All keep the bus size picked with Bus Type (stops and times go back to the engine's), as the
   prototype.
 - Routes of an **adopted** plan can be edited (their runs on the Scheduler follow) but not deleted ("Make a new plan to
@@ -300,7 +301,7 @@ for each rider, and `meta.counts.assigned` / `notified`. Riders set by hand keep
 
 | Call | Tool |
 | --- | --- |
-| `POST /schools/:id/rider_assignments { rids: [], stop_point_id }` | Set as assigned (by hand) |
+| `POST /schools/:id/rider_assignments { rids: [], stop_point_id }` | Set as assigned (by hand). Answers `{ assigned: n }` |
 | `POST /schools/:id/rider_assignments/remove { rids: [] }` | Unassign: the riders lose their PUDO. Returns `{ removed }`; `422` "None of these riders have a PUDO" |
 | `POST /schools/:id/rider_assignments/move { stop_point_id }` | Move All Riders Here: the riders assigned to the other points of that stop move to this one. Returns `{ moved }` |
 | `POST /schools/:id/rider_assignments/notify` | Notify: returns `{ notified: n }`. Show "Assigned PUDO sent to N riders". Recorded only; sending comes with the app |
@@ -318,9 +319,9 @@ for each rider, and `meta.counts.assigned` / `notified`. Riders set by hand keep
 | `DELETE /routes/:route_id/prices/:id` | Remove a price from the history (`finance`); returns `{ vehicles, prices }` |
 | `POST /routes/:id/prices { effective_from, mode: fixed\|rider, monthly \| base_price + riders_included + per_rider }` | The operator's monthly price from a date (`finance`). The history is in route `prices`. With no price, the school's default for the bus size applies (Operator Pay) |
 | `GET /schools/:id/route_charges?date=` | Route Charges: each AM / PM run of the adopted plans, only when the school is billed per bus on `date` (below) |
-| `POST /routes/:id/charges { starts_on, kind: amt\|pct, value, reason, note }` | A charge change from a date (the 1st of this month or later; it can be mid-month). `value: 0` ends the charge. `reason`: Long route, Peak timing, ERP cover, Extra stop or Other. Only on a route of an AM / PM plan in use (`422` "Route Charges are for runs of an AM or PM plan in use") and when the school is billed per bus on `starts_on` (`422` "The school is not billed per bus") |
+| `POST /routes/:id/charges { starts_on, kind: amt\|pct, value, reason, note }` | A charge change from a date (the 1st of this month or later; it can be mid-month). `value: 0` ends the charge. Answers the route's charges (`201`). `reason`: Long route, Peak timing, ERP cover, Extra stop or Other. Only on a route of an AM / PM plan in use (`422` "Route Charges are for runs of an AM or PM plan in use") and when the school is billed per bus on `starts_on` (`422` "The school is not billed per bus") |
 | `PATCH /route_charges/:id { school_route_id, status: "ok" }` | Confirm a carried charge (`status: "ok"`), or move it to another run: `school_route_id` = the **route `id`** (`runs[].route_id`) of an AM / PM plan in use (`422` "Pick a run of an AM or PM plan in use"), of the same session as the charge's run (`422` "Pick a run of the AM plan"). Both can go in one call. `422` "The school is not billed per bus" when not billed per bus on the charge's date |
-| `DELETE /route_charges/:id` | Remove a change that has not started, or drop a carried charge |
+| `DELETE /route_charges/:id` | Remove a change that has not started, or drop a carried charge (`204`; a started change: `422` "Only a change that has not started can be removed. Add a change of 0 to end it") |
 
 `GET /schools/:id/route_charges` returns:
 
@@ -342,8 +343,9 @@ with `status: "check"`. A charge with no match is listed in `unmatched` ("Charge
 ## 7. Feasibility Studies
 
 Feasibility Studies are a sandbox: nothing touches real riders, stops or plans. Permission: **`plans`** (the menu's page
-id is `feas`, see [integration.md](../integration.md); the permission is `plans`). Reading needs it too, since studies hold
-bus prices and break-even: without `plans` every call is `403` (hide the menu).
+id is `feas`, see [integration.md](../integration.md); the permission is `plans`). Reading (the list, a study, the fare
+source) is also open to a Convoy Admin, since studies hold bus prices and break-even; any other user without `plans`
+gets `403` on every call (hide the menu).
 
 | Call | What it does |
 | --- | --- |
@@ -352,7 +354,7 @@ bus prices and break-even: without `plans` every call is `403` (hide the menu).
 | `GET /feasibility_studies/:id` | The study, with its scenarios worked out (below) |
 | `DELETE /feasibility_studies/:id` | Delete the study (`204`) |
 | `PATCH /feasibility_studies/:id { study: {…}, bus_prices: [{ bus_type, monthly, attendant }], fare_tiers: [{ max_km, fare, one_way_fare }] }` | Change the study, its bus prices (monthly per bus size plus the attendant add-on) or its fare tiers (monthly; the last tier has no `max_km`) |
-| `POST /feasibility_studies/:id/rows { text }` | Paste or upload students. Each postal code is then looked up on OneMap in the background: poll the study until `geocode.pending` is `0` |
+| `POST /feasibility_studies/:id/rows { text }` | Paste or upload students (answers the study with `meta.skipped`, the lines with no postal code). Each postal code is then looked up on OneMap in the background: poll the study until `geocode.pending` is `0` |
 | `POST /feasibility_studies/:id/geocode` | Check Again: looks up the postal codes OneMap has not answered yet (`202`, the study). Codes already `found` / `not_found` are not asked again |
 | `DELETE /feasibility_studies/:id/rows` | Clear the students |
 | `DELETE /feasibility_studies/:id/rows/:row_id` | Remove one line of students (results go stale); returns the study |

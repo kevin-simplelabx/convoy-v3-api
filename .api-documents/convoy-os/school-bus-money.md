@@ -211,9 +211,9 @@ Extra Charges are added on top of a **locked** fare table, such as a fuel surcha
 | Call | What it does |
 | --- | --- |
 | `GET /academic_years/:id/extra_charges` | This year's charges, then the ones carried over from earlier years |
-| `POST /academic_years/:id/extra_charges` | Add a charge |
-| `PATCH /academic_years/:id/extra_charges/:charge_id` | Edit (Scheduled only) |
-| `DELETE /academic_years/:id/extra_charges/:charge_id` | Delete (Scheduled only) |
+| `POST /academic_years/:id/extra_charges` | Add a charge (`201`: the charge and `meta.warning`) |
+| `PATCH /academic_years/:id/extra_charges/:charge_id` | Edit (Scheduled only; `422` "Only a charge that has not started can change") |
+| `DELETE /academic_years/:id/extra_charges/:charge_id` | Delete (Scheduled only, `204`; `422` "Only a charge that has not started can be deleted") |
 | `POST /academic_years/:id/extra_charges/:charge_id/end { to_month }` | Set End (Active and not one-off): the last month charged |
 | `POST /academic_years/:id/extra_charges/preview` | The next 4 bills before and after the draft charge |
 
@@ -269,7 +269,7 @@ The policy is set per school and published as versions. Each version applies fro
 | Call | What it does |
 | --- | --- |
 | `GET /schools/:id/policy` | The versions, the current and scheduled versions, a draft for "New Version", and this year's collection cycle |
-| `POST /schools/:id/policy` | Publish (JSON) |
+| `POST /schools/:id/policy` | Publish (JSON): `201` the policy |
 
 ```json
 { "versions": [ { "version": 2, "effective_on": "2027-02-01", "state": "scheduled", "published_by": "…", "published_at": "…" },

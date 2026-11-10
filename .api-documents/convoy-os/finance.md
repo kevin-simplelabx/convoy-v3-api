@@ -140,7 +140,7 @@ Save Draft body (drafts only, `422` "Only drafts can be changed"):
 - `remove_line_ids`: trip / late cancellation lines taken off (their runs go back to Ready to Invoice).
 - `waived_run_ids`: late cancellation runs Waived (the rest are Billed).
 - GST (`gst_on`, `gst_rate`) comes from Finance Settings when the draft is made; `gst_mode` can change while a draft:
-  `excl` "Charge GST on Top", `incl` "Prices Include GST". GST off → "GST is off in Finance Settings, so no GST is charged".
+  `excl` "Charge GST on Top", `incl` "Prices Include GST". With GST off in Finance Settings, no GST is charged (the front end shows the note; the API has no message for it).
 - Bill-to, attention, terms and PO start from the client (or the site billed as its own entity). Terms: the client's
   `payment_terms_days`, else 0 for individuals ("Due on receipt") and 30 for others.
 
@@ -187,8 +187,7 @@ All three need an issued invoice (`422` "Only an issued invoice can take this") 
 - Invoice amounts: `paid`, `credited`, `balance` = total − paid − credit notes (not below 0).
 
 Summary: `{ owed, owed_count, overdue, overdue_count, invoiced, collected, month, aging [{ key, label, amount, count }] }` — Owed to You
-(open balances; "`owed_count` unpaid invoices"), Overdue ("`overdue_count` past the due date"),
-Overdue (past due), Invoiced <Mon> (issued that month), Collected <Mon> (payments that month). Aging buckets: `current`
+(open balances; "`owed_count` unpaid invoices"), Overdue ("`overdue_count` past the due date"), Invoiced <Mon> (issued that month), Collected <Mon> (payments that month). Aging buckets: `current`
 (not past due), `1_30`, `31_60`, `61_90`, `over_90` (days past due).
 
 Clients: `[{ client_id, client_site_id, name, balance, invoices }]`, largest balance first.
@@ -207,9 +206,10 @@ set pay dates and record payments"); when no approver is set, anyone with `finan
 | --- | --- |
 | Payment Requests tab, KPIs | `GET /finance/operator_pay/requests` |
 | Set a run's cost | `PUT /finance/operator_pay/costs { ref, amount }` (`422` "Enter a cost of 0 or more"); empty `amount` removes the cost set by hand (back to the worked-out cost, or "Set the cost") |
-| Add Item for <operator> | `POST /finance/operator_pay/items { operator_id, sign: pay \| deduct, description, item_on, amount }` |
-| Delete an item | `DELETE /finance/operator_pay/items/:id` |
-| Approve and Set Pay Date | `POST /finance/operator_pay/approve { refs: [], pay_date }` or `{ refs: [], batch_id }` (Or add to an open batch) |
+| Add Item for <operator> | `POST /finance/operator_pay/items { operator_id, sign: pay \| deduct, description, item_on, amount }` → `201`, no body (`422` "Enter the amount" when zero) |
+| Delete an item | `DELETE /finance/operator_pay/items/:id` → `204`; `422` "This item is in a batch. Cancel the batch first" once it is in a batch |
+| Set a run's cost (response) | `PUT /finance/operator_pay/costs` → `204`, no body; refresh the requests |
+| Approve and Set Pay Date | `POST /finance/operator_pay/approve { refs: [], pay_date }` or `{ refs: [], batch_id }` (Or add to an open batch) → `201` with the batch |
 | Ad Hoc Payment / Pay Now | `POST /finance/operator_pay/ad_hoc { operator_id, pay_date, refs: [], extra: { description, amount } }` |
 | Batches tab | `GET /finance/operator_pay/batches` |
 | A batch | `GET /finance/operator_pay/batches/:id` |
@@ -252,7 +252,7 @@ Batch: `{ id, number (PB-2026-000001), kind: batch | adhoc, pay_date, transfer_t
 created_at, created_by { id, name }, bank_file_by { id, name } | null }` ("Created by … on `created_at` | Bank file (`transfer_type`) by … on `bank_file_at`"),
 `status`: `scheduled`, `sent_to_bank`, `overdue`, `part_paid`, `paid`. `open` = no bank file and nothing paid (new approvals
 for its date join it). A batch adds `operators [{ id, operator, pays_by, notice_number, total, paid, left, status, lines, payments }]`;
-operator `status`: `to_pay` (nothing paid), `part_paid`, `paid`, `nothing_to_pay` (the operator's total is 0 or less, e.g. deductions only: nothing to pay, nothing to mark paid); `total`, `paid`, `left` are always decimals; `can_remove` = the batch is still open (show "Take out of
+operator `status`: `to_pay` (nothing paid), `part_paid`, `paid`, `nothing_to_pay` (the operator's total is 0 or less and nothing is paid, e.g. deductions only: nothing to pay, nothing to mark paid); `total`, `paid`, `left` are always decimal strings (`"0.00"` when zero); `can_remove` = the batch is still open (show "Take out of
 batch"; approvers only). Taken out, every item of the operator goes back to the requests (an ad hoc extra line as an extra item). `lines [{ id, ref, source, description, details, item_on, amount }]`,
 `payments [{ id, paid_on, amount, method, reference, by }]`. `operators[].id` is the **batch operator id**: use it for Pay
 (`batch_operator_id`) and for the payment notice (`GET /finance/documents/payment_notices/:id`).
@@ -337,7 +337,7 @@ Vehicle adds `financial` (the form fields + `schedule_file { url, name }`), `sch
 - **Upload a Loan Schedule from the list** (no vehicle picked yet): `POST /document_reads kind=vehicle_loan_schedule` → poll →
   match `result.plate` against the list rows' `plate` on the front end → found: `PATCH /finance/vehicles/:vehicle_id
   { document_read_id }` (`financial` may be left out); not found: let the user pick a vehicle (Attach to an Existing Vehicle) and send the same call.
-- **A schedule for a plate that is not in the fleet** (prototype: "Create Vehicle <plate>"): `POST /vehicles` with the plate, make, model, chassis number, engine number and registration date from `result` (Edit Vehicle pre-filled; own bus), then `PATCH /finance/vehicles/:vehicle_id { document_read_id }` to attach the loan.
+- **A schedule for a plate that is not in the fleet** (prototype: "Create Vehicle <plate>"): `POST /vehicles` `{ "vehicle": { plate, make, model, chassis_number, engine_number, registered_on } }` from `result` (Edit Vehicle pre-filled; a new vehicle is an own bus) → `201`, then `PATCH /finance/vehicles/:vehicle_id { document_read_id }` (the new vehicle's id) to attach the loan.
 - Reading a schedule fills only empty fields and marks the instalments it shows as paid. A schedule for another plate:
   `422` "This schedule is for PD1234A, not PC7475L. Use Anyway or Remove File first" → resend with `use_anyway: true`.
 

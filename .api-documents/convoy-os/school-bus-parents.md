@@ -40,26 +40,26 @@ data, and Convoy OS can add an application on a parent's behalf.
 | `POST /schools/:school_id/families` | Add a family: `{ family: { code, name, name_mode }, guardian: { first_name, last_name, relationship, phone, email } }` |
 | `GET /families/:id` | One family, with its guardians and its riders (sessions, dates, the routes they ride) |
 | `PATCH /families/:id` | Change the family: `{ family: { code, name, name_mode } }` |
-| `DELETE /families/:id` | Delete the family |
+| `DELETE /families/:id` | Delete the family (`204`) |
 | `POST /families/:id/guardians` | Add a guardian: `{ guardian: { first_name, last_name, name_order: first\|last, relationship, phone, email } }` (→ the family) |
 | `PATCH /families/:id/guardians/:guardian_id` | Change a guardian |
 | `DELETE /families/:id/guardians/:guardian_id` | Remove a guardian |
 | `POST /families/:id/riders` | Link riders: `{ school_id, rids: [] }` (a rider leaves any other family at the school) |
 | `DELETE /families/:id/riders/:rid?school_id=` | Unlink a rider |
 | `GET /families/:id/candidates?school_id=&q=` | Link Existing Rider: only riders of the school who are in **no** family, parent matches first (`match: parent`), then by name; at most 200. `match: last_name` flags a rider sharing a guardian's last name but does not rank it |
-| `POST /schools/:school_id/families/import` | CSV import (`file`, or `text`): counts and up to 30 `warnings` (see below) |
+| `POST /schools/:school_id/families/import` | CSV import (`file`, or `text`): counts and up to 30 `warnings` (see below). `422` "The file has no family_id, family_name or phone column" |
 | `GET /schools/:school_id/families/export` | CSV export |
 
 **CSV import** (columns `family_id, family_name, guardian_name, relationship, phone, email, student_id, student_name`):
 
 - A row with a `family_id` joins that family (an unknown code makes one). A row without one joins the family this **file**
-  made for the same `family_name`, else for the same phone. It never matches a family already in the company by name or phone.
+  made for the same `family_name` (a row with no name: for the same phone). It never matches a family already in the company by name or phone.
   A row with none of them is skipped with a warning.
-- A different `family_name` renames the family (warned once). A family with no name is named after its first guardian, else its code.
+- A different `family_name` renames the family (warned once: "Line 4: FAM-0007 renamed from X to Y. Check the family_id is right"). A family with no name is named after its first guardian, else its code.
 - A guardian is matched by name in the family and updated. A new guardian's `relationship` is `Guardian` unless the column
   names a known one. A wrong phone or email is **dropped with a warning** (`Line 2: 12 doesn't look like a phone number, left out`);
   the rest of the row is imported.
-- A student is linked and leaves any other family at the school. An unknown student ID is linked with a warning, as in the prototype.
+- A student is linked and leaves any other family at the school. An unknown student ID is linked with a warning ("Line 4: student S-9 is not on the rider list"), as in the prototype.
 - Answer: `{ families_added, families_renamed, guardians_added, guardians_updated, riders_linked, skipped, families_deleted, warnings }`.
   Only a family that lost riders to this file and is left with no rider and no guardian is deleted (`families_deleted`). One
   left with guardians only is kept, with the first warning `N families lost all their riders but still have guardians. Review or delete them`.
@@ -241,7 +241,7 @@ The parent fields are `parent_name`, `parent_phone`, `parent_email`, `postal`. A
   "tags": ["New", "From the App"], "renew": false, "start_when": "date", "start_on": "2026-11-16",
   "start_text": "From 16/11/2026, not earlier (moving house)", "reason": null,
   "deadline": { "stage": "answer", "by": "2026-11-06", "left": 2, "tone": "soon" },
-  "check": { "code": "covered", "kind": "fits", "label": "Fits", "tone": "success", "current": false, "free": 3, "summary": "AM fits AM 1 | PM fits PM 2" }, "offer_by": null, "quote_amount": null, "hours_left": null,
+  "check": { "code": "covered", "kind": "fits", "label": "Fits", "tone": "success", "current": false, "free": 3, "summary": "AM Fits on AM 1 | PM Fits on PM 2" }, "offer_by": null, "quote_amount": null, "hours_left": null,
   "end_action": null, "change": null, "rider": null, "family": { "id": 7, "code": "FAM-0007", "name": "TAN FAMILY" },
   "last_event": { "at": "2026-10-21T09:00:00+08:00", "by": "Ops Admin", "text": "Opened" } }
 ```
@@ -253,7 +253,7 @@ start, fee). CCA, the fixed-start reason and the form answers come only from the
 
 - The tiles `[{ label, count, filter }]`. `filter` is the query to send when the tile is clicked, e.g.
   `{ "status": "Requested" }`, `{ "tag": "Mid-Year" }`, `{ "deadline": "over" }`; `null` = not clickable ("Not Yet Renewed").
-  Mid-Year and Overdue appear only when there are any.
+  Mid-Year and Overdue appear only when some requests are mid-year (Overdue then shows its count, even 0).
 - `tabs` (`open` counts), `windows` (early and general window state; `null` when the school has no academic year), `years` and `levels`.
 - `service_check`: `{ none: false, plan: "Term 4 AM (current)" }` → "Service check uses <plan>"; `{ none: true, plan: null }` →
   "No AM route plan with routes yet".
@@ -284,8 +284,8 @@ start, fee). CCA, the fixed-start reason and the form answers come only from the
 | --- | --- |
 | `POST /schools/:school_id/bus_requests` | Add Application on a parent's behalf |
 | `POST /bus_requests/:id/acknowledge` | Mid-year: `{ answer_by, note }`. Under Review; the parent sees the date and the note |
-| `POST /bus_requests/:id/move_answer` | `{ answer_by, reason }`. The reason is required; every move is kept |
-| `POST /schools/:school_id/bus_requests/decide` | Waitlist or Decline one or many: `{ ids: [], to: Waitlisted \| Declined, reason, note }`. New Service: both. Change of Address / Service / Stop Service: **Decline only**, while Requested or Under Review. Follow the detail's `can.waitlist` / `can.decline` |
+| `POST /bus_requests/:id/move_answer` | `{ answer_by, reason }`. The reason is required (`422` "Add the reason. The parent sees it"); every move is kept |
+| `POST /schools/:school_id/bus_requests/decide` | Waitlist or Decline one or many: `{ ids: [], to: Waitlisted \| Declined, reason, note }`. New Service: both. Change of Address / Service / Stop Service: **Decline only**, while Requested or Under Review. Follow the detail's `can.waitlist` / `can.decline`. A request that cannot take it → `422` "<child names> cannot be waitlisted now" (or "declined"), with `details.ids`; a reason not in the list → "Pick a reason from the list" |
 | `POST /schools/:school_id/bus_requests/message` | `{ ids: [], text }`. Logged on each request (parent accounts are not live) |
 | `POST /bus_requests/:id/accept` | Accept and Send Quote: `{ amount, start_on, note }` |
 | `POST /schools/:school_id/bus_requests/accept` | Accept many at their Bus Fares quotes: `{ ids: [] }`. Also used by the auto-accept and "can now be covered" banners |
@@ -331,7 +331,7 @@ How the check is worked out:
   only is charged one way.
 - **Unit.** `month`, `term` or `semester`.
 - **No table.** Without a table, the quote is the estimate the parent saw.
-- **Start (`quote_default.start_on`).** The start the family asked for when it is still ahead, else the registration's service start (the first school day of the year by default) when ahead, else the next working day.
+- **Start (`quote_default.start_on`).** The family's start, or the registration's service start (the first school day of the year by default) when the family gave none. It is used when still ahead; otherwise the next working day (a start the family asked for that has passed does not fall back to the service start).
 - **Text.** `text` has the Route Fit summary and how the fare was found.
 
 **Accept checks.**
@@ -434,10 +434,10 @@ Nothing leaves the list by itself.
 
 **Alert items.** Each item has:
 
-- `request_id`, `academic_year_id` (the year the request belongs to; `null` when none covers its dates), `code`, `child_name`, `level`, `school`.
+- `request_id`, `academic_year_id` (the year the request belongs to; `null` when none covers its dates), `code`, `child_name`, `level`, `school` (`{ id, name }`).
 - `tab`: the Requests tab to open.
 - `kind`: `new`, `adr`, `svc`, `stop` or `end`.
-- `what`: for example "New bus request", "Answer due", "Renewal", "Change of address", "Leaving" or "Offer lapsed".
+- `what`: for example "New bus request", "Answer due", "Renewal", "Change of address", "Leaving", "Offer lapsed", "Withdrawn", "Not renewed", "Change of service" or "Stop service".
 - `text`: for example "Acknowledge was due Fri 23/10", or "Moves Mon 16/11. Not opened yet".
 - `tone`: `over`, `soon` or `ok`.
 - `rank`, `by` and `deadline`.
@@ -456,8 +456,8 @@ only on days with requests waiting. It is recorded in notification emails and no
 | Call | What it does |
 | --- | --- |
 | `GET /schools/:school_id/cca_rides?week_of=YYYY-MM-DD` | Settings and one week. Any day picks its Monday; the default is the next week with rides |
-| `PATCH /schools/:school_id/cca_rides?week_of=YYYY-MM-DD` | `{ enabled, price, days: [1..5], seats }`. Answers the week being viewed (`week_of`; the default week when left out) |
-| `POST /schools/:school_id/cca_rides/not_running` | `{ date, reason: school \| weather \| bus \| other \| no_school, note }`. Every ride booked that day becomes credit for its family, once per day |
+| `PUT /schools/:school_id/cca_rides?week_of=YYYY-MM-DD` (PATCH works too) | `{ enabled, price, days: [1..5], seats }`. Answers the week being viewed (`week_of`; the default week when left out) |
+| `POST /schools/:school_id/cca_rides/not_running` | `{ date, reason: school \| weather \| bus \| other \| no_school, note }`. Every ride booked that day becomes credit for its family, once per day. `meta.credited` = rides credited. `422`: "Pick the day", "No rides are booked on …", "The CCA bus is already marked as not running on …", "Pick why the bus is not running" |
 
 **Settings.**
 
@@ -468,12 +468,12 @@ only on days with requests waiting. It is recorded in notification emails and no
 **Each day of the week** has:
 
 - `date`, `label`, `phase` (`past`, `today`, `late` or `open`) and `status`, for example "Open until Sat 7 Nov, 23:59",
-  "Closed · late adds while seats last", "Bus Not Running" or "No School".
+  "Closed · late adds while seats last", "Bus Not Running", "No School", "Today" or "Done".
 - Seats: `riders`, `taken`, `seats`, `full`.
-- Calendar: `off` (`{ reason, by, at, credit }`), `no_school` (the bus cannot run: `{ run: false, kind, label, sub }`, as the prototype's `yearDay` — `kind` `public_holiday`, `no_service` (not an operating day), `school_holiday` (a holiday or between terms) or `no_cca` (outside the CCA / ASA periods); `label` is the holiday name or "No Service" / "School Holidays" / "No CCA", `sub` the reason) and `calendar`
+- Calendar: `off` (`{ reason, by, at, credit }`), `no_school` (the bus cannot run: `{ run: false, kind, label, sub }`, as the prototype's `yearDay` — `kind` `public_holiday`, `no_service` (not an operating day), `school_holiday` (a holiday or between terms) or `no_cca` (outside the CCA / ASA periods); `label` is the holiday name (a public holiday is checked first) or "No Service" / "School Holidays" / "No CCA", `sub` the reason) and `calendar`
   (a special day: `{ run: true, kind: "special_day", label, sub }`, check the bus time).
 - Actions: `can_not_running` → Bus Not Running (`POST …/cca_rides/not_running` with the reason picked), and `can_no_school_credit` → "No School credit" (give credit for rides booked before the calendar changed): the same call with `{ date, reason: "no_school" }`.
-- `rows[]`: child, class, family, `paid_on`, `method`, `bill_id`, `bill_number`, `late`, `not_riding`.
+- `rows[]`: `id`, `child_name`, `class_name`, `family` (the family's name), `paid_on`, `method`, `bill_id`, `bill_number`, `late`, `not_riding`.
 
 **Week figures (`kpis`).** `rides`, `collected`, `late`, `not_riding`, `credit_given`. Money is always a decimal string (`"0.0"` for an empty week).
 

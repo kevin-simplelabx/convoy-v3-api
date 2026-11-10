@@ -116,7 +116,7 @@ Schedules (`basic_covered_schedule`, `monthly_schedule`): `mon-fri` (Mon to Fri)
 
 - Each list sent replaces the saved one; a list left out is kept. Send the new scheme's default bands and tiers from the
   prototype when the user adds a scheme.
-- `422`: `details.name` "Name can't be blank" / "Name is already used by another pay scheme", `details.rate_plan` "Rate plan must be picked",
+- `422` (`details` holds each field's message): `name`: "can't be blank" / "is already used by another pay scheme"; `rate_plan`: "must be picked",
   "Enter the monthly pay for every route band", the lock message.
 - Delete: "Keep at least one pay scheme", "Make another scheme the default first", the lock message.
 
@@ -147,8 +147,7 @@ Driver (`GET /pay/drivers/:id` and every change) adds:
 Rules: rows never overlap — a new row ends the one before it on the day before (`ends_on` is set for you). A driver with
 scheme rows that don't cover a date has **no scheme** that day (paid S$0 → "No pay scheme today"). Without vehicle type
 rows, each job is paid at the type of its bus (by seats). `warning`: "Rate plan <plan> of <scheme> has no rates for <type>,
-so these jobs are paid S$0". `422`: `details.starts_on` "Starts on can go back up to 1 month, to 2 Oct 2026",
-"Starts on already has an assignment"; `details.ends_on` "Ends on is before the start date".
+so these jobs are paid S$0". `422` (`details`): `starts_on`: "can go back up to 1 month, to 2 Oct 2026" / "already has an assignment"; `ends_on`: "is before the start date".
 
 ## 4. Salary Simulator
 
@@ -200,7 +199,7 @@ Response:
 Template: `{ slot, name, description, month, pay_scheme_id, vehicle_type_id, rejected, on_time_percent, attendance_percent,
 school_holidays_from, school_holidays_to, routes, jobs, days_with_jobs, saved_by { id, name }, updated_at }`.
 Meta line: "<Mon YYYY> | <days_with_jobs> days with jobs, <routes.size> routes | Saved by <name> on <date>".
-Save body: the same fields (`jobs` = that month's jobs only). `422` `details.name` "Name can't be blank".
+Save body: the same fields (`jobs` = that month's jobs only). `422` `details.name`: "can't be blank".
 
 ## 5. Earnings
 
@@ -347,7 +346,7 @@ covers the month and the scheme (Earnings: also the driver's eligibility and sig
 Reward: `{ id, title, description, points_required, status: "active" | "inactive", photo { url, thumb_url } }`.
 Body: `reward[title]`, `reward[description]`, `reward[points_required]`, `reward[status]`, `reward[photo]` (JPEG, PNG or WebP,
 under 2 MB, kept at most 480 px), `reward[remove_photo]=true`. Only active rewards show in the driver app.
-`422` `details`: `title` "Title can't be blank", `points_required` "Points required must be greater than 0", `photo` (type / size).
+`422` `details`: `title`: "can't be blank"; `points_required`: "must be greater than 0"; `photo` (type / size).
 
 ## 8. Audit Log
 

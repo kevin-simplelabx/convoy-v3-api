@@ -28,7 +28,7 @@ Every run between two dates (one row per run, as on the Scheduler), with search,
 | Param | Required | Description |
 | --- | --- | --- |
 | `from` | yes | First date, `YYYY-MM-DD` |
-| `to` | yes | Last date. At most 183 days after `from` (else 422 `"Trips show up to 6 months at a time"`) |
+| `to` | yes | Last date. Fewer than 183 days after `from` (else 422 `"Trips show up to 6 months at a time"`) |
 | `q` | no | Search: Trip ID, trip name, Service For, client, stop names, plate, driver, operator, school / route label |
 | `kind` | no | Trip type: `ad_hoc`, `corporate_shuttle`, `airport_transfer`, `disposal`, `school_run`, `school_route` (School Bus route runs) |
 | `operator` | no | `own` (own fleet), `none` (no vehicle) or an operator `id` |

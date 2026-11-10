@@ -2,7 +2,7 @@
 
 The Reports menu (rail icon `insert_chart`): the **Shuttle Report** for clients — one Corporate Shuttle route and period at
 a time: utilisation, riders, on-time per stop against the timetable, and stop activity. Needs the `vehicles`, `finance` or
-`finview` permission (read only). Conventions are in [README.md](../README.md); paths start with `/api/v1`.
+`finview` permission (read only; a Convoy Admin sees it too). Conventions are in [README.md](../README.md); paths start with `/api/v1`.
 
 Numbers come from what was recorded at each stop of each run (the driver app / telematics stop events), with Correct Record
 values first. Runs with nothing recorded are left out. **Export CSV** and **Export PDF** are made by the front end from the data.
@@ -26,8 +26,8 @@ values first. Runs with nothing recorded are left out. **Export CSV** and **Expo
   "periods": [ { "value": "m|2026-10", "label": "October 2026" }, { "value": "q|2026-4", "label": "Q4 2026" }, { "value": "y|2026", "label": "2026" } ] }
 ```
 
-Clients with Corporate Shuttle routes; periods = the last 12 months, 5 quarters, 2 years. Empty `clients` → "No shuttle routes
-yet. Add a Corporate Shuttle trip with a timetable in the Scheduler and its report builds itself".
+Clients with Corporate Shuttle routes; periods = the last 12 months, 5 quarters, 2 years. Empty `clients`: the FE shows its
+empty state (FE copy, not an API message: "No shuttle routes yet. Add a Corporate Shuttle trip with a timetable in the Scheduler").
 
 ## 2. The report
 
@@ -56,6 +56,7 @@ yet. Add a Corporate Shuttle trip with a timetable in the Scheduler and its repo
   against; skipped stops are left out. Change the allowance with `PATCH /clients/:id { client: { on_time_allowance } }` (0–15, −1 / +1); any company user may (no extra permission, as in the prototype), a Convoy Admin gets `403`.
 - `timings`: Utilisation by Shuttle Timing, busiest first (`tag` Busiest / Quietest). `stop_activity`: boardings per pick-up per
   direction (routes with 3 or more stops; the destination is left out). `trend`: the 12 months to the period's end (`in_period` = shaded).
+- A `period` that is not `m|2026-10`, `q|2026-4` or `y|2026` → `422` "Period must look like m|2026-10, q|2026-4 or y|2026".
 
 ## 3. Month grids
 
@@ -73,6 +74,7 @@ yet. Add a Corporate Shuttle trip with a timetable in the Scheduler and its repo
   "worst_timing": "17:30", "worst_day": "2026-10-14" }
 ```
 
+- A `month` that is not `YYYY-MM` → `422` "Month must look like 2026-10".
 - `cells` / `on_time` follow `dates` (a `null` = the timing did not run that day). Stop `status`: `ok` (On Time), `early`
   (Early, pale green), `late`, `edep` (Left Early), `skip` (Skipped); `amended` = changed by Correct Record (badge).
 

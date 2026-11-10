@@ -139,7 +139,7 @@ returns the same row plus:
                "planned_at": "…", "arrived_at": "…", "departed_at": "…", "skipped": false } ] }
 ```
 
-Colour each segment by speed on the FE (< 20, < 40, < 60, < 80, < 100, ≥ 100 km/h, as in the prototype).
+A `since` that is not ISO 8601 → `422` "since must be an ISO 8601 time". Colour each segment by speed on the FE (< 20, < 40, < 60, < 80, < 100, ≥ 100 km/h, as in the prototype).
 
 **Replay**: pick a date and a bus, then load `GET /live_map/vehicles/:id/runs?date=2026-11-02`:
 
@@ -150,7 +150,7 @@ Colour each segment by speed on the FE (< 20, < 40, < 60, < 80, < 100, ≥ 100 k
   "meta": { "date": "2026-11-02" } }
 ```
 
-Runs with `points: 0` have no GPS and cannot be replayed. Load the chosen run with `GET /live_map/runs/:id/track` and
+Runs with `points: 0` have no GPS and cannot be replayed. A `date` that is not `YYYY-MM-DD` → `422` "Date must look like 2026-11-02". Load the chosen run with `GET /live_map/runs/:id/track` and
 play it on the FE. The range is `track_from` to `track_to`; speeds are 1×, 10× and 60×. Runs that are over can also be
 opened in Trip History (`GET /trip_history/:id`).
 

@@ -182,7 +182,7 @@ disconnect themselves in the Convoy Driver app ([driver/auth.md](../driver/auth.
 | Edit | `PATCH /drivers/:id` (same fields; `remove_photo: true` clears the photo) |
 
 - The mobile may be typed as `9123 4567`; it is stored as `+6591234567` (no country code = Singapore). 422 when it is not a phone number.
-- 422 `details.phone: ["Phone is already used by Eric Pang"]` when an invited or active driver has it.
+- 422 "Phone is already used by Eric Pang" (`details.phone: ["is already used by Eric Pang"]`) when an invited or active driver has it.
 - Once the driver has accepted, the mobile cannot change: `"Phone can only be changed by the driver in the Convoy Driver app"`
   (disable the field when `status != "pending"`).
 - The invite is recorded (not sent yet). `POST` returns `meta.message`, the SMS text, for example
@@ -274,8 +274,8 @@ pays_by { method, to, warn }, routes_count, vehicles_count`.
 - PayNow UEN left empty uses the UEN. UENs are checked: `"Uen looks wrong. Examples: 53012345A, 201912345K, T09LL1234A"`.
 - Bank details (when `payment_method` is `bank` or any bank field is given): bank, 6 to 14 digit account number, account name.
 - The branch code is worked out from the account number; send `branch_code` only for banks with `pick_branch` / `enter_branch`
-  (3.3). Errors: `details.branch_code: ["Branch code must be picked"]`, `["Branch code must be 3 digits"]`,
-  `details.account_number: ["Account number matches no UOB branch (check the first 3 digits)"]`.
+  (3.3). Errors (422, in `details`): `branch_code: ["must be picked"]`, `branch_code: ["must be 3 digits"]`,
+  `account_number: ["matches no UOB branch (check the first 3 digits)"]`.
 - Changing the bank clears the old branch code.
 - External operators: `paynow_uen` (free text), `cost_per_trip`, `cost_per_day`, `valid_until`; no payment checks.
 
@@ -413,7 +413,7 @@ Row: `id, name, seats, reason, status, status_label, vehicle_type_id, decided_at
 → "Luxury Coach | 27 seats" over "SimpleDrive | Requested <created_at> by <requested_by> | <reason>" with a badge
 `status_label` ("Waiting for Convoy" warning, "Added" success, "Declined" neutral).
 
-- 422 when the type already exists: `details.name: ["Name Luxury Coach 27 seats is already listed. Turn it on above"]`;
+- 422 when the type already exists: `details.name: ["Luxury Coach 27 seats is already listed. Turn it on above"]`;
   `"Enter the type name"`, `"Enter the number of seats"`.
 - Add Type uses an existing type with the same name and seats, else makes a custom type for every company.
 

@@ -27,7 +27,7 @@ Row (Convoy Admin view): the company fields plus `admin { name, email }`, `schoo
 `external_vehicle_cap`, `school_run_enabled`, `route_list_import_enabled`, `is_current` (the company opened for this
 sign-in: badge Open). The new company's admin is its Super Admin with every permission ("<name> created. Its admin can sign in
 with <email>"). `code` is made from the name when left out. `422`: "Password needs at least 8 characters", "Enter the admin's
-name", `details.email` "Email is already used by another user".
+name", `details.email` "is already used by another user".
 
 `POST /companies` → **201** and `PATCH /companies/:id` → **200** return the same row as the list:
 
@@ -64,7 +64,7 @@ A Convoy Admin may change **every** field of any company with `PATCH /companies/
 ```
 
  `kind`: `veh` Vehicle, `svc` Service, `place` Place, `oth` Other.
-Several spellings can share a term ("Alphard, Vellfire"). `422` `details.term` "Term is already on the list".
+Several spellings can share a term ("Alphard, Vellfire"). `422` `details.term`: "is already on the list".
 
 ## 3. Discover
 

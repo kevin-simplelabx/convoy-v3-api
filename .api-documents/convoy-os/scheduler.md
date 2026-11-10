@@ -38,12 +38,12 @@ the unassigned runs (bottom or right tray) and the workshop visits (purple block
 | Param | Required | Description |
 | --- | --- | --- |
 | `from` | yes | First date, `YYYY-MM-DD` |
-| `to` | no | Last date (default `from`). At most 42 days |
+| `to` | no | Last date (default `from`). At most 42 days; longer or reversed → `400` "Pick up to 42 days" |
 | `ownership[]` | no | Vehicle chips: `own`, `managed`, `external` (any picked matches) |
 | `size[]` | no | `sedan` (≤4 seats), `mpv` (5–7), `small` (8–15), `medium` (16–30), `large` (31+) |
 | `tags[]` | no | Tag chips (`Coach`, `Wheelchair`...); all picked must match |
 | `vip` | no | `true` for the VIP chip (tag VIP, or VIP / Alphard / Vellfire in make or model) |
-| `team_id` | no | Vehicle team |
+| `team_id` | no | Vehicle team id, or `none` for vehicles without a team |
 | `q` | no | Search plate, make, model, driver, operator |
 | `sort` | no | `type` (Own, Managed, External, then smallest; default), `smallest`, `largest` |
 
@@ -158,8 +158,8 @@ Trip run:
             "cost": { "amount": "95.0", "basis": "run", "source": "agreed" } } }
 ```
 
-- `scopes`: the choices to offer. `one` = Just this date; `later` = From this date on (recurring trips only).
-  A one-off trip only has `one` ("Move this trip").
+- `scopes`: the choices to offer. `one` = Just this date; `later` = From this date on (recurring trips, from the day after
+  the first date). A one-off trip, or the first date of a series, only has `one` ("Move this trip").
 - `members`: runs that move together (the run plus its Runs That Move Together group on that date).
 - `warnings`: show them in the dialog; the drop is still allowed.
 - `cost`: for a bus that is not ours, the cost to prefill: the pay agreed with that operator on this trip (`source: agreed`),
@@ -262,7 +262,7 @@ Drawer response = the run row plus:
 | Cancel | `PATCH /occurrences/:id/cancel` `{ lock_version, by_client }` | `by_client: true` = cancelled at the client's request (Trip History: Cancelled by Client); default by us |
 | Restore | `PATCH /occurrences/:id/restore` `{ lock_version }` | |
 | More › Force End Trip | `PATCH /occurrences/:id/end` `{ lock_version }` | Show it on a run on the road (`grid_status: "live"`). The run ends now: `status: "completed"`, `grid_status: "done"`, `ended_at`, `ended_by`; the planned `ends_at` / `end_time` stay. No undo. `422`: "This run has not started", "This run has already ended", "This run has no bus", "This run is cancelled" |
-| Raise an Issue | `POST /occurrences/:id/issue` `{ reason }` | Only on a run that is done; holds the driver's pay. `422` once the driver's pay for that month is confirmed (HR, Earnings) |
+| Raise an Issue | `POST /occurrences/:id/issue` `{ reason }` | Only on a run that is done ("An issue can be raised on a completed run only"); holds the driver's pay. `422` "Driver pay for <Month YYYY> is confirmed. Reopen it in HR, Earnings first" once that month is confirmed; `422` "Say what the issue is" with no reason |
 | Clear Issue | `DELETE /occurrences/:id/issue` | |
 | Change the pick-up time: Today Only | `PATCH /occurrences/:id/time` `{ scope: "today", start_time: "08:20" }` | Recurring trips only. This run moves (`shift_minutes`, "Moved +20 min"); every stop moves by the same amount |
 | Change the pick-up time: Save (one-off trip) / Every Run From Today | `PATCH /occurrences/:id/time` `{ scope: "from_here", start_time: "07:45" }` | See "Save Time" below; shuttles: this timing only |
@@ -272,7 +272,9 @@ Drawer response = the run row plus:
 | Assign External Vehicle | `POST /vehicles/external` (section 13), then `move` to it | |
 | Replace | Section 9 (`occurrence_id`) | Driver Unavailable, Vehicle Down, Crew Swap, Handover |
 | Send Notice | Section 12, prefilled with `trip_id` (or `school_id`) and the run's timing | |
-| Share Tracking Link | `POST /occurrences/:id/tracking_link` | Section 16 |
+| Share Tracking Link | `POST /occurrences/:id/tracking_link` → `201` | Section 16 |
+| Replace Driver (this run only) | `POST /replacements` `{ occurrence_id, replacement: { kind: "drv", driver_name, driver_phone } }` | Trip-only driver: name and phone for one run. The run must have a bus (`422` "This run has no bus to replace"). A later replacement on the run replaces it |
+| Use Regular Driver | `DELETE /replacements/:id` (the id in `replacement` of the drawer) | The run goes back to the regular bus and driver |
 | Edit Trip | `GET /trips/:trip_id` → trip form (section 7) | |
 | Delete trip | `DELETE /trips/:trip_id` | Future runs go; past runs stay |
 | Copy Info, Street View, call buttons | Front end only | |
@@ -322,7 +324,7 @@ The same photos show in the trip form.
 
 | Action | Call |
 | --- | --- |
-| Group runs | `POST /trips/:trip_id/run_groups` `{ "slots": ["d1r0|1", "d1r1|1"] }` → `{ data: { group_key: "g4", slots } }` |
+| Group runs | `POST /trips/:trip_id/run_groups` `{ "slots": ["d1r0|1", "d1r1|1"] }` → `201` `{ data: { group_key: "g4", slots } }`; under two slots → `422` "Pick two or more runs" |
 | Ungroup | `DELETE /trips/:trip_id/run_groups/:id` (`id` = the number in `group_key`, `g4` → `4`) |
 
 A slot key is `<run_key>|<slot_no>`, for example `d1r0|1` = Direction 1, first timing, vehicle 1.
@@ -590,8 +592,8 @@ Opened from Assign Trips (section 2), Save and Assign in the trip form, or Assig
 
 | Action | Call |
 | --- | --- |
-| Give ticked runs | `POST /trips/:trip_id/assignments` `{ effective_from, slots: ["d1r0|1", ...], assignee: "own" | "operator" | "none", operator_id, vehicle_id, pay_amount, pay_basis: "run" | "day" | "month" }` |
-| Remove a history entry | `DELETE /trips/:trip_id/assignments/:id` (those runs go back to what was before) |
+| Give ticked runs | `POST /trips/:trip_id/assignments` `{ effective_from, slots: ["d1r0|1", ...], assignee: "own" | "operator" | "none", operator_id, vehicle_id, pay_amount, pay_basis: "run" | "day" | "month" }` → `201` `{ data: entry }` (the history entry shape above) |
+| Remove a history entry | `DELETE /trips/:trip_id/assignments/:id` → `204` (those runs go back to what was before) |
 | If the Client Cancels a Run | `PATCH /trips/:trip_id` `{ "trip": { "operator_cancel_rule": "done" | "full" } }` |
 
 Pay per day is shared over the slots of the entry; per month also over the month's run days (`operator_cost` on each run).
@@ -631,8 +633,8 @@ Pay per day is shared over the slots of the entry; per month also over the month
 
 | Field | Description |
 | --- | --- |
-| `occurrence_id` | Replace from the drawer (one run). Leave out for Driver Away / Vehicle Down |
-| `kind` | `drv` Driver Unavailable, `veh` Vehicle Down, `crew` Crew Swap, `hand` Handover During the Trip |
+| `occurrence_id` | Replace from the drawer (one run; the server sets `scope: "run"`). Leave out for Driver Away / Vehicle Down |
+| `kind` | `drv` Driver Unavailable, `veh` Vehicle Down, `crew` Crew Swap, `hand` Handover During the Trip. A run with `drv` and no `vehicle_id` is the trip-only driver ("Replace Driver", section 5.2) |
 | `scope` | `range` for Driver Away / Vehicle Down (`drv`, `veh` only) with `original_vehicle_id`, `starts_on`, `ends_on` |
 | `vehicle_id` | New bus (`veh`, `crew`, `hand`) |
 | `driver_id` / `operator_driver_id` / `driver_name` + `driver_phone` | New driver (`drv` required; `crew` / `hand` optional, else the new bus's driver) |
@@ -678,11 +680,11 @@ A handover adds a second run (`part: 2`) on the new bus from the handover time.
 | Action | Call |
 | --- | --- |
 | Calendar list | `GET /calendars` |
-| One calendar with its days | `GET /calendars/:id` |
+| One calendar with its days | `GET /calendars/:id?year=` (the days touching that year; every day without `year`) |
 | Add a day (Change a Day / Add a Day) | `POST /calendars/:calendar_id/days` `{ "calendar_day": { kind, starts_on, ends_on, label, usual_time, new_time, shift_minutes, in_place_of, notify_drivers } }` |
 | Edit / remove a day | `PATCH` / `DELETE /calendars/:calendar_id/days/:id` |
 | New calendar | `POST /calendars` `{ "calendar": { name, kind: "school" | "general", observed_holidays, morning_time, afternoon_time }, "start_from": "moe" | "blank" | "<calendar id>" }` |
-| Edit / delete calendar | `PATCH` / `DELETE /calendars/:id` (a calendar used by trips can't be deleted) |
+| Edit / delete calendar | `PATCH` / `DELETE /calendars/:id` → `204`; `422` "This calendar is used by trips, so it can't be deleted" |
 | Public holidays | `GET /public_holidays?year=2027`, `POST /public_holidays` `{ public_holiday: { date, name, observed } }`, `PATCH`, `DELETE`, Add MOM [year] Dates: `POST /public_holidays/import` `{ year }` |
 
 Day `kind`: school calendars `hol` School Holiday, `ns` No School, `early` Early Dismissal, `late` Late Arrival
@@ -704,7 +706,7 @@ observed Monday for a Sunday holiday) is in [settings.md § 4](settings.md#4-cal
 | Read the invoice | `POST /document_reads` `kind=maintenance_invoice`, then save with `document_read_id` |
 | Cancel visit | `PATCH /maintenance_visits/:id/cancel` (scheduled visits) |
 | Delete ("Delete this maintenance record?") | `DELETE /maintenance_visits/:id` → `204`. Any saved visit (scheduled, completed or cancelled); its line items and invoice files go with it. A completed visit's cost leaves Vehicle Financials, the spend tiles and the Dashboard |
-| Fleet > Maintenance tabs | `GET /maintenance_visits?tab=upcoming|to_record|completed|cancelled&from=&to=&vehicle_id=` |
+| Fleet > Maintenance tabs | `GET /maintenance_visits?tab=upcoming\|to_record\|completed\|cancelled&q=&vehicle_id=` (with `meta.counts` per tab). Or `GET /maintenance_visits?from=&to=&vehicle_id=` for every visit in the dates, soonest first (no `tab`) |
 | Workshops window | `GET /workshops`, `POST /workshops` `{ workshop: { name, address, phone } }`, `PATCH`, `DELETE` (not when used) |
 
 Save body:
@@ -789,7 +791,7 @@ Edit Vehicle (vehicle panel) opens the vehicle form.
 | Open | `GET /vehicles/:id` |
 | Save | `PATCH /vehicles/:id` `{ "vehicle": { plate, seats, make, model, year_made, registered_on, chassis_number, engine_number, coe_expires_on, road_tax_expires_on, tags (list or "Coach, VIP"), notes, photo (file), remove_photo, operator_id, vehicle_team_id, driver_name, driver_phone } }` |
 | Add | `POST /vehicles` (same body) |
-| Remove | `DELETE /vehicles/:id` |
+| Remove | `DELETE /vehicles/:id` → `204`; `422` "<plate> still has 2 runs and 1 workshop visit from now on. Move or cancel them first, then delete the vehicle" (refused while it has runs or scheduled visits from now on) |
 | Vehicles page list | `GET /vehicles` with the filters of section 1 and `meta.facets` |
 
 Log card details on the form (all optional, send `""` or `null` to clear):

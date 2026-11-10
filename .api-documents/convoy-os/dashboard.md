@@ -3,7 +3,7 @@
 The Dashboard (rail icon `dashboard`, the Company Dashboard): widgets in four sections — Operations, Fleet and People,
 Money, Clients — on up to 6 pages of an 8-column grid that each user arranges (drag, resize, add from the tray, remove).
 Conventions are in [README.md](../README.md); paths start with `/api/v1`. Everyone in the company sees the Dashboard; Money
-widgets follow permissions. A Convoy Admin can read but not save a layout.
+widgets follow permissions. A Convoy Admin can read but not save a layout (`PUT` and `PATCH` answer `422` "View only. Convoy Admin cannot change company data"; `DELETE` resets their own view).
 
 ## Contents
 
@@ -64,16 +64,16 @@ Widgets that look at now or ahead have a `note` ("Shows today, so the period doe
 | `alerts` | `count` (trips flagged now), `action`, `at_risk`, `note`, `list [{ occurrence_id, plate, title, message, severity: 2 Action \| 1 At Risk }]` — live, from [Ops Control](ops-control.md); `period { raised, escalated, avg_ack_seconds }` = "In the Period" (alerts raised in the period, escalated to the Ops Manager, average time to acknowledge; `null` when none was acknowledged) |
 | `compl` | `count`, `change`, `list [{ occurrence_id, date, trip_label, reason }]` — runs in the period with an issue raised (Raise Issue on a run in the Scheduler drawer / Trip History; `reason` = its text), latest 5 |
 | `util` | `value` (% hours on runs of hours available: 12 a day per own vehicle), `change`, `vehicles` (**a count**: own vehicles), `hours_a_day` (12), `series [{ date, pct }]` (one per day of the period) |
-| `off` | `count`, `list [{ vehicle_id, plate, reason, kind, back_on }]` (maintenance today, vehicle down); `kind` = the maintenance kind (Service, Repair, Tyres, Inspection, Other) or "Replaced" (badge), `back_on` = "Back dd/mm" (the day after the visit / the replacement) |
+| `off` | `count`, `list [{ vehicle_id, plate, reason, kind, back_on }]` (maintenance today, vehicle down); `kind` = the maintenance kind (Service, Repair, Tyres, Inspection, Other) or "Replaced" (badge), `back_on` = ISO date the vehicle is expected back (the day after the visit, or the day after the replacement ends) |
 | `docs` | `count`, `expired`, `list [{ vehicle_id, plate, document: COE \| Road Tax \| Insurance, expires_on }]` — next 60 days |
 | `duty` | `active`, `driving_today`, `without_bus`, `pending_invites` |
 | `rev` | `value` (client price of runs not cancelled), `change`, `change_pct`, `series [{ date, amount }]`, `month { revenue, cost, profit }` (this month from Vehicle Financials; `null` without `vehfin`) |
 | `profit` | `revenue`, `cost`, `profit`, `margin`, `change` (on last month), `ytd` (profit of this year's months), `vehicles [{ vehicle_id, plate, profit }]` (By Vehicle, best first), `chart [{ month: "2026-10", revenue, cost, profit }]` (12 months to this month, oldest first) — this month, from Vehicle Financials |
 | `topbot` | `top` (best 5), `bottom` (lowest 5, empty with 5 vehicles or fewer) `[{ vehicle_id, plate, profit, change }]` — this month vs last |
-| `coll` | `bills`, `billed`, `collected`, `outstanding`, `not_paid` (bills not fully paid), `overdue` (amount), `overdue_bills`, `note` — School Bus bills of the schools the user may open, as of today (the `kpis` of [Finance › School Bus Collections](finance.md)); "Overdue" tile = `overdue` + "`overdue_bills` bills past due and grace" |
+| `coll` | `bills`, `billed`, `collected`, `outstanding`, `not_paid` (bills not fully paid), `overdue` (amount), `overdue_bills`, `note` — School Bus bills of the schools the user may open, as of today (the `kpis` of [School Finance › Collections](school-bus-finance.md#6-company-finance-pages)); "Overdue" tile = `overdue` + "`overdue_bills` bills past due and grace" |
 | `opp` | `waiting`, `waiting_items`, `waiting_operators` ("from N operators"), `approved_unpaid`, `approved_unpaid_batches` ("N batch"), `next_pay { date, number, amount }` |
 | `loans` | `due`, `count`, `overdue`, `overdue_amount`, `list [{ vehicle_id, plate, lender, due_on, amount, overdue }]` — this month and overdue |
-| `clotp` | `target: 95`, `clients [{ client_id, name, runs, on_time, change }]` (`change` = points on the period before: "+1.2 pts on …") — also the source for the `otp` widget's "By Client" list (`on_time` = % of `runs`) |
+| `clotp` | `target: 95`, `clients [{ client_id, name, runs, on_time, change }]` (`change` = points against the period before, a number such as `1.2` (`null` without data)) — also the source for the `otp` widget's "By Client" list (`on_time` = % of `runs`) |
 | `clrisk` | `count`, `list [{ client_id, name, reasons: ["On time 88.5% (-2.1 pts)", "On time 91.0% (+0.7 pts)", "S$1200.00 overdue"], on_time, change, badge: Below Target \| Falling \| Overdue }]` — below 95 %, falling 1 point or more on the period before, or with overdue invoices |
 
 Clicking an item opens its page (`page` of the widget; runs: Trip History / Scheduler by `occurrence_id`).

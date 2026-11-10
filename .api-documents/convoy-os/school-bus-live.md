@@ -38,7 +38,7 @@ App. Until those apps send data, `bin/rails live_map:simulate` writes sample dat
 | `session` | `am` (Morning Pick-up), `pm` (Afternoon Drop-off) or `asa` (CCA Drop-off). Default: the session running now, else the next one to start, else the last of the day |
 | `filter` | `all` (default), `road` (on the road), `late` (on the road and late, or GPS lost), `done` (arrived). Only `rows` is filtered |
 
-Poll every 15 to 30 seconds while the page is open.
+Poll every 15 to 30 seconds while the page is open. A `date` that is not `YYYY-MM-DD` → `422` "Date must look like 2026-11-03".
 
 **`data`:**
 
@@ -46,7 +46,7 @@ Poll every 15 to 30 seconds while the page is open.
 - `date`, `now`.
 - `sessions`: `[{ value, label, starts_at, ends_at, runs }]`. These are the sessions with runs that day, for the session
   picker. When the chosen session has not started (`kpis.buses.not_started == kpis.buses.total` and `now < starts_at`),
-  show "Morning Pick-up has not started. Buses for this session show here once the first trip starts at …".
+  show a "has not started" note with the session's `starts_at` (FE copy).
 - `session`: the session shown.
 - `kpis`:
   - `points`, `points_done`: the stops of every run, with the school counted as one point per run. Progress = done / points.
@@ -181,14 +181,13 @@ The bus's GPS track for the map comes from Live Map: `GET /live_map/runs/:id/tra
 
 ## 4. Dashboard › Finance
 
-`GET /schools/:school_id/dashboard/finance?month=YYYY-MM` (default this month). `data`:
+`GET /schools/:school_id/dashboard/finance?month=YYYY-MM` (default this month; a bad value → `422` "Month must look like 2026-11"). `data`:
 
 - `month` (`"2026-11"`), `state`:
   - `closed`: a past month.
   - `in_progress`: "Actual to today, forecast for the rest of the month".
   - `forecast`: "From the plans, riders and charges dated for this month".
-- `paid_month`: `false` when Operator Pay does not pay the month (the "<Month> is not a paid month for this school. Change it in
-  Operator Pay." banner; the costs are 0).
+- `paid_month`: `false` when Operator Pay does not pay the month (the FE shows a "not a paid month" banner that points to Operator Pay; the costs are 0).
 - `reference_day`: the day riders and seats are counted on. It is today for this month, else the month's first school day, else the 15th (a month with no school day).
 - `kpis`:
   - `revenue`: null with `revenue_note` when it cannot be worked out, for example "Bus Fares for AY 2026 not saved yet".
