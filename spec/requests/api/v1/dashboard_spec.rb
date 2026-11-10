@@ -46,6 +46,21 @@ RSpec.describe "Dashboard" do
     expect(json[:data]).to include(saved: false)
   end
 
+  it "shows the change in the Clients at Risk reason with its sign" do
+    within_tenant(company) do # same day last week both runs were late: 0 % on time, so today's 50 % is up 50 points
+      trip = Trip.find_by!(title: "Shuttle")
+      [ 0, 1 ].each do |i|
+        date = Date.new(2026, 10, 26)
+        TripOccurrence.create!(trip:, client: data[:google], date:, start_time: 420 + (i * 60), end_time: 480 + (i * 60), starts_at: date.in_time_zone.change(hour: 7 + i),
+                               ends_at: date.in_time_zone.change(hour: 8 + i), kind: "ad_hoc", trip_label: "Y#{i}", vehicle: data[:bus], price: 100, run_key: "y#{i}",
+                               slot_no: i + 1, status: "completed", max_delay_minutes: 9)
+      end
+    end
+    sign_in_as(create(:user, :admin, company:))
+    get api_v1_dashboard_path, params: { period: "today" }
+    expect(json.dig(:data, :widgets, :clrisk, :list).sole[:reasons]).to eq([ "On time 50.0% (+50.0 pts)" ])
+  end
+
   it "works out the widgets from the runs of the period" do
     sign_in_as(create(:user, :admin, company:))
     get api_v1_dashboard_path, params: { period: "today" }

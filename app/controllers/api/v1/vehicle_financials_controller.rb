@@ -66,7 +66,7 @@ module Api
         s = f&.schedule
         { vehicle_id: v.id, plate: v.plate, make: v.make, model: v.model, status: f ? f.status : "no_details", funding: f&.funding,
           lender: f&.lender, purchase_price: f&.purchase_price, owed: s&.valid? ? s.owed : nil, monthly: s&.valid? ? s.monthly : nil,
-          due_this_month: s ? s.rows.select { |r| r.status.in?(%w[due overdue]) }.sum(0.to_d, &:amount) : 0,
+          due_this_month: s ? s.rows.select { |r| r.status.in?(%w[due overdue]) }.sum(0.to_d, &:amount) : 0.to_d,
           next_due: s&.next_due && s.next_due.to_h.slice(:n, :due_on, :amount).merge(of: s.tenure) }
       end
 

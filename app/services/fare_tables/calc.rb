@@ -22,7 +22,8 @@ module FareTables
         std = fares(tier)
         out = { tier_id: tier.id, position: tier.position, label: tier_label(i), std:, small: service(:small, tier, std), express: service(:express, tier, std) }
         out[:sizes] = cols.drop(1).map do |c|
-          src = tier.sizes.find { it.fare_size_column_id == c[:id] }
+          # by id once saved; a draft (wizard preview) has no ids yet, so by the column object
+          src = tier.sizes.find { c[:id] ? it.fare_size_column_id == c[:id] : it.fare_size_column.equal?(c[:col]) }
           { column: c[:label], fares: fares(src) }
         end
         out
@@ -34,7 +35,7 @@ module FareTables
 
       cols = @t.size_columns.to_a
       cols.each_with_index.map do |c, i|
-        { id: c.id, label: column_label(cols, i) }
+        { id: c.id, col: c, label: column_label(cols, i) }
       end
     end
 

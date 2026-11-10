@@ -3,10 +3,10 @@ class TripOccurrenceDecorator < ApplicationDecorator
   def key = [ trip_id ? "t#{trip_id}" : "r#{school_route_id}", date.iso8601, trip_run_id || 0, slot_no, part ].join("|")
 
   def driver_info
-    if driver then { kind: "own", id: driver.id, name: driver.name, phone: driver.phone }
-    elsif operator_driver then { kind: "operator", id: operator_driver.id, name: operator_driver.name, phone: operator_driver.phone }
-    elsif driver_name.present? then { kind: "replacement", id: nil, name: driver_name, phone: driver_phone }
-    elsif vehicle&.driver_name.present? then { kind: "external", id: nil, name: vehicle.driver_name, phone: vehicle.driver_phone }
+    if driver then { kind: "own", id: driver.id, name: driver.name, phone: driver.phone, photo: driver.decorate.photo_thumb }
+    elsif operator_driver then { kind: "operator", id: operator_driver.id, name: operator_driver.name, phone: operator_driver.phone, photo: operator_driver.decorate.photo_thumb }
+    elsif driver_name.present? then { kind: "replacement", id: nil, name: driver_name, phone: driver_phone, photo: nil }
+    elsif vehicle&.driver_name.present? then { kind: "external", id: nil, name: vehicle.driver_name, phone: vehicle.driver_phone, photo: nil }
     end
   end
 
@@ -22,6 +22,14 @@ class TripOccurrenceDecorator < ApplicationDecorator
   def ends_next_day = end_time >= 1440
   def title = school_route ? school_route.title : trip.title
   def route_text = school_route ? "#{school_route.plan.session_name} | #{pax} riders" : trip.decorate.route_text
+  # The run's stops in travel order, [{ name, address }]: the front end builds "A > +N > B" (format.js routeSum / street)
+  # from them. School Bus route runs have none (route_text says session and riders).
+  def route_stops
+    return [] unless trip
+
+    trip.stops_in(trip_run&.direction || 1).map { |s| { name: s.name, address: s.address } }
+  end
+
   def recurring = school_route ? true : trip.recurring?
   def color = trip&.color
   def school = school_route&.plan&.school

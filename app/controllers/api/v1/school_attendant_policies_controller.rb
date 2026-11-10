@@ -11,6 +11,8 @@ module Api
       # PUT /schools/:school_id/bus_attendants { needs: statutory | all | selected, sizes: [LARGE_45, …], provided_by: operator | us }
       def update
         school = authorize find_school, :setup?
+        raise ApplicationService::Error, "Send needs, sizes or provided_by" unless params.values_at(:needs, :sizes, :provided_by).any?(&:present?)
+
         SchoolSetup.ensure_unlocked!(school:, section: :attendants)
         SchoolAttendantPolicy.transaction do
           (school.attendant_policy || school.build_attendant_policy).update!(params.permit(:needs, :provided_by, sizes: []))

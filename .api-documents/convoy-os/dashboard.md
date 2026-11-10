@@ -38,7 +38,7 @@ ids as [integration.md](../integration.md)); `link` = the link's label ("Ops Con
 Layout: `{ pages: [{ name, items: [{ widget, x, y, cols, rows }] }], period, page, saved, updated_at }` — `period` (default `d7`,
 as the prototype) is the period to open with, `page` the index of the page open last (0 = first); send them with `PATCH`
 when the user picks a period or a page (`422` on an unknown period). `saved: false` = the default
-(one "Overview" page with every widget the user may see). Save sends the whole layout; widgets the user may not see are
+(one "Overview" page with every widget the user may see); `saved: true` = a layout is stored for the user. The first `PATCH` (period / page) stores the default pages with it, so `saved` is also `true` after it; only `DELETE` resets it. `page` is an index (0 = first), not a widget id. Save sends the whole layout; widgets the user may not see are
 dropped. `422` "Pages can be 1 to 6", "Page 1 needs a name", "Page 1 has a widget out of the grid" (x + cols ≤ 8, rows 1–6).
 
 ## 2. Figures
@@ -74,6 +74,6 @@ Widgets that look at now or ahead have a `note` ("Shows today, so the period doe
 | `opp` | `waiting`, `waiting_items`, `waiting_operators` ("from N operators"), `approved_unpaid`, `approved_unpaid_batches` ("N batch"), `next_pay { date, number, amount }` |
 | `loans` | `due`, `count`, `overdue`, `overdue_amount`, `list [{ vehicle_id, plate, lender, due_on, amount, overdue }]` — this month and overdue |
 | `clotp` | `target: 95`, `clients [{ client_id, name, runs, on_time, change }]` (`change` = points on the period before: "+1.2 pts on …") — also the source for the `otp` widget's "By Client" list (`on_time` = % of `runs`) |
-| `clrisk` | `count`, `list [{ client_id, name, reasons: ["On time 88.5% (-2.1 pts)", "S$1200.00 overdue"], on_time, change, badge: Below Target \| Falling \| Overdue }]` — below 95 %, falling 1 point or more on the period before, or with overdue invoices |
+| `clrisk` | `count`, `list [{ client_id, name, reasons: ["On time 88.5% (-2.1 pts)", "On time 91.0% (+0.7 pts)", "S$1200.00 overdue"], on_time, change, badge: Below Target \| Falling \| Overdue }]` — below 95 %, falling 1 point or more on the period before, or with overdue invoices |
 
 Clicking an item opens its page (`page` of the widget; runs: Trip History / Scheduler by `occurrence_id`).

@@ -40,8 +40,8 @@ class OperatorPayBatch < ApplicationRecord
 
   enum :kind, { batch: "batch", adhoc: "adhoc" }, prefix: :kind, validate: true
 
-  def total = batch_operators.sum(&:total)
-  def paid = batch_operators.sum(&:paid)
+  def total = batch_operators.sum(0.to_d, &:total)
+  def paid = batch_operators.sum(0.to_d, &:paid)
   def open? = bank_file_at.nil? && paid.zero?
 
   # paid | part_paid | overdue | sent_to_bank | scheduled

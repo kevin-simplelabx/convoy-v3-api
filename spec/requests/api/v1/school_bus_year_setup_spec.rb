@@ -69,6 +69,14 @@ RSpec.describe "School Bus year setup" do
     expect(json.dig(:data, 1)).to include(name: "PM Departure", days: [ 1, 2, 4, 5 ], variants: [ hash_including(days: []) ])
   end
 
+  it "does not save or lock Bus Attendants from an empty body" do
+    patch api_v1_school_bus_attendants_path(school), params: {}, as: :json
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(json.dig(:error, :message)).to eq("Send needs, sizes or provided_by")
+    get api_v1_school_bus_attendants_path(school)
+    expect(json[:data]).to include(saved: false, locked: nil)
+  end
+
   it "sets which buses need an attendant and shows the setup steps" do
     put api_v1_school_bus_attendants_path(school), params: { needs: "selected", sizes: [ "MEDIUM_23" ], provided_by: "us" }, as: :json
     expect(json[:data]).to include(needs: "selected", sizes: %w[LARGE_40 LARGE_45 MEDIUM_23], provided_by: "us", saved: true)

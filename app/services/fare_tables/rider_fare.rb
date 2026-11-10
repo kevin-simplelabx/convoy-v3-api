@@ -8,7 +8,7 @@ module FareTables
     def tier_index(table, school, rider, tiers)
       if table.zones?
         sector = rider.postal.to_s[0, 2]
-        z = tiers.index { |t| t.sectors.include?(sector) || (t.area? && rider.lat && in_area?([ rider.lat, rider.lng ], t.area)) }
+        z = tiers.index { |t| t.sectors.include?(sector) || (rider.lat && in_area?([ rider.lat.to_f, rider.lng.to_f ], t.areas)) }
         return z || (tiers.size - 1)
       end
       return tiers.size - 1 unless rider.lat && school.lat
@@ -30,10 +30,10 @@ module FareTables
       end
     end
 
-    def in_area?(point, area)
-      add = Array(area["add"] || area[:add]).select { it.size > 2 }
-      sub = Array(area["sub"] || area[:sub]).select { it.size > 2 }
-      add.any? { Geo.inside?(point, it) } && sub.none? { Geo.inside?(point, it) }
+    # Inside a drawn outline of the zone and in none of its cut-outs (tiers need :areas preloaded).
+    def in_area?(point, areas)
+      add, sub = areas.partition { !it.exclude }
+      add.any? { Geo.inside?(point, it.latlngs) } && sub.none? { Geo.inside?(point, it.latlngs) }
     end
   end
 end

@@ -36,6 +36,19 @@ module FareTables
 
   def one_offs(month, target, adjustments) = adjustments.select { it.kind == "once" && it.applies?(month, target) }.sum(0.to_d, &:value)
 
+  # Money as Bus Fares sends it: a string with 2 decimals ("420.00"); nil stays nil. `money_tree` does every decimal
+  # of the worked-out fares (they hold only money).
+  def money(v) = v && format("%.2f", v)
+
+  def money_tree(x)
+    case x
+    when BigDecimal then money(x)
+    when Hash then x.transform_values { money_tree(it) }
+    when Array then x.map { money_tree(it) }
+    else x
+    end
+  end
+
   def month_periods(year, months)
     (0..11).filter_map do |i|
       first = year.starts_on >> i

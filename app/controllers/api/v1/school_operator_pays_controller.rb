@@ -41,9 +41,10 @@ module Api
         rates = school.bus_size_rates.index_by(&:bus_type)
         { saved: s.persisted?, locked: lock && { at: lock.locked_at, by: lock.locked_by&.name },
           **s.slice(:scheme, :paid_months, :part_pct, :part_basis, :break_months, :break_pay, :earn_by, :grace_start_days, :deduct_days).symbolize_keys,
-          rates: SchoolBus::BUS_TYPES.map do |k, t|
+          rates: SchoolBus.types(school).map do |t|
+            k = t[:key]
             r = rates[k]
-            { bus_type: k, label: t[:label], seats: t[:seats], ba_required: (school.attendant_policy || school.build_attendant_policy).needed_sizes.include?(k),
+            { bus_type: k, label: t[:label], seats: t[:seats], student_seats: t[:student_seats], ba_required: t[:student_seats] < t[:seats],
               fixed_on: r ? r.fixed_on : true, monthly: r&.monthly, rider_on: r&.rider_on || false, base_price: r&.base_price,
               riders_included: r&.riders_included, per_rider: r&.per_rider, default_mode: r&.default_mode || "fixed", ba_operator: r&.ba_operator, ba_us: r&.ba_us }
           end }

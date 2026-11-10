@@ -35,7 +35,7 @@ module SchoolBills
       @end = @i + 1 < @periods.size ? period_start(@i + 1) - 1 : @year.ends_on
       @month = @months[@i]
       @policy = @school.policy_versions.in_use_on(Date.current)
-      @adjustments = @school.fare_adjustments.where(academic_year: @year).to_a
+      @adjustments = @school.fare_adjustments.where(academic_year: @year).includes(:targets).to_a
       @skipped = []
       bills = @table.per_bus? ? bus_bills : rider_bills
       { period: period, due_on: SchoolBills.due_on(@policy, @start), bills:, skipped: @skipped, unlinked: @unlinked || 0 }
@@ -54,7 +54,7 @@ module SchoolBills
 
     def rider_bills
       fares = FareTables::Calc.call(@table, @periods)
-      tiers = @table.tiers.to_a
+      tiers = @table.tiers.includes(:areas).to_a
       first = riders_on(@start)
       later = riders_on(@end).except(*first.keys)
       riders = @school.riders.where(rid: first.keys | later.keys).index_by(&:rid)

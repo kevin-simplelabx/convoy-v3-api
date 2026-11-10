@@ -35,7 +35,7 @@ module Plans
       gp = (rev[:revenue] - total).round(2)
       notes << "Revenue is a year of fares spread over 12 months. To Collect is what is billed in #{label}" \
                "#{', when a term starts' unless rev[:cycle] == 'month'}#{'. Two-way riders count half here, half in the other session' if rev[:two].positive?}"
-      out.merge(revenue: rev[:revenue], to_collect: rev[:to_collect], gross_profit: gp, margin_pct: rev[:revenue].positive? ? (gp * 100 / rev[:revenue]).round(1) : nil,
+      out.merge(revenue: rev[:revenue], to_collect: rev[:to_collect], gross_profit: gp, margin_pct: rev[:revenue].positive? ? (gp * 100 / rev[:revenue]).round(1).to_f : nil,
                 basis: rev[:basis], bands: rev[:bands], two_way: rev[:two], no_fare: rev[:no_fare],
                 pl: { one_way: { riders: rev[:n1], amount: rev[:e1] }, two_way: { riders: rev[:n2], total: rev[:e2], half: (rev[:e2] / 2).round(2) } }, notes:)
     end
@@ -65,8 +65,8 @@ module Plans
       periods = FareTables.periods(year, table)
       bill_months = FareTables.bill_months(year, table)
       fares = FareTables::Calc.call(table, periods)
-      tiers = table.tiers.to_a
-      adjustments = @school.fare_adjustments.where(academic_year: year).to_a
+      tiers = table.tiers.includes(:areas).to_a
+      adjustments = @school.fare_adjustments.where(academic_year: year).includes(:targets).to_a
       bands = tiers.each_with_index.map { |t, i| { label: fares.dig(i, :label) || "#{table.zones? ? 'Zone' : 'Band'} #{i + 1}", tier_id: t.id, riders: 0, one_way: 0, two_way: 0, revenue: 0.to_d, to_collect: 0.to_d } }
       none = { label: "No fare set", riders: 0, one_way: 0, two_way: 0, revenue: 0.to_d, to_collect: 0.to_d, no_fare: true }
       sums = { e1: 0.to_d, e2: 0.to_d, b1: 0.to_d, b2: 0.to_d, n1: 0, n2: 0 }

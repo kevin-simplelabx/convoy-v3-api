@@ -25,6 +25,9 @@ class CompanySequence < ApplicationRecord
 
   def self.next!(name) = next_block!(name, 1)
 
+  # The number next_block! would give now, without reserving it (a preview: another save may take it first).
+  def self.peek(name, start: 1) = [ (find_by(name: name.to_s)&.value || 0) + 1, start ].max
+
   # Reserve `count` numbers in a row and return the first. `start` is the first number a new sequence gives.
   def self.next_block!(name, count, start: 1)
     seq = create_or_find_by!(name: name.to_s)

@@ -7,6 +7,12 @@ with_company("SD") do
     s.assign_attributes(short_name: "SSS", address: "20 Siglap View, Singapore 455789", lat: 1.3138, lng: 103.9283,
                         calendar: Calendar.kept.find_by!(name: "MOE School Calendar"))
   end
+  # Routes seeded before they had a bus type: the size of the regular bus.
+  size = ->(vehicle) { SchoolBus::BUS_TYPES.min_by { |_, t| (t[:seats] - vehicle.seats.to_i).abs }.first }
+  SchoolRoute.joins(:plan).where(school_plans: { school_id: school.id }, bus_type: nil).find_each do |r|
+    vehicle = Vehicle.find_by(id: r.regular_vehicle_id(Date.current)) or next
+    r.update_columns(bus_type: size.(vehicle))
+  end
   next if school.plans.exists?
 
   term = Date.current.beginning_of_month - 1.month
@@ -22,7 +28,7 @@ with_company("SD") do
   plans.each do |session, routes|
     plan = school.plans.create!(name: "Term 4 #{session.upcase}", session:, effective_from: term, in_use: true)
     routes.each_with_index do |(start, finish, plate, stops), i|
-      route = plan.routes.create!(number: i + 1, label: "#{session == 'am' ? 'AM' : 'PM'} #{i + 1}", start_time: start, end_time: finish,
+      route = plan.routes.create!(bus_type: size.(bus.(plate)), number: i + 1, label: "#{session == 'am' ? 'AM' : 'PM'} #{i + 1}", start_time: start, end_time: finish,
                                   riders_count: stops.sum(&:last), attendant: attendants[i % attendants.size])
       stops.each_with_index { |(name, time, riders), k| route.stops.create!(position: k, name:, scheduled_time: time, riders_count: riders) }
       route.vehicle_changes.create!(vehicle: bus.(plate), effective_from: term, created_by: admin)

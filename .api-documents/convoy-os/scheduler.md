@@ -52,17 +52,18 @@ the unassigned runs (bottom or right tray) and the workshop visits (purple block
   "data": {
     "vehicles": [ { "id": 14, "plate": "PC8841T", "seats": 23, "make": "Toyota", "model": "Coaster", "ownership": "own",
                     "size": "medium", "size_name": "Medium Bus", "vip": false, "tags": [], "default_picture": "coaster",
-                    "photo": null, "driver": { "id": 10, "kind": "own", "name": "Siti Nurhaliza", "phone": "+6590034455" },
+                    "photo": null, "driver": { "id": 10, "kind": "own", "name": "Siti Nurhaliza", "phone": "+6590034455", "photo": "/api/v1/downloads/<token>" },
                     "operator": null, "vehicle_team": { "id": 1, "name": "East", "color": "#0B6E6E" },
                     "insurance": { "insurer": null, "ends_on": null, "status": "none" }, "plate_conflict": false } ],
     "occurrences": [ { "id": 490, "key": "t8|2026-11-02|1|1|1", "date": "2026-11-02",
                        "trip_id": 8, "trip_run_id": 1, "run_key": "d1r0", "slot_no": 1, "part": 1, "school_route_id": null,
                        "trip_label": "TID103716-1", "kind": "corporate_shuttle", "title": "MBC Campus Shuttle",
-                       "route_text": "Labrador Park MRT Exit A to Mapletree Business City", "client_id": 2, "school_name": null,
+                       "route_text": "Labrador Park MRT Exit A to Mapletree Business City",
+                       "route_stops": [ { "name": "Labrador Park MRT Exit A", "address": "Labrador Villa Rd, Singapore 119187" }, { "name": "Mapletree Business City", "address": "10 Pasir Panjang Rd, #01-01, Singapore 117438" } ], "client_id": 2, "client_name": "Google Asia Pacific", "school_name": null,
                        "start_time": "07:45", "end_time": "08:00", "starts_at": "2026-11-02T07:45:00+08:00",
                        "ends_at": "2026-11-02T08:00:00+08:00", "ends_next_day": false, "shift_minutes": 0,
                        "vehicle_id": 14, "plate": "PC8841T", "original_vehicle_id": null, "original_plate": null,
-                       "driver": { "kind": "own", "id": 10, "name": "Siti Nurhaliza", "phone": "+6590034455" },
+                       "driver": { "kind": "own", "id": 10, "name": "Siti Nurhaliza", "phone": "+6590034455", "photo": "/api/v1/downloads/<token>" },
                        "operator_id": null, "pax": 0, "price": "76.19", "trip_value": "1.0", "operator_cost": null,
                        "status": "scheduled", "grid_status": "ok", "cancelled_at": null, "ended_at": null, "issue_reason": null, "issue_raised_at": null,
                        "recurring": true, "color": "#3267D6", "group_key": "g1", "pair_trip_id": null, "is_return": false,
@@ -395,6 +396,13 @@ every stop has a pin (two-way when every stop on the way back is within 200 m of
 Validation messages follow the trip form: "Pick the client", "Enter the pick-up point", "Enter the drop-off point",
 "Enter how many vehicles are needed", "End time must be different from the start time", "Hours must be greater than 0",
 "Wait minutes must be entered for an arrival", "The return starts before the outbound trip ends"...
+
+`driver.photo` (grid vehicle rows, run rows and the drawer) is the driver's thumbnail link (`/api/v1/downloads/:token`), `null`
+when the driver has no photo or is a replacement / external driver typed by name. `client_name` is on every run row. `route_stops` is the run's stops in travel order (`[{ name, address }]`, `[]` for School Bus route runs): build "A > +N > B" from them with the prototype's `street(name, address)` / `routeSum` (`format.js`); `route_text` stays as it was.
+
+**Next Trip ID preview:** `GET /trips/next_number` → `{ "data": { "trip_id": "TID100731" } }` for the New Trip header. It
+reserves nothing (the number is taken when the trip is saved) so another save can take it first; show it as informational
+and read the real `trip_id` from the create answer. Same permission as creating a trip.
 
 ### 7.3 Trip fields (`trip`)
 

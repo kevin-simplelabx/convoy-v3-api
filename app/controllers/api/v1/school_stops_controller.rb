@@ -26,16 +26,12 @@ module Api
         render json: { data: row(ss, SchoolRider.of_school_on(school, Date.current).to_a), meta: { invalid:, shared: } }
       end
 
-      # DELETE /schools/:school_id/stops/:id — Unlink (the school's hand links to its points go too).
+      # DELETE /schools/:school_id/stops/:id — Unlink (the school's hand links and rider assignments at its points go too).
       def destroy
         school = find_school
         authorize Stop, :update?
-        ss = school.school_stops.find_by!(stop_id: params[:id])
-        SchoolStop.transaction do
-          school.rider_point_links.where(stop_point_id: ss.stop.all_points.select(:id)).delete_all
-          ss.destroy!
-        end
-        head :no_content
+        stop = Stop.with_discarded.find(params[:id])
+        render json: { data: { unassigned: SchoolStops::Unlink.call(school, stop) } }
       end
 
       # POST /schools/:school_id/stops/import { from_school_id, with_catchments }
@@ -71,20 +67,22 @@ module Api
         head :no_content
       end
 
-      # POST /schools/:school_id/rider_links/remove { links: [{ rid, point_id }] } — Select Links › Remove.
+      # POST /schools/:school_id/rider_links/remove { links: [{ rid, point_id }] } — Select Links › Remove; riders assigned to
+      # a removed point are unassigned.
       def unlink
         school = find_school
         authorize Stop, :update?
         links = params.permit(links: %i[rid point_id]).to_h.deep_symbolize_keys[:links]
         raise ApplicationService::Error, "Pick the links to remove" if links.blank?
 
-        SchoolStops::Links.remove(school, links, user: current_user)
-        head :no_content
+        render json: { data: { unassigned: SchoolStops::Links.remove(school, links, user: current_user) } }
       end
 
       private
 
       def find_school = policy_scope(School).find(params[:school_id])
+
+      def subzones = @subzones ||= UraSubzone.pluck(:code, :name, :planning_area).to_h { |c, n, a| [ c, { code: c, name: n, planning_area: a } ] }
 
       def catchment_params
         p = params.permit(:postal_codes, postal_codes: [], off_point_ids: [], areas: [ :name, :exclude, :how, { latlngs: [] } ]).to_h.deep_symbolize_keys
@@ -93,7 +91,7 @@ module Api
       end
 
       def row(ss, riders)
-        { stop: StopBlueprint.render_as_hash(ss.stop, school_id: ss.school_id), postal_codes: ss.postal_codes, areas: ss.areas,
+        { stop: StopBlueprint.render_as_hash(ss.stop, school_id: ss.school_id, subzones:), postal_codes: ss.postal_codes, areas: ss.areas,
           off_point_ids: ss.off_point_ids, riders: riders.count { ss.covers?(it.postal, it.lat, it.lng) } }
       end
     end

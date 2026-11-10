@@ -11,7 +11,6 @@
 #  kind             :string           not null
 #  name             :string           not null
 #  note             :string
-#  targets          :string           default([]), not null, is an Array
 #  to_month         :date
 #  value            :decimal(12, 2)   not null
 #  created_at       :datetime         not null
@@ -37,15 +36,19 @@ class FareAdjustment < ApplicationRecord
   include TenantScoped
   audited associated_with: :school
 
+  self.ignored_columns += [ "targets" ] # moved to fare_adjustment_targets (20261105100200); dropped later
+
   KINDS = %w[pct amt once].freeze
 
   belongs_to :school
   belongs_to :academic_year
   belongs_to :created_by, class_name: "User", optional: true
+  has_many :targets, class_name: "FareAdjustmentTarget", dependent: :delete_all, inverse_of: :fare_adjustment
 
   validates :name, presence: true
   validates :kind, inclusion: { in: KINDS }
   validates :value, numericality: { greater_than: 0 }
+  validates :value, numericality: { less_than_or_equal_to: 100, message: "must be 100 or less" }, if: -> { kind == "pct" }
   validate :months_in_order
 
   before_validation do
@@ -61,9 +64,14 @@ class FareAdjustment < ApplicationRecord
     "active"
   end
 
-  # Does it apply to a bill of a month for a target (tier id or "bus:<type>")?
+  def tier_ids = targets.filter_map(&:fare_tier_id)
+  def bus_types = targets.filter_map(&:bus_type)
+
+  # Does it apply to a bill of a month for a target (a tier id or "bus:<type>")? No targets = every rider.
   def applies?(month, target)
-    (targets.empty? || targets.include?(target.to_s)) &&
+    keys = targets.map(&:key)
+    key = target.to_s.start_with?("bus:") ? target.to_s : target.to_i
+    (keys.empty? || keys.include?(key)) &&
       (kind == "once" ? from_month == month : from_month <= month && (to_month.nil? || month <= to_month))
   end
 

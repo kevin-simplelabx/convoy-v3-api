@@ -29,9 +29,19 @@ RSpec.describe "Scheduler and runs" do
     expect(json.dig(:data, :vehicles).pluck(:plate)).to eq(%w[PD1A])
     expect(json.dig(:data, :occurrences).size).to eq(1)
     expect(json.dig(:data, :occurrences, 0)).to include(start_time: "08:00", plate: "PD1A", grid_status: "ok")
-    expect(json.dig(:data, :occurrences, 0, :driver)).to include(kind: "own", name: "Eric")
+    expect(json.dig(:data, :occurrences, 0, :driver)).to include(kind: "own", name: "Eric", photo: nil)
+    expect(json.dig(:data, :occurrences, 0)).to include(client_name: "Google")
+    expect(json.dig(:data, :occurrences, 0, :route_stops)).to eq([ { name: "A", address: nil }, { name: "B", address: nil } ])
+    expect(json.dig(:data, :vehicles, 0, :driver)).to include(kind: "own", name: "Eric", photo: nil)
     expect(json.dig(:data, :unassigned).size).to eq(1)
     expect(json[:meta]).to include(unassigned_before: nil, unassigned_after: nil)
+  end
+
+  it "sends the driver's photo thumbnail on the grid rows and runs" do
+    within_tenant(company) { d[:driver].update!(photo: Rack::Test::UploadedFile.new(Rails.root.join("spec/fixtures/files/photo.png"), "image/png")) }
+    get api_v1_scheduler_path, params: { from: "2026-11-03" }
+    expect(json.dig(:data, :vehicles, 0, :driver, :photo)).to start_with("/api/v1/downloads/")
+    expect(json.dig(:data, :occurrences, 0, :driver, :photo)).to start_with("/api/v1/downloads/")
   end
 
   it "has no runs past the horizon (the daily job adds them as it moves)" do

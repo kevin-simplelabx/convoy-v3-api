@@ -255,7 +255,7 @@ module Dashboard
       clients = Client.where(id: ids).index_by(&:id)
       list = ids.map do |id|
         reasons = []
-        (c = late.find { |x| x[:client_id] == id }) && reasons << "On time #{c[:on_time]}%#{" (#{c[:change]} pts)" if c[:change]}"
+        (c = late.find { |x| x[:client_id] == id }) && reasons << "On time #{c[:on_time]}%#{" (#{format('%+.1f', c[:change])} pts)" if c[:change]}"
         (o = overdue.find { |cl, _| cl.id == id }) && reasons << "S$#{format('%.2f', o[1])} overdue"
         { client_id: id, name: clients[id]&.name, reasons:, on_time: c&.dig(:on_time), change: c&.dig(:change),
           badge: c && c[:on_time] < 95 ? "Below Target" : (c ? "Falling" : "Overdue") }

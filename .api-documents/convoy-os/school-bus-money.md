@@ -48,17 +48,25 @@ There is one fare table per academic year. It needs that year's **Terms & Semest
 | --- | --- |
 | `GET /academic_years/:id/fares` | The table, its billing periods, the worked-out fares and the bus types |
 | `PATCH /academic_years/:id/fares` | Save & Lock the whole table, as the wizard's Review step sends it (JSON) |
-| `GET /academic_years/:id/fares/copy?from_id=` | "Copy AY X Fares": another year's table as a draft. Nothing is saved. |
+| `POST /academic_years/:id/fares/preview` | A draft table worked out before saving: its bills, fares and the first failing check. Nothing is saved. |
+| `GET /academic_years/:id/fares/copy?from_id=` | "Copy AY X Fares": another year's table as a draft, without ids. Nothing is saved. |
 
 `GET` returns:
 
 ```json
-{ "table": { …the table, same shape as the PATCH body below; tiers also carry their "id"… } | null,
+{ "table": { …the table, same shape as the PATCH body below; tiers and surcharges also carry their "id"… } | null,
   "locked": { "at": "…", "by": "…" } | null, "calendar_locked": true,
   "periods": [ { "label": "Term 1", "short": "Term 1", "starts_on": "2026-01-02", "ends_on": "2026-03-13", "school_days": 50, "cca_days": 50 } ],
   "fares": [ …see §2… ],
-  "bus_types": [ { "key": "SMALL_13", "label": "13-seater", "seats": 13 } ] }
+  "bus_types": [ { "key": "SMALL_13", "label": "13-seater", "seats": 13, "student_seats": 12 } ],
+  "plan_runs": { "LARGE_40": 3, "SMALL_13": 2 } }
 ```
+
+- `bus_types[].student_seats` = `seats` less 1 when the school's Bus Attendants setting needs an attendant on that
+  size (the attendant takes a seat). Bus Rates shows "45 seats, 44 for students" and the price per student seat.
+- `plan_runs` counts the routes per bus type in the AM and PM route plans in use today (an AM and a PM run count as 2).
+  Bus Rates "From Route Plans" shows "3 runs in the route plans" or "Not in the route plans". Routes without a bus
+  type are left out.
 
 The PATCH body is the whole table. Send only the parts that apply:
 
@@ -71,11 +79,12 @@ The PATCH body is the whole table. Send only the parts that apply:
   "distribution": "equal" | "prorated" | "bill" | "billpro" | "custom",
   "one_way": { "type": "pct" | "flat" | "custom", "value": 60 },
   "by_size": false, "size_columns": [ { "max_seats": 15 }, { "max_seats": null } ],
-  "tiers": [ { "max_km": 3, "name": null, "sectors": ["45", "46"], "area": null,
+  "tiers": [ { "id": 31, "max_km": 3, "name": null, "sectors": ["45", "46"],
+               "areas": [ { "latlngs": [[1.35, 103.94], [1.36, 103.95], [1.34, 103.96]], "exclude": false } ],
                "fare": 1680, "pm_fare": null, "one_way_fare": null, "period_fares": [], "period_pm_fares": [],
                "small_fare": null, "express_fare": null, "cca_fare": null,
                "sizes": [ { "fare": 1800, "pm_fare": null, "one_way_fare": null, "period_fares": [], "period_pm_fares": [] } ] } ],
-  "surcharges": [ { "name": "Sentosa", "sectors": ["09"], "area": null, "kind": "flat" | "pct" | "fixed", "amount": 200,
+  "surcharges": [ { "id": 7, "name": "Sentosa", "sectors": ["09"], "areas": [], "kind": "flat" | "pct" | "fixed", "amount": 200,
                     "one_way_kind": "same" | "pct" | "fixed", "one_way_value": null } ],
   "small": { "on": true, "type": "pct" | "flat" | "custom", "value": 10, "seats": 15 },
   "express": { "on": false, "type": "pct", "value": null },
@@ -99,7 +108,7 @@ The wizard's steps for `bus` are Who Pays, Billing, Bus Rates and Review.
 
 | Field | Values |
 | --- | --- |
-| `basis` | `distance`: `tiers` by `max_km`, in increasing order; the last tier is open-ended. `zone`: each tier has a `name`, postal `sectors` (first 2 digits) and/or a drawn `area`; the first matching zone applies. |
+| `basis` | `distance`: `tiers` by `max_km`, in increasing order; the last tier is open-ended. `zone`: each tier has a `name`, postal `sectors` (first 2 digits) and/or drawn `areas`; the first matching zone applies. |
 | `trip` | `both`: one 2-way fare plus a 1-way rule. `one`: 1-way only. `ampm`: AM and PM fares, where 2-way = AM + PM. |
 | `cycle` | `period`: one bill per term or semester. `month`: one bill per month listed in `months`, where 1 = January. |
 | `distribution` | How the annual fare is spread over the bills (table below) |
@@ -118,10 +127,24 @@ The wizard's steps for `bus` are Who Pays, Billing, Bus Rates and Review.
 | `billpro` | `fare` per bill, scaled by the bill's school days against the average |
 | `custom` | Each bill is typed in: `period_fares`, plus `period_pm_fares` when `trip` is `ampm` |
 
-`sectors` may be sent as an array or as text such as `"45, 46"`. `area` is the polygon drawn on the map (a list of
-`[lat, lng]`), stored as it is sent.
+`sectors` may be sent as an array or as text such as `"45, 46"`.
 
-**Checks (422).** The error messages are the wizard's, step by step. Examples:
+**Drawn areas (`areas`).** Zones and location surcharges can have several outlines drawn on the map, like a stop's
+catchment: `areas: [{ latlngs: [[lat, lng], …], exclude }]`. A home counts when it is inside an outline with
+`exclude: false` and inside no outline with `exclude: true` (a cut-out). An area needs at least 3 corners ("Zone 1: area 1
+needs at least 3 corners"); cut-outs alone do not count as a drawn area. The old single `area` field is gone: sending it
+is a 422 "area is replaced by areas: [{ latlngs, exclude }]".
+
+**Ids (`id`).** Send back each tier's and surcharge's `id` from `GET`. Save & Lock keeps those rows (and their ids) and
+updates them; rows without an id (or with an id of another table) are added; rows left out are removed. Extra Charges
+point at tier ids, so they keep working after unlock + save. A tier an Extra Charge targets cannot be removed: 422
+"Tier 2 is used by the Extra Charge "Toll". Keep it, or remove it from that charge first" (zones use their name).
+"Copy AY X Fares" returns the other year's table without ids, so saving it adds new rows.
+
+**Checks (422).** The error messages are the wizard's, step by step. `error.details` names the wizard step to go back to:
+`{ "step": 2, "step_name": "Fares" }`. `step` is the prototype's step index: 0 Who Pays, 1 Billing, 2 Fares (Bus Rates when
+the school pays per bus), 3 Services, 4 CCA / ASA. Errors raised before the checks ("Before saving" below, areas,
+removed tiers) have no `details`. Examples:
 
 | Step | Example message |
 | --- | --- |
@@ -135,6 +158,18 @@ The wizard's steps for `bus` are Who Pays, Billing, Bus Rates and Review.
 | Bus Rates | "13-seater: enter a rate above 0", "Enter how many runs the school booked" |
 | Before saving | "Save and lock the Terms & Semesters first", "Bus Fares is locked. Unlock to edit" |
 
+**Preview of a draft (`POST /academic_years/:id/fares/preview`).** Send the wizard's draft (same body as `PATCH`, any
+step, incomplete is fine). The answer works the table out without saving it:
+
+```json
+{ "periods": [ { "label": "Semester 1", "school_days": 105, "cca_days": 105, … } ],
+  "fares": [ …as in §2… ],
+  "problem": { "message": "Above 3 km: enter the 2-way fare", "step": 2, "step_name": "Fares" } | null }
+```
+
+`periods` counts school days from the calendar now (not the frozen numbers). Missing fares count as 0. `problem` is the
+first check Save & Lock would fail, or `null`. Needs the finance permission.
+
 **Frozen school days.** When the table is locked, each bill's school days and CCA days are frozen, so holidays added later
 do not change the bills. `periods` shows the frozen numbers while the table is locked. When it is unlocked, they are
 counted again from the calendar.
@@ -142,12 +177,13 @@ counted again from the calendar.
 ## 2. The fare table (worked out)
 
 `fares` in `GET /academic_years/:id/fares` is worked out on the server with the prototype's formula (`logic/fares.js`).
-Amounts are strings with 2 decimals.
+Amounts are strings with 2 decimals; so are the fares in `table` (tier and size `fare`, `pm_fare`, `one_way_fare`,
+`period_fares`, `small_fare`, `express_fare`, `cca_fare`, `cca.fixed`, bus `rate`).
 
 ```json
 [ { "tier_id": 31, "position": 1, "label": "0 to 3 km",
-    "std": { "two": { "annual": "1680.0", "periods": ["420.0", "420.0", "420.0", "420.0"] },
-             "one": { "annual": "1008.0", "periods": ["252.0", "252.0", "252.0", "252.0"] } },
+    "std": { "two": { "annual": "1680.00", "periods": ["420.00", "420.00", "420.00", "420.00"] },
+             "one": { "annual": "1008.00", "periods": ["252.00", "252.00", "252.00", "252.00"] } },
     "small": { "two": {…}, "one": {…} } | null,
     "express": null,
     "sizes": [ { "column": "Above 15 Seats", "fares": { "two": {…}, "one": {…} } } ] } ]
@@ -181,11 +217,11 @@ Extra Charges are added on top of a **locked** fare table, such as a fuel surcha
 | `POST /academic_years/:id/extra_charges/:charge_id/end { to_month }` | Set End (Active and not one-off): the last month charged |
 | `POST /academic_years/:id/extra_charges/preview` | The next 4 bills before and after the draft charge |
 
-The add and edit body is `{ name, kind: pct|amt|once, value, from_month: "2027-01", to_month, targets: [], note }`.
+The add and edit body is `{ name, kind: pct|amt|once, value, from_month: "2027-01", to_month, tier_ids: [], bus_types: [], note }`.
 
 ```json
-{ "id": 4, "name": "Fuel Surcharge", "kind": "pct", "value": "5.0", "from_month": "2026-12", "to_month": null,
-  "targets": [], "note": "…", "state": "scheduled", "created_by": "Ops Admin", "created_at": "…",
+{ "id": 4, "name": "Fuel Surcharge", "kind": "pct", "value": "5.00", "from_month": "2026-12", "to_month": null,
+  "tier_ids": [], "bus_types": [], "note": "…", "state": "scheduled", "created_by": "Ops Admin", "created_at": "…",
   "carried_from": null, "can_edit": true, "can_delete": true, "can_end": false }
 ```
 
@@ -200,22 +236,31 @@ The add and edit body is `{ name, kind: pct|amt|once, value, from_month: "2027-0
 - Every bill is raised in the month of its term start, or in its chosen month.
 - `to_month: null` means no end. Such a charge carries into later academic years, where it shows with `carried_from` set
   to the year it came from. It is read only there.
-- `targets` lists the tiers it applies to (tier ids from `table.tiers[].id`), or `"bus:<type>"` when the school pays per
-  bus. An empty list means all riders.
-- `from_month` must be this month or later ("The first month cannot be in the past").
+- `tier_ids` lists the tiers / zones it applies to (ids from `table.tiers[].id`); when the school pays per bus,
+  `bus_types` lists the bus sizes instead (sizes with a rate). Both empty = all riders. `targets` is gone: sending it is
+  a 422 "targets is replaced by tier_ids and bus_types".
+- The checks follow the form, in this order: "Give the charge a name", "Enter an amount above 0", "Percentage must be 100
+  or less", "Pick the start month", "Bills before this month are already raised. Pick this month or later", "No bill is
+  raised in that month" (one-off charge), "End month must be on or after the start month". Then the targets: "Pick
+  tiers of this year's Bus Fares" (or zones), "Pick bus sizes only when the school pays per bus", "The school pays per
+  bus. Pick bus sizes, not tiers", "Pick bus sizes the fares have a rate for".
 
 **States and messages**
 
 | Field | Meaning |
 | --- | --- |
 | `state` | `scheduled` (not started), `active`, or `ended` |
-| `meta.warning` (on save) | "No bill falls in these months, so no one is charged yet" |
+| `meta.warning` (on save, not one-off) | "No AY 2027 bills fall between February 2027 and May 2027", or with no end "No AY 2027 bills fall from February 2027 to the end of the year. It starts on AY bills of later years" |
 
-The preview body is the draft charge. Add `id` when editing, so the old version of that charge is left out. The response:
+The preview body is the draft charge. Add `id` when editing, so the old version of that charge is left out. It shows the
+first picked tier / bus size (or the first of the table). The response:
 
 ```json
-[ { "bill": "Term 1", "before": "420.0", "after": "441.0", "change": "21.0" } ]
+{ "data": [ { "bill": "Term 1", "before": "420.00", "after": "441.00", "change": "21.00" } ],
+  "meta": { "example": "0 to 3 km, 2-way rider" } }
 ```
+
+`meta.example` is the line above the table ("Example: 0 to 3 km, 2-way rider").
 
 ## 4. Payment & Refund Policy
 
@@ -314,7 +359,7 @@ This is set per school, and only finance users see it.
 { "saved": true, "locked": { "at": "…", "by": "…" },
   "scheme": "some", "paid_months": [1,2,3,4,5,7,8,9,10,11], "part_pct": "50.0", "part_basis": "school",
   "break_months": [6, 12], "break_pay": "earned", "earn_by": "terms", "grace_start_days": 0, "deduct_days": 0,
-  "rates": [ { "bus_type": "MEDIUM_23", "label": "23-seater", "seats": 23, "ba_required": false,
+  "rates": [ { "bus_type": "MEDIUM_23", "label": "23-seater", "seats": 23, "student_seats": 23, "ba_required": false,
                "fixed_on": true, "monthly": "3600.0", "rider_on": true, "base_price": "3000.0", "riders_included": 15, "per_rider": "60.0",
                "default_mode": "fixed", "ba_operator": null, "ba_us": null } ] }
 ```
@@ -331,7 +376,7 @@ per_rider, default_mode, ba_operator, ba_us }]`.
 | `break_months` | Months paid as a retainer |
 | `break_pay` | `full`, or `earned` |
 | `earn_by` (when earned) | `terms`: each term the route ran in counts equally; within one term, its halves count. `days`: school days run out of the term's school days, with `grace_start_days` (a start within this many days counts from day 1) and `deduct_days` |
-| Prices per size | Fixed Monthly (`fixed_on`, `monthly`) and/or Fixed + Per Rider (`rider_on`, `base_price`, `riders_included`, `per_rider`). Keep at least one; `default_mode` chooses between them when both are on. The bus attendant add-ons are `ba_operator` ("their BA") and `ba_us` ("our BA"); `ba_required` follows the Bus Attendants step |
+| Prices per size | Fixed Monthly (`fixed_on`, `monthly`) and/or Fixed + Per Rider (`rider_on`, `base_price`, `riders_included`, `per_rider`). Keep at least one; `default_mode` chooses between them when both are on. The bus attendant add-ons are `ba_operator` ("their BA") and `ba_us` ("our BA"); `ba_required` follows the Bus Attendants step; `student_seats` is `seats` less the attendant's seat when `ba_required` |
 
 The Bus Attendants page (`GET /schools/:id/bus_attendants`) shows `ba_operator` / `ba_us` for each bus type.
 

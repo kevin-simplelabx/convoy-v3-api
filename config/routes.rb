@@ -362,6 +362,7 @@ Rails.application.routes.draw do
       resources :academic_years, only: %i[show destroy] do
         resource :fares, controller: :fare_tables, only: %i[show update] do
           get :copy
+          post :preview
         end
         resources :extra_charges, only: %i[index create update destroy] do
           post :end, on: :member, action: :end_charge
@@ -623,6 +624,7 @@ Rails.application.routes.draw do
 
       # Trips
       resources :trips do
+        get :next_number, on: :collection
         get :prices, on: :member
         resources :attachments, controller: :trip_attachments, only: %i[create destroy]
         resources :assignments, controller: :trip_assignments, only: %i[index create destroy]

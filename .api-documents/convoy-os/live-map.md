@@ -70,7 +70,7 @@ let markers glide between reports on the front end.
   - **Available:** "Next trip starts {next_run.starts_at}", or `{last_run.title} | ended {last_run.ended_at}`.
     `next_run`: `{ id, trip_label, title, client, school, starts_at }` (`school` = the school of a School Bus route, else `null`:
     "School Route | <school>"); `last_run` (only when the bus has no run now; the last run of
-    the day that ended): `{ id, trip_label, title, client, ended_at }` (`ended_at` = when it ended, else its planned end), e.g.
+    the day that ended): `{ id, trip_label, title, client, school, ended_at }` (`ended_at` = when it ended, else its planned end), e.g.
     `{ "id": 812, "trip_label": "T-0042-AM", "title": "Labrador Park → Google Mapletree", "client": "Google Asia Pacific", "ended_at": "2026-11-02T09:05:00+08:00" }`.
   - **Offline:** "Since {last_reported_at}" plus how long ago.
 - `eta_at` is estimated as a straight line at 30 km/h from the last position. It is the planned time when there is no

@@ -4,6 +4,74 @@ Changes to existing Convoy OS endpoints made while building other apps (Convoy D
 on (renamed, removed or changed fields and endpoints). New optional fields are not listed here; they are in the menu
 documents. Newest first. Each item: what changed, before → after, and what the front-end has to do.
 
+## 10/11/2026 — Stops and assignments (API-ISSUES §22 Stops, phase Q2)
+
+Doc: [school-bus-stops.md](school-bus-stops.md). **B** = breaking.
+
+| # | Where | Before → after | Front-end |
+| --- | --- | --- | --- |
+| 1 | Stops › Unlink (`DELETE /schools/:id/stops/:stop_id`) | **B** `204` → `200 { data: { unassigned: n } }`; riders assigned to the stop's points are unassigned in the same transaction | Parse the body; show "n riders unassigned" |
+| 2 | Stop Library › Archive (`DELETE /stops/:id`) | **B** `204` → `200 { data: { unassigned: n } }`; assignments left on its points (old unlinks) are removed | Parse the body |
+| 3 | Select Links › Remove (`POST /schools/:id/rider_links/remove`) | **B** `204` → `200 { data: { unassigned: n } }`; a rider assigned to a removed point is unassigned (prototype `removeLinks`) | Parse the body; "n riders unassigned" |
+| 4 | `GET /schools/:id/stops`, `PUT …/stops/:id` | `stop.subzone { code, name, planning_area }` added (same as `GET /stops`) | Read it from there |
+| 5 | Ask for Photos (`POST /stop_photo_requests`) | `rid` accepted for `audience: parent` (`school_rider_id` still works) | Send `rid` from Stop Assignment |
+| 6 | CSV exports | `Content-Disposition` is exposed to the browser (CORS) | Read the file name from the header |
+
+## 10/11/2026 — Bus Fares and Extra Charges (API-ISSUES §22 Fares, phase Q1)
+
+Doc: [school-bus-money.md § 1–3](school-bus-money.md#1-bus-fares). **B** = breaking.
+
+| # | Where | Before → after | Front-end |
+| --- | --- | --- | --- |
+| 1 | Bus Fares › zones, surcharges | **B** `area` (one polygon, kept only as a JSON string) → `areas: [{ latlngs: [[lat, lng], …], exclude }]` on each tier and surcharge, in and out; several outlines and cut-outs (`exclude: true`), like a stop's catchment. Sending `area` → 422 | Send and read `areas`; Draw Area edits the list (add / cut-out) |
+| 2 | Bus Fares › Save & Lock | **B** Tiers / zones and surcharges are kept by `id`: send back each row's `id` from `GET` (new rows without one). Before, every save gave new ids, so Extra Charges lost their tiers. Surcharges now carry `id` too. A tier an Extra Charge targets cannot be removed (422 "Tier 2 is used by the Extra Charge "Toll". Keep it, or remove it from that charge first") | Keep `id` in the wizard draft; "Copy AY X Fares" comes without ids (new rows) |
+| 3 | Bus Fares › 422 | `error.details: { step, step_name }` on the wizard checks (0 Who Pays, 1 Billing, 2 Fares / Bus Rates, 3 Services, 4 CCA / ASA) | Jump to that step on Save & Lock |
+| 4 | Bus Fares | New `POST /academic_years/:id/fares/preview` (draft, nothing saved): `periods` with school days from the calendar now, `fares`, `problem` (first failing check with its step or `null`) | Use it for each step's numbers before Save & Lock (school days per bill, the fare table) |
+| 5 | Bus Fares › Bus Rates | New `plan_runs: { "<bus_type>": n }` (runs in the AM and PM route plans in use) and `bus_types[].student_seats`; Operator Pay `rates[].student_seats` too | "3 runs in the route plans" / "Not in the route plans", "45 seats, 44 for students", price per student seat |
+| 6 | Bus Fares | Money in `fares` and the table's fares now has 2 decimals ("420.00", was "420.0") | None if parsed as numbers |
+| 7 | Extra Charges | **B** `targets` (strings: tier ids, `"bus:<type>"`) → `tier_ids: [int]` and `bus_types: [string]`, in the body and the row. Sending `targets` → 422 | Send / read `tier_ids` (riders pay) or `bus_types` (school pays per bus) |
+| 8 | Extra Charges › preview | The preview now uses the first picked tier / bus size (it used the first tier when the id was a number). Adds `meta.example` ("0 to 3 km, 2-way rider"); amounts with 2 decimals | Show `meta.example` above the table |
+| 9 | Extra Charges › checks | **B** (wording) Messages follow the form: "Give the charge a name", "Enter an amount above 0", "Percentage must be 100 or less" (a 150% charge was accepted), "Pick the start month" (was "Pick the first month"), "Bills before this month are already raised. Pick this month or later" (was "The first month cannot be in the past"), "No bill is raised in that month" (one-off in a month with no bill: was saved with a warning, now 422), "End month must be on or after the start month". `meta.warning` for a charge over months with no bill reads "No AY 2027 bills fall between February 2027 and May 2027" | Show the message as is |
+| 10 | Extra Charges | `value` has 2 decimals ("5.00") | None |
+
+## 10/11/2026 — Answers to API-ISSUES §25 (Route Plans, Dashboard, Finance, Year Setup, Stops)
+
+Every §25 item is answered below: **BE bug** (fixed), **Doc gap** (API right, doc fixed), **FE answer**, **Not valid**.
+**B** = breaking (a value or shape the front end may read differently). 7 BE bugs, 6 doc gaps, 3 FE answers, 2 not valid.
+
+| # | Where | Your claim | Class | Answer / what changed | Front-end |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Route Plans › Optimise | `POST /routes/:id/optimise`, `/plans/:id/optimise` → 422 "no /optimise" | Not valid | The route exists in the routing service (`routing-service/server.js`, added with the 04/11 commit; covered by its tests). Your routing container runs an older image | Deploy the routing service (`bin/routing-image && bin/kamal accessory reboot routing`); nothing to change in the app |
+| 2 | Run Routing | `progress` null while running | FE answer | `null` while `running` means the routing service has no entry yet (just started or restarted); documented in school-bus-routes.md. Small runs end in about 0.2 s | Keep polling; show "Estimating…" while `null` |
+| 3 | Route Plans › Estimate | `margin_pct` is a string | BE bug **B** | Now a number with 1 decimal (`null` when revenue is 0), as the doc said. Same for School Dashboard › Finance `kpis.margin_pct` | Stop parsing it as a string |
+| 4 | Route Plans › Replacement Buses | Own regular bus → 201 with an empty list | Doc gap | By design, as the prototype ("Back on its regular bus"): the dates are cut out of replacements and nothing is added | An empty list is not an error; show "Back on its regular bus" |
+| 5 | Dashboard | `PATCH /dashboard/layout` sets `saved: true` | Doc gap | `saved` = a layout is stored for the user; the first PATCH stores the default pages with the period / page. Only `DELETE` resets. `page` is an index | None; documented |
+| 6 | Dashboard › Clients at Risk | Reasons lose the sign | BE bug | Reasons read "On time 91.0% (+0.7 pts)" / "(-2.1 pts)" | Show as is |
+| 7 | Live Map | `last_run.school` undocumented | Doc gap | `last_run` carries `school` like `next_run` (`null` unless a School Bus route) | Optional "School Route \| <school>" |
+| 8 | Finance › Operator Payments | Total -30.0, left 0, status paid | BE bug **B** | Batch operator `status` is `nothing_to_pay` when its total is 0 or less (deductions only) and nothing was paid; `paid` only for a positive total fully paid. `total` / `paid` / `left` are always decimals (were Integer 0 when empty) | Add the chip "Nothing to Pay"; no Pay / Mark Paid for it |
+| 9 | Vehicle Financials | `due_this_month` "0.0" vs number 0 | BE bug | A vehicle with no loan details now answers "0.0" like the others | Parse as the other money values |
+| 10 | Client Invoices | `cancelled_hours_before` 0 after the start | FE answer | Never below 0, as the prototype (`Math.max(0, …)`) | Show "cancelled 0 h before" |
+| 11 | Vehicle Financials | No "create vehicle" from a loan schedule | Doc gap | The pieces exist: read `result` has plate / make / model / chassis / engine / registered_on. Recipe added to finance.md | `POST /vehicles` (Edit Vehicle pre-filled), then `PATCH /finance/vehicles/:id { document_read_id }` |
+| 12 | Operator Payments › Requests | Items have no id | BE bug | Items add `item_id` (manual items, `source: item`; else `null`); `ref` stays opaque | `DELETE /finance/operator_pay/items/:item_id`, do not parse `ref` |
+| 13 | Year Setup › Bus Attendants | `PATCH {}` saves and locks | BE bug **B** | An empty body is `422` "Send needs, sizes or provided_by"; nothing is saved or locked | Send the form values on Save & Lock |
+| 14 | Stop Library | `GET /stops` has no `meta.subzones` | Doc gap | Each row carries `subzone { code, name, planning_area }`; the doc line is fixed | Read `data[].subzone` |
+| 15 | Stops › Import | Answer `state` null | Not valid | The answer is `{ data: { added } }`; there is no `state` field and the doc matches | If another field was meant, tell us which call |
+| 16 | Year Setup › Bus Attendants | `routes[].bus_type` null on St. Stephen's | BE bug (seed) | The seeded routes now get a type from the regular bus seats (re-run `bin/rails db:seed`); engine routes always have one. A hand-made route may still be `null`: it needs no attendant (documented) | Count `null` as "no BA needed" |
+| 17 | Stops › Photo Requests | Is To Review part of Open? | FE answer | Yes, as the prototype: To Review = open requests with a photo waiting, so the Open count includes them | Keep both counts from `meta.counts` |
+| 18 | Stops › Photo Requests | Ask for photos on an archived stop's point → 404 | Doc gap | By design: an archived stop is out of the library, so its points are not found | Hide Request Photo for archived stops |
+
+## 10/11/2026 — Scheduler (API-ISSUES §26)
+
+No breaking changes (**B** = none).
+
+| # | Where | API | Front-end |
+| --- | --- | --- | --- |
+| 1 | Scheduler grid, drawer | `driver.photo` (thumb link or `null`) on `vehicles[].driver` and run `driver` | Show the photo on each row and in the drawer; stop reading `GET /drivers` for it |
+| 2 | Scheduler grid | `client_name` on every run (was only in the Trips list) | Card line "TID \| client"; stop looking it up in `GET /clients` |
+| 3 | Trip form | `GET /trips/next_number` → `{ data: { trip_id } }`, reserves nothing | New Trip header; informational, use the create answer's `trip_id` |
+| 4 | Drawer "Replace Driver" / "Use Regular Driver" | No API change: `POST /replacements` kind `drv`, scope `run` (`trip_id`, `run_date`, `slot_no`, `driver_name`, `driver_phone`); delete it to use the regular driver | Post the run-scope replacement from the drawer. A run replacement has no dates; "Temporary driver dd/mm to dd/mm" is a range replacement on the bus |
+| 5 | Scheduler grid | `route_stops: [{ name, address }]` on every run, in travel order (`[]` for School Bus route runs); `route_text` unchanged | Build "A > +N > B" with `routeSum` / `street(name, address)`; the BE has no street field |
+
 ## 04/11/2026 — Prototype features added to the API (phase 5)
 
 Features the prototype has that the API did not. One **breaking change**: #4 `DELETE /stop_photo_requests/:id`.

@@ -184,7 +184,7 @@ RSpec.describe "School Bus finance bills" do
     d = json[:data]
     # R1, R2, R4 on the list in January (R3 joins in March), all AM + PM in the rider data: 1,680 a year two-way, the January bill 840
     expect(d).to include(title: "Estimate for Jan 2027", paid_month: true, riders: 3, two_way: 3, revenue: "210.0", to_collect: "1260.0",
-                         operator_cost: "3000.0", gross_profit: "-2790.0", unpriced: 0, basis: "distance", no_fare: 0)
+                         operator_cost: "3000.0", gross_profit: "-2790.0", margin_pct: -1328.6, unpriced: 0, basis: "distance", no_fare: 0)
     expect(d[:bands].first).to include(label: "0 to 3 km", riders: 3, two_way: 3, one_way: 0, share: 100.0, revenue: "210.0", to_collect: "1260.0")
     expect(d[:pl]).to eq(one_way: { riders: 0, amount: "0.0" }, two_way: { riders: 3, total: "420.0", half: "210.0" })
     expect(d[:notes].last).to eq("Revenue is a year of fares spread over 12 months. To Collect is what is billed in Jan 2027, when a term starts. " \

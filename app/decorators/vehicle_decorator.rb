@@ -24,11 +24,11 @@ class VehicleDecorator < ApplicationDecorator
 
   def photo_info = file_info(:photo, versions: [ :thumb ])
 
-  # Driver today: { id, kind own|operator|external, name, phone }.
+  # Driver today: { id, kind own|operator|external, name, phone, photo (thumb link, nil for external) }.
   def driver_today
     d = default_driver_on(Date.current)
-    if d then { id: d.id, kind: d.is_a?(Driver) ? "own" : "operator", name: d.name, phone: d.phone }
-    elsif driver_name.present? then { id: nil, kind: "external", name: driver_name, phone: driver_phone }
+    if d then { id: d.id, kind: d.is_a?(Driver) ? "own" : "operator", name: d.name, phone: d.phone, photo: d.decorate.photo_thumb }
+    elsif driver_name.present? then { id: nil, kind: "external", name: driver_name, phone: driver_phone, photo: nil }
     end
   end
 

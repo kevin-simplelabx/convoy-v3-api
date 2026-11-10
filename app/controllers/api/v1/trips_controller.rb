@@ -40,6 +40,12 @@ module Api
         head :no_content
       end
 
+      # GET /trips/next_number — the Trip ID a new trip would get (New Trip header). Reserves nothing; informational only.
+      def next_number
+        authorize Trip, :create?
+        render json: { data: { trip_id: Trip.next_trip_id } }
+      end
+
       # GET /trips/:id/prices?date= — what each vehicle slot (and each run of a shuttle) earns on a date.
       def prices
         trip = authorize kept.includes(*FULL).find(params[:id]), :show?

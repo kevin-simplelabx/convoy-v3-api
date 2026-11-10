@@ -416,6 +416,8 @@ Rules (422 messages name the session):
 PATCH /schools/:id/bus_attendants { needs: statutory|all|selected, sizes: [...], provided_by: operator|us }
 ```
 
+- An empty body is `422` "Send needs, sizes or provided_by" and nothing is saved or locked.
+- `routes[].bus_type` is `null` for a route that has none (a hand-made route, old data): it needs no attendant. Routes from the routing engine always have one.
 - With `selected`, at least one size is required, and the sizes required by law are always included.
 - The price table (Their BA / Our BA): `bus_types[].ba_operator` / `ba_us` (S$ a month, from Operator Pay,
   [school-bus-money.md](school-bus-money.md); `null` = not priced).

@@ -1,19 +1,33 @@
 # The Bus Fares wizard's checks, step by step as in Convoy OS (fareCheck / payCheck / busCheck): the first problem as a
-# sentence, or nil. f = the fare table as sent (symbol keys), periods = the billing periods it gives.
+# sentence with the wizard step it belongs to (HTML step index: 0 Who Pays, 1 Billing, 2 Fares or Bus Rates,
+# 3 Services, 4 CCA / ASA), or nil. f = the fare table as sent and cleaned (FareTables::Form), periods = its bills.
 module FareTables
   class Check
-    def self.call(f, periods) = new(f, periods).call
+    STEPS = [ "Who Pays", "Billing", "Fares", "Services", "CCA / ASA" ].freeze
+
+    def self.problem(f, periods) = new(f, periods).problem
 
     def initialize(f, periods)
       @f = f
       @p = periods
     end
 
-    def call
-      who_pays || (@f[:payer] == "bus" ? per_bus : (billing || tiers || sizes || surcharges || services || cca))
+    # { message:, step:, step_name: } or nil.
+    def problem
+      steps.each_with_index do |check, i|
+        message = check.call or next
+        return { message:, step: i, step_name: i == 2 && @f[:payer] == "bus" ? "Bus Rates" : STEPS[i] }
+      end
+      nil
     end
 
     private
+
+    def steps
+      return [ -> { who_pays }, -> { no_periods if @p.empty? }, -> { per_bus } ] if @f[:payer] == "bus"
+
+      [ -> { who_pays }, -> { billing }, -> { tiers || sizes || surcharges }, -> { services }, -> { cca } ]
+    end
 
     def n?(x) = x.present? && x.to_s.match?(/\A\d+(\.\d+)?\z/)
     def trip = @f[:trip] || "both"
@@ -31,8 +45,6 @@ module FareTables
     end
 
     def per_bus
-      return no_periods if @p.empty?
-
       rates = Array(@f[:bus_rates]).select { it[:rate].present? }
       return "Enter a rate for at least one bus size" if rates.empty?
 
@@ -75,7 +87,7 @@ module FareTables
         lb = tier_label(i)
         if zones?
           return "Zone #{i + 1} needs a name" if t[:name].to_s.strip.empty?
-          return "#{lb}: add postal sectors or draw the area" if Array(t[:sectors]).empty? && t[:area].blank?
+          return "#{lb}: add postal sectors or draw the area" if Array(t[:sectors]).empty? && !Form.area?(t)
         elsif i < list.size - 1
           return "Tier #{i + 1} needs an upper distance" unless n?(t[:max_km]) && t[:max_km].to_d.positive?
           return "Tier #{i + 1} must end further out than tier #{i}" if i.positive? && t[:max_km].to_d <= list[i - 1][:max_km].to_d
@@ -116,7 +128,7 @@ module FareTables
     def surcharges
       Array(@f[:surcharges]).each do |x|
         return "Every location surcharge needs a name" if x[:name].to_s.strip.empty?
-        return "#{x[:name]}: add postal sectors or draw the area" if Array(x[:sectors]).empty? && x[:area].blank?
+        return "#{x[:name]}: add postal sectors or draw the area" if Array(x[:sectors]).empty? && !Form.area?(x)
         return "#{x[:name]}: enter the surcharge amount" unless n?(x[:amount])
         return "#{x[:name]}: enter the 1-way value" if (x[:one_way_kind] || "same") != "same" && !n?(x[:one_way_value])
       end

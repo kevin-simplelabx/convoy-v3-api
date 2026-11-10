@@ -79,7 +79,58 @@ RSpec.describe "School Bus stop assignment" do
 
     post api_v1_school_rider_links_path(sss), params: { stop_point_id: f[:s1].points.first.id, postals: %w[460300] }
     delete api_v1_school_stop_path(sss, f[:s1])
-    expect(response).to have_http_status(:no_content)
+    expect(json[:data]).to eq(unassigned: 0)
     expect(within_tenant(company) { sss.rider_point_links.count }).to eq(0)
+  end
+
+  it "unassigns the riders of the stop's points when it is unlinked, and only those" do
+    within_tenant(company) do
+      [ f[:s1], f[:s2] ].each { |st| SchoolStop.create!(school: sss, stop: st, postal_codes: %w[460101]) }
+      sss.rider_assignments.create!(rid: "R1", stop_point: f[:s1].points.first)
+      sss.rider_assignments.create!(rid: "R4", stop_point: f[:s1].points.second)
+      sss.rider_assignments.create!(rid: "R2", stop_point: f[:s2].points.first)
+    end
+    delete api_v1_school_stop_path(sss, f[:s1])
+    expect(json[:data]).to eq(unassigned: 2)
+    expect(within_tenant(company) { sss.rider_assignments.pluck(:rid) }).to eq(%w[R2])
+    get api_v1_school_stop_assignment_path(sss)
+    expect(json[:meta][:counts][:assigned]).to eq(1)
+  end
+
+  it "unassigns a rider when the link to the point they ride is removed" do
+    point = f[:s1].points.first
+    post api_v1_school_rider_links_path(sss), params: { stop_point_id: point.id, rids: %w[R3 R1] }
+    within_tenant(company) do
+      sss.rider_assignments.create!(rid: "R3", stop_point: point, manual: true)
+      sss.rider_assignments.create!(rid: "R1", stop_point: f[:s1].points.second)
+    end
+    post api_v1_school_remove_rider_links_path(sss), params: { links: [ { rid: "R3", point_id: point.id }, { rid: "R1", point_id: point.id } ] }, as: :json
+    expect(json[:data]).to eq(unassigned: 1)
+    expect(within_tenant(company) { sss.rider_assignments.pluck(:rid) }).to eq(%w[R1])
+  end
+
+  it "shows the subzone in the school's stops and in the PUT answer, like the library" do
+    put api_v1_school_stop_path(sss, f[:s1]), params: { postal_codes: %w[460101] }, as: :json
+    expect(json.dig(:data, :stop)).to include(subzone_code: "BDSZ03")
+    expect(json.dig(:data, :stop)).to have_key(:subzone)
+    get api_v1_school_stops_path(sss)
+    expect(json[:data].first[:stop]).to have_key(:subzone)
+  end
+
+  it "archives a stop, unassigning riders an earlier unlink left on its points" do
+    within_tenant(company) { sss.rider_assignments.create!(rid: "R1", stop_point: f[:s2].points.first) }
+    delete api_v1_stop_path(f[:s2])
+    expect(json[:data]).to eq(unassigned: 1)
+    expect(within_tenant(company) { [ sss.rider_assignments.count, Stop.discarded.count ] }).to eq([ 0, 1 ])
+
+    within_tenant(company) { SchoolStop.create!(school: sss, stop: f[:s1]) }
+    delete api_v1_stop_path(f[:s1])
+    expect(response).to have_http_status(:unprocessable_content)
+    expect(json.dig(:error, :message)).to eq("Unlink BDSZ03-0001 from every school first")
+  end
+
+  it "reads the Content-Disposition header across origins" do
+    get api_v1_school_stops_path(sss), headers: { "Origin" => "http://localhost:3000" }
+    expect(response.headers["Access-Control-Expose-Headers"]).to include("Content-Disposition")
   end
 end

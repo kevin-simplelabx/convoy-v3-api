@@ -48,8 +48,8 @@ List parameters:
 
 - `q` matches the stop name, the Stop ID, a PUDO ID (such as `0001c`) or an old ID; not postal codes (the prototype's
   search box is "Search name, Stop ID, PUDO ID or old ID").
-- Paged as every list ([README § Responses](../README.md#responses)): `meta { page, limit, count, pages }` plus
-  `meta.subzones`; default 50, `limit` up to 500.
+- Paged as every list ([README § Responses](../README.md#responses)): `meta { page, limit, count, pages }`;
+  each row carries its `subzone { code, name, planning_area }` (so do `GET /schools/:id/stops` and the `PUT` answer); default 50, `limit` up to 500.
 - `status` is `approved`, `school` or `pending`.
 - `not_linked=1` (with `school_id`) gives the stops that school does not use yet ("Browse Library").
 
@@ -114,7 +114,7 @@ their use or sizes change, the API answers 422 with `code: "confirm_required"`:
 Show the dialog with those schools and their riders, then send the same request again with `confirmed: true`. Every
 school using the stop gets its "Stops changed since routing" time updated (`stops_changed_at`, §3).
 
-**Archive:** `DELETE /stops/:id` works only when no school uses the stop ("Unlink BDSZ03-0001 from every school first").
+**Archive:** `DELETE /stops/:id` works only when no school uses the stop ("Unlink BDSZ03-0001 from every school first"). It answers `200 { data: { unassigned: n } }`: riders still assigned to the stop's points (left by an older unlink) are unassigned in the same transaction.
 
 ## 2. Library membership and requests
 
@@ -144,8 +144,8 @@ A rider whose home is inside the catchment may use the stop's points.
 | --- | --- |
 | `GET /schools/:id/stops?attention=1` | The school's stops (the "School Stops N" / "Needs Attention N" chips) |
 | `PATCH /schools/:id/stops/:stop_id` | Add to School / Use Stop (links it if needed) and change the catchment |
-| `DELETE /schools/:id/stops/:stop_id` | Unlink (the school's hand links to its points go too) |
-| `POST /schools/:id/stops/import { from_school_id, with_catchments }` | Import from Another School: links its stops that this school can see, with or without their catchments. Returns `{ added: n }` |
+| `DELETE /schools/:id/stops/:stop_id` | Unlink: the school's hand links and the riders assigned to the stop's points go too (one transaction). Answers `200 { data: { unassigned: n } }`. The prototype only warns when riders use the stop; there is no block |
+| `POST /schools/:id/stops/import { from_school_id, with_catchments }` | Import from Another School: links its stops that this school can see, with or without their catchments. Returns `{ data: { added: n } }` (no other field) |
 
 ```json
 { "data": [ { "stop": { …stop row… }, "postal_codes": ["460100"], "off_point_ids": [],
@@ -205,7 +205,7 @@ Rider colours on the map follow `status`:
 | Call | Tool |
 | --- | --- |
 | `POST /schools/:id/rider_links { stop_point_id, rids: [...], postals: [...] }` | Select Riders (S): link the picked riders or postal codes to a point as an alternative |
-| `POST /schools/:id/rider_links/remove { links: [{ rid, point_id }] }` | Select Links (L) › Remove: a hand link is deleted; a link from the catchment is cut off for that rider |
+| `POST /schools/:id/rider_links/remove { links: [{ rid, point_id }] }` | Select Links (L) › Remove: a hand link is deleted; a link from the catchment is cut off for that rider. A rider assigned to a removed point is unassigned. Answers `200 { data: { unassigned: n } }` |
 
 Reload the assignment after either call.
 
@@ -226,8 +226,8 @@ the photos it received (Add Received Photos).
 
 | Call | What it does |
 | --- | --- |
-| `GET /stop_photo_requests?status=open\|review\|closed\|all` | The requests with their photos; tabs Open / To Review (requests with photos to review) / Closed, counts in `meta.counts` |
-| `POST /stop_photo_requests { stop_point_id, audience, school_rider_id, max_submissions }` | Ask for Photos |
+| `GET /stop_photo_requests?status=open\|review\|closed\|all` | The requests with their photos; tabs Open / To Review (requests with photos to review) / Closed, counts in `meta.counts`. To Review overlaps Open: it is the open requests that have a photo waiting (as in the prototype), so the Open count includes them |
+| `POST /stop_photo_requests { stop_point_id, audience, school_rider_id, max_submissions }` | Ask for Photos (`404` for a point of an archived stop: an archived stop is out of the library) |
 | `POST /stop_photo_requests/:id/close` | Close Request → the request |
 | `POST /stop_photo_requests/:id/reopen` | Reopen a closed request → the request (`422` "Already at the max photos. Raise the max or reject some first") |
 | `DELETE /stop_photo_requests/:id` | **Remove** a closed request with its photos (`204`). A photo already accepted stays the point's photo. Before 04/11/2026 this call closed the request: use `/close` for that |
@@ -256,7 +256,7 @@ Sent By "Driver" for a driver request, else "Parent of <rider>" / "Parent"; Role
 
 **Ask for Photos:**
 
-- `audience` is `parents` (parents at the stop), `driver`, `both`, or `parent` with `school_rider_id` (one parent).
+- `audience` is `parents` (parents at the stop), `driver`, `both`, or `parent` with `rid` (the `rid` of Stop Assignment, looked up among the schools that use the point's stop) or `school_rider_id` (one parent). Unknown `rid` → 404.
 - `max_submissions` is 1–12; the default is 6.
 - Each point has one open request: "BDSZ03-0001A already has an open photo request".
 

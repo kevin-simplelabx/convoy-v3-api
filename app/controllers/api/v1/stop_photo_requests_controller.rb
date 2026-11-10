@@ -23,11 +23,11 @@ module Api
                                auto: { driver: company.stop_photo_auto_driver, parent: company.stop_photo_auto_parent } } }
       end
 
-      # POST /stop_photo_requests { stop_point_id, audience: parents|driver|both|parent, school_rider_id, max_submissions }
+      # POST /stop_photo_requests { stop_point_id, audience: parents|driver|both|parent, school_rider_id | rid, max_submissions }
       def create
         authorize Stop, :update?
         point = StopPoint.where(stop: Stop.kept).find(params.require(:stop_point_id))
-        rider = params[:school_rider_id].present? ? SchoolRider.find(params[:school_rider_id]) : nil
+        rider = find_rider(point)
         req = StopPhotos.ask(point, audience: params.require(:audience), rider:, max: params[:max_submissions] || 6, user: current_user)
         render json: { data: row(StopPhotoRequest.includes(*INCLUDES).find(req.id)) }, status: :created
       end
@@ -90,6 +90,17 @@ module Api
       private
 
       def find = StopPhotoRequest.find(params[:id])
+
+      # The parent's rider: by school_rider_id, or by rid (what Stop Assignment returns) among the schools that use the point's stop.
+      def find_rider(point)
+        return SchoolRider.find(params[:school_rider_id]) if params[:school_rider_id].present?
+        return if params[:rid].blank?
+
+        riders = SchoolRider.where(rid: params[:rid].to_s, school_id: point.stop.school_stops.select(:school_id)).order(id: :desc).to_a
+        raise ActiveRecord::RecordNotFound, "Rider #{params[:rid]} is not at a school that uses this stop" if riders.empty?
+
+        riders.first
+      end
 
       def render_request(meta: nil, status: :ok)
         body = { data: row(StopPhotoRequest.includes(*INCLUDES).find(params[:id])) }

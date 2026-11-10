@@ -81,6 +81,20 @@ RSpec.describe "Finance operator payments" do
     expect(json.dig(:data, :lines).size).to eq(3)
   end
 
+  it "gives manual items their id, and a batch of deductions only is not Paid" do
+    post api_v1_finance_operator_pay_items_path, params: { operator_id: data[:hup].id, description: "Late arrival", item_on: "2026-10-07", amount: 30, sign: "deduct" }, as: :json
+    get api_v1_finance_operator_pay_requests_path
+    items = json.dig(:data, 0, :items)
+    item = items.find { it[:source] == "item" }
+    expect(item[:ref]).to eq("item:#{item[:item_id]}")
+    expect(items.reject { it[:source] == "item" }.pluck(:item_id)).to all(be_nil)
+
+    post api_v1_finance_operator_pay_approve_path, params: { refs: [ item[:ref] ], pay_date: "2026-11-10" }, as: :json
+    batch = json[:data]
+    expect(batch).to include(total: "-30.0", paid: "0.0", status: "scheduled")
+    expect(batch[:operators].sole).to include(total: "-30.0", paid: "0.0", left: "0.0", status: "nothing_to_pay")
+  end
+
   it "takes an operator out of an open batch: its items go back to the requests, and the empty batch goes" do
     refs = [ run_ref(data[:runs][0]) ]
     post api_v1_finance_operator_pay_ad_hoc_path, params: { operator_id: data[:hup].id, pay_date: "2026-11-10", refs:,

@@ -1,10 +1,10 @@
 # School Bus › Year Setup › Bus Fares of an academic year: the table (as the wizard sends it), its billing periods and
-# the fares worked out per tier and bill; Save & Lock; another year's table as a draft.
+# the fares worked out per tier and bill; Save & Lock; a draft worked out before saving; another year's table as a draft.
 # Unlock: POST /academic_years/:id/unlock { section: "fares" }.
 module Api
   module V1
     class FareTablesController < BaseController
-      INCLUDES = { tiers: :sizes, size_columns: [], surcharges: [], bus_rates: [] }.freeze
+      INCLUDES = { tiers: %i[sizes areas], size_columns: [], surcharges: :areas, bus_rates: [] }.freeze
 
       # GET /academic_years/:academic_year_id/fares
       def show
@@ -21,12 +21,23 @@ module Api
         render json: { data: payload(find_year) }
       end
 
-      # GET /academic_years/:academic_year_id/fares/copy?from_id= — another year's table as a draft (not saved).
+      # POST /academic_years/:academic_year_id/fares/preview { …the draft table, as PUT… } — its bills (school days from the
+      # calendar now) and fares, and the first wizard check that fails; nothing is saved.
+      def preview
+        year = find_year
+        authorize year.school, :money_setup?
+        out = FareTables::Preview.call(year, table_params)
+        render json: { data: out.merge(fares: FareTables.money_tree(out[:fares])) }
+      end
+
+      # GET /academic_years/:academic_year_id/fares/copy?from_id= — another year's table as a draft (not saved, no ids).
       def copy
         year = find_year
         authorize year.school, :money_setup?
-        from = year.school.academic_years.find(params.require(:from_id)).fare_table or raise ApplicationService::Error, "That year has no fares yet"
-        render json: { data: FareTables::Present.call(from).merge(period_snapshot: nil) }
+        from = year.school.academic_years.includes(fare_table: INCLUDES).find(params.require(:from_id)).fare_table
+        raise ApplicationService::Error, "That year has no fares yet" unless from
+
+        render json: { data: FareTables::Present.call(from, copy: true).merge(period_snapshot: nil) }
       end
 
       private
@@ -41,22 +52,33 @@ module Api
         periods = FareTables.periods(year)
         lock = year.lock_of(:fares)
         { table: table && FareTables::Present.call(table), locked: lock && { at: lock.locked_at, by: lock.locked_by&.name },
-          calendar_locked: year.lock_of(:calendar).present?, periods:, fares: table ? FareTables::Calc.call(table, periods) : [],
-          bus_types: SchoolBus::BUS_TYPES.map { |k, t| { key: k, label: t[:label], seats: t[:seats] } } }
+          calendar_locked: year.lock_of(:calendar).present?, periods:, fares: table ? FareTables.money_tree(FareTables::Calc.call(table, periods)) : [],
+          bus_types: SchoolBus.types(year.school), plan_runs: SchoolBus.plan_runs(year.school) }
       end
 
       def table_params
         prices = [ :fare, :pm_fare, :one_way_fare, { period_fares: [], period_pm_fares: [] } ]
-        area = [ :area, { area: [] } ]
-        params.permit(
+        f = params.permit(
           :payer, :basis, :trip, :cycle, :distribution, :by_size, :bus_count, { months: [] }, { bill_to: %i[name contact email] },
           { one_way: %i[type value] }, { size_columns: [ :max_seats ] },
-          { tiers: [ :max_km, :name, :small_fare, :express_fare, :cca_fare, :sectors, { sectors: [] }, *area, *prices, { sizes: prices } ] },
-          { surcharges: [ :name, :kind, :amount, :one_way_kind, :one_way_value, :sectors, { sectors: [] }, *area ] },
+          { tiers: [ :id, :max_km, :name, :small_fare, :express_fare, :cca_fare, :sectors, { sectors: [] }, *prices, { sizes: prices } ] },
+          { surcharges: [ :id, :name, :kind, :amount, :one_way_kind, :one_way_value, :sectors, { sectors: [] } ] },
           { small: %i[on type value seats] }, { express: %i[on type value] },
           { cca: [ :on, :per, :price, :fixed, :split, :with_services, { riders: { non: %i[on type amount], am: %i[on type amount], pm: %i[on type amount] } } ] },
           { bus_rates: %i[bus_type rate booked_runs] }
-        ).to_h.deep_symbolize_keys.tap { |f| bools!(f) }
+        ).to_h.deep_symbolize_keys.tap { |h| bools!(h) }
+        %i[tiers surcharges].each { |k| f[k] = with_areas(f[k], params[k]) if f.key?(k) }
+        f
+      end
+
+      # areas: [{ latlngs: [[lat, lng], …], exclude }] (nested arrays, so not through permit); the old `area` → 422.
+      def with_areas(rows, raw)
+        rows.each_with_index.map do |row, i|
+          r = raw[i]
+          raise ApplicationService::Error, "area is replaced by areas: [{ latlngs, exclude }]" if r.key?(:area)
+
+          row.merge(areas: Array(r[:areas]).map { |a| { exclude: a[:exclude], latlngs: Array(a[:latlngs]).map { Array(it) } } })
+        end
       end
 
       def bools!(f)

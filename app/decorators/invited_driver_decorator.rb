@@ -2,6 +2,9 @@
 module InvitedDriverDecorator
   def photo_info = file_info(:photo, versions: [ :thumb ])
 
+  # Thumbnail link for the Scheduler (grid rows and drawer), nil without a photo.
+  def photo_thumb = file_url(:photo, :thumb)
+
   # Shown to Your Customers: { name, photo, set_by, set_at } or nil when the company has not set one.
   def display_info
     return unless display_set_at

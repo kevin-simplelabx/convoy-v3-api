@@ -8,7 +8,7 @@
 #   school_payout:<id>  a school's pay run for an operator's month (School Finance): what is left to pay; ready once approved.
 module OperatorPay
   class Due < ApplicationService
-    Item = Struct.new(:ref, :source, :operator, :description, :details, :item_on, :amount, :ready, :why, :editable, keyword_init: true)
+    Item = Struct.new(:ref, :source, :operator, :description, :details, :item_on, :amount, :ready, :why, :editable, :item_id, keyword_init: true)
 
     def initialize(operator_id: nil, now: Time.current)
       @operator_id = operator_id
@@ -75,7 +75,7 @@ module OperatorPay
       scope = scope.where(operator_id: @operator_id) if @operator_id
       scope.map do |i|
         Item.new(ref: "item:#{i.id}", source: "item", operator: i.operator, description: i.description, item_on: i.item_on,
-                 amount: i.amount, ready: true, editable: false)
+                 amount: i.amount, ready: true, editable: false, item_id: i.id)
       end
     end
   end

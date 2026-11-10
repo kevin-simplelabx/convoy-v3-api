@@ -10,7 +10,7 @@ module Api
         render json: { data: rows(year) }
       end
 
-      # POST /academic_years/:academic_year_id/extra_charges { name, kind: pct|amt|once, value, from_month, to_month, targets: [], note }
+      # POST /academic_years/:academic_year_id/extra_charges { name, kind: pct|amt|once, value, from_month, to_month, tier_ids: [], bus_types: [], note }
       def create
         year = find_year
         authorize year.school, :money_setup?
@@ -52,11 +52,12 @@ module Api
       end
 
       # POST /academic_years/:academic_year_id/extra_charges/preview { …a draft charge, id when editing } — the next 4 bills
-      # from its first month for its first target (or the first tier): before and after.
+      # from its first month for its first target (or the first tier): before and after; meta.example names the example.
       def preview
         year = find_year
         authorize year.school, :show?
-        render json: { data: ExtraCharges::Preview.call(year, charge_params, except_id: params[:id]) }
+        out = ExtraCharges::Preview.call(year, charge_params, except_id: params[:id])
+        render json: { data: out[:rows], meta: { example: out[:example] } }
       end
 
       private
@@ -64,11 +65,15 @@ module Api
       def find_year = AcademicYear.where(school: policy_scope(School)).includes(:school, :terms, :holidays, :setup_locks).find(params[:academic_year_id])
       def find_charge(year) = year.school.fare_adjustments.where(academic_year: year).find(params[:id])
 
-      def charge_params = params.permit(:name, :kind, :value, :from_month, :to_month, :note, targets: []).to_h.symbolize_keys
+      def charge_params
+        raise ApplicationService::Error, "targets is replaced by tier_ids and bus_types" if params.key?(:targets)
+
+        params.permit(:name, :kind, :value, :from_month, :to_month, :note, tier_ids: [], bus_types: []).to_h.symbolize_keys
+      end
 
       def rows(year)
-        own = year.school.fare_adjustments.where(academic_year: year).includes(:created_by).order(:from_month, :id).map { row(year, it) }
-        carried = year.school.fare_adjustments.where.not(academic_year: year).where.not(kind: "once").includes(:academic_year)
+        own = year.school.fare_adjustments.where(academic_year: year).includes(:created_by, :targets).order(:from_month, :id).map { row(year, it) }
+        carried = year.school.fare_adjustments.where.not(academic_year: year).where.not(kind: "once").includes(:academic_year, :created_by, :targets)
                       .where(from_month: ...year.starts_on).where("to_month IS NULL OR to_month >= ?", year.starts_on).order(:from_month)
                       .map { row(year, it).merge(carried_from: it.academic_year.key, can_edit: false, can_delete: false, can_end: false) }
         own + carried
@@ -77,8 +82,8 @@ module Api
       def row(year, c)
         writer = policy(year.school).money_setup?
         state = c.state
-        { id: c.id, name: c.name, kind: c.kind, value: c.value, from_month: c.from_month.strftime("%Y-%m"), to_month: c.to_month&.strftime("%Y-%m"),
-          targets: c.targets, note: c.note, state:, created_by: c.created_by&.name, created_at: c.created_at, carried_from: nil,
+        { id: c.id, name: c.name, kind: c.kind, value: FareTables.money(c.value), from_month: c.from_month.strftime("%Y-%m"), to_month: c.to_month&.strftime("%Y-%m"),
+          tier_ids: c.tier_ids, bus_types: c.bus_types, note: c.note, state:, created_by: c.created_by&.name, created_at: c.created_at, carried_from: nil,
           can_edit: writer && state == "scheduled", can_delete: writer && state == "scheduled", can_end: writer && state == "active" && c.kind != "once" }
       end
     end

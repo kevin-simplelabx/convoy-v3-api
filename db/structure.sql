@@ -144,7 +144,7 @@ CREATE TABLE public.app_accounts (
     delete_requested_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT app_accounts_name_order CHECK (((name_order)::text = ANY (ARRAY[('first'::character varying)::text, ('last'::character varying)::text])))
+    CONSTRAINT app_accounts_name_order CHECK (((name_order)::text = ANY ((ARRAY['first'::character varying, 'last'::character varying])::text[])))
 );
 
 
@@ -179,7 +179,7 @@ CREATE TABLE public.app_devices (
     push_token character varying NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT app_devices_platform CHECK (((platform)::text = ANY (ARRAY[('ios'::character varying)::text, ('android'::character varying)::text])))
+    CONSTRAINT app_devices_platform CHECK (((platform)::text = ANY ((ARRAY['ios'::character varying, 'android'::character varying])::text[])))
 );
 
 
@@ -216,9 +216,9 @@ CREATE TABLE public.app_identities (
     verified_at timestamp(6) without time zone NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT app_identities_kind CHECK (((kind)::text = ANY (ARRAY[('mobile'::character varying)::text, ('email'::character varying)::text]))),
+    CONSTRAINT app_identities_kind CHECK (((kind)::text = ANY ((ARRAY['mobile'::character varying, 'email'::character varying])::text[]))),
     CONSTRAINT app_identities_mobile_personal CHECK ((((kind)::text = 'email'::text) OR ((tag)::text = 'personal'::text))),
-    CONSTRAINT app_identities_tag CHECK (((tag)::text = ANY (ARRAY[('personal'::character varying)::text, ('work'::character varying)::text])))
+    CONSTRAINT app_identities_tag CHECK (((tag)::text = ANY ((ARRAY['personal'::character varying, 'work'::character varying])::text[])))
 );
 
 
@@ -488,7 +488,7 @@ CREATE TABLE public.banks (
     "position" integer DEFAULT 0 NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT banks_branch_rule CHECK (((branch_rule)::text = ANY (ARRAY[('pre3'::character varying)::text, ('pre3drop'::character varying)::text, ('posb'::character varying)::text, ('sc'::character varying)::text, ('uob'::character varying)::text, ('list'::character varying)::text])))
+    CONSTRAINT banks_branch_rule CHECK (((branch_rule)::text = ANY ((ARRAY['pre3'::character varying, 'pre3drop'::character varying, 'posb'::character varying, 'sc'::character varying, 'uob'::character varying, 'list'::character varying])::text[])))
 );
 
 
@@ -525,7 +525,7 @@ CREATE TABLE public.booking_approval_acts (
     carried_from integer,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT booking_approval_acts_act CHECK (((act)::text = ANY (ARRAY[('approve'::character varying)::text, ('decline'::character varying)::text])))
+    CONSTRAINT booking_approval_acts_act CHECK (((act)::text = ANY ((ARRAY['approve'::character varying, 'decline'::character varying])::text[])))
 );
 
 
@@ -557,7 +557,7 @@ CREATE TABLE public.booking_approval_step_people (
     booking_approval_step_id bigint NOT NULL,
     client_user_id bigint NOT NULL,
     reason character varying NOT NULL,
-    CONSTRAINT booking_approval_step_people_reason CHECK (((reason)::text = ANY (ARRAY[('group'::character varying)::text, ('named'::character varying)::text, ('fallback'::character varying)::text])))
+    CONSTRAINT booking_approval_step_people_reason CHECK (((reason)::text = ANY ((ARRAY['group'::character varying, 'named'::character varying, 'fallback'::character varying])::text[])))
 );
 
 
@@ -633,8 +633,8 @@ CREATE TABLE public.booking_approvals (
     decided_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT booking_approvals_same_person CHECK (((same_person)::text = ANY (ARRAY[('once'::character varying)::text, ('other'::character varying)::text]))),
-    CONSTRAINT booking_approvals_status CHECK (((status)::text = ANY (ARRAY[('wait'::character varying)::text, ('ok'::character varying)::text, ('no'::character varying)::text, ('none'::character varying)::text])))
+    CONSTRAINT booking_approvals_same_person CHECK (((same_person)::text = ANY ((ARRAY['once'::character varying, 'other'::character varying])::text[]))),
+    CONSTRAINT booking_approvals_status CHECK (((status)::text = ANY ((ARRAY['wait'::character varying, 'ok'::character varying, 'no'::character varying, 'none'::character varying])::text[])))
 );
 
 
@@ -1747,7 +1747,7 @@ CREATE TABLE public.client_approval_rules (
     same_person character varying DEFAULT 'once'::character varying NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT client_approval_rules_same_person CHECK (((same_person)::text = ANY (ARRAY[('once'::character varying)::text, ('other'::character varying)::text])))
+    CONSTRAINT client_approval_rules_same_person CHECK (((same_person)::text = ANY ((ARRAY['once'::character varying, 'other'::character varying])::text[])))
 );
 
 
@@ -1812,7 +1812,7 @@ CREATE TABLE public.client_approval_steps (
     need character varying DEFAULT 'any'::character varying NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT client_approval_steps_need CHECK (((need)::text = ANY (ARRAY[('any'::character varying)::text, ('all'::character varying)::text])))
+    CONSTRAINT client_approval_steps_need CHECK (((need)::text = ANY ((ARRAY['any'::character varying, 'all'::character varying])::text[])))
 );
 
 
@@ -1851,7 +1851,7 @@ CREATE TABLE public.client_billing_contacts (
     "position" integer DEFAULT 0 NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT client_billing_contacts_send_as CHECK (((send_as)::text = ANY (ARRAY[('to'::character varying)::text, ('cc'::character varying)::text])))
+    CONSTRAINT client_billing_contacts_send_as CHECK (((send_as)::text = ANY ((ARRAY['to'::character varying, 'cc'::character varying])::text[])))
 );
 
 
@@ -1999,7 +1999,7 @@ CREATE TABLE public.client_invoice_lines (
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
     amount_overridden boolean DEFAULT false NOT NULL,
-    CONSTRAINT client_invoice_lines_source CHECK (((source)::text = ANY (ARRAY[('trip'::character varying)::text, ('late_cancel'::character varying)::text, ('manual'::character varying)::text])))
+    CONSTRAINT client_invoice_lines_source CHECK (((source)::text = ANY ((ARRAY['trip'::character varying, 'late_cancel'::character varying, 'manual'::character varying])::text[])))
 );
 
 
@@ -2132,8 +2132,8 @@ CREATE TABLE public.client_invoices (
     voided_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT client_invoices_kind CHECK (((kind)::text = ANY (ARRAY[('invoice'::character varying)::text, ('credit_note'::character varying)::text]))),
-    CONSTRAINT client_invoices_status CHECK (((status)::text = ANY (ARRAY[('draft'::character varying)::text, ('issued'::character varying)::text, ('void'::character varying)::text])))
+    CONSTRAINT client_invoices_kind CHECK (((kind)::text = ANY ((ARRAY['invoice'::character varying, 'credit_note'::character varying])::text[]))),
+    CONSTRAINT client_invoices_status CHECK (((status)::text = ANY ((ARRAY['draft'::character varying, 'issued'::character varying, 'void'::character varying])::text[])))
 );
 
 
@@ -2323,7 +2323,7 @@ CREATE TABLE public.client_users (
     client_team_id bigint,
     manager_id bigint,
     created_by_client_user_id bigint,
-    CONSTRAINT client_users_role CHECK (((role)::text = ANY (ARRAY[('super'::character varying)::text, ('adm'::character varying)::text, ('fin'::character varying)::text, ('ssa'::character varying)::text, ('sa'::character varying)::text, ('sfin'::character varying)::text, ('member'::character varying)::text])))
+    CONSTRAINT client_users_role CHECK (((role)::text = ANY ((ARRAY['super'::character varying, 'adm'::character varying, 'fin'::character varying, 'ssa'::character varying, 'sa'::character varying, 'sfin'::character varying, 'member'::character varying])::text[])))
 );
 
 
@@ -2467,7 +2467,7 @@ CREATE TABLE public.company_country_requests (
     decided_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT company_country_requests_status CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('approved'::character varying)::text, ('declined'::character varying)::text, ('withdrawn'::character varying)::text])))
+    CONSTRAINT company_country_requests_status CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'approved'::character varying, 'declined'::character varying, 'withdrawn'::character varying])::text[])))
 );
 
 
@@ -2502,7 +2502,7 @@ CREATE TABLE public.company_lead_domains (
     updated_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT company_lead_domains_status CHECK (((status)::text = ANY (ARRAY[('new'::character varying)::text, ('contacted'::character varying)::text, ('demo'::character varying)::text, ('signed'::character varying)::text, ('lost'::character varying)::text])))
+    CONSTRAINT company_lead_domains_status CHECK (((status)::text = ANY ((ARRAY['new'::character varying, 'contacted'::character varying, 'demo'::character varying, 'signed'::character varying, 'lost'::character varying])::text[])))
 );
 
 
@@ -2713,7 +2713,7 @@ CREATE TABLE public.discover_advertisers (
     discarded_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT discover_advertisers_kind CHECK (((kind)::text = ANY (ARRAY[('tc'::character varying)::text, ('attr'::character varying)::text, ('prog'::character varying)::text, ('brand'::character varying)::text])))
+    CONSTRAINT discover_advertisers_kind CHECK (((kind)::text = ANY ((ARRAY['tc'::character varying, 'attr'::character varying, 'prog'::character varying, 'brand'::character varying])::text[])))
 );
 
 
@@ -2779,8 +2779,8 @@ CREATE TABLE public.discover_placements (
     created_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT discover_placements_kind CHECK (((kind)::text = ANY (ARRAY[('trip'::character varying)::text, ('prog'::character varying)::text, ('ad'::character varying)::text, ('news'::character varying)::text]))),
-    CONSTRAINT discover_placements_status CHECK (((status)::text = ANY (ARRAY[('draft'::character varying)::text, ('live'::character varying)::text, ('paused'::character varying)::text])))
+    CONSTRAINT discover_placements_kind CHECK (((kind)::text = ANY ((ARRAY['trip'::character varying, 'prog'::character varying, 'ad'::character varying, 'news'::character varying])::text[]))),
+    CONSTRAINT discover_placements_status CHECK (((status)::text = ANY ((ARRAY['draft'::character varying, 'live'::character varying, 'paused'::character varying])::text[])))
 );
 
 
@@ -2982,7 +2982,7 @@ CREATE TABLE public.driver_invites (
     delivery character varying DEFAULT 'recorded'::character varying NOT NULL,
     sent_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT driver_invites_kind CHECK (((kind)::text = ANY (ARRAY[('invite'::character varying)::text, ('resend'::character varying)::text])))
+    CONSTRAINT driver_invites_kind CHECK (((kind)::text = ANY ((ARRAY['invite'::character varying, 'resend'::character varying])::text[])))
 );
 
 
@@ -3491,7 +3491,7 @@ CREATE TABLE public.driver_point_lots (
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
     CONSTRAINT driver_point_lots_points CHECK (((points > 0) AND ((remaining >= 0) AND (remaining <= points)))),
-    CONSTRAINT driver_point_lots_source CHECK (((source)::text = ANY (ARRAY[('manual'::character varying)::text, ('bonus'::character varying)::text])))
+    CONSTRAINT driver_point_lots_source CHECK (((source)::text = ANY ((ARRAY['manual'::character varying, 'bonus'::character varying])::text[])))
 );
 
 
@@ -3687,7 +3687,7 @@ CREATE TABLE public.external_vehicle_submissions (
     submitted_ip character varying,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT external_vehicle_submissions_status CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('added'::character varying)::text, ('dismissed'::character varying)::text])))
+    CONSTRAINT external_vehicle_submissions_status CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'added'::character varying, 'dismissed'::character varying])::text[])))
 );
 
 
@@ -3827,6 +3827,38 @@ ALTER SEQUENCE public.family_riders_id_seq OWNED BY public.family_riders.id;
 
 
 --
+-- Name: fare_adjustment_targets; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.fare_adjustment_targets (
+    id bigint NOT NULL,
+    fare_adjustment_id bigint NOT NULL,
+    fare_tier_id bigint,
+    bus_type character varying,
+    CONSTRAINT fare_adjustment_targets_one_target CHECK ((num_nonnulls(fare_tier_id, bus_type) = 1))
+);
+
+
+--
+-- Name: fare_adjustment_targets_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.fare_adjustment_targets_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: fare_adjustment_targets_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.fare_adjustment_targets_id_seq OWNED BY public.fare_adjustment_targets.id;
+
+
+--
 -- Name: fare_adjustments; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -3865,6 +3897,40 @@ CREATE SEQUENCE public.fare_adjustments_id_seq
 --
 
 ALTER SEQUENCE public.fare_adjustments_id_seq OWNED BY public.fare_adjustments.id;
+
+
+--
+-- Name: fare_areas; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.fare_areas (
+    id bigint NOT NULL,
+    fare_tier_id bigint,
+    fare_surcharge_id bigint,
+    "position" integer NOT NULL,
+    exclude boolean DEFAULT false NOT NULL,
+    ring double precision[] NOT NULL,
+    CONSTRAINT fare_areas_one_owner CHECK ((num_nonnulls(fare_tier_id, fare_surcharge_id) = 1))
+);
+
+
+--
+-- Name: fare_areas_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.fare_areas_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: fare_areas_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.fare_areas_id_seq OWNED BY public.fare_areas.id;
 
 
 --
@@ -4365,8 +4431,8 @@ CREATE TABLE public.finance_settings (
     updated_at timestamp(6) without time zone NOT NULL,
     school_bill_draft_days integer DEFAULT 7 NOT NULL,
     school_bill_start_rule character varying DEFAULT 'prorate'::character varying NOT NULL,
-    CONSTRAINT finance_settings_approval CHECK (((approval)::text = ANY (ARRAY[('single'::character varying)::text, ('maker'::character varying)::text]))),
-    CONSTRAINT finance_settings_gst_mode CHECK (((gst_mode)::text = ANY (ARRAY[('excl'::character varying)::text, ('incl'::character varying)::text])))
+    CONSTRAINT finance_settings_approval CHECK (((approval)::text = ANY ((ARRAY['single'::character varying, 'maker'::character varying])::text[]))),
+    CONSTRAINT finance_settings_gst_mode CHECK (((gst_mode)::text = ANY ((ARRAY['excl'::character varying, 'incl'::character varying])::text[])))
 );
 
 
@@ -4409,8 +4475,8 @@ CREATE TABLE public.fuel_alerts (
     checked_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT fuel_alerts_kind CHECK (((kind)::text = ANY (ARRAY[('eff'::character varying)::text, ('odo'::character varying)::text, ('dbl'::character varying)::text, ('big'::character varying)::text, ('price'::character varying)::text, ('trend'::character varying)::text]))),
-    CONSTRAINT fuel_alerts_status CHECK (((status)::text = ANY (ARRAY[('open'::character varying)::text, ('checked'::character varying)::text])))
+    CONSTRAINT fuel_alerts_kind CHECK (((kind)::text = ANY ((ARRAY['eff'::character varying, 'odo'::character varying, 'dbl'::character varying, 'big'::character varying, 'price'::character varying, 'trend'::character varying])::text[]))),
+    CONSTRAINT fuel_alerts_status CHECK (((status)::text = ANY ((ARRAY['open'::character varying, 'checked'::character varying])::text[])))
 );
 
 
@@ -4445,7 +4511,7 @@ CREATE TABLE public.fuel_companies (
     "position" integer DEFAULT 0 NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT fuel_companies_kind CHECK (((kind)::text = ANY (ARRAY[('fuel'::character varying)::text, ('elec'::character varying)::text, ('both'::character varying)::text])))
+    CONSTRAINT fuel_companies_kind CHECK (((kind)::text = ANY ((ARRAY['fuel'::character varying, 'elec'::character varying, 'both'::character varying])::text[])))
 );
 
 
@@ -4497,7 +4563,7 @@ CREATE TABLE public.fuel_entries (
     updated_at timestamp(6) without time zone NOT NULL,
     energy_km integer,
     CONSTRAINT fuel_entries_amounts CHECK (((quantity > (0)::numeric) AND (cost >= (0)::numeric))),
-    CONSTRAINT fuel_entries_kind CHECK (((kind)::text = ANY (ARRAY[('diesel'::character varying)::text, ('petrol'::character varying)::text, ('def'::character varying)::text, ('elec'::character varying)::text])))
+    CONSTRAINT fuel_entries_kind CHECK (((kind)::text = ANY ((ARRAY['diesel'::character varying, 'petrol'::character varying, 'def'::character varying, 'elec'::character varying])::text[])))
 );
 
 
@@ -4983,7 +5049,7 @@ CREATE TABLE public.occurrence_corrections (
     lock_version integer DEFAULT 0 NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT occurrence_corrections_outcome CHECK (((outcome)::text = ANY (ARRAY[('completed'::character varying)::text, ('incomplete'::character varying)::text])))
+    CONSTRAINT occurrence_corrections_outcome CHECK (((outcome)::text = ANY ((ARRAY['completed'::character varying, 'incomplete'::character varying])::text[])))
 );
 
 
@@ -5705,7 +5771,7 @@ CREATE TABLE public.operator_pay_batches (
     created_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT operator_pay_batches_kind CHECK (((kind)::text = ANY (ARRAY[('batch'::character varying)::text, ('adhoc'::character varying)::text])))
+    CONSTRAINT operator_pay_batches_kind CHECK (((kind)::text = ANY ((ARRAY['batch'::character varying, 'adhoc'::character varying])::text[])))
 );
 
 
@@ -5902,7 +5968,7 @@ CREATE TABLE public.pay_bonus_drivers (
     signed_up_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT pay_bonus_drivers_role CHECK (((role)::text = ANY (ARRAY[('eligible'::character varying)::text, ('signed_up'::character varying)::text])))
+    CONSTRAINT pay_bonus_drivers_role CHECK (((role)::text = ANY ((ARRAY['eligible'::character varying, 'signed_up'::character varying])::text[])))
 );
 
 
@@ -6091,8 +6157,8 @@ CREATE TABLE public.pay_bonuses (
     discarded_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT pay_bonuses_frequency CHECK (((frequency)::text = ANY (ARRAY[('daily'::character varying)::text, ('weekly'::character varying)::text, ('monthly'::character varying)::text, ('quarterly'::character varying)::text, ('half_yearly'::character varying)::text, ('yearly'::character varying)::text]))),
-    CONSTRAINT pay_bonuses_plan_type CHECK (((plan_type)::text = ANY (ARRAY[('trip_target'::character varying)::text, ('reliability_otp'::character varying)::text, ('reliability_attendance'::character varying)::text])))
+    CONSTRAINT pay_bonuses_frequency CHECK (((frequency)::text = ANY ((ARRAY['daily'::character varying, 'weekly'::character varying, 'monthly'::character varying, 'quarterly'::character varying, 'half_yearly'::character varying, 'yearly'::character varying])::text[]))),
+    CONSTRAINT pay_bonuses_plan_type CHECK (((plan_type)::text = ANY ((ARRAY['trip_target'::character varying, 'reliability_otp'::character varying, 'reliability_attendance'::character varying])::text[])))
 );
 
 
@@ -6300,7 +6366,7 @@ CREATE TABLE public.pay_rewards (
     discarded_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT pay_rewards_status CHECK (((status)::text = ANY (ARRAY[('active'::character varying)::text, ('inactive'::character varying)::text])))
+    CONSTRAINT pay_rewards_status CHECK (((status)::text = ANY ((ARRAY['active'::character varying, 'inactive'::character varying])::text[])))
 );
 
 
@@ -6371,7 +6437,7 @@ CREATE TABLE public.pay_scheme_target_tiers (
     "position" integer DEFAULT 0 NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT pay_scheme_target_tiers_period CHECK (((period)::text = ANY (ARRAY[('weekly'::character varying)::text, ('monthly'::character varying)::text])))
+    CONSTRAINT pay_scheme_target_tiers_period CHECK (((period)::text = ANY ((ARRAY['weekly'::character varying, 'monthly'::character varying])::text[])))
 );
 
 
@@ -6486,7 +6552,7 @@ CREATE TABLE public.pay_schemes (
     discarded_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT pay_schemes_type CHECK (((scheme_type)::text = ANY (ARRAY[('basic_plus_trips'::character varying)::text, ('monthly_with_minimum'::character varying)::text, ('shift_based'::character varying)::text])))
+    CONSTRAINT pay_schemes_type CHECK (((scheme_type)::text = ANY ((ARRAY['basic_plus_trips'::character varying, 'monthly_with_minimum'::character varying, 'shift_based'::character varying])::text[])))
 );
 
 
@@ -6752,7 +6818,7 @@ CREATE TABLE public.portal_sign_in_codes (
     ip character varying,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT portal_sign_in_codes_purpose CHECK (((purpose)::text = ANY (ARRAY[('first'::character varying)::text, ('reset'::character varying)::text])))
+    CONSTRAINT portal_sign_in_codes_purpose CHECK (((purpose)::text = ANY ((ARRAY['first'::character varying, 'reset'::character varying])::text[])))
 );
 
 
@@ -7211,8 +7277,8 @@ CREATE TABLE public.replacements (
     updated_at timestamp(6) without time zone NOT NULL,
     school_route_id bigint,
     CONSTRAINT replacements_dates CHECK ((ends_on >= starts_on)),
-    CONSTRAINT replacements_kind CHECK (((kind)::text = ANY (ARRAY[('drv'::character varying)::text, ('veh'::character varying)::text, ('crew'::character varying)::text, ('hand'::character varying)::text]))),
-    CONSTRAINT replacements_range_kinds CHECK ((((scope)::text = 'run'::text) OR ((kind)::text = ANY (ARRAY[('drv'::character varying)::text, ('veh'::character varying)::text])))),
+    CONSTRAINT replacements_kind CHECK (((kind)::text = ANY ((ARRAY['drv'::character varying, 'veh'::character varying, 'crew'::character varying, 'hand'::character varying])::text[]))),
+    CONSTRAINT replacements_range_kinds CHECK ((((scope)::text = 'run'::text) OR ((kind)::text = ANY ((ARRAY['drv'::character varying, 'veh'::character varying])::text[])))),
     CONSTRAINT replacements_run_source CHECK ((((scope)::text = 'range'::text) OR (num_nonnulls(trip_id, school_route_id) = 1)))
 );
 
@@ -9390,7 +9456,7 @@ CREATE TABLE public.trip_occurrences (
     driver_end_reason character varying,
     end_on_board integer,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
-    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
+    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 )
 PARTITION BY RANGE (date);
 
@@ -9468,7 +9534,7 @@ CREATE TABLE public.trip_occurrences_y2026m09 (
     driver_end_reason character varying,
     end_on_board integer,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
-    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
+    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 );
 
 
@@ -9531,7 +9597,7 @@ CREATE TABLE public.trip_occurrences_y2026m10 (
     driver_end_reason character varying,
     end_on_board integer,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
-    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
+    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 );
 
 
@@ -9594,7 +9660,7 @@ CREATE TABLE public.trip_occurrences_y2026m11 (
     driver_end_reason character varying,
     end_on_board integer,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
-    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
+    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 );
 
 
@@ -9657,7 +9723,7 @@ CREATE TABLE public.trip_occurrences_y2026m12 (
     driver_end_reason character varying,
     end_on_board integer,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
-    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
+    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 );
 
 
@@ -9720,7 +9786,7 @@ CREATE TABLE public.trip_occurrences_y2027m01 (
     driver_end_reason character varying,
     end_on_board integer,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
-    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
+    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 );
 
 
@@ -9783,7 +9849,7 @@ CREATE TABLE public.trip_occurrences_y2027m02 (
     driver_end_reason character varying,
     end_on_board integer,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
-    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
+    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 );
 
 
@@ -9846,7 +9912,7 @@ CREATE TABLE public.trip_occurrences_y2027m03 (
     driver_end_reason character varying,
     end_on_board integer,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
-    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
+    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
 );
 
 
@@ -10455,8 +10521,8 @@ CREATE TABLE public.trips (
     route_list_imported_at timestamp(6) without time zone,
     students_purged_at timestamp(6) without time zone,
     booking_trip_id bigint,
-    CONSTRAINT trips_end_mode CHECK (((end_mode)::text = ANY (ARRAY[('none'::character varying)::text, ('never'::character varying)::text, ('date'::character varying)::text, ('count'::character varying)::text]))),
-    CONSTRAINT trips_kind CHECK (((kind)::text = ANY (ARRAY[('ad_hoc'::character varying)::text, ('corporate_shuttle'::character varying)::text, ('airport_transfer'::character varying)::text, ('disposal'::character varying)::text, ('school_run'::character varying)::text])))
+    CONSTRAINT trips_end_mode CHECK (((end_mode)::text = ANY ((ARRAY['none'::character varying, 'never'::character varying, 'date'::character varying, 'count'::character varying])::text[]))),
+    CONSTRAINT trips_kind CHECK (((kind)::text = ANY ((ARRAY['ad_hoc'::character varying, 'corporate_shuttle'::character varying, 'airport_transfer'::character varying, 'disposal'::character varying, 'school_run'::character varying])::text[])))
 );
 
 
@@ -10725,7 +10791,7 @@ CREATE TABLE public.vehicle_finance_entries (
     created_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT vehicle_finance_entries_kind CHECK (((kind)::text = ANY (ARRAY[('revenue'::character varying)::text, ('cost'::character varying)::text])))
+    CONSTRAINT vehicle_finance_entries_kind CHECK (((kind)::text = ANY ((ARRAY['revenue'::character varying, 'cost'::character varying])::text[])))
 );
 
 
@@ -10775,7 +10841,7 @@ CREATE TABLE public.vehicle_financials (
     updated_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT vehicle_financials_funding CHECK (((funding)::text = ANY (ARRAY[('loan'::character varying)::text, ('cash'::character varying)::text])))
+    CONSTRAINT vehicle_financials_funding CHECK (((funding)::text = ANY ((ARRAY['loan'::character varying, 'cash'::character varying])::text[])))
 );
 
 
@@ -11122,7 +11188,7 @@ CREATE TABLE public.vehicle_type_requests (
     vehicle_type_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT vehicle_type_requests_status CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('added'::character varying)::text, ('declined'::character varying)::text])))
+    CONSTRAINT vehicle_type_requests_status CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'added'::character varying, 'declined'::character varying])::text[])))
 );
 
 
@@ -12036,10 +12102,24 @@ ALTER TABLE ONLY public.family_riders ALTER COLUMN id SET DEFAULT nextval('publi
 
 
 --
+-- Name: fare_adjustment_targets id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.fare_adjustment_targets ALTER COLUMN id SET DEFAULT nextval('public.fare_adjustment_targets_id_seq'::regclass);
+
+
+--
 -- Name: fare_adjustments id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.fare_adjustments ALTER COLUMN id SET DEFAULT nextval('public.fare_adjustments_id_seq'::regclass);
+
+
+--
+-- Name: fare_areas id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.fare_areas ALTER COLUMN id SET DEFAULT nextval('public.fare_areas_id_seq'::regclass);
 
 
 --
@@ -13995,11 +14075,27 @@ ALTER TABLE ONLY public.family_riders
 
 
 --
+-- Name: fare_adjustment_targets fare_adjustment_targets_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.fare_adjustment_targets
+    ADD CONSTRAINT fare_adjustment_targets_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: fare_adjustments fare_adjustments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.fare_adjustments
     ADD CONSTRAINT fare_adjustments_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: fare_areas fare_areas_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.fare_areas
+    ADD CONSTRAINT fare_areas_pkey PRIMARY KEY (id);
 
 
 --
@@ -15589,6 +15685,20 @@ CREATE INDEX idx_on_company_id_status_created_at_f335c61b86 ON public.external_v
 --
 
 CREATE INDEX idx_on_company_id_vocational_licence_expires_on_68d32c5ee3 ON public.driver_kyc_profiles USING btree (company_id, vocational_licence_expires_on);
+
+
+--
+-- Name: idx_on_fare_adjustment_id_bus_type_d4427973e8; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_on_fare_adjustment_id_bus_type_d4427973e8 ON public.fare_adjustment_targets USING btree (fare_adjustment_id, bus_type) WHERE (bus_type IS NOT NULL);
+
+
+--
+-- Name: idx_on_fare_adjustment_id_fare_tier_id_99d63c766c; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_on_fare_adjustment_id_fare_tier_id_99d63c766c ON public.fare_adjustment_targets USING btree (fare_adjustment_id, fare_tier_id) WHERE (fare_tier_id IS NOT NULL);
 
 
 --
@@ -17429,7 +17539,7 @@ CREATE INDEX index_drivers_on_last_vehicle_id ON public.drivers USING btree (las
 -- Name: index_drivers_on_live_phone; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX index_drivers_on_live_phone ON public.drivers USING btree (company_id, phone) WHERE (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('active'::character varying)::text])) AND (discarded_at IS NULL));
+CREATE UNIQUE INDEX index_drivers_on_live_phone ON public.drivers USING btree (company_id, phone) WHERE (((status)::text = ANY ((ARRAY['pending'::character varying, 'active'::character varying])::text[])) AND (discarded_at IS NULL));
 
 
 --
@@ -17531,6 +17641,13 @@ CREATE UNIQUE INDEX index_family_riders_on_school_id_and_rid ON public.family_ri
 
 
 --
+-- Name: index_fare_adjustment_targets_on_fare_tier_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_fare_adjustment_targets_on_fare_tier_id ON public.fare_adjustment_targets USING btree (fare_tier_id);
+
+
+--
 -- Name: index_fare_adjustments_on_academic_year_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -17542,6 +17659,20 @@ CREATE INDEX index_fare_adjustments_on_academic_year_id ON public.fare_adjustmen
 --
 
 CREATE INDEX index_fare_adjustments_on_school_id_and_from_month ON public.fare_adjustments USING btree (school_id, from_month);
+
+
+--
+-- Name: index_fare_areas_on_fare_surcharge_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_fare_areas_on_fare_surcharge_id ON public.fare_areas USING btree (fare_surcharge_id);
+
+
+--
+-- Name: index_fare_areas_on_fare_tier_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_fare_areas_on_fare_tier_id ON public.fare_areas USING btree (fare_tier_id);
 
 
 --
@@ -18157,7 +18288,7 @@ CREATE INDEX index_operator_drivers_on_last_vehicle_id ON public.operator_driver
 -- Name: index_operator_drivers_on_live_phone; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX index_operator_drivers_on_live_phone ON public.operator_drivers USING btree (company_id, phone) WHERE (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('active'::character varying)::text])) AND (discarded_at IS NULL));
+CREATE UNIQUE INDEX index_operator_drivers_on_live_phone ON public.operator_drivers USING btree (company_id, phone) WHERE (((status)::text = ANY ((ARRAY['pending'::character varying, 'active'::character varying])::text[])) AND (discarded_at IS NULL));
 
 
 --
@@ -22120,6 +22251,14 @@ ALTER TABLE ONLY public.client_approval_rule_sites
 
 
 --
+-- Name: fare_areas fk_rails_02b977da59; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.fare_areas
+    ADD CONSTRAINT fk_rails_02b977da59 FOREIGN KEY (fare_tier_id) REFERENCES public.fare_tiers(id) ON DELETE CASCADE;
+
+
+--
 -- Name: document_reads fk_rails_02d9fe65e2; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -22720,6 +22859,14 @@ ALTER TABLE ONLY public.vehicle_handovers
 
 
 --
+-- Name: fare_areas fk_rails_2090b1dc4e; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.fare_areas
+    ADD CONSTRAINT fk_rails_2090b1dc4e FOREIGN KEY (fare_surcharge_id) REFERENCES public.fare_surcharges(id) ON DELETE CASCADE;
+
+
+--
 -- Name: replacements fk_rails_20ad5cb2d5; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -23101,6 +23248,14 @@ ALTER TABLE ONLY public.school_bill_runs
 
 ALTER TABLE ONLY public.driver_point_allocations
     ADD CONSTRAINT fk_rails_3336a5f9a3 FOREIGN KEY (driver_point_deduction_id) REFERENCES public.driver_point_deductions(id);
+
+
+--
+-- Name: fare_adjustment_targets fk_rails_33516b7af3; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.fare_adjustment_targets
+    ADD CONSTRAINT fk_rails_33516b7af3 FOREIGN KEY (fare_adjustment_id) REFERENCES public.fare_adjustments(id) ON DELETE CASCADE;
 
 
 --
@@ -24301,6 +24456,14 @@ ALTER TABLE ONLY public.family_riders
 
 ALTER TABLE ONLY public.school_payouts
     ADD CONSTRAINT fk_rails_6bf6da087f FOREIGN KEY (returned_by_id) REFERENCES public.users(id);
+
+
+--
+-- Name: fare_adjustment_targets fk_rails_6c1d17be9b; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.fare_adjustment_targets
+    ADD CONSTRAINT fk_rails_6c1d17be9b FOREIGN KEY (fare_tier_id) REFERENCES public.fare_tiers(id) ON DELETE CASCADE;
 
 
 --
@@ -27582,6 +27745,10 @@ ALTER TABLE public.trip_occurrences
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261110100000'),
+('20261105100200'),
+('20261105100100'),
+('20261105100000'),
 ('20261104220100'),
 ('20261104220000'),
 ('20261104210000'),

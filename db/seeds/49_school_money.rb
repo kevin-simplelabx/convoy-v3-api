@@ -1,5 +1,6 @@
 # School Bus money set-up sample for St. Stephen's School: AY 2026 Bus Fares (parents pay, distance tiers, per term,
-# 1-way at 60%, Small Bus +10%, CCA per trip) locked, a fuel surcharge from next month, Payment & Refund Policy
+# 1-way at 60%, Small Bus +10%, CCA per trip) locked, a fuel surcharge from next month (every rider) and a toll for
+# the Above 10 km tier only, Payment & Refund Policy
 # version 1, Payment Methods (company account, card +3%), Operator Pay (10 paid months, June / December earned by terms)
 # with prices per bus size.
 with_company("SD") do
@@ -18,6 +19,11 @@ with_company("SD") do
   unless school.fare_adjustments.exists?
     school.fare_adjustments.create!(academic_year: year, name: "Fuel Surcharge", kind: "pct", value: 5, from_month: Date.current.next_month.beginning_of_month,
                                     note: "Fuel surcharge (diesel above S$3.20 a litre)", created_by: admin)
+  end
+  unless school.fare_adjustments.exists?(name: "Long Distance Toll")
+    toll = school.fare_adjustments.create!(academic_year: year, name: "Long Distance Toll", kind: "amt", value: 15, created_by: admin,
+                                           from_month: Date.current.next_month.beginning_of_month, note: "ERP tolls on the expressway runs")
+    toll.targets.create!(fare_tier: year.fare_table.tiers.last) # Above 10 km only
   end
   unless school.policy_versions.exists?
     Policies::Publish.call(school, Policies.default.merge(effective_on: Date.current), user: admin)

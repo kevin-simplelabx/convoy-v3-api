@@ -10,4 +10,17 @@ module SchoolBus
   module_function
 
   def statutory_sizes = BUS_TYPES.select { |_, t| t[:law] }.keys
+
+  # The bus types for a school's money screens: seats, and student seats = seats less the attendant's seat on the sizes
+  # the school's Bus Attendant setting needs one on (the engine's prepTypes).
+  def types(school)
+    needed = (school.attendant_policy || SchoolAttendantPolicy.new).needed_sizes
+    BUS_TYPES.map { |k, t| { key: k, label: t[:label], seats: t[:seats], student_seats: t[:seats] - (needed.include?(k) ? 1 : 0) } }
+  end
+
+  # Runs per bus type in the AM and PM route plans in use today (HTML planBuses: an AM and a PM run count as 2), for
+  # per-bus fares "From Route Plans". Routes without a bus type are left out.
+  def plan_runs(school, day = Date.current)
+    SchoolRoute.joins(:plan).merge(SchoolDashboard.plans_on(school, day).where(session: %w[am pm])).where.not(bus_type: nil).group(:bus_type).count
+  end
 end

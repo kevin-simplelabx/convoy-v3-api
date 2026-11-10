@@ -17,7 +17,7 @@ RSpec.describe "Finance vehicle financials" do
 
   it "works out the loan schedule and what is owed" do
     get api_v1_finance_vehicles_path
-    expect(json[:data].first).to include(plate: "PC7475L", status: "no_details")
+    expect(json[:data].first).to include(plate: "PC7475L", status: "no_details", due_this_month: "0.0") # a decimal like the rows with a loan
 
     save(funding: "loan", loan_amount: 100_000)
     expect(json.dig(:error, :details).keys).to include(:tenure_months, :first_due_on)

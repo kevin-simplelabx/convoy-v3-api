@@ -64,6 +64,16 @@ RSpec.describe "School Bus stop photo requests" do
     expect(within_tenant(company) { f[:a].reload.photo.url }).to be_present
   end
 
+  it "asks one parent by rid (what Stop Assignment returns) or school_rider_id" do
+    rider = within_tenant(company) { School.first.riders.create!(rid: "R9", name: "Rider 9", postal: "460101", source: "manual") }
+    post api_v1_stop_photo_requests_path, params: { stop_point_id: f[:a].id, audience: "parent", rid: "R9" }
+    expect(json[:data]).to include(audience: "parent", parent_of: "Rider 9")
+    post api_v1_stop_photo_requests_path, params: { stop_point_id: f[:b].id, audience: "parent", school_rider_id: rider.id }
+    expect(json[:data]).to include(parent_of: "Rider 9")
+    post api_v1_stop_photo_requests_path, params: { stop_point_id: f[:b].id, audience: "parent", rid: "NOPE" }
+    expect(response).to have_http_status(:not_found)
+  end
+
   it "records photos the office received, up to the max, and closes the request when it is reached" do
     post api_v1_stop_photo_requests_path, params: { stop_point_id: f[:b].id, audience: "driver", max_submissions: 2 }
     id = json.dig(:data, :id)

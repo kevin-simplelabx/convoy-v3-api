@@ -115,7 +115,7 @@ invoice a credit note is for (`null` on an invoice).
 Line: `{ id, source: trip | late_cancel | manual, trip_id, ref, description, details, period_text, quantity, unit_price, amount,
 amount_overridden, runs_amount (not on manual lines),
 runs [{ id, occurrence_id, date, start_time, trip_label, amount, waived, cancelled_hours_before }] }`. `cancelled_hours_before`
-(late cancellation runs, else `null`): hours before the start the client cancelled, rounded → "<date> <time> | <trip> | cancelled 3 h before".
+(late cancellation runs, else `null`): hours before the start the client cancelled, rounded → "<date> <time> | <trip> | cancelled 3 h before". Never below 0 (as the prototype): a run cancelled at or after its start shows `0`.
 
 Save Draft body (drafts only, `422` "Only drafts can be changed"):
 
@@ -226,7 +226,8 @@ The bank CSV lists only operators with something left to pay; Payment Type is `P
 ### 4.1 Requests
 
 `data`: one group per operator `{ operator { id, name }, pays_by { method, to, warn }, to_approve, not_ready, items }`.
-Item: `{ ref, source: trip | replacement | item | school, description, details, item_on, amount, ready, why, editable }`.
+Item: `{ ref, source: trip | replacement | item | school, description, details, item_on, amount, ready, why, editable, item_id }`.
+`item_id` is the id of a manual item (`source: item`, `null` otherwise): use it for `DELETE /finance/operator_pay/items/:id`.
 `ref` is an opaque key: send it back as is (`refs`, `PUT …/costs`), never parse it. Today it looks like `run:<id>:<date>`,
 `replacement:<id>`, `item:<id>` or `school_payout:<id>`.
 
@@ -251,7 +252,7 @@ Batch: `{ id, number (PB-2026-000001), kind: batch | adhoc, pay_date, transfer_t
 created_at, created_by { id, name }, bank_file_by { id, name } | null }` ("Created by … on `created_at` | Bank file (`transfer_type`) by … on `bank_file_at`"),
 `status`: `scheduled`, `sent_to_bank`, `overdue`, `part_paid`, `paid`. `open` = no bank file and nothing paid (new approvals
 for its date join it). A batch adds `operators [{ id, operator, pays_by, notice_number, total, paid, left, status, lines, payments }]`;
-operator `status`: `to_pay` (nothing paid), `part_paid`, `paid`; `can_remove` = the batch is still open (show "Take out of
+operator `status`: `to_pay` (nothing paid), `part_paid`, `paid`, `nothing_to_pay` (the operator's total is 0 or less, e.g. deductions only: nothing to pay, nothing to mark paid); `total`, `paid`, `left` are always decimals; `can_remove` = the batch is still open (show "Take out of
 batch"; approvers only). Taken out, every item of the operator goes back to the requests (an ad hoc extra line as an extra item). `lines [{ id, ref, source, description, details, item_on, amount }]`,
 `payments [{ id, paid_on, amount, method, reference, by }]`. `operators[].id` is the **batch operator id**: use it for Pay
 (`batch_operator_id`) and for the payment notice (`GET /finance/documents/payment_notices/:id`).
@@ -336,6 +337,7 @@ Vehicle adds `financial` (the form fields + `schedule_file { url, name }`), `sch
 - **Upload a Loan Schedule from the list** (no vehicle picked yet): `POST /document_reads kind=vehicle_loan_schedule` → poll →
   match `result.plate` against the list rows' `plate` on the front end → found: `PATCH /finance/vehicles/:vehicle_id
   { document_read_id }` (`financial` may be left out); not found: let the user pick a vehicle (Attach to an Existing Vehicle) and send the same call.
+- **A schedule for a plate that is not in the fleet** (prototype: "Create Vehicle <plate>"): `POST /vehicles` with the plate, make, model, chassis number, engine number and registration date from `result` (Edit Vehicle pre-filled; own bus), then `PATCH /finance/vehicles/:vehicle_id { document_read_id }` to attach the loan.
 - Reading a schedule fills only empty fields and marks the instalments it shows as paid. A schedule for another plate:
   `422` "This schedule is for PD1234A, not PC7475L. Use Anyway or Remove File first" → resend with `use_anyway: true`.
 

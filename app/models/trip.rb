@@ -228,6 +228,11 @@ class Trip < ApplicationRecord
   validate { errors.add(:unpaid_months, "must be months 1 to 12") if unpaid_months.any? { |m| !m.to_i.between?(1, 12) } }
   validate { errors.add(:attachments, "can be up to #{MAX_ATTACHMENTS} files per trip") if attachments.reject(&:marked_for_destruction?).size > MAX_ATTACHMENTS }
 
+  TRIP_NO_START = 100_001
+
+  # The Trip ID a trip saved now would get (read-only: reserves nothing).
+  def self.next_trip_id = "TID#{CompanySequence.peek(:trip_no, start: TRIP_NO_START)}"
+
   before_create :assign_trip_numbers
   before_update :assign_trip_numbers, if: :numbers_outgrown?
 
@@ -407,7 +412,7 @@ class Trip < ApplicationRecord
 
   def assign_trip_numbers
     count = number_block_days
-    self.trip_no = CompanySequence.next_block!(:trip_no, count, start: 100_001)
+    self.trip_no = CompanySequence.next_block!(:trip_no, count, start: TRIP_NO_START)
     self.trip_no_from = starts_on
     self.trip_no_count = count
   end

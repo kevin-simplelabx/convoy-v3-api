@@ -1,4 +1,4 @@
-# A distance tier (up to max_km; the last is open-ended) or a zone (name, postal sectors and / or a drawn area — the
+# A distance tier (up to max_km; the last is open-ended) or a zone (name, postal sectors and / or drawn areas — the
 # first matching zone applies) of a fare table, with its fares: 2-way (or AM) and PM a year, own 1-way, per-period
 # amounts (custom distribution), Small Bus / Express own fares, CCA price. Prices by bus size are in fare_tier_sizes.
 # == Schema Information
@@ -7,7 +7,6 @@
 # Database name: primary
 #
 #  id              :bigint           not null, primary key
-#  area            :jsonb
 #  cca_fare        :decimal(12, 2)
 #  express_fare    :decimal(12, 2)
 #  fare            :decimal(12, 2)
@@ -31,8 +30,9 @@
 #  fk_rails_...  (fare_table_id => fare_tables.id) ON DELETE => cascade
 #
 class FareTier < ApplicationRecord
+  self.ignored_columns += [ "area" ] # moved to fare_areas (20261105100200); dropped later
+
   belongs_to :fare_table, inverse_of: :tiers
   has_many :sizes, class_name: "FareTierSize", dependent: :delete_all, inverse_of: :fare_tier
-
-  def area? = area.present? && Array(area).any?
+  has_many :areas, -> { order(:position) }, class_name: "FareArea", dependent: :delete_all, inverse_of: :fare_tier
 end

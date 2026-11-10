@@ -30,7 +30,14 @@ class OperatorPayBatchOperator < ApplicationRecord
   has_many :lines, -> { order(:item_on, :id) }, class_name: "OperatorPayBatchLine", dependent: :delete_all
   has_many :payments, -> { order(:paid_on, :id) }, class_name: "OperatorPayPayment", dependent: :delete_all
 
-  def total = lines.sum(&:amount)
-  def paid = payments.sum(&:amount)
-  def left = [ total - paid, 0 ].max
+  def total = lines.sum(0.to_d, &:amount)
+  def paid = payments.sum(0.to_d, &:amount)
+  def left = [ total - paid, 0.to_d ].max
+
+  # to_pay | part_paid | paid | nothing_to_pay (deductions only: there is no payment to make)
+  def status
+    return "nothing_to_pay" if total <= 0 && paid.zero?
+
+    left.zero? ? "paid" : (paid.positive? ? "part_paid" : "to_pay")
+  end
 end

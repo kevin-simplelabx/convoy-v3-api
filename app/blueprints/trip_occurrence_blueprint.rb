@@ -4,6 +4,8 @@ class TripOccurrenceBlueprint < ApplicationBlueprint
          :pax, :status, :vehicle_id, :original_vehicle_id, :operator_id, :price, :trip_value, :operator_cost, :shift_minutes,
          :issue_reason, :issue_raised_at, :cancelled_at, :ended_at, :starts_at, :ends_at, :ends_next_day, :overridden_fields, :lock_version,
          :replacement_id, :trip_assignment_id
+  field(:route_stops) { |o| o.route_stops }
+  field(:client_name) { |o| o.client&.name }
   field(:start_time) { |o| o.start_time_hm }
   field(:end_time) { |o| o.end_time_hm }
   field(:grid_status) { |o| o.grid_status }
@@ -26,7 +28,6 @@ class TripOccurrenceBlueprint < ApplicationBlueprint
   # A row of the Trips page.
   view :list do
     field(:status_group) { |o| o.status_group }
-    field(:client_name) { |o| o.client&.name }
     field(:customer) { |o| o.customer }
     field(:vehicle_seats) { |o| o.vehicle&.seats }
     field(:required_vehicle_type) { |o| o.required_vehicle_type }

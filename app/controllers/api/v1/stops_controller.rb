@@ -38,13 +38,10 @@ module Api
         render_data find(stop.id), StopBlueprint, view: :detail, school_id: context_school&.id, subzones:
       end
 
-      # DELETE /stops/:id — Archive (only when no school uses it).
+      # DELETE /stops/:id — Archive (only when no school uses it); riders still assigned to its points are unassigned.
       def destroy
         stop = authorize find
-        raise ApplicationService::Error, "Unlink #{stop.code} from every school first" if stop.school_stops.any?
-
-        stop.discard!
-        head :no_content
+        render json: { data: { unassigned: Stops::Archive.call(stop) } }
       end
 
       # GET /stops/nearby?lat=&lng=&school_id= — library stops within 600 m that the school does not use yet.

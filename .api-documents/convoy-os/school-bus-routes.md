@@ -202,7 +202,7 @@ the plan card's Est. Revenue / Operator Cost / Gross Profit and the Details dial
   `one_way` one-way"), Revenue, To Collect (this plan's share); a "No fare set" band (`no_fare: true`) for riders with no
   fare. `pl` = the Profit and Loss lines: "Fares from N one-way riders, in full", "Half of the two-way fares from N riders
   (S$total in total)" (+ `half`).
-- `margin_pct` = gross profit ÷ revenue (`null` when revenue is 0).
+- `margin_pct` = gross profit ÷ revenue, a **number** with 1 decimal (`null` when revenue is 0). The School Dashboard › Finance `kpis.margin_pct` is a number too.
 
 ## 4. Hand edits and Route Again
 
@@ -286,7 +286,7 @@ Riders set by hand keep their point.
 | --- | --- |
 | `POST /routes/:id/vehicle { vehicle_id, from }` | The regular bus from a date (empty `vehicle_id` = no bus). The history is in route `vehicles`. Short-term replacement buses: the drawer's Replacement Buses (below), or drag the run on the Scheduler (`POST /occurrences/:id/move`, `scope: range`, [scheduler § 3.2](scheduler.md#32-confirm-post-occurrencesidmove)) |
 | `GET /routes/:id/replacements` | Replacement Buses: `[{ id, starts_on, ends_on, vehicle { id, plate, seats }, company, arranged_by: operator\|us, daily_rate, deduct_from_operator, reason, school_days, by, created_at }]`, latest first |
-| `POST /routes/:id/replacements { from, to, vehicle_id \| plate + (operator_id \| company), arranged_by: operator\|us, daily_rate, deduct, reason }` | Add Replacement → `201` the list. "Bus not in our list": `plate` with a Transport Operator (`operator_id`: the bus joins its fleet) or a company typed in (`company`: added as an External Vehicle, within the external vehicle limit); a plate the company already has is that bus. `422`: "Pick the start date", "End date is before the start date", "Enter the replacement bus plate", "Enter the company that owns the bus", "Enter the cost per day" (arranged by us) |
+| `POST /routes/:id/replacements { from, to, vehicle_id \| plate + (operator_id \| company), arranged_by: operator\|us, daily_rate, deduct, reason }` | Add Replacement → `201` the list. When the bus is the route's own regular bus nothing is added: the dates are cut out of any replacement there, so those days go back to the regular bus and the list can come back empty (not an error; the prototype says "Back on its regular bus"). "Bus not in our list": `plate` with a Transport Operator (`operator_id`: the bus joins its fleet) or a company typed in (`company`: added as an External Vehicle, within the external vehicle limit); a plate the company already has is that bus. `422`: "Pick the start date", "End date is before the start date", "Enter the replacement bus plate", "Enter the company that owns the bus", "Enter the cost per day" (arranged by us) |
 | `DELETE /route_replacements/:id` | Remove a replacement (`204`); the regular bus comes back on runs not started yet |
 | `PATCH /routes/:id/pay_setup { attendant_required, attendant_provided_by: operator\|us, attendant_price, pay_to: own\|operator\|"", pay_to_operator_id }` | The price card's Bus Attendant Required / BA Provided By / BA Price and, for a route with no bus, Paid To (plans or finance; `attendant_price` needs finance: `422` "Needs the Fares & Billing permission"). Returns `pay_setup` |
 | `DELETE /routes/:route_id/vehicle_changes/:id` | Bus History "Remove this change" (not the first one: `422` "The first bus of the route cannot be removed. Change it instead"); returns `{ vehicles, prices }`, the runs follow |

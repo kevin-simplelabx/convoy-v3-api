@@ -34,6 +34,30 @@ RSpec.describe "Trips" do
     expect(trip[:standby]).to include(location: "Pasir Panjang carpark", report_time: "07:45")
   end
 
+  describe "GET /trips/next_number" do
+    it "starts at TID100001 and creates no sequence row" do
+      get next_number_api_v1_trips_path
+      expect(json[:data]).to eq(trip_id: "TID100001")
+      expect(within_tenant(company) { CompanySequence.where(name: "trip_no").count }).to eq(0)
+    end
+
+    it "does not reserve a number: previewing twice and saving gives the previewed number" do
+      get next_number_api_v1_trips_path
+      get next_number_api_v1_trips_path
+      expect(json[:data][:trip_id]).to eq("TID100001")
+      post api_v1_trips_path, params: { trip: base }, as: :json
+      expect(json.dig(:data, :trip_id)).to eq("TID100001")
+      get next_number_api_v1_trips_path
+      expect(json[:data][:trip_id]).to eq("TID100002")
+    end
+
+    it "skips the whole block of a recurring trip" do
+      post api_v1_trips_path, params: { trip: base.merge(days: [ 1, 2, 3 ], end_mode: "date", ends_on: "2026-11-08") }, as: :json
+      get next_number_api_v1_trips_path
+      expect(json[:data][:trip_id]).to eq("TID100008")
+    end
+  end
+
   it "creates the return of a two-way trip and links them" do
     back = {
       start_time: "17:00", end_time: "18:00",

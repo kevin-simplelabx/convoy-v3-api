@@ -28,7 +28,7 @@ module SchoolDashboard
       profit = exp && (exp - cost[:total]).round(2)
       { month: @month, state:, reference_day: day,
         kpis: { revenue: exp, revenue_note: rev[:error], revenue_basis: rev[:basis], revenue_riders: rev[:riders], academic_year: rev[:key],
-                operator_cost: cost[:total].round(2), profit:, margin_pct: exp&.positive? ? (profit * 100 / exp).round(1) : nil,
+                operator_cost: cost[:total].round(2), profit:, margin_pct: exp&.positive? ? (profit * 100 / exp).round(1).to_f : nil,
                 cost_per_rider: riders.positive? ? (cost[:total] / riders).round(2) : nil, riders:,
                 seats: { riders: load, seats:, routes:, pct: seats.positive? ? (load * 100.0 / seats).round(1) : nil } },
         collections: collections(rev), route_costs: route_costs(cost), year: year_chart(year), ahead: Ahead.new(@school, @today, SchoolDashboard.year_on(@school, @today)).fin,
