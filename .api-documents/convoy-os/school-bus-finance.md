@@ -214,7 +214,8 @@ To open each type:
 - A credit note, debit note or receipt opens with `GET /school_documents/:id`.
 - A payment voucher opens with `GET /school_payouts/:id/voucher`.
 - Voucher on a payout: `voucher: { number, on }`, or `null` until the voucher is numbered (`number` is "Draft" on the voucher page).
-- Payout `history` (newest first), each entry has a `kind`: `returned` (Sent back to Ops), `sent` (Sent to Finance), `approved`
+  The voucher is numbered at the first payment, so a part-paid run has one: its `status` is `Part Paid` until the net is paid, then `Paid`. The voucher page and the documents list (`payment_voucher`) both carry it; the voucher page also has `paid` and `balance`.
+- Payout `history` (newest first by when each step was recorded, so two payments on one day keep their order; `at` on a `paid` entry is the date paid), each entry has a `kind`: `returned` (Sent back to Ops), `sent` (Sent to Finance), `approved`
   (with the net), or `paid` (a payment with its amount, method and reference). The entries are the prototype's steps.
 
 **A credit note, debit note or receipt (`data`).** Every type has:

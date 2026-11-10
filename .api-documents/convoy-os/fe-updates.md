@@ -4,6 +4,28 @@ Changes to existing Convoy OS endpoints made while building other apps (Convoy D
 on (renamed, removed or changed fields and endpoints). New optional fields are not listed here; they are in the menu
 documents. Newest first. Each item: what changed, before → after, and what the front-end has to do.
 
+## 10/11/2026 — Bus Requests windows: registration state (API-ISSUES §24, WIP G4)
+
+**B** — `GET /schools/:id/bus_requests` → `meta.windows.registration`. Before: the saved status (`draft` / `scheduled`) or `null` when no registration was saved. Now: the registration's state, the same value as `meta.years[].registration`: `draft` until a registration is scheduled, then `upcoming`, `renewals_open`, `general_upcoming`, `open` or `closed`. `windows` is still `null` when the school has no academic year.
+
+Front-end: read `windows.registration` as a state (show it the way you show `years[].registration`); do not expect `null` or `scheduled`.
+
+## 10/11/2026 — School Bus answers from API-ISSUES (no API change: §23, §24, §27; WIP G3, G5–G8)
+
+- **Payouts `future`** (§24): `true` for the current month too, because `future` means "the month has not ended" (the prototype's rule). Show `month_text` for that month, not "future".
+- **Payouts `meta` / Documents `payers`** (§24): `meta.payers` names can repeat when two families share a name. Match on `key`, not `name`.
+- **Routing `summary.riders`** (§23): `assigned` + `unassigned`, so a rider with no stop is counted (as the doc already says). Show `assigned` and `unassigned` for the split.
+- **Routing `effort`** (§23): `effort[].sec` is the most time each effort level may search (15 s for `low`). A run finishes when its search does and can be much faster (the 0.2 s you saw is correct). The doc now says so (`school-bus-routes.md`).
+- **Replacements 422** (§27): `message` is the readable sentence and keeps the field name ("Starts on can't be blank"), as the other 422s do. Use `details` for the field: `{ starts_on: ["can't be blank"] }`.
+
+## 10/11/2026 — School Payouts: payment history order and the voucher status (API-ISSUES §24, WIP G1 / G2)
+
+**B** (behaviour change, shapes unchanged) — `GET /schools/:id/payouts` (each row's `history`), `GET /school_payouts/:id/voucher`, `GET /finance/documents?type=payment_voucher`:
+- `history` is **newest first by when each step was recorded**. Before: sorted by the typed `paid_on` date, so two payments on one day, or a payment next to an approval from the same day, could come out in the wrong order. `at` on a `paid` entry is still the date paid.
+- Voucher `status` is **`Part Paid` until the net is paid, then `Paid`**. Before: always `Paid`. The voucher is numbered at the first payment, so a part-paid run has one. This departs from the prototype, which always shows "Paid" on a voucher. The voucher page also has `paid` and `balance`.
+
+Front-end: show the history in the order given (do not sort it). Show `Part Paid` on the voucher and document rows when the status says so.
+
 ## 10/11/2026 — API-ISSUES fixes: clients search with a text `q`, stop times on Live (§25, §14)
 
 - **`GET /clients?q=Google`** (any list that takes `q`): a `q` that is text, not `q[field]=value`, is now ignored and the list returns unfiltered. Before: `500`. Use `q[name_i_cont]=Google` to search by name, as the doc says. Applies to every list endpoint that uses the `Paginated` concern.

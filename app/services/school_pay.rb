@@ -38,10 +38,17 @@ module SchoolPay
             (auto + p.adjustments.map { { kind: it.kind, route: it.route_label, reason: it.reason, sign: it.sign, amount: it.amount } }).map do |a|
               { details: [ a[:kind], a[:route], a[:reason] ].compact_blank.join(" | "), amount: a[:sign].to_i * a[:amount].to_d }
             end
+    due = net(p.base, auto, p.adjustments.to_a)
     { id: p.id, title: "Payment Voucher", number: p.voucher_number || "Draft", month: p.month, school: p.school.name,
-      pay_to: { id: p.operator.id, name: p.operator.name }, invoice_number: p.invoice_number, lines:, net: net(p.base, auto, p.adjustments.to_a),
+      pay_to: { id: p.operator.id, name: p.operator.name }, invoice_number: p.invoice_number, lines:, net: due,
+      status: voucher_status(p), paid: p.paid_amount, balance: [ due - p.paid_amount, 0.to_d ].max.round(2),
       payments: p.payments.map { it.slice(:paid_on, :amount, :method, :reference) },
       prepared_by: p.prepared_by&.name, approved_by: p.approved_by&.name, approved_at: p.approved_at }
+  end
+
+  # A voucher is numbered at the first payment, so a part-paid run has one too: "Part Paid" until the net is paid.
+  def voucher_status(p)
+    net(p.base, p.auto_lines.map(&:symbolize_keys), p.adjustments.to_a) <= p.paid_amount + 0.005 ? "Paid" : "Part Paid"
   end
 
   # Route pay plus the lines (auto replacement lines, then those Ops added), each added or deducted.

@@ -18,7 +18,7 @@ module SchoolBills
       bills = SchoolBill.issued.where(school: @schools).includes(:school, :lines, :waivers, payments: :receipt, notes: []).to_a
       docs = SchoolDocument.where(school: @schools).includes(:school, :school_bill, :applied_bill, payments: :school_bill).to_a
       policies = Calc.policies(@schools.map(&:id), today: @today)
-      vouchers = SchoolPayout.where(school: @schools).where.not(voucher_number: nil).includes(:school, :operator, :payments).to_a
+      vouchers = SchoolPayout.where(school: @schools).where.not(voucher_number: nil).includes(:school, :operator, :payments, :adjustments).to_a
       all = bills.map { invoice(it, Calc.call(it, policy: policies[it.school_id], today: @today)) } + docs.map { doc(it) } + vouchers.map { voucher(it) }
       payers = all.reject { it[:payer_key].nil? }.map { [ it[:payer_key], it[:to] ] }.uniq(&:first).sort_by(&:last)
       counts = { "all" => all.size }.merge(TYPES.keys.index_with { |t| all.count { it[:type] == t } })
@@ -45,7 +45,7 @@ module SchoolBills
     def voucher(p)
       key = "operator:#{p.operator_id}"
       { type: "pv", id: p.id, number: p.voucher_number, date: p.voucher_on, school_id: p.school_id, school: p.school.name, to: p.operator.name,
-        amount: p.paid_amount, status: "Paid", tone: "neutral", links: "#{p.month.strftime('%b %Y')} route pay#{" | Invoice #{p.invoice_number}" if p.invoice_number}",
+        amount: p.paid_amount, status: SchoolPay.voucher_status(p), tone: "neutral", links: "#{p.month.strftime('%b %Y')} route pay#{" | Invoice #{p.invoice_number}" if p.invoice_number}",
         payer_key: key, payer_keys: [ key ], search: [ p.voucher_number, p.operator.name, p.invoice_number ] }
     end
 

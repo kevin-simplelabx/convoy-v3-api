@@ -57,7 +57,7 @@ The `GET` response:
 ## 2. Run Routing
 
 `POST /schools/:id/routing_runs { session: am|pm|asa, date, params: { preset, effort, … } }` returns **202** with the
-run. Poll `GET /routing_runs/:id` until `status` is `done` or `failed` (it takes up to the effort time: 15–120 s).
+run. Poll `GET /routing_runs/:id` until `status` is `done` or `failed` (it finishes when the search does; `effort[].sec` is the most time each effort level may search, 15 s for `low`, up to 120 s. A run often ends well before that).
 The school must be on the map first (`422` "Place the school on the map first (postal code)").
 
 ```json

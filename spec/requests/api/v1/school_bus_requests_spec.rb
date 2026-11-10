@@ -85,6 +85,19 @@ RSpec.describe "School Bus requests" do
     expect(json[:meta]).to include(year: nil, windows: nil)
   end
 
+  it "gives the registration window state as Years does: draft until scheduled, then renewals open" do
+    get api_v1_school_bus_requests_path(school), params: { academic_year_id: f[:this].id }
+    expect(json[:meta][:windows]).to include(registration: "draft")
+
+    within_tenant(company) do
+      SchoolRegistration.create!(school:, academic_year: f[:this], status: "scheduled", renew_from: Date.new(2026, 11, 1), renew_to: Date.new(2026, 11, 30),
+                                 general_from: Date.new(2026, 12, 1), general_to: Date.new(2026, 12, 31), service_starts_on: Date.new(2027, 1, 4))
+    end
+    get api_v1_school_bus_requests_path(school), params: { academic_year_id: f[:this].id }
+    expect(json[:meta][:windows]).to include(registration: "renewals_open")
+    expect(json[:meta][:years].find { it[:id] == f[:this].id }).to include(registration: "renewals_open")
+  end
+
   it "acknowledges mid-year requests within working days and moves the answer date" do
     late, soon = within_tenant(company) do
       [ f[:app].("Lee Ryan", f[:this], Time.zone.local(2026, 10, 20, 10)), f[:app].("Ho Chloe", f[:this], Time.zone.local(2026, 10, 28, 10), start_when: "fixed",

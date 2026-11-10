@@ -14,7 +14,8 @@ module SchoolPay
     def call
       cost = Cost.call(@school, @month)
       payouts = @school.school_payouts.where(month: @month)
-                       .includes(:operator, :prepared_by, :sent_by, :returned_by, :approved_by, :payments, adjustments: %i[files created_by paired_operator])
+                       .includes(:operator, :prepared_by, :sent_by, :returned_by, :approved_by, payments: :recorded_by,
+                                 adjustments: %i[files created_by paired_operator])
                        .index_by(&:operator_id)
       keys = (cost[:by_operator].keys | payouts.keys | cost[:auto].keys)
       ops = Operator.where(id: keys.grep(Integer)).index_by(&:id)
@@ -110,12 +111,16 @@ module SchoolPay
     def history(p, auto)
       return [] unless p
 
+      # Newest first by when each step was recorded: a payment's paid_on is the date typed, so its created_at orders it.
       ev = []
       ev << { at: p.returned_at, kind: "returned", text: "Sent back to Ops", by: p.returned_by&.name } if p.returned_at
       ev << { at: p.sent_at, kind: "sent", text: "Sent to Finance", by: p.sent_by&.name } if p.sent_at
       ev << { at: p.approved_at, kind: "approved", text: "Approved#{" for S$#{format('%.2f', SchoolPay.net(p.base, auto, p.adjustments.to_a))}" if p.base}", by: p.approved_by&.name } if p.approved_at
-      p.payments.each { ev << { at: it.paid_on, kind: "paid", text: "S$#{format('%.2f', it.amount)} paid | #{it.method}#{" | #{it.reference}" if it.reference}", by: it.recorded_by&.name } }
-      ev.sort_by { it[:at].to_time }.reverse
+      p.payments.each do
+        ev << { at: it.paid_on, kind: "paid", text: "S$#{format('%.2f', it.amount)} paid | #{it.method}#{" | #{it.reference}" if it.reference}", by: it.recorded_by&.name,
+                recorded_at: it.created_at, seq: it.id }
+      end
+      ev.sort_by { [ (it[:recorded_at] || it[:at]).to_time, it[:seq].to_i ] }.reverse.map { it.except(:recorded_at, :seq) }
     end
   end
 end

@@ -94,7 +94,8 @@ RSpec.describe "School Bus finance payouts" do
     expect(json.dig(:error, :message)).to eq("Only an approved pay run with no payment can be reopened")
 
     get api_v1_school_payout_voucher_path(a[:id])
-    expect(json[:data]).to include(number: "PV-2026-000001", invoice_number: "ALP-1125", net: "5955.0", pay_to: hash_including(name: "Alpha Bus"))
+    expect(json[:data]).to include(number: "PV-2026-000001", invoice_number: "ALP-1125", net: "5955.0", pay_to: hash_including(name: "Alpha Bus"),
+                                   status: "Part Paid", paid: "5000.0", balance: "955.0")
     expect(json[:data][:lines].map { it[:details] }).to eq([ "Route pay, 2 routes", "Replacement bus we arranged | AM 1 | PB2002B (Beta Coaches), 2 days at S$150.00/day. Aircon broke",
                                                              "Taxi claim | AM 1 | Bus no-show", "Route covered by Beta Coaches | AM 2 | Alpha short of drivers" ])
 
@@ -121,7 +122,32 @@ RSpec.describe "School Bus finance payouts" do
     get api_v1_finance_school_collections_path
     expect(json[:meta][:schools].pluck(:name)).to eq([ "St. Stephen's School" ])
     get api_v1_finance_documents_path, params: { type: "payment_voucher" }
-    expect(json[:data].sole).to include(number: "PV-2026-000001", to: "Alpha Bus", school: "St. Stephen's School", amount: "5000.0")
+    expect(json[:data].sole).to include(number: "PV-2026-000001", to: "Alpha Bus", school: "St. Stephen's School", amount: "5000.0", status: "Part Paid")
+  end
+
+  it "lists payments newest first even on the same day, and the voucher is Paid once the net is paid" do
+    within_tenant(company) do
+      FinanceSetting.current.update!(approval: "maker")
+      FinanceApprover.create!(company:, user: ops, can_prepare: true, can_approve: true)
+      FinanceApprover.create!(company:, user: checker, can_prepare: true, can_approve: true)
+    end
+    at Time.zone.local(2026, 12, 2, 9, 0)
+    post path(:send_to_finance), params: { month: "2026-11" }, as: :json
+    at Time.zone.local(2026, 12, 2, 10, 0), checker
+    post path(:approve), params: { month: "2026-11" }, as: :json
+    net = row(board, "Alpha Bus")[:net].to_d
+
+    at Time.zone.local(2026, 12, 3, 10, 0)
+    post path(:payments), params: { month: "2026-11", paid_on: "2026-12-03", amount: 3000, method: "Bank Transfer" }, as: :json
+    at Time.zone.local(2026, 12, 3, 10, 5)
+    post path(:payments), params: { month: "2026-11", paid_on: "2026-12-03", amount: format("%.2f", net - 3000), method: "Bank Transfer" }, as: :json
+
+    a = row(board, "Alpha Bus")
+    expect(a[:history].map { it[:text] }).to eq([ "S$#{format('%.2f', net - 3000)} paid | Bank Transfer", "S$3000.00 paid | Bank Transfer",
+                                                  "Approved for S$#{format('%.2f', net)}", "Sent to Finance" ])
+    expect(a).to include(status: "Paid", balance: "0.0")
+    get api_v1_school_payout_voucher_path(a[:id])
+    expect(json[:data]).to include(status: "Paid", balance: "0.0")
   end
 
   it "keeps balance and still to pay decimal when the net is not positive" do

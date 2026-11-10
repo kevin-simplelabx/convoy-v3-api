@@ -94,7 +94,7 @@ module BusRequests
 
       reg = @year.registration || SchoolRegistrations.build(@year)
       state = ->(from, to) { @today < from ? "upcoming" : @today > to ? "closed" : "open" }
-      { registration: reg.persisted? ? reg.status : nil, confirm_hours: reg.confirm_hours,
+      { registration: reg.state(@today), confirm_hours: reg.confirm_hours,
         list: [ { name: "Early window (renewals)", from: reg.renew_from, to: reg.renew_to, state: state.(reg.renew_from, reg.renew_to) },
                 { name: "General window (everyone)", from: reg.general_from, to: reg.general_to, state: state.(reg.general_from, reg.general_to) } ] }
     end

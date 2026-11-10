@@ -266,6 +266,7 @@ start, fee). CCA, the fixed-start reason and the form answers come only from the
   `{ "status": "Requested" }`, `{ "tag": "Mid-Year" }`, `{ "deadline": "over" }`; `null` = not clickable ("Not Yet Renewed").
   Mid-Year and Overdue appear only when some requests are mid-year (Overdue then shows its count, even 0).
 - `tabs` (`open` counts), `windows` (early and general window state; `null` when the school has no academic year), `years` and `levels`.
+  `windows.registration` is the registration's state, the same value as `years[].registration`: `draft` until a registration is scheduled, then `upcoming`, `renewals_open`, `general_upcoming`, `open` or `closed`.
 - `service_check`: `{ none: false, plan: "Term 4 AM (current)" }` → "Service check uses <plan>"; `{ none: true, plan: null }` →
   "No AM route plan with routes yet".
 - Rows carry `lat`, `lng`, `located` (the applicant's home, for the map of applicant homes; `null` until placed). Home
