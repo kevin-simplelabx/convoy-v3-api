@@ -4,6 +4,96 @@ Changes to existing Convoy OS endpoints made while building other apps (Convoy D
 on (renamed, removed or changed fields and endpoints). New optional fields are not listed here; they are in the menu
 documents. Newest first. Each item: what changed, before → after, and what the front-end has to do.
 
+## 10/11/2026 — Answers to the rest of API-ISSUES (Convoy OS, phase R2)
+
+This section answers every API-ISSUES item not already answered above. Items marked **Open** are not finished (see the end).
+
+| # | Where | Your claim | Answer | Front-end |
+| --- | --- | --- | --- | --- |
+| 1 | Live Ops › attention kinds (§14) | Only 3 kinds listed | `gps_lost`, `late`, `no_show` (documented). `delay_expected` is not built (see 22) | Nothing |
+| 2 | Live Map › offline bus (§16) | Hidden after 3 days; the doc keeps it | Not an API rule: the API returns the bus with its last position, as the prototype. Hiding after 3 days is a front-end choice | Hide offline buses on the front end if you want to |
+| 3 | Riders › `meta.dataset.state` (§22) | `null` on the list | **Fixed:** the list now sends the state of its list for the day (`in_use`, `scheduled` or `replaced`) | Read it |
+| 4 | Riders › `lat` / `lng` (§22) | Numbers, README says strings | Numbers, as now (README corrected) | Treat as numbers |
+| 5 | Riders › `route_labels` `id` (§22) | Undocumented id | Label sets are keyed by `session`; there is no `id` | Use `session` |
+| 6 | Year Setup › hand-added level (§22) | Stored as `custom`; doc silent | Documented: `section` is `pre`, `pri`, `sec`, `jc`, `grd`, `yr`, or `custom` (hand-added) | Send only those values |
+| 7 | Year Setup › unlock (§22) | Year 200, school 204 | Both `200`; the school unlock answers the school | Parse the body |
+| 8 | Year Setup › `session id`, `period_label`, copy (§22) | Undocumented | The session rows have no `id`: each is keyed by `position` (and `name`). `PUT …/sessions` sends the whole list, so no id is needed. `period_label` and the copy (`GET …/sessions/copy`, a draft in `data`, no `meta`) are documented | Key rows by `position` |
+| 9 | Stops › candidate `metres` (§22) | `null` when the home has no location | Kept `null` (documented) | Show no distance |
+| 10 | Stops › `street_view_url` message (§22) | Raw field name in the message | **Fixed:** "Street View link must be a Google Maps link" (no field prefix) | Show the message |
+| 11 | Stops › Needs Attention (§22) | Omits "No catchment" / "No riders" | Kept as the prototype: Needs Attention is the coverage gaps only. Those two texts are row labels | Show them as labels |
+| 12 | Stops › delete a stop or a photo request (§22) | No delete | A stop is archived (`DELETE /stops/:id`, the only delete). A closed photo request is removed by `DELETE /stop_photo_requests/:id` (`204`) | Use Archive / Remove |
+| 13 | Routing › unassigned reason labels (§23) | Reason is a code | Codes: `RIDER_NO_STOP`, `ADMIN_REMOVED`, `NOT_ROUTED`, and the others in the doc. The FE maps the labels | Map each code |
+| 14 | Routing › `summary.riders` (§23) | Does it count no-stop riders? | Yes: `assigned` + `unassigned`, so a no-stop rider counts | Nothing |
+| 15 | Routing › low effort time (§23) | 0.2 s against 15 s in the doc | `sec` is the limit; a run ends when its search finishes, so a small run is under a second | Nothing |
+| 16 | Routing › `defaults.preset` vs `types` (§23) | Preset FEWEST_BUSES, types Balanced | `defaults` are the prototype defaults (Fewest Buses); `types` now shows the same list. Change in R1 row 4 | Nothing |
+| 17 | Routing › engine params keys (§23) | `maxEffort`, `rr*`, `ants`, `effort[].use` undocumented | Documented in `school-bus-routes.md` | Leave them at defaults |
+| 18 | Routing › empty route stops (§23) | `422`; doc said the route goes | `422`, use Delete Route (R1 row 13) | Show the message |
+| 19 | Routing › answer shapes (§23) | `vehicle` / `prices` / `charges` / comment / delete answers differ from the doc | As implemented: `POST /routes/:id/vehicle` and `/prices` → `{ vehicles, prices }`; `POST /routes/:id/charges` → the list; comment `POST` → `201` + the plan; comment `DELETE` → `204`; route `DELETE` → `200` + the plan | Read these shapes |
+| 20 | Routing › adopt cancels the other scheduled plan (§23) | Doc only "after the date" | Same as the prototype (R1 row 14) | Nothing |
+| 21 | Feasibility › postal `999999` accepted (§23) | Accepted | **Open:** we cannot reproduce it. Asked of the FE (see the question at the end) | See the question |
+| 22 | Families › guardian `name_order` (§24) | Undocumented on create | Documented: `first` or `last`, the order of the guardian's name | Send it |
+| 23 | Families › guardian `422`s without `details` (§24) | No field name for the name check | **Fixed** for the name check: `details.first` and `details.last` (both fields in red, as the prototype). Phone and email already come with `details.phone` / `details.email`. Registration and CCA `422`s stay message-only | Mark `first` / `last` / `phone` / `email` in red |
+| 24 | Families › unlink / delete (§24) | `200` / `204` undocumented | Unlink a rider `200` + the family; delete a family `204` (documented) | Nothing |
+| 25 | Registration › message fields (§24) | `released_at`, `saved_at`, `saved_by` undocumented | Documented: `released_at` (`null` until released; the screen shows "Released by you"), `saved` / `saved_at` / `saved_by` on the registration | Show "Released by you" |
+| 26 | Requests › `tabs.open` for New Service (§24) | `null` | `0` (R1 row 6) | Show `0` |
+| 27 | Requests › Overdue tile count 0 (§24) | Sent with count 0 | `0` is the true count when nothing is overdue, as sent | Show 0 |
+| 28 | Requests › Route Fit `tm` and fields (§24) | Unit unknown; no route / stop fields | `tm` is minutes from midnight of the stop time. Each route has `id`, `label`, `free` (seats), `start` / `end` (minutes), and `stops[]` with `name`, `ll`, `tm`, `n`, `postals` | Read these |
+| 29 | Requests › quote with no Bus Fares (§24) | `"0.0"` | `amount` is `null` when there is no estimate (R1 row 20) | Show an empty amount to type |
+| 30 | Requests › bulk accept answer (§24) | Undocumented | `POST /schools/:id/bus_requests/accept { ids }` → `200 { data: { updated: n } }` (documented) | Show the count |
+| 31 | Requests › change-row fare unit (§24) | No unit | Per term (R1 row 16) | Show "per term" |
+| 32 | Bills › statement lines (§24) | `details`, `charge` / `credit` null | Lines keep `details` (R1 row 17) | Read `details` |
+| 33 | Bills › `late_waived` (§24) | Money string, doc said boolean | A money string (R1 row 15) | Parse as money |
+| 34 | Bills › `payer_key`, history, voucher, payout kind (§24) | Undocumented | Documented: `payer_key` (`school` or `family:<id>`; `family:` with no id = the child is not in a family yet); bill `history` kinds (`payment`, notes, `waiver`); voucher `{ number, on }`; payout `history` kinds (`returned`, `sent`, `approved`, `paid`) | Read these shapes |
+| 35 | Bills › `meta.payers` same name twice (§24) | Duplicate names | Two payers with the same name are two families (two keys). By design | Nothing |
+| 36 | Live › `position` on arrived runs (§24) | Sent after arrival | Kept: the last known position (R1 row 9) | Nothing |
+| 37 | Live › `ahead[]` / `attention[]` `detail` (§24) | Undocumented | `detail` is the line shown under the title, as the prototype (documented) | Show it |
+| 38 | Live › utilisation with 0 seats (§24) | `null` with 65 riders | `null` (no seats, no %) | Show "—" |
+| 39 | Live › "Delay expected" (§24) | Label missing | **Not built** for now (skipped) | Hide it |
+| 40 | Finance › pending stop requests (§24) | No field | **Not built** for now (skipped) | Hide it |
+| 41 | Parents › `/api/v1/app/*` (§14) | In OpenAPI only | The parent app (Convoy App) is not final yet (its Phase 1 is in progress). Its markdown doc will come when Phase 1 is done. Until then use the OpenAPI file | Use OpenAPI for now |
+
+**Open (not finished)**
+- **21** Postal `999999`: the FE question below.
+- **Not built:** Delay expected (39) and pending stop requests on Finance (40), skipped for now.
+
+**Question to the FE (21): postal `999999`.** Please send, for the feasibility study that accepted postal `999999`:
+1. the exact request body (name, `school_mode`, `prospect_postal`, and anything else sent),
+2. the endpoint (`POST` or `PATCH`) and the response status,
+3. the time it happened, and the study id if there is one.
+We cannot reproduce it: a postal code OneMap does not know gives `422` "Postal code not found on OneMap", and nothing is saved.
+(Postal lookup is skipped only when `school_mode` is `existing`, because the postal code is not used then.)
+
+## 10/11/2026 — Decisions on the remaining API-ISSUES items (Convoy OS, phase R1)
+
+Docs: [school-bus-setup.md § 2.2, 3](school-bus-setup.md), [school-bus-stops.md](school-bus-stops.md), [school-bus-routes.md](school-bus-routes.md),
+[school-bus-parents.md](school-bus-parents.md), [school-bus-live.md](school-bus-live.md), [school-bus-finance.md](school-bus-finance.md).
+**B** = breaking. 
+
+| # | Where | Change | Front-end |
+| --- | --- | --- | --- |
+| 1 | Riders: `PATCH /schools/:id/riders/:rid`, `DELETE /schools/:id/riders/:rid` (new) | Edit or remove a rider added by hand. Delete is refused (`422`) while a family, stop, absence, CCA booking, request or bill uses the rider. Riders from an uploaded list answer `422` | Enable Edit / Remove for hand-added riders only |
+| 2 | `POST /schools/:id/unlock` (school sections) | **B** `204` → `200` with the school, as the year unlock | Parse the body (the record) |
+| 3 | `POST /schools/:id/rider_links/remove` | Accepts `{ rid }` or `{ postal }` per link; a postal link removes the code for every rider of that code at the school | Send `postal` for a whole code |
+| 4 | `GET /routing/settings` | `types` is the engine's defaults (the same list as `defaults.types`, Fewest Buses), as the prototype shows them | Show `types` as the defaults |
+| 5 | `POST /families` | A typed name is required for `name_mode: custom` (`422` "Family name is required"); an automatic name is worked out from the guardians | Show the message |
+| 6 | Requests `tabs` | **B** `New Service` `open` is `0` (was `null`) | Show `0` |
+| 7 | Levels | `section` values are listed (`pre`, `pri`, `sec`, `jc`, `grd`, `yr`, `custom`); send only these | Send only listed values |
+| 8 | Live Ops `attention` | Three kinds (`gps_lost`, `late`, `no_show`); `delay_expected` is not built | Nothing |
+| 9 | Live Ops `position` | Kept after a run arrives (the last known position); `null` before it starts | Nothing |
+| 10 | Rider `lat` / `lng` | Numbers (not strings), as now | Treat as numbers |
+| 11 | Route summary `riders` | `assigned` + `unassigned`, so riders with no stop count | Map `unassigned[].reason` labels on the front end |
+| 12 | Stops › Archive | The only delete for a stop (`DELETE /stops/:id`) | Nothing |
+| 13 | Routes › `PUT /routes/:id/stops` | Empty list → `422`; use Delete Route | Show the message |
+| 14 | Plans › Adopt | Adopting a plan also cancels the plan scheduled for the same session (as the prototype) | Nothing |
+| 15 | Money string `late_waived` | A money string, like `late_fee` (the doc said boolean) | Parse as money |
+| 16 | Change-row fare `amount` | Per term | Show "per term" |
+| 17 | Statement lines | Lines keep `details` (not `text`) | Read `details` |
+| 18 | Families `code` | **B** Codes are numbered per school (`FAM-0001` at each school), unique within the school, not the company. The same code can now exist at two schools | Show the code as is; do not treat it as a company-wide key |
+| 20 | Requests `quote_default.amount` | **B** With no Bus Fares table and no parent estimate the amount is `null` (was `"0.0"`). Staff type the fare; Accept without a fare is `422` | Show an empty amount to type; do not show 0 |
+| 19 | Families `name` (auto) | Shown as the rule: surname in upper case then " Family" (e.g. `TAN Family`); the doc example was `TAN FAMILY` | Nothing |
+
+Not built: "Delay expected" in Live Ops and pending stop requests on Finance (skipped for now; the FE is told).
+
 ## 10/11/2026 — Answers to API-ISSUES §14–§24 with no API change (Convoy OS, phase Q9)
 
 These items are answers, not changes: the API is right as it is (same as the prototype), or the feature is not built yet.

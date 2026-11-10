@@ -64,10 +64,15 @@ data, and Convoy OS can add an application on a parent's behalf.
   Only a family that lost riders to this file and is left with no rider and no guardian is deleted (`families_deleted`). One
   left with guardians only is kept, with the first warning `N families lost all their riders but still have guardians. Review or delete them`.
 
+- `DELETE /families/:id/riders/:rid` (unlink) answers `200` with the family. `DELETE /families/:id` answers `204`.
+- `payer_key` (school bills and documents) groups bills by payer: `school` for the school's own bills, or `family:<family_id>`.
+  `family:` with no id is a payer whose child is not in a family yet, so it is grouped by the child's bill only.
+- Bulk accept: `POST /schools/:id/bus_requests/accept { ids: [...] }` answers `200 { data: { updated: n } }`, the number of requests accepted.
+
 **List row** (`GET /schools/:school_id/families`, paged, `meta { page, limit, count, pages, unlinked_riders }`):
 
 ```json
-{ "id": 7, "code": "FAM-0007", "name": "TAN FAMILY", "name_mode": "auto", "source": "app", "sample": true, "guardians": 2,
+{ "id": 7, "code": "FAM-0007", "name": "TAN Family", "name_mode": "auto", "source": "app", "sample": true, "guardians": 2,
   "first_guardian": { "name": "Tan Wei Ming", "relationship": "Father", "phone": "+65 9123 4567" },
   "children": [ { "rid": "S-1001", "name": "Tan Jia Hui" } ] }
 ```
@@ -75,7 +80,7 @@ data, and Convoy OS can add an application on a parent's behalf.
 **One family** (`GET /families/:id`):
 
 ```json
-{ "id": 7, "code": "FAM-0007", "name": "TAN FAMILY", "name_mode": "auto", "source": "app", "sample": true,
+{ "id": 7, "code": "FAM-0007", "name": "TAN Family", "name_mode": "auto", "source": "app", "sample": true,
   "address": "Blk 101 Bedok North Ave 4 #05-12", "postal": "460101", "registered_at": "2026-10-20T19:42:00+08:00", "school_id": 1,
   "guardians": [ { "id": 15, "first_name": "Wei Ming", "last_name": "Tan", "name_order": "last", "name": "Tan Wei Ming",
                    "relationship": "Father", "phone": "+65 9123 4567", "email": "weiming.tan@example.com",
@@ -107,9 +112,10 @@ What the prototype's lines come from:
 
 How families work:
 
-- **Codes.** Codes run `FAM-0001`, `FAM-0002` and so on.
+- **Codes.** Codes run `FAM-0001`, `FAM-0002` and so on, numbered per school: each school starts at `FAM-0001`. A code is unique within its school.
 - **Automatic names.** With `name_mode: auto`, the name comes from a guardian's last name: Father first, then Mother, then
-  the first guardian, upper case. For example, `TAN FAMILY`.
+  the first guardian: the surname in upper case, then " Family". For example, `TAN Family`. A guardian with no surname gives the guardian's name.
+- **Custom names.** With `name_mode: custom` a name must be typed: `422` "Family name is required".
 - **Add Rider.** `POST /schools/:id/riders` accepts `family_id` to put the new rider in that family.
 
 ## 2. Bus Service Registration
@@ -138,7 +144,7 @@ There is one registration per school academic year.
   - Seats and waitlist: `seats_buffer`, `waitlist_auto`.
 - **Fees.** `show_fare`, `extra_terms`.
 - **Form questions.** `asks[]`, from `cls sidn dob med photo emerg cca`.
-- **Messages.** `messages[]`: `{ key, enabled, email, whatsapp, app, offset_days, offset_hours, subject, body, whatsapp_body, scheduled }`.
+- **Messages.** `messages[]`: `{ key, enabled, email, whatsapp, app, offset_days, offset_hours, subject, body, whatsapp_body, scheduled }`, `released_at` }`.
 
 **Defaults.** These count from the year's first school day S:
 
@@ -167,6 +173,10 @@ There is one registration per school academic year.
   - `event`.
   - `adjustable`, `manual`.
   - `sends_on`: the date it goes at 09:00. It is null for messages that follow an event, or that wait for Release Now.
+  - `released_at`: when a message kept for Release Now was released (`null` until then). The screen shows "Released by you"
+    and no time; the time is for the record.
+- The registration answer also has `saved` (a draft or a saved version exists), `saved_at` (the time of the last save) and
+  `saved_by` (the name of who saved it).
 
 **Messages.** There are 12, in this order: `inv`, `grad`, `rem`, `last`, `open`, `recv`, `offer`, `crem`, `wl`, `lapse`,
 `rej`, `wel`. Their texts start from `config/presets/registration_messages.yml`. Timing rules:
@@ -199,7 +209,8 @@ There is one registration per school academic year.
 
 - New Service: overdue mid-year first, then due soon, then other mid-year requests, then the rest. Renewals come first
   within each group, then the oldest.
-- The other tabs: newest first.
+- The other tabs: newest first. `New Service` `open` is always `0`.
+- The fare of a change of service or address row (`amount`) is per term.
 
 **Statuses** use the app's words:
 
@@ -242,7 +253,7 @@ The parent fields are `parent_name`, `parent_phone`, `parent_email`, `postal`. A
   "start_text": "From 16/11/2026, not earlier (moving house)", "reason": null,
   "deadline": { "stage": "answer", "by": "2026-11-06", "left": 2, "tone": "soon" },
   "check": { "code": "covered", "kind": "fits", "label": "Fits", "tone": "success", "current": false, "free": 3, "summary": "AM Fits on AM 1 | PM Fits on PM 2" }, "offer_by": null, "quote_amount": null, "hours_left": null,
-  "end_action": null, "change": null, "rider": null, "family": { "id": 7, "code": "FAM-0007", "name": "TAN FAMILY" },
+  "end_action": null, "change": null, "rider": null, "family": { "id": 7, "code": "FAM-0007", "name": "TAN Family" },
   "last_event": { "at": "2026-10-21T09:00:00+08:00", "by": "Ops Admin", "text": "Opened" } }
 ```
 
@@ -330,7 +341,7 @@ How the check is worked out:
 - **Which amount.** The amount of the bill the start date falls in. Both sessions are charged two ways; AM only or PM
   only is charged one way.
 - **Unit.** `month`, `term` or `semester`.
-- **No table.** Without a table, the quote is the estimate the parent saw.
+- **No table.** Without a table, the quote is the estimate the parent saw. With no estimate either, `amount` is `null`: staff type the fare, and Accept needs one (`422` "has no fare from Bus Fares. Accept it on its own with a fare"). Operator Pay is not used for a parent quote.
 - **Start (`quote_default.start_on`).** The family's start, or the registration's service start (the first school day of the year by default) when the family gave none. It is used when still ahead; otherwise the next working day (a start the family asked for that has passed does not fall back to the service start).
 - **Text.** `text` has the Route Fit summary and how the fare was found.
 

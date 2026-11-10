@@ -75,7 +75,7 @@ module Families
     end
 
     def build(code, name)
-      fam = @school.families.create!(code: code.presence || Family.next_code, name: name.presence || "New Family", name_mode: "custom")
+      fam = @school.families.create!(code: code.presence || Family.next_code(@school), name: name.presence || "New Family", name_mode: "custom")
       @out[:families_added] += 1
       @created << fam.id
       @unnamed << fam.id if name.blank?

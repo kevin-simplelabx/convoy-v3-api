@@ -57,6 +57,7 @@ RSpec.describe "School Bus riders" do
     lim = json[:data].find { |r| r[:rid] == "S-2" }
     expect(lim).to include(pm: false, starts_on: "2026-01-02", ends_on: "2026-11-20")
 
+    expect(json.dig(:meta, :dataset, :state)).to eq("in_use")
     get api_v1_school_riders_path(school), params: { filter: "unlocated" }
     expect(json[:data].map { |r| r[:rid] }).to eq(%w[S-5])
     get api_v1_school_riders_path(school), params: { q: "bedok", date: "2026-11-25" }
@@ -104,6 +105,21 @@ RSpec.describe "School Bus riders" do
     lines = response.body.lines
     expect(lines.first.strip).to start_with("student_id,student_name")
     expect(lines.size).to eq(3)
+  end
+
+  it "edits a rider added by hand, places a new postal code, and removes the rider" do
+    post api_v1_school_riders_path(school), params: { rider: { first_name: "Wei", last_name: "Tan", postal: "460216", am: true, pm: false, cca_days: "Tue" } }
+    patch api_v1_school_rider_path(school, "M-0001"), params: { rider: { first_name: "Wiel", postal: "460101", pm: true, cca_days: "Mon;Wed" } }
+    expect(response).to have_http_status(:ok)
+    expect(json[:data]).to include(rid: "M-0001", name: "Tan Wiel", postal: "460101", pm: true, cca_days: [ 1, 3 ], lat: 1.3301, located: true)
+
+    patch api_v1_school_rider_path(school, "M-0001"), params: { rider: { cca_days: "Funday" } }
+    expect(json.dig(:error, :message)).to eq("CCA days must be days like Mon;Wed")
+
+    delete api_v1_school_rider_path(school, "M-0001")
+    expect(response).to have_http_status(:no_content)
+    get api_v1_school_riders_path(school)
+    expect(json[:data]).to be_empty
   end
 
   it "needs the schools permission to change riders" do

@@ -122,7 +122,7 @@ App, and the school sees its bill in the Client Portal (when those apps come).
 - Who and what: `id`, `number`, `kind` (`first`, `cca` or `period`), `payer`, `family_id`, `bill_to`, `bill_to_code`,
   `bill_to_email`, `children`, `lines_count`, `period`, `academic_year_id`, `period_index`.
 - Dates and amounts: `issued_on`, `due_on`, `total`, `paid`, `owed`.
-- Fees and notes: `late_fee`, `late_waived`, `credited` (credit notes taken off the bill and other waivers), `debited`.
+- Fees and notes: `late_fee`, `late_waived` (a money string, like `late_fee`), `credited` (credit notes taken off the bill and other waivers), `debited`.
 - Status: `overdue`, `days_overdue`, `status`, `tone`.
 
 **`meta`:**
@@ -213,6 +213,9 @@ To open each type:
 - An invoice opens with `GET /school_bills/:id`.
 - A credit note, debit note or receipt opens with `GET /school_documents/:id`.
 - A payment voucher opens with `GET /school_payouts/:id/voucher`.
+- Voucher on a payout: `voucher: { number, on }`, or `null` until the voucher is numbered (`number` is "Draft" on the voucher page).
+- Payout `history` (newest first), each entry has a `kind`: `returned` (Sent back to Ops), `sent` (Sent to Finance), `approved`
+  (with the net), or `paid` (a payment with its amount, method and reference). The entries are the prototype's steps.
 
 **A credit note, debit note or receipt (`data`).** Every type has:
 
@@ -330,7 +333,7 @@ school name. `meta` has:
 { "data": [ { "id": 301, "number": "INV-2026-000301", "kind": "period", "payer": "family", "family_id": 44, "bill_to": "Tan Wei Ming",
               "bill_to_code": "F0044", "bill_to_email": "weiming.tan@example.com", "children": ["Tan Jia Hui"], "lines_count": 2,
               "period": "Term 4 2026", "academic_year_id": 2, "period_index": 3, "issued_on": "2026-10-01", "due_on": "2026-10-15",
-              "total": "420.0", "paid": "0.0", "late_fee": "10.0", "late_waived": false, "credited": "0.0", "debited": "0.0",
+              "total": "420.0", "paid": "0.0", "late_fee": "10.0", "late_waived": "0.0", "credited": "0.0", "debited": "0.0",
               "owed": "430.0", "overdue": true, "days_overdue": 20, "status": "Overdue", "tone": "danger",
               "school_id": 1, "school": "St. Stephen's School" } ],
   "meta": { "kpis": { "bills": 182, "billed": "76440.0", "collected": "61200.0", "outstanding": "15240.0", "not_paid": 36, "overdue": "8120.0", "overdue_bills": 19 },

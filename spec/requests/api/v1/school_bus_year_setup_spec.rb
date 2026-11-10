@@ -44,7 +44,8 @@ RSpec.describe "School Bus year setup" do
     put api_v1_school_levels_path(school), params: { levels: [ { name: "P1" } ] }, as: :json
     expect(json.dig(:error, :message)).to eq("School Levels is locked. Unlock to edit")
     post unlock_api_v1_school_path(school), params: { section: "levels" }
-    expect(response).to have_http_status(:no_content)
+    expect(response).to have_http_status(:ok)
+    expect(json[:data]).to include(id: school.id)
   end
 
   it "saves bus sessions once the calendar is locked, checks their times, and copies them to another year" do

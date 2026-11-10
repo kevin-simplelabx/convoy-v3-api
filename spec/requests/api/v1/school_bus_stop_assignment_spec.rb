@@ -83,6 +83,19 @@ RSpec.describe "School Bus stop assignment" do
     expect(within_tenant(company) { sss.rider_point_links.count }).to eq(0)
   end
 
+  it "removes a rider link for a whole postal code and unassigns every rider of that code" do
+    within_tenant(company) do
+      sss.riders.where(rid: "R1").update_all(postal: "460101")
+      sss.rider_assignments.create!(rid: "R1", stop_point: f[:s1].points.first)
+      sss.rider_assignments.create!(rid: "R2", stop_point: f[:s1].points.first)
+    end
+    post api_v1_school_remove_rider_links_path(sss), params: { links: [ { postal: "460101", point_id: f[:s1].points.first.id } ] }, as: :json
+    expect(json[:data]).to eq(unassigned: 1)
+    expect(within_tenant(company) { sss.rider_point_links.pluck(:kind, :postal) }).to eq([ %w[disconnected 460101] ])
+    post api_v1_school_remove_rider_links_path(sss), params: { links: [ { point_id: f[:s1].points.first.id } ] }, as: :json
+    expect(response).to have_http_status(:unprocessable_entity)
+  end
+
   it "unassigns the riders of the stop's points when it is unlinked, and only those" do
     within_tenant(company) do
       [ f[:s1], f[:s2] ].each { |st| SchoolStop.create!(school: sss, stop: st, postal_codes: %w[460101]) }

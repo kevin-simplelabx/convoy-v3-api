@@ -43,7 +43,7 @@ module Api
         school = authorize find, section == "operator_pay" ? :money_setup? : :setup?
 
         SchoolSetup.unlock!(school:, section:)
-        head :no_content
+        render_data school, SchoolBlueprint, view: :record
       end
 
       private

@@ -123,6 +123,15 @@ RSpec.describe "School Bus request accept" do
     expect(detail(pm_only)[:check]).to include(label: "Not Checked")
   end
 
+  it "leaves the suggested amount empty when there is no estimate and no distance to price" do
+    no_estimate = within_tenant(company) do
+      f[:school].bus_requests.create!(academic_year: f[:year], child_name: "No Estimate", parent_name: "Ng", postal: "460101", am: true, pm: true,
+                                      start_on: "2027-01-04", submitted_at: 2.days.ago, level: "P1", source: "console")
+    end
+    expect(detail(no_estimate)[:quote_default]).to include(amount: nil, start_on: "2027-01-04")
+    expect(detail(no_estimate)[:quote_default][:text]).to include("No saved Bus Fares table")
+  end
+
   it "lists requests the scheduled registration would auto-accept" do
     within_tenant(company) do
       SchoolRegistrations.build(f[:year]).tap { it.assign_attributes(status: "scheduled", auto_siblings: true, siblings_need_cover: false) }.save!

@@ -224,7 +224,7 @@ Each edit is re-timed by the engine on the server. Every call returns the whole 
 
 | Call | Tool |
 | --- | --- |
-| `PUT /routes/:id/stops { stops: [{ stop_point_id, riders: [rid] }], vias: [[[lat, lng], …], …] }` | Reorder stops, move a stop or a rider here, add or remove riders, via points (one list per leg) |
+| `PUT /routes/:id/stops { stops: [{ stop_point_id, riders: [rid] }], vias: [[[lat, lng], …], …] }` | Reorder stops, move a stop or a rider here, add or remove riders, via points (one list per leg). A route left with no riders is refused (`422`): use Delete Route |
 | `POST /plans/:plan_id/routes { bus_type, stops: [...] }` | New Route (R): the route is locked and badged "Manual" |
 | `PATCH /routes/:id { route: { bus_type, locked, hidden, attendant_id } }` | Bus Type, Lock, Hide, Attendant |
 | `DELETE /routes/:id` | Delete a route |
@@ -242,8 +242,11 @@ Rules:
 - A route drawn by hand cannot be reset (`422` "<Route> was drawn by hand, so there is nothing to reset to").
 - Reset Route and Reset All keep the bus size picked with Bus Type (stops and times go back to the engine's), as the
   prototype.
+- Adopting a plan from a date also cancels the plan scheduled for the same session (as the prototype: one scheduled plan per session).
 - Routes of an **adopted** plan can be edited (their runs on the Scheduler follow) but not deleted ("Make a new plan to
   remove a route").
+
+`summary.riders` is `assigned` + `unassigned`: a rider with no stop is in `unassigned`, so it counts. `unassigned[].reason` is a code (`RIDER_NO_STOP`, `ADMIN_REMOVED`, …); the front end maps the label.
 
 **Optimise / Optimise All / Reset All** return the plan and `meta.message`, the toast as the prototype words it:
 "AM 1 re-ordered. Journey 30 to 25 min, avg ride 6 to 5 min", "AM 1 is already in the best order for its passengers",
@@ -454,8 +457,13 @@ only what changed; an empty value or `{}` = company setting. Anything else is `4
 | `amTraffic`, `pmTraffic` | AM / PM Traffic (1.4 = 40% slower) | number from 0.1 |
 | `headroom` | **Seat Buffer**: seats kept empty on every bus, replacing each bus size's own buffer | fraction 0–0.9 (the screen shows %: send `0.1` for 10%) |
 | `effort` | Search effort | `low`, `medium`, `high`, `extra`, `max` |
+| `maxEffort` | The highest effort the company may use (set by its Convoy plan); a higher `effort` is cut to it | `low` … `max` |
+| `algorithm`, `ants`, `acoIters`, `sweepStarts`, `rrMax`, `maxSectorDeg`, `sectorFromKm` | Engine search settings (ant colony and ruin & recreate). Leave them at the defaults unless the routing team asks | numbers |
+| `rrPerStop`, `rrMaxIt`, `rrStall` | Ruin & recreate settings: iterations per stop, iteration cap, stall limit | numbers |
 
-Bus sizes without a company setting come from the engine's defaults (`GET /routing/settings` → `defaults.types`).
+`GET /routing/settings` → `effort.<level>`: `label`, `runs` (search passes), `sec` (the time limit for that level; a run ends earlier when its search finishes, and a small run takes under a second), and `use` (a text: what the level is for, for example "Quick what-if checks").
+
+Bus sizes without a company setting come from the engine's defaults (`GET /routing/settings` → `defaults.types`). `types` in the same answer is the same list (the defaults, as the prototype shows them), so the screen and the run use one set of values.
 
 How the figures are worked out:
 

@@ -44,7 +44,7 @@ module BusRequests
 
     def create_family(school)
       last, *first = @req.parent_name.to_s.split
-      family = school.families.create!(code: Family.next_code, name: "#{(last || 'New').upcase} Family", name_mode: "custom",
+      family = school.families.create!(code: Family.next_code(school), name: "#{(last || 'New').upcase} Family", name_mode: "custom",
                                        source: @req.source == "app" ? "app" : "console", address: @req.address, postal: @req.postal,
                                        registered_at: @req.submitted_at)
       family.guardians.create!(first_name: first.join(" ").presence, last_name: last, name_order: "last", relationship: "Parent",

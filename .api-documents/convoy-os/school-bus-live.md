@@ -64,6 +64,7 @@ Poll every 15 to 30 seconds while the page is open. A `date` that is not `YYYY-M
   | `no_show` | 2 | `rider: { rid, name }`, `stop`, `marked_by` |
 
   A run is late from 4 minutes. GPS is lost when a run on the road has had no position for 3 minutes (as in Ops Control).
+The prototype also shows a `delay_expected` item (a run not yet started that will be late); it is not built, so Live Ops has these three kinds only.
 - `filters`: the count for each filter.
 - `rows`: one per run:
   - `occurrence_id`, `route_id`, `label`, `plate`, `driver: { name, phone }`.
@@ -75,7 +76,7 @@ Poll every 15 to 30 seconds while the page is open. A `date` that is not `YYYY-M
   - `end_at`, `end_planned_at`: the school ETA (morning) or the last drop-off (afternoon), and its plan.
   - `starts_at`.
   - `line`: `[[lat, lng], …]`, the stops in order with the school last (morning) or first (afternoon).
-  - `position`: `{ lat, lng, speed_kmh, heading, recorded_at }` while the run is on the road, else null.
+  - `position`: `{ lat, lng, speed_kmh, heading, recorded_at }`: the live position while the run is on the road, and the last known position once it has arrived; `null` before it starts.
 
 **Child status** (`counts`, and each child in § 2):
 
@@ -151,7 +152,7 @@ The bus's GPS track for the map comes from Live Map: `GET /live_map/runs/:id/tra
   - `name`, `direction`, `cca`.
   - `different_today`: today has its own times; show "Different timing today".
   - `arrive_from`, `arrive_to` (to school) or `depart` (to home).
-  - `routes`, `buses`, `riders`, `seats`, `seats_used_pct`, `without_bus`.
+  - `routes`, `buses`, `riders`, `seats`, `seats_used_pct`, `without_bus`. `seats_used_pct` is `null` when there are no seats.
 
   The routes come from the plans running today: AM for to-school sessions, PM for to-home sessions, CCA for CCA sessions.
 - `sessions_note`: on a day the buses run with no sessions: "Bus Sessions are not set up for this year", or "No sessions

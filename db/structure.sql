@@ -17595,17 +17595,17 @@ CREATE INDEX index_external_vehicle_submissions_on_vehicle_id ON public.external
 
 
 --
--- Name: index_families_on_company_id_and_code; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX index_families_on_company_id_and_code ON public.families USING btree (company_id, code);
-
-
---
 -- Name: index_families_on_school_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX index_families_on_school_id ON public.families USING btree (school_id);
+
+
+--
+-- Name: index_families_on_school_id_and_code; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_families_on_school_id_and_code ON public.families USING btree (school_id, code);
 
 
 --
@@ -27748,6 +27748,7 @@ ALTER TABLE public.trip_occurrences
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261110140000'),
 ('20261110130100'),
 ('20261110130000'),
 ('20261110120100'),

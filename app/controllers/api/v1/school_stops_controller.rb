@@ -67,13 +67,14 @@ module Api
         head :no_content
       end
 
-      # POST /schools/:school_id/rider_links/remove { links: [{ rid, point_id }] } — Select Links › Remove; riders assigned to
+      # POST /schools/:school_id/rider_links/remove { links: [{ rid or postal, point_id }] } — Select Links › Remove; riders assigned to
       # a removed point are unassigned.
       def unlink
         school = find_school
         authorize Stop, :update?
-        links = params.permit(links: %i[rid point_id]).to_h.deep_symbolize_keys[:links]
+        links = params.permit(links: %i[rid postal point_id]).to_h.deep_symbolize_keys[:links]
         raise ApplicationService::Error, "Pick the links to remove" if links.blank?
+        raise ApplicationService::Error, "Each link needs a rid or a postal code" if links.any? { it[:rid].blank? && it[:postal].blank? }
 
         render json: { data: { unassigned: SchoolStops::Links.remove(school, links, user: current_user) } }
       end

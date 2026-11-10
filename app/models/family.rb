@@ -1,5 +1,5 @@
 # A family of the School Bus service: guardians and the riders it has at the school (and others). Code FAM-0001 (unique
-# in the company); name_mode auto = "<father's surname, else mother's, else the first guardian's> FAMILY" (upper case),
+# in the school); name_mode auto = "<father's surname, else mother's, else the first guardian's> FAMILY" (upper case),
 # custom = typed. source app = registered in the Convoy App (sample data until the app exists).
 # == Schema Information
 #
@@ -22,8 +22,8 @@
 #
 # Indexes
 #
-#  index_families_on_company_id_and_code  (company_id,code) UNIQUE
-#  index_families_on_school_id            (school_id)
+#  index_families_on_school_id           (school_id)
+#  index_families_on_school_id_and_code  (school_id,code) UNIQUE
 #
 # Foreign Keys
 #
@@ -38,7 +38,7 @@ class Family < ApplicationRecord
   has_many :guardians, -> { order(:position, :id) }, class_name: "FamilyGuardian", dependent: :delete_all, inverse_of: :family
   has_many :family_riders, dependent: :delete_all
 
-  validates :code, presence: true, uniqueness: { scope: :company_id, case_sensitive: false }
+  validates :code, presence: true, uniqueness: { scope: :school_id, case_sensitive: false }
   validates :name, presence: true
   validates :name_mode, inclusion: { in: %w[auto custom] }
 
@@ -46,8 +46,9 @@ class Family < ApplicationRecord
 
   before_validation :auto_name, if: -> { name_mode == "auto" }
 
-  def self.next_code
-    n = where("code ~ '^FAM-[0-9]+$'").pluck(Arel.sql("MAX(SUBSTRING(code FROM 5)::int)")).first.to_i
+  # The next code at a school (per school, as the prototype's famNext).
+  def self.next_code(school)
+    n = where(school:).where("code ~ '^FAM-[0-9]+$'").pluck(Arel.sql("MAX(SUBSTRING(code FROM 5)::int)")).first.to_i
     "FAM-#{(n + 1).to_s.rjust(4, '0')}"
   end
 

@@ -18,6 +18,16 @@ RSpec.describe "School Bus families" do
     sign_in_as(create(:user, company:, permissions: %w[schools]))
   end
 
+  it "numbers family codes per school, so two schools both start at FAM-0001" do
+    other = within_tenant(company) { School.create!(name: "Other School", short_name: "OTH") }
+    post api_v1_school_families_path(school), params: { family: { name: "Tan Family", name_mode: "custom" } }
+    expect(json[:data]).to include(code: "FAM-0001")
+    post api_v1_school_families_path(other), params: { family: { name: "Lim Family", name_mode: "custom" } }
+    expect(json[:data]).to include(code: "FAM-0001")
+    post api_v1_school_families_path(school), params: { family: { name: "Koh Family", name_mode: "custom" } }
+    expect(json[:data]).to include(code: "FAM-0002")
+  end
+
   it "adds a family named after the father, links riders and searches" do
     post api_v1_school_families_path(school), params: { guardian: { first_name: "Ah Kow", last_name: "Tan", relationship: "Father", phone: "9123 4567" } }
     fam = json[:data]
@@ -25,12 +35,16 @@ RSpec.describe "School Bus families" do
 
     post guardians_api_v1_family_path(fam[:id]), params: { guardian: { first_name: "Mei", relationship: "Mother", phone: "12" } }
     expect(json.dig(:error, :message)).to eq("Phone doesn't look like a phone number")
+    post guardians_api_v1_family_path(fam[:id]), params: { guardian: { first_name: "", last_name: "", relationship: "Mother" } }
+    expect(json[:error]).to include(message: "Enter a first name or last name", details: { first: [ "Enter a first name or last name" ], last: [ "Enter a first name or last name" ] })
 
     get candidates_api_v1_family_path(fam[:id])
     expect(json[:data].map { |c| [ c[:rid], c[:match] ] }).to eq([ %w[S2 parent], %w[S1 parent], [ "S3", nil ] ])
     post riders_api_v1_family_path(fam[:id]), params: { rids: %w[S1 S2] }
     expect(json.dig(:data, :riders).map { |r| r[:rid] }).to eq(%w[S1 S2])
 
+    post api_v1_school_families_path(school), params: { family: { name: "", name_mode: "custom" } }
+    expect(json.dig(:error, :message)).to eq("Family name is required")
     post api_v1_school_families_path(school), params: { family: { name: "Lim household", name_mode: "custom" } }
     other = json[:data]
     post riders_api_v1_family_path(other[:id]), params: { rids: %w[S2 S3] }

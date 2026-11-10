@@ -15,7 +15,7 @@ module Api
         counts = SchoolRider::FILTERS.index_with { all.filtered(it).count }
         list = school.rider_datasets.in_use_on(date)
         render_page all.filtered(params[:filter]).order(:name, :id), SchoolRiderBlueprint,
-                    meta: { date:, counts:, dataset: list && RiderDatasetBlueprint.render_as_hash(list.decorate) }
+                    meta: { date:, counts:, dataset: list && RiderDatasetBlueprint.render_as_hash(list.decorate, date:, in_use: list) }
       end
 
       # POST /schools/:school_id/riders { rider: { first_name, last_name, name_order, rid, gender, grade, address, postal, am, pm,
@@ -26,6 +26,20 @@ module Api
         # From a family (Add New Rider): the rider joins it.
         Families.link(Family.where(school: policy_scope(School)).find(params[:family_id]), school, [ rider.rid ]) if params[:family_id].present?
         render_data rider, SchoolRiderBlueprint, status: :created
+      end
+
+      # PATCH /schools/:school_id/riders/:rid { rider: { ... } } — a rider added by hand; the same fields as Add Rider, all optional.
+      def update
+        school = authorize find_school, :manage_riders?
+        rider = school.riders.manual.find_by!(rid: params[:rid])
+        render_data SchoolRiders::Update.call(rider:, params: rider_params), SchoolRiderBlueprint
+      end
+
+      # DELETE /schools/:school_id/riders/:rid — a rider added by hand that nothing uses (answers 204).
+      def destroy
+        school = authorize find_school, :manage_riders?
+        SchoolRiders::Remove.call(rider: school.riders.manual.find_by!(rid: params[:rid]))
+        head :no_content
       end
 
       # GET /schools/:school_id/riders/export?date= — CSV in the upload template's columns.

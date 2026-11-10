@@ -41,7 +41,7 @@ A Convoy Admin can read but change nothing.
 | `GET /stops/:id?school_id=` | One stop with the schools that use it and the coverage table |
 | `POST /stops` | Add a stop |
 | `PATCH /stops/:id` | Change a stop |
-| `DELETE /stops/:id` | Archive |
+| `DELETE /stops/:id` | Archive (the only delete: a stop is archived, never hard-deleted) |
 | `GET /stops/nearby?lat=&lng=&school_id=` | "Nearby in Library": stops within 600 m that the school does not use yet, nearest first, with `metres` |
 
 List parameters:
@@ -90,7 +90,7 @@ PATCH /stops/:id { stop: { name, points: [{ id, … }] }, school_id, confirmed }
 - Send the whole list of points. A point with `id` is changed. A point without `id` is new and gets the next free
   letter. A point left out is removed (retired).
 - Exactly one point is primary. If none is marked, the first point is.
-- `street_view_url` must be a Google Maps link.
+- `street_view_url` must be a Google Maps link ("Street View link must be a Google Maps link").
 - The answer is the stop: `201` when created, `200` when changed.
 - On the Library page, send no `school_id` (or `in_library: true`). The stop is then `approved`.
 - From a school's screen, send `school_id` and `in_library: false`. The stop belongs to that school
@@ -180,7 +180,7 @@ may use:
             "stops_changed_at": "…" } }
 ```
 
-**Candidates.** A rider's candidate points are worked out like this, as in the prototype:
+**Candidates.** `metres` is `null` when the rider's home has no location. A rider's candidate points are worked out like this, as in the prototype:
 
 1. Start with every point of the school's stops whose catchment has the rider's home: by postal code, or inside an area
    and not in an exclude area.
@@ -206,7 +206,7 @@ Rider colours on the map follow `status`:
 | Call | Tool |
 | --- | --- |
 | `POST /schools/:id/rider_links { stop_point_id, rids: [...], postals: [...] }` | Select Riders (S): link the picked riders or postal codes to a point as an alternative. Answers `204` |
-| `POST /schools/:id/rider_links/remove { links: [{ rid, point_id }] }` | Select Links (L) › Remove: a hand link is deleted; a link from the catchment is cut off for that rider. A rider assigned to a removed point is unassigned. Answers `200 { data: { unassigned: n } }` |
+| `POST /schools/:id/rider_links/remove { links: [{ rid or postal, point_id }] }` | Select Links (L) › Remove. A postal link removes the code for every rider of that code at the school: a hand link is deleted; a link from the catchment is cut off for that rider. A rider assigned to a removed point is unassigned. Answers `200 { data: { unassigned: n } }` |
 
 Reload the assignment after either call.
 

@@ -62,6 +62,7 @@ to rebuild from the last recorded examples.
 - **Money, decimals and coordinates come back as strings**: `"price": "76.19"`, `"lat": "1.2722"`. Send them as numbers or strings.
   Exception: live GPS (Live Map, Trace / Replay, the Driver app's positions, Ops Control `gps`) returns `lat` / `lng` /
   `speed_kmh` as **numbers** (`"lat": 1.2801`). Treat both forms as numbers on the front end (`Number(x)`).
+  School Bus rider homes (`lat` / `lng` of a rider) are also **numbers** (`"lat": 1.32`).
 - Display formats (company Date Format / Time Format) are the front end's job. The only server-formatted text is human
   sentences such as warnings and summaries, which already follow the company's formats.
 

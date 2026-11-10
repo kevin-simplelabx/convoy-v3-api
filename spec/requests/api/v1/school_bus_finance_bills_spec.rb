@@ -158,7 +158,7 @@ RSpec.describe "School Bus finance bills" do
     lim = within_tenant(company) do
       SchoolBills::Run.call(year, 0)
       SchoolBills::Issue.call(year, 0, user:)
-      SchoolBill.find_by!(family: f[:lim])
+      SchoolBill.find_by!(family: f[:lim], number: "INV-2026-000001")
     end
     post notes_api_v1_school_bill_path(lim), params: { doc_type: "cn", description: "Bus late", amount: 10, reason: "Late twice", credit_use: "refund",
                                                        method: "PayNow", reference: "R9" }, as: :json

@@ -18,15 +18,18 @@ module SchoolStops
     end
 
     # Returns how many riders were unassigned (HTML `removeLinks`: a rider assigned to the point they are unlinked from).
+    # A link is by rid, or by postal code for the whole code (every rider of that code at the school).
     def remove(school, links, user: nil)
       unassigned = 0
       RiderPointLink.transaction do
         links.each do |l|
-          unassigned += school.rider_assignments.where(rid: l[:rid], stop_point_id: l[:point_id]).destroy_all.size
-          hand = RiderPointLink.where(school:, stop_point_id: l[:point_id], kind: "alternative", rid: l[:rid])
+          target = l[:rid].present? ? { rid: l[:rid] } : { postal: l[:postal].to_s.gsub(/\D/, "") }
+          rids = target[:rid] ? [ target[:rid] ] : school.riders.where(postal: target[:postal]).distinct.pluck(:rid)
+          unassigned += school.rider_assignments.where(rid: rids, stop_point_id: l[:point_id]).destroy_all.size
+          hand = RiderPointLink.where(school:, stop_point_id: l[:point_id], kind: "alternative", **target)
           next hand.delete_all if hand.exists?
 
-          RiderPointLink.find_or_create_by!(school:, stop_point_id: l[:point_id], kind: "disconnected", rid: l[:rid]) { it.created_by = user }
+          RiderPointLink.find_or_create_by!(school:, stop_point_id: l[:point_id], kind: "disconnected", **target) { it.created_by = user }
         end
       end
       unassigned

@@ -53,7 +53,7 @@ class StopPoint < ApplicationRecord
   validates :lat, :lng, presence: true
   validate { errors.add(:base, "Point #{suffix} needs at least one bus size") if sizes.empty? }
   validate { errors.add(:sizes, "can only be S, M or L") unless (sizes - SIZES.keys).empty? }
-  validate { errors.add(:street_view_url, "must be a Google Maps link") if street_view_url.present? && !street_view_url.match?(STREET_VIEW) }
+  validate { errors.add(:base, "Street View link must be a Google Maps link") if street_view_url.present? && !street_view_url.match?(STREET_VIEW) }
 
   def pudo_code = "#{stop.code}#{suffix}"
 end

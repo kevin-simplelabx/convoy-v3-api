@@ -90,6 +90,8 @@ Save Labels:
 
 ```
 PUT /schools/:id/route_labels { labels: { am: { prefix, start, digits, suffix }, pm: {…}, asa: {…} } }
+
+Each label set is keyed by its `session`; the rows carry no `id`.
 ```
 
 - `start` must be 0 or more.
@@ -207,6 +209,10 @@ POST /schools/:id/riders { rider: { first_name, last_name, name_order: first|las
 - An empty `rid` becomes `M-0001`, `M-0002`, and so on. The answer is the rider (`201`).
 - The home is placed now. When OneMap does not know the postal code, the rider is saved with `located: false`. Show
   "Postal code not found, so they have no map location".
+
+**Edit a rider added by hand:** `PATCH /schools/:id/riders/:rid { rider: { … } }` takes the same fields as Add Rider, all optional. A new postal code is placed on the map again. A rider from an uploaded list answers `422` "Riders from an uploaded list change with the next upload".
+
+**Remove a rider added by hand:** `DELETE /schools/:id/riders/:rid` answers `204`. Refused with `422` while a family, a stop, an absence, a CCA booking, a bus request or a bill still uses the rider ("… is still used by a family: remove that first").
 
 **Export CSV:** `GET /schools/:id/riders/export?date=` returns the template's columns for the riders on that date. The file
 name is in `Content-Disposition` (CORS exposes it).
@@ -351,13 +357,15 @@ Levels are set per school, not per year.
 
 **Save & Lock:** `PATCH /schools/:id/levels { levels: [{ name, section, final }] }` (send JSON, in order).
 
+`section` is one of `pre`, `pri`, `sec`, `jc`, `grd`, `yr`, or `custom` for a level added by hand (stored as `custom`, the FE sends only these values).
+
 | Error (422) | Cause |
 | --- | --- |
 | "Add at least one level" | Empty list |
 | "Every level needs a name" | A level has no name |
 | "P1 is listed twice" | Duplicate name (ignoring case) |
 
-**Unlock:** `POST /schools/:id/unlock { section: "levels" }` returns 204.
+**Unlock:** `POST /schools/:id/unlock { section: "levels" }` returns `200` with the school (as the year unlock returns the year).
 
 ## 6. Bus Sessions
 

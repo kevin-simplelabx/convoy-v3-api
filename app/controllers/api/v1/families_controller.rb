@@ -26,9 +26,13 @@ module Api
       def create
         school = find_school
         authorize Family
+        name_mode = params.dig(:family, :name_mode) || "auto"
+        # A typed name is required (as the prototype); an automatic name is worked out from the guardians.
+        raise ApplicationService::Error, "Family name is required" if name_mode == "custom" && params.dig(:family, :name).blank?
+
         family = Family.transaction do
-          f = school.families.new(code: params.dig(:family, :code).presence || Family.next_code, name: params.dig(:family, :name).presence || "New Family",
-                                  name_mode: params.dig(:family, :name_mode) || "auto")
+          f = school.families.new(code: params.dig(:family, :code).presence || Family.next_code(school), name: params.dig(:family, :name).presence || "New Family",
+                                  name_mode:)
           f.save!
           f.guardians.create!(guardian_params) if params[:guardian].present?
           f.save!
@@ -103,7 +107,15 @@ module Api
       def find(id = params[:id]) = Family.where(school: policy_scope(School)).includes(:school, :guardians, :family_riders).find(id)
       def rider_school(family) = params[:school_id].present? ? policy_scope(School).find(params[:school_id]) : family.school
 
-      def guardian_params = params.require(:guardian).permit(:first_name, :last_name, :name_order, :relationship, :phone, :email)
+      # The name check names both fields in details, so the screen marks them in red (as the prototype's gSave).
+      def guardian_params
+        attrs = params.require(:guardian).permit(:first_name, :last_name, :name_order, :relationship, :phone, :email)
+        if attrs[:first_name].blank? && attrs[:last_name].blank?
+          message = "Enter a first name or last name"
+          raise ApplicationService::Error.new(message, code: "invalid", details: { first: [ message ], last: [ message ] })
+        end
+        attrs
+      end
 
       def guardian_row(g) = g.slice(:id, :first_name, :last_name, :name_order, :relationship, :phone, :email, :app_joined_at, :app_joined_how).merge(name: g.name)
 

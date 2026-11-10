@@ -241,7 +241,7 @@ Rails.application.routes.draw do
           post :preview, on: :collection
         end
         get :rider_events, to: "rider_datasets#events"
-        resources :riders, controller: :school_riders, only: %i[index create] do
+        resources :riders, controller: :school_riders, only: %i[index create update destroy], param: :rid do
           get :export, on: :collection
         end
         resources :academic_years, only: %i[index create], shallow: true

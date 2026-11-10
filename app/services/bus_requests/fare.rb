@@ -1,6 +1,6 @@
 # The final quote suggestion for a new request (Convoy OS reqBase): the Bus Fares tier for the distance from school
 # (the year's locked table, else the latest locked one before it), for the bill the start date falls in — two ways, or
-# one way when only AM or PM; else the estimate the parent saw.
+# one way when only AM or PM; else the estimate the parent saw (nil when there is none).
 module BusRequests
   module Fare
     module_function
@@ -10,7 +10,9 @@ module BusRequests
       table = table_for(req.school, year)
       km = req.km&.to_f || (req.lat && req.school.lat && RouteFit.km([ req.school.lat.to_f, req.school.lng.to_f ], [ req.lat.to_f, req.lng.to_f ]))
       if table.nil? || km.nil? || table.per_bus? || table.zones? || table.tiers.empty?
-        return { amount: req.estimate.to_d.round(2), unit: unit(table, year), km:,
+        # No estimate either: no amount (nil), so staff type the fare; Accept then needs a fare.
+        estimate = req.estimate.to_d
+        return { amount: estimate.positive? ? estimate.round(2) : nil, unit: unit(table, year), km:,
                  text: "No saved Bus Fares table, so this is the estimate the parent saw" }
       end
 

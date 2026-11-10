@@ -85,7 +85,7 @@ module BusRequests
     def tabs
       counts = @school.bus_requests.where(kind: %w[adr svc stop]).group(:kind, :status).count
       open = ->(k, sts) { counts.sum { |(kind, st), n| kind == k && sts.include?(st) ? n : 0 } }
-      [ { kind: "new", label: "New Service", open: nil }, { kind: "adr", label: "Change of Address", open: open.("adr", OPEN) },
+      [ { kind: "new", label: "New Service", open: 0 }, { kind: "adr", label: "Change of Address", open: open.("adr", OPEN) },
         { kind: "svc", label: "Change of Service", open: open.("svc", OPEN) }, { kind: "stop", label: "Stop Service", open: open.("stop", [ "Requested" ]) } ]
     end
 
