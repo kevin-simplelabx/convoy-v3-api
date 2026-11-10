@@ -24,7 +24,7 @@ module Portal
           upcoming_trips: { count: trips.size, next: trips.first && { date: trips.first.date, time: trips.first.start_time_hm } },
           changes_to_review: trips.count(&:awaiting_ack?),
           waiting_for_you: (waiting if @user.can?(:approve) || waiting.positive?),
-          shuttle_runs_today: (shuttles && { count: shuttles.size, on_road: shuttles.count { RunState.on_road?(it[:state]) } }),
+          shuttle_runs_today: (shuttles && { count: shuttles.size, on_road: shuttles.count { RunState.on_road?(it[:state]) }, active_routes: active_routes }),
           school_buses_today: (school && { count: school.size, on_road: school.count { RunState.on_road?(RunState.call(it, @now)) } }),
           sites: (sites.any? && { count: sites.size, own_entity: sites.count(&:own_billing?) }) || nil
         },
@@ -67,6 +67,11 @@ module Portal
         { id: o.id, date: o.date, trip_id: o.trip_id, title: o.trip.title, label: o.trip_label, starts_at: o.starts_at, ends_at: o.ends_at,
           site: o.trip.client_site&.name, state:, state_label: RunState::LABELS.fetch(state) }
       end
+    end
+
+    # Shuttle routes running today's date range (started, not ended) on the person's sites: "N active routes" when none is on the road.
+    def active_routes
+      Notices.trips_for(@user).where(kind: "corporate_shuttle").where(starts_on: ..@today).where("ends_on IS NULL OR ends_on >= ?", @today).count
     end
 
     # Today's School Bus runs of the schools linked to the client or the person's sites (nil when none is linked).

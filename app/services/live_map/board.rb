@@ -139,7 +139,7 @@ module LiveMap
     end
 
     def school_bus_students(occ)
-      ActiveRecord::Associations::Preloader.new(records: [ occ ], associations: [ :passenger_marks, { school_route: { stops: :riders } } ]).call
+      ActiveRecord::Associations::Preloader.new(records: [ occ ], associations: [ :passenger_marks, { school_route: { stops: %i[riders stop_point] } } ]).call
       school = occ.school_route.plan.school
       ctx = SchoolLive.context(school, occ.date, [ occ ])
       run = SchoolLive::Run.new(occ, school:, now: @now, **ctx)

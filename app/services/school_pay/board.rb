@@ -27,7 +27,7 @@ module SchoolPay
       { month: @month, month_label: @month.strftime("%b %Y"), future: @month >= @today.beginning_of_month,
         month_text: (@month > @today.beginning_of_month ? "This month has not started. Amounts are a forecast" : "This month has not ended. Route pay may still change" if @month >= @today.beginning_of_month),
         rights: rights.except(:approvers), rights_text: rights_text(rights),
-        kpis: { net_payable: due.round(2), paid: paid.round(2), still_to_pay: [ due - paid, 0 ].max.round(2),
+        kpis: { net_payable: due.round(2), paid: paid.round(2), still_to_pay: [ due - paid, 0.to_d ].max.round(2),
                 operators_to_pay: payable.count { it[:status] != "Paid" } },
         kinds: SchoolPayoutAdjustment::KINDS.map { |k, s| { kind: k, sign: s } }, methods: SchoolPayoutPayment::METHODS,
         routes: cost[:rows].map { it.route.label }.uniq, rows: }
@@ -51,7 +51,7 @@ module SchoolPay
       net = SchoolPay.net(base, auto, adjustments)
       batch = p && @batched[p.id]
       paid = (p ? p.paid_amount : 0.to_d) + (batch ? batch[:paid] : 0)
-      bal = [ net - paid, 0 ].max.round(2)
+      bal = [ net - paid, 0.to_d ].max.round(2)
       payable = key.is_a?(Integer)
       status = status_of(key, p, paid, bal)
       mine = rights[:maker] && p&.sent_by_id == @user.id
@@ -62,7 +62,7 @@ module SchoolPay
         deductions: lines_sum(auto, adjustments, -1), net:, paid:, balance: bal, status:, tone: TONES[status], invoice_number: p&.invoice_number,
         voucher: p&.voucher_number && { number: p.voucher_number, on: p.voucher_on }, batch: batch&.except(:paid),
         routes: routes.map { route_row(it) }, lines: auto.map { auto_row(it) } + adjustments.map { adj_row(it, locked) },
-        history: history(p),
+        history: history(p, auto),
         can: payable ? actions(p, st, paid, locked, rights, mine, batch) : {},
         note: { "none" => "Assign an operator to these routes in Operator Pay before paying", "own" => "Our own buses: nothing to pay" }[key] }
     end
@@ -94,7 +94,7 @@ module SchoolPay
     end
 
     def route_row(r)
-      { route: r.route.label, session: r.plan.session, plan: r.plan.name, bus_type: r.route.bus_type, plate: r.vehicle&.plate, price: r.price, unpriced: r.unpriced,
+      { route: r.route.label, session: r.plan.session, plan: r.plan.name, bus_type: r.route.bus_size(r.vehicle), plate: r.vehicle&.plate, price: r.price, unpriced: r.unpriced,
         days: r.days, of: r.of, break_month: r.brk, earned: r.earned.round(4), rate: r.rate, from: r.from, to: r.to, amount: r.amount, note: r.note,
         attendant: r.attendant }
     end
@@ -107,13 +107,13 @@ module SchoolPay
         files: a.files.map { (ApplicationDecorator.new(it).file_info(:file) || {}).merge(id: it.id, name: it.name.presence || it.file.file&.filename) } }
     end
 
-    def history(p)
+    def history(p, auto)
       return [] unless p
 
       ev = []
       ev << { at: p.returned_at, kind: "returned", text: "Sent back to Ops", by: p.returned_by&.name } if p.returned_at
       ev << { at: p.sent_at, kind: "sent", text: "Sent to Finance", by: p.sent_by&.name } if p.sent_at
-      ev << { at: p.approved_at, kind: "approved", text: "Approved#{" for S$#{format('%.2f', p.base)}" if p.base}", by: p.approved_by&.name } if p.approved_at
+      ev << { at: p.approved_at, kind: "approved", text: "Approved#{" for S$#{format('%.2f', SchoolPay.net(p.base, auto, p.adjustments.to_a))}" if p.base}", by: p.approved_by&.name } if p.approved_at
       p.payments.each { ev << { at: it.paid_on, kind: "paid", text: "S$#{format('%.2f', it.amount)} paid | #{it.method}#{" | #{it.reference}" if it.reference}", by: it.recorded_by&.name } }
       ev.sort_by { it[:at].to_time }.reverse
     end

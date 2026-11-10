@@ -21,12 +21,18 @@ may run for other clients the rest of the day). Poll every 20–30 s while the p
 - **Activities** pills (when more than one): `am` AM, `pm` PM, `asa` CCA (school bus sessions of the schools linked to the
   client or the person's sites), `bookings` Bookings (the client's one-off trips; Members see only trips from their own
   bookings), `shuttles` Shuttles. Without `activity`: the one with buses on the road, else the next to start, else the first.
+- `count` / `on_road` of an activity are counted from the same runs the list shows (`state` of each run), so a pill and its
+  list always agree. **School Bus runs have no On the way**: they are `scheduled` until the bus starts, `started` while
+  on the road, `ended` once arrived. Bookings and Shuttles also use `on_the_way` (the driver started, or 30 minutes before
+  the start when there is no Driver app).
 - **Trip States** counters filter the list: Started, On the way, Scheduled, Ended (`state` of each run).
+- A run with no Driver app events (no `arrived_at` / `departed_at` on its stops) goes `started` at its start and `ended`
+  at its planned end by the clock.
 
 A run (Bookings, Shuttles):
 
 ```json
-{ "id": 901, "date": "2026-11-04", "kind": "corporate_shuttle", "title": "Staff Shuttle", "label": "S-08", "site": { "id": 1, "name": "Punggol" },
+{ "id": 901, "date": "2026-11-04", "kind": "corporate_shuttle", "kind_label": "Shuttle, morning", "title": "Staff Shuttle", "label": "S-08", "site": { "id": 1, "name": "Punggol" },
   "starts_at": "…", "ends_at": "…", "state": "on_the_way", "state_label": "On the way",
   "booking": null, "bus": { "plate": "PD6604E", "model": "Yutong ZK6107", "seats": 40 }, "driver": { "name": "Kumar" },
   "next_stop": { "name": "Blk 101 Punggol Field", "planned_at": "…", "eta_at": "…" },
@@ -34,10 +40,15 @@ A run (Bookings, Shuttles):
   "line": [ [1.3984, 103.9072], [1.4043, 103.902] ] }
 ```
 
+`kind` is the trip kind (`ad_hoc`, `airport_transfer`, `disposal`, `corporate_shuttle`) and `kind_label` the text for the
+row ("Ad Hoc / Charter", "Ad Hoc / Charter, Two Way", "Two Way, return", "Airport Transfer", "Disposal", "Shuttle, morning",
+"Shuttle, evening"). `site` is the trip's own site, else the first stop site the person covers (a site picked in
+`site_id` wins); `null` only when no site of the run is in view.
+
 A School Bus run: the [School Live Ops row](../convoy-os/school-bus-live.md) (`occurrence_id`, `label`, `plate`,
 `driver`, `status`, `late_minutes`, `points`, `points_done`, `counts` of children, `next_stop { name, at_stop, expected_at }`,
-`end_at`, `line`, `position` while on the road) plus `id`, `kind: "school_bus"`, `title`, `school`, `bus { plate }`,
-`state`, `state_label`.
+`end_at`, `line`, `position` while on the road) plus `id`, `kind: "school_bus"`, `kind_label` ("School bus, morning" /
+"School bus, afternoon" / "School bus, CCA"), `title`, `school`, `bus { plate }` (`null` without a bus), `state`, `state_label`.
 
 Row text: time range, state badge, title, "site | kind | booking number | plate | N students", then "Next: <stop>,
 <eta_at>" / "Heading to <stop>, due <planned_at>" / "On the map from <starts_at − 30 min>" / "Ended <ends_at>" / "No bus
@@ -48,7 +59,8 @@ assigned yet. Ask <company>" (`bus: null`). `booking` → **Open Booking <number
 - Bookings / Shuttles: the run fields plus `stops [{ position, name, use, planned_at, lat, lng, arrived_at, departed_at, skipped }]`.
 - School Bus: the [School Live Ops run detail](../convoy-os/school-bus-live.md) — bus, crew (driver, bus attendant), the
   next stop, counts (total, on board, waiting, at school / dropped off, absent, Bus Not Required) and each stop with its
-  students and their status.
+  **`students`** and their status (Convoy OS calls the same list `riders`). The run row's fields are merged in: `id`,
+  `kind`, `kind_label`, `title`, `school`, `bus`, `state`, `state_label`. `position` is `null` unless `state` is `started`.
 
 `404` for a run that is not the client's, not today, or not on the person's sites.
 

@@ -26,7 +26,7 @@ module SchoolDashboard
       load, seats, routes = seat_use(day)
       exp = rev[:error] ? nil : rev[:expected]
       profit = exp && (exp - cost[:total]).round(2)
-      { month: @month, state:, reference_day: day,
+      { month: ym(@month), state:, reference_day: day, paid_month: cost[:paid_month],
         kpis: { revenue: exp, revenue_note: rev[:error], revenue_basis: rev[:basis], revenue_riders: rev[:riders], academic_year: rev[:key],
                 operator_cost: cost[:total].round(2), profit:, margin_pct: exp&.positive? ? (profit * 100 / exp).round(1).to_f : nil,
                 cost_per_rider: riders.positive? ? (cost[:total] / riders).round(2) : nil, riders:,
@@ -36,6 +36,8 @@ module SchoolDashboard
     end
 
     private
+
+    def ym(date) = date.strftime("%Y-%m")
 
     def state
       cur = @today.beginning_of_month
@@ -112,7 +114,7 @@ module SchoolDashboard
       name = ->(key, op) { op&.name || (key == "own" ? "Our buses" : "Not assigned") }
       { total: cost[:total].round(2), school_days: cost[:school_days], priced: cost[:priced], routes: cost[:routes],
         rows: cost[:rows].map do |r|
-          { route: r.route.label, session: r.plan.session, plan: r.plan.name, bus_type: r.route.bus_type, plate: r.vehicle&.plate,
+          { route: r.route.label, session: r.plan.session, plan: r.plan.name, bus_type: r.route.bus_size(r.vehicle), plate: r.vehicle&.plate,
             operator: name.(r.key.to_s, r.operator), price: r.price, unpriced: r.unpriced, days: r.days, of: r.of, amount: r.amount, note: r.note,
             attendant: r.attendant }
         end,
@@ -129,7 +131,7 @@ module SchoolDashboard
         r = revenue(m)
         c = SchoolPay::Cost.call(@school, m)[:total].round(2)
         rv = r[:error] ? 0.to_d : r[:expected]
-        { month: m, revenue: rv, cost: c, profit: (rv - c).round(2) }
+        { month: ym(m), revenue: rv, cost: c, profit: (rv - c).round(2) }
       end
     end
 

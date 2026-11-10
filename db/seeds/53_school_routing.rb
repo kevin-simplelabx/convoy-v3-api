@@ -1,6 +1,6 @@
 # Route Plans sample: the company's routing parameters (Balanced priority, High effort) and a feasibility study for a
 # prospect school with students by postal code and bus prices (run it from the screen: the routing service plans it).
-# The seeded St. Stephen's plans stay as they are (source "manual"); new plans come from Run Routing.
+# The seeded St. Stephen's plans stay as they are (source "manual"); new plans come from Run Routing (figures: 57_school_plan_summary).
 with_company("SD") do
   admin = User.find_by!(email: "ops@simpledrive.sg")
   RoutingSetting.find_or_create_by!(company: ActsAsTenant.current_tenant) do |s|

@@ -70,20 +70,21 @@ RSpec.describe "School Bus Dashboard" do
     expect(json.dig(:data, :finance_allowed)).to be(true)
     get api_v1_school_dashboard_finance_path(school), params: { month: "2026-11" }
     fin = json[:data]
-    expect(fin).to include(month: "2026-11-01", state: "in_progress", reference_day: "2026-11-03")
+    expect(fin).to include(month: "2026-11", state: "in_progress", reference_day: "2026-11-03", paid_month: true)
     expect(fin[:kpis]).to include(revenue: nil, revenue_note: "Bus Fares for AY 2026 not saved yet", operator_cost: "4200.0", profit: nil,
                                   cost_per_rider: "2100.0", riders: 2, seats: { riders: 3, seats: 50, routes: 2, pct: 6.0 })
     expect(fin[:collections]).to include(billable: nil)
     expect(fin[:route_costs]).to include(total: "4200.0")
     expect(fin[:route_costs][:rows].sum { it[:amount].to_d }).to eq(4200)
+    expect(fin[:route_costs][:rows].pluck(:bus_type)).to include("LARGE_40")
     expect(fin[:route_costs][:by_operator].sum { it[:amount].to_d }).to eq(4200)
     expect(fin[:collections]).to include(billed: "0.0", collected: "0.0", overdue: { bills: 0, owed: "0.0" })
     expect(fin[:year].size).to eq(12)
-    expect(fin[:year].find { it[:month] == "2026-10-01" }).to include(cost: "4200.0", revenue: "0.0")
+    expect(fin[:year].find { it[:month] == "2026-10" }).to include(cost: "4200.0", revenue: "0.0")
     expect(fin[:ahead].sole).to include(date: "2027-01-04", kind: "plan_adopted", cost_change: "0.0")
     expect(fin[:attention].pluck(:kind)).to eq(%w[setup unpriced])
 
     get api_v1_school_dashboard_finance_path(school), params: { month: "2026-12" }
-    expect(json[:data]).to include(state: "forecast")
+    expect(json[:data]).to include(month: "2026-12", state: "forecast")
   end
 end

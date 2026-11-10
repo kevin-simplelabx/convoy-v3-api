@@ -4,6 +4,8 @@
 module Api
   module V1
     class SchoolBillsController < BaseController
+      NO_LOCKED_YEAR = "Lock the Bus Fares for a year first"
+
       # GET /schools/:school_id/bills?academic_year_id=&period_index=&status=&q=&page=&limit=
       def index
         authorize :finance, :index?
@@ -34,7 +36,10 @@ module Api
       # GET /schools/:school_id/bill_runs?academic_year_id=&period_index=&q= — the Family Bills card.
       def runs
         authorize :finance, :index?
-        render json: { data: SchoolBills::Board.call(find_year(find_school), index: params[:period_index], q: params[:q]) }
+        year = find_year(find_school, required: false)
+        return render json: { data: { on: false, error: NO_LOCKED_YEAR } } unless year
+
+        render json: { data: SchoolBills::Board.call(year, index: params[:period_index], q: params[:q]) }
       end
 
       # POST /schools/:school_id/bill_runs { academic_year_id, period_index } — Draft Now / Draft Again.
@@ -128,12 +133,14 @@ module Api
       def calc(bill) = SchoolBills::Calc.call(bill, policy: bill.school.policy_versions.in_use_on(Date.current))
 
       # The year asked for, else the one with locked fares covering today, else the latest with locked fares.
-      def find_year(school)
+      def find_year(school, required: true)
         return school.academic_years.find(params[:academic_year_id]) if params[:academic_year_id].present?
 
         locked = school.academic_years.includes(:setup_locks, :fare_table).select { it.fare_table&.locked? }
         year = locked.find { (it.starts_on..it.ends_on).cover?(Date.current) } || locked.max_by(&:starts_on)
-        year or raise ApplicationService::Error, "Lock the Bus Fares for a year first"
+        raise ApplicationService::Error, NO_LOCKED_YEAR if year.nil? && required
+
+        year
       end
 
       def day(key)

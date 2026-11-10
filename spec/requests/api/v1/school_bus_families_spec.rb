@@ -61,11 +61,55 @@ RSpec.describe "School Bus families" do
     CSV
     post import_api_v1_school_families_path(school), params: { text: csv }
     expect(json[:data]).to include(families_added: 2, guardians_added: 3, riders_linked: 3, skipped: 1)
-    expect(json.dig(:data, :warnings)).to include("Line 3: not-an-email doesn't look like an email", "Line 4: student S9 is not on the rider list")
+    expect(json.dig(:data, :warnings)).to include("Line 3: not-an-email doesn't look like an email, left out", "Line 4: student S9 is not on the rider list")
 
     get export_api_v1_school_families_path(school)
     lines = response.body.lines.map(&:strip)
     expect(lines.first).to eq("family_id,family_name,guardian_name,relationship,phone,email,student_id,student_name")
     expect(lines).to include("FAM-0009,LIM Family,Lim Boon,Father,98887777,,S9,")
+  end
+
+  it "offers only riders without a family as candidates: parent matches first, then by name" do
+    post api_v1_school_families_path(school), params: { guardian: { first_name: "Ah Kow", last_name: "Tan", relationship: "Father", phone: "9123 4567" } }
+    fam = json[:data]
+    post api_v1_school_families_path(school), params: { family: { name: "Lim household", name_mode: "custom" } }
+    post riders_api_v1_family_path(json.dig(:data, :id)), params: { rids: %w[S2] }
+
+    get candidates_api_v1_family_path(fam[:id])
+    expect(json[:data].map { |c| [ c[:rid], c[:match] ] }).to eq([ %w[S1 parent], [ "S3", nil ] ])
+  end
+
+  it "imports with groups made inside the file, left-out phones and emails, and only the families it emptied deleted" do
+    within_tenant(company) do
+      emptied = school.families.create!(code: "FAM-0050", name: "Emptied", name_mode: "custom")
+      kept = school.families.create!(code: "FAM-0051", name: "Kept", name_mode: "custom")
+      kept.guardians.create!(first_name: "Kept", last_name: "Parent")
+      school.families.create!(code: "FAM-0052", name: "Already empty", name_mode: "custom")
+      Families.link(emptied, school, %w[S1])
+      Families.link(kept, school, %w[S2])
+      school.families.create!(code: "FAM-0053", name: "Chan Family", name_mode: "custom") # same name as in the file: not matched
+    end
+    csv = <<~CSV
+      family_id,family_name,guardian_name,relationship,phone,email,student_id,student_name
+      ,Chan Family,Chan Mei,Mother,12,bad@mail,S1,
+      ,Chan Family,Chan Boy,,91112222,boy@mail.com,S2,
+      ,,Wong Lee,,93334444,,,
+      ,,Wong Lee,,93334444,,S3,
+    CSV
+    post import_api_v1_school_families_path(school), params: { text: csv }
+    expect(json[:data]).to include(families_added: 2, guardians_added: 3, guardians_updated: 1, riders_linked: 3, families_deleted: 1)
+    expect(json.dig(:data, :warnings)).to eq([ "1 families lost all their riders but still have guardians. Review or delete them",
+                                               "Line 2: 12 doesn't look like a phone number, left out", "Line 2: bad@mail doesn't look like an email, left out" ])
+
+    within_tenant(company) do
+      expect(Family.pluck(:code)).to contain_exactly("FAM-0051", "FAM-0052", "FAM-0053", "FAM-0054", "FAM-0055")
+      chan = Family.find_by!(code: "FAM-0054")
+      expect(chan.name).to eq("Chan Family")
+      expect(chan.guardians.map { [ it.name, it.relationship, it.phone ] }).to eq([ [ "Chan Mei", "Mother", nil ], [ "Chan Boy", "Guardian", "91112222" ] ])
+      expect(chan.family_riders.pluck(:rid)).to contain_exactly("S1", "S2")
+      wong = Family.find_by!(code: "FAM-0055")
+      expect(wong.name).to eq("Wong Lee")
+      expect(wong.family_riders.pluck(:rid)).to eq(%w[S3])
+    end
   end
 end

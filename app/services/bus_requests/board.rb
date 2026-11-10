@@ -90,7 +90,7 @@ module BusRequests
     end
 
     def windows
-      return [] unless @year
+      return unless @year
 
       reg = @year.registration || SchoolRegistrations.build(@year)
       state = ->(from, to) { @today < from ? "upcoming" : @today > to ? "closed" : "open" }

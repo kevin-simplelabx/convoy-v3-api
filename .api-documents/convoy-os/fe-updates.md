@@ -4,6 +4,61 @@ Changes to existing Convoy OS endpoints made while building other apps (Convoy D
 on (renamed, removed or changed fields and endpoints). New optional fields are not listed here; they are in the menu
 documents. Newest first. Each item: what changed, before → after, and what the front-end has to do.
 
+## 10/11/2026 — St. Stephen's seed data (API-ISSUES §14 item 17, §22–§24 "Seed data", phase Q8)
+
+Seed data only, no endpoint or field changes. After a reset + reseed, the St. Stephen's Term 4 plans (AM and PM) have the
+data the screens were missing:
+
+| # | Where | Before → after | Front-end |
+| --- | --- | --- | --- |
+| 1 | `GET /schools/:id/plans/:id` routes[].stops[] | no `stop_point_id`, no lat / lng → every stop links its library stop and main PUDO point, with the point's lat / lng | Nothing; the map can draw the stops and a stop can be edited |
+| 2 | stops[].riders / `riders_count` | most stops empty → each stop lists the students living at it (65 AM, 57 PM; counts match) | Nothing |
+| 3 | routes[].bus_type, `seats`, `student_seats`, `fill` | `bus_type` null (`bus_mix {"": 3}`) → the size of the regular bus (`LARGE_40` / `LARGE_45`), with seats and fill | Nothing |
+| 4 | plan `summary` and `params` | null → filled (riders, assigned, byType, avgFill, …; the company's routing parameters with session and attendant) | Nothing |
+| 5 | Stop Assignment (`rider_assignments`) | none → the 65 AM riders have their PUDO point | Nothing |
+
+Seed order only: the Client Portal bookings moved from `46_bookings.rb` to `47_portal_bookings.rb` so a clean seed runs in one pass.
+
+## 10/11/2026 — Vehicle Financials Running Total, Live Ops / Dashboard fields (API-ISSUES §20, §24 Live / Dash, phase Q7 Convoy OS)
+
+Docs: [finance.md § Vehicle Financials](finance.md), [school-bus-live.md § 2, § 4](school-bus-live.md).
+Class: **BE bug** (fixed), **Doc gap**. **B** = breaking. 8 rows: 7 BE bugs (1 breaking: 5), 1 doc gap. Client Portal items (13, 14) are not in this entry.
+
+| # | Where | Your claim | Class | Answer / what changed | Front-end |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Vehicle Financials `GET /finance/vehicles/pl`, `GET /finance/vehicles/:id/pl` (16) | No "Running Total" | BE bug | `chart[].running_total` (profit from the first month on record to the end of that month, as the prototype's `vfBody`) and `running_total` (the Month period's card, "Profit to the end of <month>"; `null` for the other periods). Same on a vehicle's view | Draw Running Total as the second line (Monthly Profit / Running Total) and show the Month card |
+| 2 | Live Ops run `stops[].riders[].status` (C5) | Runs "arrived" with every stop done but children still `waiting` | BE bug | A child nobody ticked is `waiting` only until the bus has left the stop (or the run is done). After that: morning `on_board` (`at_school` once the run is done), afternoon `dropped_off`, as the prototype's `stu()`. A tick, Bus Not Required or No Show always wins. The board's `counts`, `kpis.riders` and the Live Map / Client Portal run views follow | Nothing (map the statuses as before) |
+| 3 | Live Ops run `bus.type`; Dashboard `route_costs.rows[].bus_type`; Operator Payments route rows `bus_type` (C6) | `null` | BE bug | A route made without a bus size shows the size nearest its seats (or its bus's seats). Display only: prices and rates still use the route's own size, so a route with no size stays "unpriced". The seeded St. Stephen's routes already have one | Nothing |
+| 4 | Dashboard Finance `month`, `year[].month` (C6) | `"2026-11-01"`, doc says `YYYY-MM` | BE bug **B** | Both are `"YYYY-MM"` now (the query `?month=YYYY-MM` is unchanged). `reference_day`, `ahead[].date` stay dates | Parse `month` as `YYYY-MM` (not as a date) |
+| 5 | Dashboard Finance (C6) | No field for the "not a paid month" banner | BE bug | New `paid_month` (`false` when Operator Pay does not pay the month; the costs are 0). Banner text as the prototype: "<Month Year> is not a paid month for this school. Change it in Operator Pay." | Show the banner when `paid_month` is `false` |
+| 6 | Live Ops run `crew[]` (C6) | No Bus Attendant photo (driver photo too) | BE bug | `crew[].photo`: signed thumbnail link for the driver and the bus attendant, `null` when none (a replacement driver has none) | Show the photo, else the initials |
+| 7 | Live Ops run `stops[].address` (C6) | No stop address under the stop name | BE bug | `address` = the PUDO point's description (`stop_point.description`); `null` when the stop is not linked or the point has none | Show it under the name when set |
+| 8 | Dashboard Finance `reference_day` in a month with no school day (C6) | December 2026-12-15 undocumented | Doc gap | By design: today for this month, else the month's first school day, else the 15th. Documented | Nothing |
+
+## 10/11/2026 — Families / Requests / Bills / CCA Rides / Operator Payments (API-ISSUES §24 Q6, §14 items 9, 10a, 10b, 12, 15, C1–C4, phase Q6)
+
+Docs: [school-bus-parents.md § 1, 2, 4, 6](school-bus-parents.md), [school-bus-finance.md](school-bus-finance.md).
+Class: **BE bug** (fixed), **Doc gap**, **FE answer**. **B** = breaking. 14 rows: 11 BE bugs (5 breaking: 6, 8, 10, 11, 12), 1 doc gap, 2 FE answers.
+
+| # | Where | Your claim | Class | Answer / what changed | Front-end |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Families candidates (C1) | The list has riders of other families, no exact "riders without a family" / "Parent matches" | BE bug | `GET /families/:id/candidates` returns only riders of the school who are in no family (as the prototype's pool), parent matches first (`match: "parent"`), then by name; 200 at most. `match: "last_name"` still flags a shared last name but no longer ranks | Nothing; "N riders without a family" can use the list length (up to 200) |
+| 2 | Families CSV import (item 9) | One bad phone fails the whole file; rows match families company-wide by name / phone; the file empties other families; default relationship | BE bug | A wrong phone or email is dropped with a warning (`Line 2: 12 doesn't look like a phone number, left out`) and the row imports. Without `family_id`, rows group **inside the file** by `family_name`, else phone; a family already in the company is never matched by name or phone. Only a family that lost riders to the file and is left empty is deleted; one left with guardians only is kept with the first warning "N families lost all their riders but still have guardians…". New guardian `relationship` defaults to `Guardian`. A family with no name is named after its first guardian, else its code (was "New Family"). Skipped rows now carry a warning | Show `warnings` as before |
+| 3 | Families CSV import | An unknown student is warned **and** linked (name `null`, `on_list: false`) | FE answer | As the prototype ("not in this school's rider list, linked anyway") | Nothing |
+| 4 | Families CSV import | `families_deleted` undocumented | Doc gap | Documented with the other counts (`school-bus-parents.md` § 1) | Nothing |
+| 5 | Operator Payments history (10a) | "Approved for S$0.00" when the net is S$87.50 | BE bug | The text prints the **net** (route pay + additions − deductions), as the prototype's `runNet`; it printed the route pay before | Nothing |
+| 6 | Operator Payments / CCA / bills money (10b, C2) | `balance`, `kpis.still_to_pay`, CCA `kpis.collected` / `credit_given` are the number `0` when empty or when the net is ≤ 0, else strings | BE bug **B** | Always decimal strings (`"0.0"`). Same fix for other sums that could leak `0`: CCA `off.credit`, bill `amount` of a draft with no lines, Operator Pay `still_to_pay`, Finance Client Invoice `paid` / `credited` / `balance` | Parse these fields as decimal strings only |
+| 7 | CCA Rides rows (C2) | Rows have only `bill_id` | BE bug | Rows have `bill_number` (the CCA bill's number, `null` while not billed) | Show it |
+| 8 | CCA Rides `no_school` (C2) | `{ run, label }` with a made-up label | BE bug **B** | `{ run: false, kind, label, sub }` as the prototype's `yearDay`: `kind` `public_holiday` \| `no_service` \| `school_holiday` \| `no_cca`; `label` the holiday name, "No Service", "School Holidays" or "No CCA"; `sub` the reason ("Public holiday", "Mon is not an operating day", "Between terms"…). A public holiday now also stops the CCA bus. The special-day `calendar` has `kind: "special_day"` and `sub` (same text as `detail`, which stays) | Show `label` and `sub` |
+| 9 | CCA Rides `PUT` (C2) | The answer is the current week, not the one viewed | BE bug | `PUT /schools/:id/cca_rides?week_of=YYYY-MM-DD` answers that week (default week when left out) | Send the viewed `week_of` |
+| 10 | Requests `record_payment` (item 12) | An empty method is accepted (saved as "Bank Transfer"); methods undocumented | BE bug **B** | `422` "Pick how it was paid" when `method` is empty or not one of `meta.methods`; `meta.methods` is on the answer and on `GET /bus_requests/:id` (`PayNow`, `Bank Transfer`, `GIRO`, `Cheque`, `Cash`, `Card`) | Add a method picker; send `method` |
+| 11 | Bills `GET bill_runs` (item 15) | Before fares are locked it answers `422` "Lock the Bus Fares for a year first" (doc: `on: false` with `error`) | BE bug **B** | `GET …/bill_runs` answers `200 { data: { on: false, error } }` when no year has locked fares (also when `academic_year_id` is left out). `POST` Draft / Issue still answer `422` | Read `on: false`; no `422` handling needed for GET |
+| 12 | Requests (C3) | "Not Checked (part)" when every session is Not Checked; rows have no `can`; alert items no academic year; `windows` `[]` with no year; no start date → year start | BE bug (5 fixes) | The route check says "(part)" only when some, not all, sessions are Not Checked. Every row has `can` (same object as the drawer). Alert items have `academic_year_id`. `meta.windows` is `null` (was `[]`) when the school has no academic year **B**. With no start date asked, `quote_default.start_on` and Add Application use the registration's service start (the first school day by default), not the year start | Read `windows` as `null`; use `row.can` for the row buttons |
+| 13 | Requests alerts / digest (C3) | "3 changes of address" for 1 address + 1 service + 1 stop | FE answer | As the prototype (`reqAlerts`: `nAdr` counts address, service and stop changes and prints "changes of address") | Nothing |
+| 14 | First invoices (C4) | `lines: []`, `children: []`, `bill_to_code: null` | BE bug | The first invoice has one line ("<child> | First month, <period>", amount before GST, `rid`, `child_name`) so `children` fills in. `bill_to_code` and `family_id` are the family's, also for a renewing child already in a family (before: only a new child, and the code stayed `null`). Not in the prototype (its invoice has no lines); added to match period bills | Nothing |
+
+Also found: the Billing Differences list had no order; it is now by bill id.
+
 ## 10/11/2026 — Setup / Registration / Policy / Operator Pay (API-ISSUES §22 items A1–A3, A9, A11, §14 item 8 and 11, phase Q5)
 
 Docs: [school-bus-setup.md § 2, 7, 8](school-bus-setup.md#8-setup-strip-and-summary), [school-bus-money.md § 3, 5](school-bus-money.md),

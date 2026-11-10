@@ -46,7 +46,7 @@ module BusRequests
     end
 
     def item(r, n)
-      base = { request_id: r.id, code: r.code, child_name: r.child_name, level: r.level, school: { id: r.school.id, name: r.school.name },
+      base = { request_id: r.id, academic_year_id: year_of(r)&.id, code: r.code, child_name: r.child_name, level: r.level, school: { id: r.school.id, name: r.school.name },
                tab: %w[adr svc stop].include?(r.kind) ? r.kind : "new", kind: n[:kind] == "mid" ? "new" : n[:kind], rank: n[:rank], by: n[:by],
                deadline: n[:clock] }
       if n[:kind] == "end"

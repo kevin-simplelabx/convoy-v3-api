@@ -85,6 +85,9 @@ class SchoolRoute < ApplicationRecord
   def title = "#{school.short} #{label}"
 
   # The regular bus on a date (nil = none).
+  # The bus type to show: its own, else the size nearest its seats (or the bus's).
+  def bus_size(vehicle = nil) = bus_type || SchoolBus.size_for(seats || vehicle&.seats)
+
   def regular_vehicle_id(date) = vehicle_changes.select { |c| c.effective_from <= date }.last&.vehicle_id
 
   def replacement_on(date) = replacements.reverse.find { |r| (r.starts_on..r.ends_on).cover?(date) }

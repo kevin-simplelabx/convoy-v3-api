@@ -32,13 +32,14 @@
 class FamilyGuardian < ApplicationRecord
   audited associated_with: :family
 
+  PHONE = /\A\+?[\d\s-]{8,}\z/
   RELATIONSHIPS = %w[Parent Mother Father Guardian Grandparent Relative Helper Other].freeze
 
   belongs_to :family, inverse_of: :guardians
 
   validates :relationship, inclusion: { in: RELATIONSHIPS }
   validates :name_order, inclusion: { in: %w[first last] }
-  validates :phone, format: { with: /\A\+?[\d\s-]{8,}\z/, message: "doesn't look like a phone number" }, allow_blank: true
+  validates :phone, format: { with: PHONE, message: "doesn't look like a phone number" }, allow_blank: true
   validates :email, format: { with: /\A[^@\s]+@[^@\s]+\.[^@\s]+\z/, message: "doesn't look like an email" }, allow_blank: true
   validate { errors.add(:base, "Enter a first name or last name") if first_name.blank? && last_name.blank? }
 

@@ -81,7 +81,7 @@ Poll every 15 to 30 seconds while the page is open.
 
 | Status | When |
 | --- | --- |
-| `waiting` | Nothing recorded yet |
+| `waiting` | Nothing recorded yet, and the bus has not left the child's stop |
 | `on_board` | Boarded |
 | `at_school` | Alighted at the school (morning) |
 | `dropped_off` | Alighted at their stop (afternoon) |
@@ -100,25 +100,30 @@ The map's traffic layer, weather card and road incidents are not built (see § 5
 
 - `occurrence_id`, `route_id`, `label`, `session`, `date`.
 - `bus`: `{ plate, type, seats, operator }`. `type` is the label of the bus size (for example `"40-seater"`); `operator`
-  is `"Own fleet"` for our buses.
+  is `"Own fleet"` for our buses. A route made without a bus size shows the size nearest its seats (or the bus's seats);
+  `null` only when neither is known.
 - `status`, `alert`, `late_minutes`, `points`, `points_done`, `counts`, `on_board`, `stops_count`, `next_stop`
   (`{ index, name, at_stop, expected_at }`).
 - `alert`: null, or `{ kind: gps_lost, tone, title, last_ping }`, or `{ kind: late, tone, title, school_eta, planned_at }`.
   Show it as the banner.
 - `end`: `{ planned_at, at, done }`. This is the last row of the timeline (the school, or the last drop-off).
 - `methods`: how the children who boarded did it: `{ tick, qr, card, palm }`. `tick` = marked by hand ("Manual").
-- `crew`: `[{ role: "Driver" | "Bus Attendant", name, phone }]`. "Call" opens `tel:`.
+- `crew`: `[{ role: "Driver" | "Bus Attendant", name, phone, photo }]`. "Call" opens `tel:`. `photo` is a signed thumbnail link
+  (`/api/v1/downloads/…`), `null` when there is none (a replacement driver never has one).
 - `log`: `[{ at, kind, text }]`, newest first, with only what has happened so far. The kinds are `started`, `arrived`,
   `boarded` / `dropped_off` (per stop), `no_show`, `manual` (a child marked present by hand), `alert_<kind>` /
   `cleared_<kind>` (Ops Control alerts on the run) and `at_school`.
 - `school`: `{ name, lat, lng }`, and `position` (as in § 1).
 - `stops`: one per stop:
-  - `index`, `number`, `name`, `lat`, `lng`, `planned_at`.
+  - `index`, `number`, `name`, `address`, `lat`, `lng`, `planned_at`. `address` is the PUDO point's description
+    ("Bus stop opposite Kembangan MRT"), shown under the name; `null` when the stop is not linked to a point or it has none.
   - `state`: `done`, `at` (at the stop now) or `todo`.
   - `arrived_at`, `departed_at`, `late_minutes` (once left).
   - `expected_at`: for a stop not reached yet.
   - `riders`: one per child:
-    - `rid`, `name`, `level`, `status`.
+    - `rid`, `name`, `level`, `status`. A child nobody ticked is not left as `waiting` once the bus has left the stop
+      (as the prototype): `on_board` in the morning (`at_school` when the run is done), `dropped_off` in the afternoon.
+      Ticks, Bus Not Required and No Show always win.
     - `marked_by`: the attendant or driver, or "Parent".
     - `reason`: for Bus Not Required, for example "Unwell. Fever".
     - `boarded_at`, `board_method`.
@@ -178,11 +183,13 @@ The bus's GPS track for the map comes from Live Map: `GET /live_map/runs/:id/tra
 
 `GET /schools/:school_id/dashboard/finance?month=YYYY-MM` (default this month). `data`:
 
-- `month`, `state`:
+- `month` (`"2026-11"`), `state`:
   - `closed`: a past month.
   - `in_progress`: "Actual to today, forecast for the rest of the month".
   - `forecast`: "From the plans, riders and charges dated for this month".
-- `reference_day`: the day riders and seats are counted on. It is today for this month, else the month's first school day.
+- `paid_month`: `false` when Operator Pay does not pay the month (the "<Month> is not a paid month for this school. Change it in
+  Operator Pay." banner; the costs are 0).
+- `reference_day`: the day riders and seats are counted on. It is today for this month, else the month's first school day, else the 15th (a month with no school day).
 - `kpis`:
   - `revenue`: null with `revenue_note` when it cannot be worked out, for example "Bus Fares for AY 2026 not saved yet".
     Otherwise it is the fares expected in the month. Each billing period's fares are worked out as Family Bills would
@@ -200,10 +207,10 @@ The bus's GPS track for the map comes from Live Map: `GET /live_map/runs/:id/tra
   - `collected`: payments received in the month.
   - `overdue`: the bills overdue today, past their due date with something owed.
 - `route_costs`: Finance › Route Costs and By Transport Operator for the month:
-  `{ total, school_days, priced, routes, rows: [{ route, session, plan, bus_type, plate, operator, price, unpriced, days, of, amount, note, attendant }],
+  `{ total, school_days, priced, routes, rows: [{ route, session, plan, bus_type (the route's size, else the one nearest its seats; display only, prices use the route's own), plate, operator, price, unpriced, days, of, amount, note, attendant }],
   by_operator: [{ key, operator_id, name, routes, amount }] }` (the same figures as School Finance › Operator Payments; `operator`
   "Our buses" / "Not assigned" for own buses / no bus; `attendant { amount, by }` as there).
-- `year`: the academic year's 12 months, `[{ month, revenue, cost, profit }]`, for the revenue against cost chart.
+- `year`: the academic year's 12 months, `[{ month ("2026-10"), revenue, cost, profit }]`, for the revenue against cost chart.
 - `ahead`: up to 8 items in the next 90 days:
   - `plan_adopted`: `revenue_change` (only when the school pays per bus by the plan) and `cost_change`, both a month.
   - `route_charge`: `route`, `charge_kind`, `value`, `note`. When `value` is 0, the charge ends.

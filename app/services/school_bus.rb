@@ -11,6 +11,9 @@ module SchoolBus
 
   def statutory_sizes = BUS_TYPES.select { |_, t| t[:law] }.keys
 
+  # The bus type nearest to a seat count (routes made before they had a type): shown only, prices still use the route's own type.
+  def size_for(seats) = seats.to_i.positive? ? BUS_TYPES.min_by { |_, t| (t[:seats] - seats.to_i).abs }.first : nil
+
   # The bus types for a school's money screens: seats, and student seats = seats less the attendant's seat on the sizes
   # the school's Bus Attendant setting needs one on (the engine's prepTypes).
   def types(school)

@@ -116,7 +116,21 @@ module BusRequests
       change: (change(req) unless req.kind == "new"),
       rider: req.school_rider && { id: req.school_rider.id, rid: req.school_rider.rid },
       family: req.family && { id: req.family.id, code: req.family.code, name: req.family.name },
-      last_event: last && { at: last.at, by: last.by_name, text: last.text } }
+      last_event: last && { at: last.at, by: last.by_name, text: last.text }, can: can(req, set) }
+  end
+
+  # What the user may do with a request (the buttons of its drawer), also on every row.
+  def can(req, set)
+    st = req.live_status
+    mid = mid?(req, set)
+    accept = req.kind == "new" && Accept::ELIGIBLE.include?(st) && st != "Lapsed"
+    { acknowledge: mid && req.status == "Requested", move_answer: mid && req.status == "Under Review",
+      waitlist: req.kind == "new" && ACTIONABLE.include?(st) && st != "Waitlisted",
+      decline: req.kind == "new" ? ACTIONABLE.include?(st) : [ "Requested", "Under Review" ].include?(st),
+      accept:, reoffer: req.kind == "new" && st == "Lapsed",
+      record_payment: %w[Accepted Lapsed].include?(st) && req.first_bill.present? && !req.first_bill.paid?,
+      confirm_change: %w[adr svc].include?(req.kind) && OPEN.include?(st), confirm_stop: req.kind == "stop" && st == "Requested",
+      not_agreed: req.kind == "adr" && st == "Not Agreed", end_rider: end_of(req).present? }
   end
 
   def detail(req, today = Date.current)
@@ -125,8 +139,7 @@ module BusRequests
     clock = clock(req, set, today, days)
     mid = mid?(req, set)
     check = Check.new(req.school, today:).(req)
-    st = req.live_status
-    can_accept = req.kind == "new" && Accept::ELIGIBLE.include?(st) && st != "Lapsed"
+    can_accept = req.kind == "new" && Accept::ELIGIBLE.include?(req.live_status) && req.live_status != "Lapsed"
     row(req, set, clock, check).merge(
       academic_year: req.academic_year&.key, address: req.address, km: req.km,
       estimate: req.estimate, fix_why: req.fix_why, fix_note: req.fix_note, class_name: req.class_name, student_no: req.student_no,
@@ -137,18 +150,11 @@ module BusRequests
       route_fit: check && check[:sessions],
       quote: req.quote_amount && { amount: req.quote_amount, base: req.quote_base, unit: req.quote_unit, note: req.quote_note, by: req.quoted_by&.name,
                                    at: req.quoted_at },
-      quote_default: (quote_default(req, check, today, days) if can_accept),
+      quote_default: (quote_default(req, set, check, today, days) if can_accept),
       places: req.places.map { { session: it.session, route_id: it.school_route_id, route: it.route_label, kind: it.kind, stop: it.stop_name, delta_minutes: it.delta_minutes } },
       first_bill: (b = req.first_bill) && { id: b.id, number: b.number, period: b.period_label, subtotal: b.subtotal, gst: b.gst_amount, total: b.total,
                                             status: b.paid? ? "paid" : "open", issued_on: b.issued_on, due_at: b.due_at,
                                             paid_at: (p = b.payments.reject(&:voided?).last)&.created_at, method: p&.method },
-      can: { acknowledge: mid && req.status == "Requested", move_answer: mid && req.status == "Under Review",
-             waitlist: req.kind == "new" && ACTIONABLE.include?(st) && st != "Waitlisted",
-             decline: req.kind == "new" ? ACTIONABLE.include?(st) : [ "Requested", "Under Review" ].include?(st),
-             accept: can_accept, reoffer: req.kind == "new" && st == "Lapsed",
-             record_payment: %w[Accepted Lapsed].include?(st) && req.first_bill.present? && !req.first_bill.paid?,
-             confirm_change: %w[adr svc].include?(req.kind) && OPEN.include?(st), confirm_stop: req.kind == "stop" && st == "Requested",
-             not_agreed: req.kind == "adr" && st == "Not Agreed", end_rider: end_of(req).present? },
       planned: req.planned_at && { at: req.planned_at, ok: req.planned_ok, lines: req.plan_lines },
       events: req.events.reverse.map { { at: it.at, by: it.by_name, text: it.text } }
     )
@@ -165,10 +171,11 @@ module BusRequests
   end
 
   # What the Accept dialog starts from: the Bus Fares quote (with the Route Fit summary) and the start date.
-  def quote_default(req, check, today, days)
+  def quote_default(req, set, check, today, days)
     b = Fare.base(req)
+    start = req.start_on || set.start
     { amount: b[:amount], unit: b[:unit], text: [ ("Route Fit: #{check[:summary]}" if check && check[:sessions].present?), b[:text] ].compact.join(". "),
-      start_on: req.start_on && req.start_on > today ? req.start_on : days.next_working(today + 1), estimate: req.estimate }
+      start_on: start.present? && start > today ? start : days.next_working(today + 1), estimate: req.estimate }
   end
 
   END_ACTIONS = { "lapsed" => [ "Remove from Rider List", "Offer lapsed", "The first invoice was not paid in time. Take the child off the rider list" ],

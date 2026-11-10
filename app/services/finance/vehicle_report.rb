@@ -17,6 +17,7 @@ module Finance
 
     def fleet
       pl = lines(@from, @to)
+      series = chart(nil)
       runs = billed_runs.group(:vehicle_id).count
       by_vehicle = @vehicles.map do |v|
         rev, cost = totals(pl[v.id].values.flatten)
@@ -26,14 +27,16 @@ module Finance
       rev, cost = totals(pl.values.flat_map { |m| m.values.flatten })
       { period: @period, basis: @basis, from: @from, to: @to, revenue: rev, cost:, profit: rev - cost,
         margin: rev.positive? ? ((rev - cost) / rev * 100).round(1) : nil, vehicles: by_vehicle.sort_by { |r| r[:profit] },
-        categories: categories(pl.values.flat_map { |m| m.values.flatten }), chart: chart(nil), cost_per_km: cost_per_km(pl) }
+        categories: categories(pl.values.flat_map { |m| m.values.flatten }), chart: series, running_total: running_total(series),
+        cost_per_km: cost_per_km(pl) }
     end
 
     def vehicle(v)
       pl = lines(@from, @to)[v.id]
       rev, cost = totals(pl.values.flatten)
+      series = chart(v.id)
       { vehicle_id: v.id, plate: v.plate, period: @period, basis: @basis, from: @from, to: @to, revenue: rev, cost:, profit: rev - cost,
-        categories: categories(pl.values.flatten), chart: chart(v.id), break_even: break_even(pl, billed_runs.where(vehicle_id: v.id).count) }
+        categories: categories(pl.values.flatten), chart: series, running_total: running_total(series), break_even: break_even(pl, billed_runs.where(vehicle_id: v.id).count) }
     end
 
     # Cost items this month above 1.5 × the median of the six months before (with that cost in 3 of them) and S$100 over it.
@@ -84,10 +87,13 @@ module Finance
       when "this_year" then [ @today.beginning_of_year, @today.end_of_year ]
       when "last_year" then [ @today.prev_year.beginning_of_year, @today.prev_year.end_of_year ]
       when "last_12" then [ @today.beginning_of_month << 11, @today ]
-      when "all" then [ [ VehicleFinancial.minimum(:bought_on), @today.beginning_of_month << 35 ].compact.min, @today ]
+      when "all" then [ history_start, @today ]
       else [ @month, @month.end_of_month ]
       end
     end
+
+    # The first month on record: the earliest purchase, at most 36 months back.
+    def history_start = [ VehicleFinancial.minimum(:bought_on), @today.beginning_of_month << 35 ].compact.min
 
     def lines(from, to) = Finance::VehiclePl.call(vehicles: @vehicles, from:, to:, basis: @basis, today: @today)
 
@@ -111,17 +117,24 @@ module Finance
       end.sort_by { -it[:amount] }
     end
 
-    # The 12 months to the selected month: revenue, cost and profit (one vehicle or the fleet).
+    # The 12 months to the selected month: revenue, cost, profit and the running total (profit from the first month on record
+    # to the end of that month, as the prototype's "Running Total"), for one vehicle or the fleet.
     def chart(vehicle_id)
-      start = @month << 11
-      pl = lines(start, @month.end_of_month)
-      (0..11).map do |i|
-        m = start >> i
+      window = @month << 11
+      first = [ window, history_start.beginning_of_month ].min
+      pl = lines(first, @month.end_of_month)
+      run = 0.to_d
+      rows = (0..((@month.year * 12 + @month.month) - (first.year * 12 + first.month))).map do |i|
+        m = first >> i
         list = vehicle_id ? pl[vehicle_id][m] : pl.values.flat_map { |x| x[m] }
         rev, cost = totals(list)
-        { month: m.strftime("%Y-%m"), revenue: rev, cost:, profit: rev - cost }
+        { month: m.strftime("%Y-%m"), revenue: rev, cost:, profit: rev - cost, running_total: (run += rev - cost) }
       end
+      rows.last(12)
     end
+
+    # The Month period's "Running Total" card: profit to the end of the selected month; other periods have none.
+    def running_total(series) = @period == "month" ? series.last[:running_total] : nil
 
     # Runs done in the period (up to today) with a client price.
     def billed_runs = TripOccurrence.between(@from, [ @to, @today ].min).where.not(status: %w[cancelled removed skipped]).where("price > 0")

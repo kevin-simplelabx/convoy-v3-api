@@ -78,6 +78,13 @@ RSpec.describe "School Bus requests" do
     expect(board(status: "Waitlisted")[:data].size).to eq(2)
   end
 
+  it "sends no registration windows for a school with no academic year" do
+    bare = within_tenant(company) { School.create!(name: "Bare School") }
+    get api_v1_school_bus_requests_path(bare)
+    expect(json[:data]).to eq([])
+    expect(json[:meta]).to include(year: nil, windows: nil)
+  end
+
   it "acknowledges mid-year requests within working days and moves the answer date" do
     late, soon = within_tenant(company) do
       [ f[:app].("Lee Ryan", f[:this], Time.zone.local(2026, 10, 20, 10)), f[:app].("Ho Chloe", f[:this], Time.zone.local(2026, 10, 28, 10), start_when: "fixed",

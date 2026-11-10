@@ -184,7 +184,7 @@ RSpec.describe "Driver app driving" do
 
       sign_in_as(create(:user, :admin, company:))
       get api_v1_school_live_path(route.plan.school), params: { date: day.iso8601 }
-      expect(json.dig(:data, :kpis, :riders)).to include(at_school: 1, not_required: 2, waiting: 1)
+      expect(json.dig(:data, :kpis, :riders)).to include(at_school: 2, not_required: 2, waiting: 0) # S-3 was never ticked: at school as the run is done
 
       travel_to Time.zone.local(2026, 11, 4, 9, 0)
       OccurrenceCompleteJob.perform_now

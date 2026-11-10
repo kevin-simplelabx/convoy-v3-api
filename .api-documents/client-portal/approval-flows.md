@@ -36,7 +36,9 @@ site the person covers ("<site> (own flow)" when `on`).
   `other` "… the later step needs someone else".
 - A rule that names a site, person or team removed since shows "a removed site" / "a removed person or team" in
   `when_text` and matches no booking until it is edited.
-- A flow never saved shows `on: false`, no rules and an empty Otherwise (`id: null`).
+- A flow never saved shows `on: false`, no rules and an empty Otherwise: `{ "id": null, "name": "Otherwise", "position": 0, "same_person": "once",
+  "approved_automatically": true, "when": null, "when_text": ["Every other booking"], "steps": [] }` (`when` is `null` for it; a saved
+  Otherwise has the `when` object). Editing it creates the flow and the Otherwise.
 
 ## 2. Change a flow
 
@@ -49,7 +51,7 @@ site the person covers ("<site> (own flow)" when `on`).
 | Move up / down | `POST /portal/approval_flows/:for/rules/:id/move { direction: "up" \| "down" }` |
 | Edit Otherwise (steps and same person only) | `PATCH /portal/approval_flows/:for/otherwise { rule: { steps, same_person } }` |
 
-Every call answers the whole flow (§ 1 shape).
+Every call answers the whole flow (§ 1 shape) with `200`, including Delete Rule (never `204`); Add Rule answers `201`.
 
 `rule`:
 

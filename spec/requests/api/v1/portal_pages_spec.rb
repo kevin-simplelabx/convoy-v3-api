@@ -53,7 +53,7 @@ RSpec.describe "Client Portal pages" do
     get api_v1_portal_home_path, headers: as(portal_token(f[:sa_a])), as: :json
     d = json[:data]
     expect(d[:tiles]).to include(upcoming_trips: { count: 1, next: { date: "2026-11-04", time: "07:30" } }, changes_to_review: 0, waiting_for_you: 0,
-                                 shuttle_runs_today: { count: 3, on_road: 1 }, school_buses_today: nil, sites: { count: 1, own_entity: 0 })
+                                 shuttle_runs_today: { count: 3, on_road: 1, active_routes: 1 }, school_buses_today: nil, sites: { count: 1, own_entity: 0 })
     expect(d[:upcoming].first).to include(from: "Changi", to: "Tower A", status: "sent", site: "Tower A")
     expect(d[:shuttles_today].pluck(:label, :state)).to eq([ %w[S8 ended], %w[S9 started], %w[S18 scheduled] ])
     expect(d[:notices].pluck(:message)).to eq([ "No shuttle on Friday" ])

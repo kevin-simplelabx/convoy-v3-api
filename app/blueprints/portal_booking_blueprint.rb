@@ -39,10 +39,12 @@ class PortalBookingBlueprint < Blueprinter::Base
     row(t, o).merge(
       airport_direction: t.airport_direction, flight_number: t.flight_number, terminal: t.terminal, wait_minutes: t.wait_minutes,
       meet_and_greet: t.meet_and_greet, signboard_name: t.signboard_name, luggage_on: t.luggage_on,
-      luggage: { cabin: t.luggage_cabin, medium: t.luggage_medium, large: t.luggage_large, extra_large: t.luggage_extra_large, oversized: t.luggage_oversized },
+      luggage_cabin: t.luggage_cabin, luggage_medium: t.luggage_medium, luggage_large: t.luggage_large, luggage_extra_large: t.luggage_extra_large,
+      luggage_oversized: t.luggage_oversized,
       contact_name: t.contact_name, contact_phone: t.contact_phone, note: t.note,
       points: t.out_points.map { it.slice(:name, :address, :lat, :lng, :use, :note) },
       back_points: t.two_way? ? t.back_points.map { it.slice(:name, :address, :lat, :lng, :use, :note) } : [],
+      own_way_back: t.two_way? && t.own_way_back?,
       vehicles: t.vehicles.map { { vehicle_type_id: it.vehicle_type_id, name: it.vehicle_type.name, seats: it.vehicle_type.seats, count: it.count } },
       seats_requested: t.seats_requested, estimate_lines: t.estimate_lines,
       acknowledgement: t.acknowledged_at && { at: t.acknowledged_at, by: t.acknowledged_by_name, how: t.acknowledged_how },

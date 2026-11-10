@@ -54,7 +54,7 @@ else from this month, or else the last period.
 
 **The card (`data`):**
 
-- `on`: false (with `error`) until the year's Bus Fares are locked.
+- `on`: false (with `error`) until the year's Bus Fares are locked. `GET` answers `200 { on: false, error }` also when **no** year of the school has locked fares (before: `422`); `POST` Draft / Issue still answer `422` then.
 - `payer`: `family`, `school` or `bus`.
 - `periods`: `[{ index, label, month }]`. The label is `"Semester 1 | billed Jan 2027"`, or `"Jan 2027"` for monthly bills.
 - `due_on`: the due date of the period's bills.
@@ -261,7 +261,7 @@ Every action returns the whole month again, like `GET`.
 
 - `month`, `month_label`, `future`, and `month_text`, which is shown when the month has not ended.
 - `rights: { prepare, approve, set_up, maker }` and `rights_text`.
-- `kpis: { net_payable, paid, still_to_pay, operators_to_pay }`.
+- `kpis: { net_payable, paid, still_to_pay, operators_to_pay }`. Money is always a decimal string, `"0.0"` when the net is zero or negative (`balance` too).
 - `kinds: [{ kind, sign }]`, `methods`, and `routes` (labels for the line form).
 - `rows`, one per operator. Each row has:
   - Who: `key` (the operator id, `own` or `none`), `operator`, `name`, `payable`, `id`, `routes_count`.
@@ -277,7 +277,7 @@ Every action returns the whole month again, like `GET`.
     (theirs)" when `by` is `operator`, "(ours)" when `us`. Which sizes need one follows Bus Attendants (statutory / all / selected sizes).
     For example, `days` 11 `of` 21 with the `note` `"Took over from Beta Coaches on 16/11/2026"`.
   - `lines`: `[{ id, kind, sign, adj_on, route, amount, reason, auto, paired_with, by, can_remove, files: [{ id, name, url, size, content_type }] }]`.
-  - `history`: newest first: sent, sent back, approved, paid.
+  - `history`: newest first: sent, sent back, approved, paid. "Approved for S$…" is the **net** (route pay plus additions less deductions), as the prototype's `runNet`.
   - `can: { edit, send, recall, send_back, approve, reopen, pay, need_other }`.
   - `note`: shown for `own` and `none`.
 

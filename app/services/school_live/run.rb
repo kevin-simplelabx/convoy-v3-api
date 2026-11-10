@@ -20,7 +20,7 @@ module SchoolLive
       @stops = list.each_with_index.map do |s, i|
         e = events[i]
         reached = e.present? && (e.skipped || e.arrived_at.present?)
-        { index: i, name: s.name, lat: s.lat&.to_f, lng: s.lng&.to_f, planned_at: LiveMap.at_minute(occ, s.scheduled_time),
+        { index: i, name: s.name, address: s.stop_point&.description.presence, lat: s.lat&.to_f, lng: s.lng&.to_f, planned_at: LiveMap.at_minute(occ, s.scheduled_time),
           arrived_at: e&.arrived_at, departed_at: e&.departed_at, skipped: e&.skipped || false, reached:,
           left: reached && (e.skipped || e.departed_at.present? || (!@am && i == list.size - 1)) }
       end
@@ -98,7 +98,7 @@ module SchoolLive
     def rider(rid, i, info, absence, b)
       stop = stops[i]
       status, by = if b.nil? && absence&.covers?(route.plan.session) then [ "not_required", "Parent" ]
-      elsif b.nil? then [ "waiting", nil ]
+      elsif b.nil? then [ unmarked_status(stop), nil ]
       elsif b.state == "not_boarding" then [ "not_required", b.marked_by ]
       elsif b.state == "not_boarded" then [ "no_show", b.marked_by ]
       elsif b.state == "alighted" then [ @am ? "at_school" : "dropped_off", b.marked_by ]
@@ -109,6 +109,15 @@ module SchoolLive
       { rid:, name: info&.name || rid, level: info&.grade, stop: { index: i, name: stop[:name] }, status:, marked_by: by,
         reason: absence ? absence.reason_text : nil, boarded_at: b&.boarded_at, board_method: b&.board_method, board:,
         alighted_at: b&.alighted_at, alight_method: b&.alight_method }
+    end
+
+    # A child nobody ticked (no Driver app, or the run ended by time): once the bus has left the stop or the run is done, as the
+    # prototype's stu() → on board, then at school (morning) / dropped off (afternoon); until then waiting.
+    def unmarked_status(stop)
+      return "waiting" unless done? || stop[:left]
+      return "dropped_off" unless @am
+
+      done? ? "at_school" : "on_board"
     end
 
     def eta_to(stop) = @now + LiveMap.eta_minutes([ @live.lat, @live.lng ], [ stop[:lat], stop[:lng] ]).minutes

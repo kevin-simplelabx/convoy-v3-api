@@ -36,7 +36,7 @@ module BusRequests
       kinds = fits.values.map { it[:kind] }.reject { it == "none" }
       worst = (kinds.presence || [ "none" ]).max_by { RouteFit::RANK[it] }
       label, tone, code = RouteFit::KINDS[worst]
-      { code:, kind: worst, label: label + (fits.values.any? { it[:kind] == "none" } ? " (part)" : ""), tone:, current: false,
+      { code:, kind: worst, label: label + (kinds.any? && kinds.size < fits.size ? " (part)" : ""), tone:, current: false,
         free: fits.values.filter_map { it[:free] }.min, summary: fits.map { |s, f| "#{s} #{one(s, f)}" }.join(" | "), sessions: fits }
     end
 

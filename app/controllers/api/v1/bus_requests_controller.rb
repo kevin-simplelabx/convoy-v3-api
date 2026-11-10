@@ -19,7 +19,7 @@ module Api
       end
 
       def show
-        render json: { data: BusRequests.detail(authorize(find)) }
+        render json: { data: BusRequests.detail(authorize(find)), meta: { methods: SchoolBills::RecordPayment::METHODS } }
       end
 
       # GET /bus_requests/alerts — the bell and the strip: requests that need someone across the schools the user opens.
@@ -88,7 +88,7 @@ module Api
       def record_payment
         req = authorize find, :update?
         BusRequests::RecordPayment.call(req, method: params[:method], user: current_user)
-        render json: { data: BusRequests.detail(find(req.id)) }
+        render json: { data: BusRequests.detail(find(req.id)), meta: { methods: SchoolBills::RecordPayment::METHODS } }
       end
 
       # POST /bus_requests/:id/confirm_change { amount, note, stop } — Change of Address (stop needed) or Service; Change the Fare when Not Agreed.

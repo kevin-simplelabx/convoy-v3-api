@@ -105,9 +105,9 @@ class ClientInvoice < ApplicationRecord
     update!(subtotal: split[:sub], gst: split[:gst], total: split[:total])
   end
 
-  def paid = payments.sum(&:amount)
-  def credited = credit_notes.reject(&:void?).sum(&:total)
-  def balance = [ total - paid - credited, 0 ].max
+  def paid = payments.sum(0.to_d, &:amount)
+  def credited = credit_notes.reject(&:void?).sum(0.to_d, &:total)
+  def balance = [ total - paid - credited, 0.to_d ].max
 
   # Draft | Void | Paid | Overdue | Partly Paid | Issued (credit note: Issued | Void)
   def display_status(today = Date.current)

@@ -11,6 +11,7 @@ Start with [screen-map.md](screen-map.md): every screen and button → the call 
 | Area | Document |
 | --- | --- |
 | Screen and button → call | [screen-map.md](screen-map.md) |
+| Answers to the front-end's findings and the changes it must make (newest first) | [fe-updates.md](fe-updates.md) |
 | Sign in, pick an organisation, password, session | [auth.md](auth.md) |
 | Shell: who am I, rail, what each role can do, Role Permissions | [shell.md](shell.md) |
 | Settings: Users, Teams, Logo and Colour, Sites, Billing Details | [settings.md](settings.md) |

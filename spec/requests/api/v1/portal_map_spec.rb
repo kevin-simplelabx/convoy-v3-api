@@ -101,4 +101,54 @@ RSpec.describe "Client Portal map" do
     expect(json[:data]).to contain_exactly(hash_including(name: "Aisha Tan", level: "K2", session: "am", route: "AM 1", plate: "PD6604E",
                                                           stop: "Blk 101 Punggol Field", status: "waiting"))
   end
+
+  it "counts a School Bus session from its own rows, and words the kind of each run as the prototype does" do
+    get api_v1_portal_map_path, params: { activity: "am" }, headers: as(portal_token(f[:admin]))
+    d = json[:data]
+    # 07:20 is inside the 30 minutes before the planned start, but no driver has started: the pill says what the row says.
+    expect(d[:activities].find { it[:key] == "am" }).to eq(key: "am", label: "AM", count: 1, on_road: 0)
+    expect(d[:counts]).to include(scheduled: 1, on_the_way: 0, started: 0)
+    expect(d[:runs].first).to include(kind: "school_bus", kind_label: "School bus, morning", state: "scheduled")
+
+    get api_v1_portal_map_path, params: { activity: "shuttles" }, headers: as(portal_token(f[:admin]))
+    expect(json.dig(:data, :runs, 0)).to include(kind: "corporate_shuttle", kind_label: "Shuttle, morning")
+    get api_v1_portal_map_path, params: { activity: "bookings" }, headers: as(portal_token(f[:admin]))
+    expect(json.dig(:data, :runs, 0)).to include(kind: "ad_hoc", kind_label: "Ad Hoc / Charter")
+  end
+
+  it "answers a School Bus run with the list row's fields, students at each stop, and the position only while it runs" do
+    token = portal_token(f[:sa_p])
+    get api_v1_portal_map_path, params: { activity: "am" }, headers: as(token)
+    row = json.dig(:data, :runs, 0)
+    get api_v1_portal_map_run_path(row[:id]), headers: as(token), as: :json
+    d = json[:data]
+    expect(d).to include(id: row[:id], kind: "school_bus", kind_label: "School bus, morning", title: "Bright Steps (Punggol) AM 1",
+                         school: { id: f[:school].id, name: "Bright Steps (Punggol)" }, bus: hash_including(plate: "PD6604E"), state: "scheduled",
+                         state_label: "Scheduled", position: nil)
+    expect(d[:stops].first).not_to have_key(:riders)
+    expect(d[:stops].first[:students]).to contain_exactly(hash_including(name: "Aisha Tan"))
+
+    # The bus has a position and the run is not on the road: still no position. Once started, it shows.
+    within_tenant(company) do
+      VehicleLivePosition.find_by!(vehicle: f[:bus]).update!(recorded_at: Time.zone.local(2026, 11, 3, 7, 19))
+      TripOccurrence.find(row[:id]).update!(started_at: Time.zone.local(2026, 11, 3, 7, 5))
+    end
+    get api_v1_portal_map_run_path(row[:id]), headers: as(token), as: :json
+    expect(json[:data]).to include(state: "started", position: hash_including(lat: 1.3984))
+  end
+
+  it "takes a run's site from the first stop site in view when the trip has none" do
+    within_tenant(company) do
+      trip = create(:trip, client: f[:client], client_site: nil, title: "Cross-site Shuttle", start_time: "10:00", end_time: "11:00", days: [ 1, 2, 3, 4, 5 ],
+                           end_mode: "never", starts_on: Date.new(2026, 10, 1))
+      trip.update_columns(kind: "corporate_shuttle") # rubocop:disable Rails/SkipsModelValidations
+      trip.stops.each_with_index { |stop, i| stop.update_columns(client_site_id: (i.zero? ? f[:tampines] : f[:punggol]).id) } # rubocop:disable Rails/SkipsModelValidations
+      day = Date.new(2026, 11, 3)
+      TripOccurrence.create!(trip:, client: f[:client], date: day, start_time: 600, end_time: 660, starts_at: day.in_time_zone.change(hour: 10),
+                             ends_at: day.in_time_zone.change(hour: 11), kind: "corporate_shuttle", trip_label: "X10", run_key: "x10")
+    end
+    row = ->(token) { get api_v1_portal_map_path, params: { activity: "shuttles" }, headers: as(token); json.dig(:data, :runs).find { it[:title] == "Cross-site Shuttle" } }
+    expect(row.(portal_token(f[:admin]))[:site]).to eq(id: f[:tampines].id, name: "Tampines")
+    expect(row.(portal_token(f[:sa_p]))[:site]).to eq(id: f[:punggol].id, name: "Punggol") # Tampines is not theirs
+  end
 end

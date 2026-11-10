@@ -32,7 +32,7 @@ module SchoolBills
       ApplicationRecord.transaction do
         names = @allocations.map { |b, _| b.to_name }.uniq
         family = @allocations.map { |b, _| b.family_id }.uniq
-        total = @allocations.sum { |_, a| a.to_d.round(2) }
+        total = @allocations.sum(0.to_d) { |_, a| a.to_d.round(2) }
         receipt = SchoolDocument.create!(school: @school, doc_type: "rcp", number: Finance::Numbering.next!("rcp", date: @paid_on), issued_on: @paid_on,
                                          family_id: family.one? ? family.first : nil, payer: @allocations.first[0].payer,
                                          bill_to: names.size > 3 ? "#{names.first(3).join(', ')} and others" : names.join(", "),

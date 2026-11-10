@@ -48,6 +48,16 @@ RSpec.describe "School Bus finance bills" do
 
   def bill(id) = get(api_v1_school_bill_path(id)).then { json[:data] }
 
+  it "answers on: false with the reason when no year has locked Bus Fares" do
+    at Time.zone.local(2026, 12, 10, 9, 0)
+    bare = within_tenant(company) { School.create!(name: "Bare School") }
+    get api_v1_school_bill_runs_path(bare)
+    expect(response).to have_http_status(:ok)
+    expect(json[:data]).to eq(on: false, error: "Lock the Bus Fares for a year first")
+    post api_v1_school_bill_runs_path(bare), params: { period_index: 0 }, as: :json
+    expect(json.dig(:error, :message)).to eq("Lock the Bus Fares for a year first")
+  end
+
   it "drafts on the draft day, issues with GST, carries a credit, charges late fees and records payments" do
     at Time.zone.local(2026, 12, 10, 9, 0)
     b = board

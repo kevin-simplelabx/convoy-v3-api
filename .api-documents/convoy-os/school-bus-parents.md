@@ -46,9 +46,23 @@ data, and Convoy OS can add an application on a parent's behalf.
 | `DELETE /families/:id/guardians/:guardian_id` | Remove a guardian |
 | `POST /families/:id/riders` | Link riders: `{ school_id, rids: [] }` (a rider leaves any other family at the school) |
 | `DELETE /families/:id/riders/:rid?school_id=` | Unlink a rider |
-| `GET /families/:id/candidates?school_id=&q=` | Link Existing Rider: parent matches first, then the same last name (`match: parent \| last_name`) |
-| `POST /schools/:school_id/families/import` | CSV import (`file`, or `text`), with warnings |
+| `GET /families/:id/candidates?school_id=&q=` | Link Existing Rider: only riders of the school who are in **no** family, parent matches first (`match: parent`), then by name; at most 200. `match: last_name` flags a rider sharing a guardian's last name but does not rank it |
+| `POST /schools/:school_id/families/import` | CSV import (`file`, or `text`): counts and up to 30 `warnings` (see below) |
 | `GET /schools/:school_id/families/export` | CSV export |
+
+**CSV import** (columns `family_id, family_name, guardian_name, relationship, phone, email, student_id, student_name`):
+
+- A row with a `family_id` joins that family (an unknown code makes one). A row without one joins the family this **file**
+  made for the same `family_name`, else for the same phone. It never matches a family already in the company by name or phone.
+  A row with none of them is skipped with a warning.
+- A different `family_name` renames the family (warned once). A family with no name is named after its first guardian, else its code.
+- A guardian is matched by name in the family and updated. A new guardian's `relationship` is `Guardian` unless the column
+  names a known one. A wrong phone or email is **dropped with a warning** (`Line 2: 12 doesn't look like a phone number, left out`);
+  the rest of the row is imported.
+- A student is linked and leaves any other family at the school. An unknown student ID is linked with a warning, as in the prototype.
+- Answer: `{ families_added, families_renamed, guardians_added, guardians_updated, riders_linked, skipped, families_deleted, warnings }`.
+  Only a family that lost riders to this file and is left with no rider and no guardian is deleted (`families_deleted`). One
+  left with guardians only is kept, with the first warning `N families lost all their riders but still have guardians. Review or delete them`.
 
 **List row** (`GET /schools/:school_id/families`, paged, `meta { page, limit, count, pages, unlinked_riders }`):
 
@@ -240,7 +254,7 @@ start, fee). CCA, the fixed-start reason and the form answers come only from the
 - The tiles `[{ label, count, filter }]`. `filter` is the query to send when the tile is clicked, e.g.
   `{ "status": "Requested" }`, `{ "tag": "Mid-Year" }`, `{ "deadline": "over" }`; `null` = not clickable ("Not Yet Renewed").
   Mid-Year and Overdue appear only when there are any.
-- `tabs` (`open` counts), `windows` (early and general window state), `years` and `levels`.
+- `tabs` (`open` counts), `windows` (early and general window state; `null` when the school has no academic year), `years` and `levels`.
 - `service_check`: `{ none: false, plan: "Term 4 AM (current)" }` → "Service check uses <plan>"; `{ none: true, plan: null }` →
   "No AM route plan with routes yet".
 - Rows carry `lat`, `lng`, `located` (the applicant's home, for the map of applicant homes; `null` until placed). Home
@@ -261,7 +275,8 @@ start, fee). CCA, the fixed-start reason and the form answers come only from the
 - Also `academic_year`, `address`, `km`, `estimate`, `fix_why`, `fix_note`, `class_name`,
   `student_no`, `birth_date`, `medical`, `cca_days`, `fee_paid`, `policy_version`, `answer_default`.
 - `events[]`, newest first.
-- `can`: `{ acknowledge, move_answer, waitlist, decline, accept, reoffer, record_payment, confirm_change, confirm_stop, not_agreed, end_rider }`.
+- `can`: `{ acknowledge, move_answer, waitlist, decline, accept, reoffer, record_payment, confirm_change, confirm_stop, not_agreed, end_rider }`. The same object is on every list row.
+- `meta.methods` (here and in the `record_payment` answer): the payment methods to pick from (`PayNow`, `Bank Transfer`, `GIRO`, `Cheque`, `Cash`, `Card`).
 
 ## 4. New Service: review, accept, first invoice
 
@@ -275,7 +290,7 @@ start, fee). CCA, the fixed-start reason and the form answers come only from the
 | `POST /bus_requests/:id/accept` | Accept and Send Quote: `{ amount, start_on, note }` |
 | `POST /schools/:school_id/bus_requests/accept` | Accept many at their Bus Fares quotes: `{ ids: [] }`. Also used by the auto-accept and "can now be covered" banners |
 | `POST /bus_requests/:id/reoffer` | A lapsed offer again: the same quote and invoice number, new hours to pay |
-| `POST /bus_requests/:id/record_payment` | Record First Invoice Paid: `{ method }`. The request becomes Active |
+| `POST /bus_requests/:id/record_payment` | Record First Invoice Paid: `{ method }`, required (`422` "Pick how it was paid" when empty or not one of `meta.methods`). The request becomes Active |
 
 **Add Application.**
 
@@ -306,7 +321,7 @@ How the check is worked out:
   who have left by then.
 - **Limits.** The arrival window and max journey come from the year's Bus Sessions. Without them, the plan's own settings apply.
 - **Worst session wins.** The row shows the worst session. The order from best to worst is Fits, New Stop, Not Checked,
-  Bus Full, New Area. The label gets "(part)" when a session is Not Checked.
+  Bus Full, New Area. The label gets "(part)" when some, but not all, sessions are Not Checked (a request whose every session is Not Checked reads just "Not Checked").
 - **Other labels.** A renewal whose child already rides shows `Covered` (current route). An accepted request shows `Seat held`.
 
 **Quote (`quote_default`).** This is the Bus Fares tier for the distance from the school.
@@ -316,6 +331,7 @@ How the check is worked out:
   only is charged one way.
 - **Unit.** `month`, `term` or `semester`.
 - **No table.** Without a table, the quote is the estimate the parent saw.
+- **Start (`quote_default.start_on`).** The start the family asked for when it is still ahead, else the registration's service start (the first school day of the year by default) when ahead, else the next working day.
 - **Text.** `text` has the Route Fit summary and how the fare was found.
 
 **Accept checks.**
@@ -333,6 +349,7 @@ How the check is worked out:
   - Numbered from Finance Settings (`INV-2026-000123`).
   - GST as in Finance Settings.
   - Covers the start's billing period, and is due at `offer_by`.
+  - Has one line (`lines[]`): the child's first month, `"<child> | First month, <period>"`. `bill_to_code` is the family code; `family_id` the family (also for a renewing child, who is already in one).
 - **A new child** joins the rider list from the start date as Unpaid, and joins a family. The family is the school's
   family with a guardian of the same phone (last 8 digits) or email. Otherwise a new family `<LAST NAME> Family` is
   created, with the parent as guardian.
@@ -417,7 +434,7 @@ Nothing leaves the list by itself.
 
 **Alert items.** Each item has:
 
-- `request_id`, `code`, `child_name`, `level`, `school`.
+- `request_id`, `academic_year_id` (the year the request belongs to; `null` when none covers its dates), `code`, `child_name`, `level`, `school`.
 - `tab`: the Requests tab to open.
 - `kind`: `new`, `adr`, `svc`, `stop` or `end`.
 - `what`: for example "New bus request", "Answer due", "Renewal", "Change of address", "Leaving" or "Offer lapsed".
@@ -439,7 +456,7 @@ only on days with requests waiting. It is recorded in notification emails and no
 | Call | What it does |
 | --- | --- |
 | `GET /schools/:school_id/cca_rides?week_of=YYYY-MM-DD` | Settings and one week. Any day picks its Monday; the default is the next week with rides |
-| `PATCH /schools/:school_id/cca_rides` | `{ enabled, price, days: [1..5], seats }` |
+| `PATCH /schools/:school_id/cca_rides?week_of=YYYY-MM-DD` | `{ enabled, price, days: [1..5], seats }`. Answers the week being viewed (`week_of`; the default week when left out) |
 | `POST /schools/:school_id/cca_rides/not_running` | `{ date, reason: school \| weather \| bus \| other \| no_school, note }`. Every ride booked that day becomes credit for its family, once per day |
 
 **Settings.**
@@ -453,12 +470,12 @@ only on days with requests waiting. It is recorded in notification emails and no
 - `date`, `label`, `phase` (`past`, `today`, `late` or `open`) and `status`, for example "Open until Sat 7 Nov, 23:59",
   "Closed · late adds while seats last", "Bus Not Running" or "No School".
 - Seats: `riders`, `taken`, `seats`, `full`.
-- Calendar: `off` (`{ reason, by, at, credit }`), `no_school` (not a school day, with the holiday name) and `calendar`
-  (a special day: check the bus time).
+- Calendar: `off` (`{ reason, by, at, credit }`), `no_school` (the bus cannot run: `{ run: false, kind, label, sub }`, as the prototype's `yearDay` — `kind` `public_holiday`, `no_service` (not an operating day), `school_holiday` (a holiday or between terms) or `no_cca` (outside the CCA / ASA periods); `label` is the holiday name or "No Service" / "School Holidays" / "No CCA", `sub` the reason) and `calendar`
+  (a special day: `{ run: true, kind: "special_day", label, sub }`, check the bus time).
 - Actions: `can_not_running` → Bus Not Running (`POST …/cca_rides/not_running` with the reason picked), and `can_no_school_credit` → "No School credit" (give credit for rides booked before the calendar changed): the same call with `{ date, reason: "no_school" }`.
-- `rows[]`: child, class, family, `paid_on`, `method`, `bill_id`, `late`, `not_riding`.
+- `rows[]`: child, class, family, `paid_on`, `method`, `bill_id`, `bill_number`, `late`, `not_riding`.
 
-**Week figures (`kpis`).** `rides`, `collected`, `late`, `not_riding`, `credit_given`.
+**Week figures (`kpis`).** `rides`, `collected`, `late`, `not_riding`, `credit_given`. Money is always a decimal string (`"0.0"` for an empty week).
 
 **Booking rules (Convoy App).**
 

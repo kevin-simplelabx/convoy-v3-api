@@ -31,6 +31,7 @@ RSpec.describe "School Bus request alerts" do
       [ "Lim Kai", "Leaving", "The last day has passed. End the rider", "soon" ],
       [ "Lim Kai", "Change of address", "Moves Mon 16/11. Not opened yet", "ok" ]
     ])
+    expect(json[:data].first).to include(academic_year_id: f[:year].id)
     expect(json[:meta]).to include(count: 3, overdue: 1, text: "1 to acknowledge | 1 change of address | 1 to take off the rider list | 1 overdue")
 
     get digest_api_v1_bus_requests_path

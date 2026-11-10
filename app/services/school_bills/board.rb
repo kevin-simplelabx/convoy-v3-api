@@ -49,7 +49,7 @@ module SchoolBills
     def row(b)
       kids = b.lines.reject(&:credit_note_id).filter_map(&:child_name).uniq
       { id: b.id, status: b.status, number: b.number, family_id: b.family_id, bill_to: b.to_name, bill_to_code: b.bill_to_code, children: kids,
-        amount: b.draft? ? b.lines.sum(&:amount) : b.total, part_charges: b.lines.to_a.count { it.note.present? },
+        amount: b.draft? ? b.lines.sum(0.to_d, &:amount) : b.total, part_charges: b.lines.to_a.count { it.note.present? },
         lines: b.lines.map { it.slice(:rid, :child_name, :description, :note, :amount) } }
     end
   end

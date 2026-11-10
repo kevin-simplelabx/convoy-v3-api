@@ -72,6 +72,31 @@ RSpec.describe "Client Portal bookings" do
     end
   end
 
+  it "takes luggage and answers it flat, like Convoy OS, and refuses a nested luggage object" do
+    token = portal_token(f[:mo])
+    nested = trip(luggage: { cabin: 2 })
+    post estimate_api_v1_portal_bookings_path, params: { booking: booking(trips: [ nested ]) }, headers: as(token), as: :json
+    expect(response).to have_http_status(:unprocessable_content)
+    expect(json[:error]).to include(code: "luggage_flat", message: start_with("Send luggage as luggage_cabin"))
+    post api_v1_portal_bookings_path, params: { booking: booking(trips: [ nested ]) }, headers: as(token), as: :json
+    expect(response).to have_http_status(:unprocessable_content)
+    within_tenant(company) { expect(Booking.count).to eq(0) }
+
+    post api_v1_portal_bookings_path, params: { booking: booking(trips: [ trip(luggage_on: true, luggage_cabin: 2, luggage_large: 1) ]) },
+                                      headers: as(token), as: :json
+    expect(response).to have_http_status(:created), json.inspect
+    t = json.dig(:data, :trips, 0)
+    expect(t).to include(luggage_on: true, luggage_cabin: 2, luggage_medium: 0, luggage_large: 1, luggage_extra_large: 0, luggage_oversized: 0)
+    expect(t).not_to have_key(:luggage)
+  end
+
+  it "says whether a Two Way trip has its own way back, as a boolean on every trip" do
+    token = portal_token(f[:mo])
+    post api_v1_portal_bookings_path, params: { booking: booking(trips: [ trip, trip(kind: "two_way", return_time: "17:00") ]) }, headers: as(token), as: :json
+    expect(response).to have_http_status(:created), json.inspect
+    expect(json.dig(:data, :trips).pluck(:own_way_back)).to eq([ false, false ])
+  end
+
   it "waits for the client's approval when a rule asks for it" do
     within_tenant(company) do
       flow = ClientApprovalFlow.for!(f[:google], nil)

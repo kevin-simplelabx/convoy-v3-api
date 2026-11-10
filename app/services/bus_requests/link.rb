@@ -21,7 +21,10 @@ module BusRequests
       family = @req.family || match(school) || create_family(school)
       Families.link(family, school, [ rider.rid ])
       @req.update!(school_rider: rider, family:)
-      @req.first_bill&.update!(school_rider: rider, family:)
+      if (bill = @req.first_bill)
+        bill.update!(school_rider: rider, family:, bill_to_code: family.code)
+        bill.lines.update_all(rid: rider.rid)
+      end
       @req.log!("#{@req.child_name} added to the rider list as #{rider.rid} (Unpaid) and linked to #{family.name} (#{family.code})", by: @user)
       rider
     end

@@ -25,7 +25,7 @@
 | Upcoming Trips | always | trips of the bookings the person sees, today to 30 days ahead (not declined / cancelled); "Next: <day>, <time>" | Bookings › Upcoming |
 | Changes to Review | always | those trips with changes to review ("Made by <company>") | Bookings |
 | Waiting for You | not `null` (roles that approve, or someone asked) | bookings the person may decide now | Approvals |
-| Shuttle Runs Today | not `null` (the client has shuttles) | "N on the road now" (`on_road`) or "N active routes" | Shuttles |
+| Shuttle Runs Today | not `null` (the client has shuttles): `{ count, on_road, active_routes }` | "N on the road now" (`on_road`) or, when none, "N active route(s)" (`active_routes`: shuttle routes on the person's sites that have started and not ended today) | Shuttles |
 | School Buses Today | not `null` (the client, or a site the person covers, is a school) | runs today, `on_road` | Map |
 | Sites | not `null` | "N billed as their own entity" or "Billed to <client>" | Settings › Sites |
 

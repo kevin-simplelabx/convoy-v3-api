@@ -9,6 +9,8 @@ module BusRequests
     end
 
     def call
+      raise Error, "Pick how it was paid" unless SchoolBills::RecordPayment::METHODS.include?(@method)
+
       bill = @req.first_bill
       raise Error, "This request has no first invoice to pay" unless bill
       raise Error, "The first invoice is already paid" if bill.paid?
@@ -16,9 +18,9 @@ module BusRequests
 
       ApplicationRecord.transaction do
         owed = SchoolBills::Calc.call(bill, policy: nil).owed
-        SchoolBills::RecordPayment.call(@req.school, [ [ bill, owed ] ], paid_on: Date.current, method: @method.presence || "Bank Transfer", user: @user)
+        SchoolBills::RecordPayment.call(@req.school, [ [ bill, owed ] ], paid_on: Date.current, method: @method, user: @user)
         @req.update!(status: "Active")
-        @req.log!("First invoice paid#{" by #{@method}" if @method.present?}. Service is active", by: @user)
+        @req.log!("First invoice paid by #{@method}. Service is active", by: @user)
       end
       PlanSync.call(@req, user: @user)
       @req

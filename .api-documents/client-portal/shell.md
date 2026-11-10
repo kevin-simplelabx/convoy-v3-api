@@ -12,7 +12,8 @@ Without an organisation picked every call here answers `422` `pick_account` ([au
   "account": { "id": 2, "email": "kenneth.ong@google.com", "name": "Kenneth Ong" },
   "client_user": {
     "client_user_id": 2, "name": "Kenneth Ong", "title": "Finance", "role": "fin", "role_label": "Finance Admin", "wide": true,
-    "client": { "id": 2, "name": "Google Asia Pacific", "kind": "company" },
+    "client": { "id": 2, "name": "Google Asia Pacific", "kind": "company",
+                "brand": { "logo": { "url": "…", "name": "google-logo.png", "size": 4210, "content_type": "image/png" }, "logo_ratio": 3.2, "color": "#4285F4" } },
     "company": { "id": 1, "name": "SimpleDrive", "display_name": "SimpleDrive", "theme_color": "#0B6E6E", "logo": null } },
   "all_sites": true,
   "sites": [ { "id": 2, "name": "Google Asia Pacific (Pasir Panjang)" }, { "id": 1, "name": "Mapletree Business City" } ],

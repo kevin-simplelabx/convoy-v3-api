@@ -47,7 +47,8 @@ RSpec.describe "School Bus CCA rides" do
     d = json[:data]
     expect(d[:week_of]).to eq("2026-11-09")
     expect(d[:days].map { [ it[:label], it[:taken], it[:status] ] }).to eq([ [ "Tue 10 Nov", 2, "Open until Sat 7 Nov, 23:59" ], [ "Thu 12 Nov", 2, "Open until Sat 7 Nov, 23:59" ] ])
-    expect(d[:kpis]).to eq(rides: 4, collected: "32.0", late: 1, not_riding: 0, credit_given: 0)
+    expect(d[:kpis]).to eq(rides: 4, collected: "32.0", late: 1, not_riding: 0, credit_given: "0.0")
+    expect(d[:days].flat_map { it[:rows] }.map { it[:bill_number] }).to all(be_present)
 
     post not_running_api_v1_school_cca_rides_path(f[:school]), params: { date: "2026-11-12", reason: "weather", note: "Lightning risk" }, as: :json
     expect(json.dig(:meta, :credited)).to eq(2)
@@ -61,8 +62,13 @@ RSpec.describe "School Bus CCA rides" do
     expect(next_bill).to have_attributes(gross: 16, credit_used: 16, total: 0, payments: [])
     expect(within_tenant(company) { CcaBooking.where(school_bill: next_bill).pluck(:method).uniq }).to eq([ "Credit" ])
     get path, params: { week_of: "2026-11-18" }
-    expect(json.dig(:data, :days).last).to include(status: "No School", no_school: { run: false, label: "Sports Day (no school)" }, can_no_school_credit: true)
+    expect(json.dig(:data, :days).last).to include(status: "No School", no_school: { run: false, kind: "school_holiday", label: "Sports Day (no school)", sub: "School holiday" }, can_no_school_credit: true)
     post not_running_api_v1_school_cca_rides_path(f[:school]), params: { date: "2026-11-19", reason: "no_school", note: "Sports Day" }, as: :json
     expect(json[:data][:days].last[:off]).to include(reason: "No school: Sports Day", credit: "8.0")
+
+    # Saving the settings answers the week being viewed; an empty week has decimal figures
+    put path, params: { enabled: true, price: 8, days: [ 2, 4 ], seats: 3, week_of: "2026-12-09" }, as: :json
+    expect(json[:data]).to include(week_of: "2026-12-07")
+    expect(json.dig(:data, :kpis)).to eq(rides: 0, collected: "0.0", late: 0, not_riding: 0, credit_given: "0.0")
   end
 end

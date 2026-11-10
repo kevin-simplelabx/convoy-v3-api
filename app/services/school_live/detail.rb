@@ -12,10 +12,11 @@ module SchoolLive
       r = @r
       occ = r.occ
       v = occ.vehicle
-      type = SchoolBus::BUS_TYPES[r.route.bus_type]
+      size = r.route.bus_size(v)
+      type = SchoolBus::BUS_TYPES[size]
       boarded = r.riders.select { it[:boarded_at] }
       { occurrence_id: occ.id, route_id: r.route.id, label: r.route.label, session: r.route.plan.session, date: occ.date,
-        bus: { plate: v&.plate, type: type&.dig(:label) || r.route.bus_type, seats: r.route.seats || v&.seats, operator: v && (v.operator&.name || "Own fleet") },
+        bus: { plate: v&.plate, type: type&.dig(:label) || size, seats: r.route.seats || v&.seats, operator: v && (v.operator&.name || "Own fleet") },
         status: r.status, alert: alert, late_minutes: r.late_minutes, points: r.points, points_done: r.points_done, counts: r.counts,
         on_board: r.counts["on_board"], stops_count: r.stops.size,
         next_stop: (n = r.next_stop) && { index: n[:index], name: n[:name], at_stop: r.at_stop&.dig(:index) == n[:index], expected_at: r.expected_at(n) },
@@ -40,7 +41,8 @@ module SchoolLive
     def crew
       d = @r.occ.decorate.driver_info
       a = @r.route.attendant
-      [ d && { role: "Driver", name: d[:name], phone: d[:phone] }, a && { role: "Bus Attendant", name: a.name, phone: a.phone } ].compact
+      [ d && { role: "Driver", name: d[:name], phone: d[:phone], photo: d[:photo] },
+        a && { role: "Bus Attendant", name: a.name, phone: a.phone, photo: a.decorate.photo_thumb } ].compact
     end
 
     # What happened so far, newest first: trip started, arrived at each stop, boarded / dropped off there, children not at the
@@ -73,7 +75,7 @@ module SchoolLive
     def stop(s)
       r = @r
       kids = r.riders.select { it[:stop][:index] == s[:index] }
-      { index: s[:index], number: s[:index] + 1, name: s[:name], lat: s[:lat], lng: s[:lng], planned_at: s[:planned_at],
+      { index: s[:index], number: s[:index] + 1, name: s[:name], address: s[:address], lat: s[:lat], lng: s[:lng], planned_at: s[:planned_at],
         state: s[:left] || r.done? ? "done" : (s[:reached] ? "at" : "todo"), arrived_at: s[:arrived_at], departed_at: s[:departed_at],
         late_minutes: s[:departed_at] && s[:planned_at] ? [ (((s[:arrived_at] || s[:departed_at]) - s[:planned_at]) / 60).round, 0 ].max : nil,
         expected_at: s[:reached] || r.done? ? nil : r.expected_at(s), riders: kids.map { it.except(:stop) } }

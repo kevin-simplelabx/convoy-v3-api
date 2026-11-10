@@ -91,7 +91,7 @@ RSpec.describe "School Bus Live Ops" do
     expect(d).to include(label: "AM 1", session: "am", bus: { plate: "PD6604E", type: "40-seater", seats: 40, operator: "Own fleet" }, on_board: 1)
     expect(d[:alert]).to include(kind: "late", tone: "danger")
     expect(d[:methods]).to eq(tick: 0, qr: 1, card: 0, palm: 0)
-    expect(d[:crew]).to eq([ { role: "Driver", name: "Kumar", phone: "+6591234567" }, { role: "Bus Attendant", name: "Mdm Rosnah", phone: "+6591112233" } ])
+    expect(d[:crew]).to eq([ { role: "Driver", name: "Kumar", phone: "+6591234567", photo: nil }, { role: "Bus Attendant", name: "Mdm Rosnah", phone: "+6591112233", photo: nil } ])
     expect(d[:log].pluck(:text)).to eq([ "1 student boarded at Blk 101 Bedok North", "Child 2 not at stop. Marked by Mdm Rosnah",
                                          "Arrived at Blk 101 Bedok North", "Trip started" ])
     first, second = d[:stops]
@@ -101,6 +101,55 @@ RSpec.describe "School Bus Live Ops" do
     expect(first[:riders].last).to include(marked_by: "Parent", reason: "Unwell. Fever")
     expect(second).to include(state: "todo", riders: [ hash_including(rid: "S-3", status: "waiting") ])
     expect(second[:expected_at]).to be > "2026-11-03T06:45:00.000+08:00"
+  end
+
+  it "counts a child nobody ticked as on board once the bus left the stop, then at school once the run is done" do
+    day = Date.new(2026, 11, 3)
+    within_tenant(company) { f[:r1].occurrences.find_by!(date: day).passenger_marks.where(passenger_key: "S-1").delete_all }
+    id = within_tenant(company) { f[:r1].occurrences.find_by!(date: day).id }
+    get api_v1_school_live_run_path(school, id)
+    expect(json.dig(:data, :stops, 0, :riders).find { it[:rid] == "S-1" }).to include(status: "on_board", marked_by: nil)
+    expect(json.dig(:data, :stops, 1, :riders).first).to include(rid: "S-3", status: "waiting") # its stop is not left yet
+
+    within_tenant(company) { TripOccurrence.find(id).update_columns(ended_at: Time.zone.local(2026, 11, 3, 7, 21)) }
+    get api_v1_school_live_run_path(school, id)
+    expect(json.dig(:data, :stops).flat_map { it[:riders] }.pluck(:status)).to eq(%w[at_school no_show not_required at_school])
+    expect(json.dig(:data, :counts)).to include(at_school: 2, no_show: 1, not_required: 1, waiting: 0)
+  end
+
+  it "drops an afternoon child off at the stop the bus has left" do
+    day = Date.new(2026, 11, 3)
+    within_tenant(company) do
+      p1 = SchoolRoute.joins(:plan).find_by!(school_plans: { session: "pm" }, label: "PM 1")
+      SchoolRouteRider.create!(school_route: p1, stop: p1.stops.first, rid: "S-1")
+      occ = p1.occurrences.find_by!(date: day)
+      occ.update_columns(started_at: Time.zone.local(2026, 11, 3, 6, 0))
+      occ.stop_events.create!(position: 0, stop_name: "Blk 101 Bedok North", arrived_at: Time.zone.local(2026, 11, 3, 6, 1), departed_at: Time.zone.local(2026, 11, 3, 6, 2))
+      @pm_id = occ.id
+    end
+    get api_v1_school_live_run_path(school, @pm_id)
+    expect(json.dig(:data, :stops, 0, :riders)).to contain_exactly(hash_including(rid: "S-1", status: "dropped_off"))
+  end
+
+  it "fills the bus type from the seats, adds the crew's photos and the stop address from its PUDO point" do
+    day = Date.new(2026, 11, 3)
+    within_tenant(company) do
+      f[:r2].update_columns(bus_type: nil, seats: nil)
+      stop = Stop.create!(name: "Kembangan MRT", code: "BDSZ05-0001", subzone_code: "BDSZ05")
+      point = stop.all_points.create!(suffix: "A", lat: 1.3210, lng: 103.9129, sizes: %w[L], description: "Bus stop opposite Kembangan MRT")
+      f[:r2].stops.first.update!(stop_point: point)
+      f[:r1].attendant.update!(photo: fixture_file_upload("photo.png", "image/png"))
+      f[:bus].driver_schedules.first.driver.update!(photo: fixture_file_upload("photo.png", "image/png"))
+    end
+    id2 = within_tenant(company) { f[:r2].occurrences.find_by!(date: day).id }
+    get api_v1_school_live_run_path(school, id2)
+    expect(json.dig(:data, :bus)).to include(type: "23-seater", seats: 23) # the bus's 23 seats
+    expect(json.dig(:data, :stops, 0)).to include(name: "Kembangan MRT", address: "Bus stop opposite Kembangan MRT")
+
+    id1 = within_tenant(company) { f[:r1].occurrences.find_by!(date: day).id }
+    get api_v1_school_live_run_path(school, id1)
+    expect(json.dig(:data, :crew).pluck(:photo)).to all(start_with("/api/v1/downloads/"))
+    expect(json.dig(:data, :stops, 0)).to include(address: nil)
   end
 
   it "writes sample attendance for the runs that have started (seed / live_map:simulate)" do

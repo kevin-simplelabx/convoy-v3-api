@@ -89,9 +89,19 @@ module Api
         def booking_params
           raw = params.require(:booking)
           raw = ActionController::Parameters.new(JSON.parse(raw)) if raw.is_a?(String)
+          reject_nested_luggage(raw)
           raw.permit(*(Bookings::Save::PERMIT - [ :client_id ]))
         rescue JSON::ParserError
           raise ActionController::BadRequest, "booking is not valid JSON"
+        end
+
+        # Luggage is flat (luggage_cabin ... luggage_oversized) in both directions, as in Convoy OS; a nested object would be dropped silently.
+        def reject_nested_luggage(raw)
+          trips = Array.wrap(raw[:days]).flat_map { Array.wrap(it[:trips]) }
+          return unless trips.any? { it.respond_to?(:key?) && it.key?(:luggage) }
+
+          raise ApplicationService::Error.new("Send luggage as luggage_cabin, luggage_medium, luggage_large, luggage_extra_large and luggage_oversized, not as a luggage object",
+                                              code: "luggage_flat")
         end
 
         def render_booking(booking, status: :ok)

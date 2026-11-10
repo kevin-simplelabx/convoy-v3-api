@@ -7,7 +7,10 @@ module Portal
   class Map
     ACTIVITIES = { "am" => "AM", "pm" => "PM", "asa" => "CCA", "bookings" => "Bookings", "shuttles" => "Shuttles" }.freeze
     SCHOOL = %w[am pm asa].freeze
-    INCLUDES = [ :stop_events, :driver, :operator_driver, { vehicle: :live_position, trip: [ :client_site, :stops, { booking_trip: :booking } ], trip_run: :times } ].freeze
+    # What the list row says under the title (Client Portal logic/app-feed.js KIND, TRIP_LBL and the shuttle runs).
+    SCHOOL_KINDS = { "am" => "School bus, morning", "pm" => "School bus, afternoon", "asa" => "School bus, CCA" }.freeze
+    INCLUDES = [ :stop_events, :driver, :operator_driver, :school_route, { vehicle: :live_position, trip: [ :client_site, { stops: :client_site }, { booking_trip: :booking } ],
+                                                          trip_run: :times } ].freeze
 
     def initialize(client_user:, site_id: nil, now: Time.current)
       @user = client_user
@@ -32,7 +35,7 @@ module Portal
       occ = TripOccurrence.where(date: @today).find(id)
       if occ.school_route_id
         school = schools.find { it.id == occ.school_route.plan.school_id } or raise ActiveRecord::RecordNotFound
-        return SchoolLive::Board.new(school, @today, session: occ.school_route.plan.session, now: @now).route(occ.id)
+        return school_run(school, occ)
       end
       raise ActiveRecord::RecordNotFound unless trip_runs.exists?(id: occ.id)
 
@@ -67,21 +70,21 @@ module Portal
     def sites = @user.limit_to_sites(@client.sites, :id).order(:name).map { { id: it.id, name: it.name, lat: it.lat&.to_f, lng: it.lng&.to_f } }
 
     def activities
+      # School sessions count the rows the list shows, so the pill and the list always agree.
       list = SCHOOL.filter_map do |k|
-        runs = school_occurrences.select { it.school_route.plan.session == k }
-        activity(k, runs) if runs.any?
+        states = school_rows(k).pluck(:state)
+        activity(k, states) if states.any?
       end
       %w[bookings shuttles].each do |k|
         runs = trip_runs.where(trip: { kind: k == "shuttles" ? "corporate_shuttle" : Trip.kinds.keys - %w[corporate_shuttle] })
                         .includes(:stop_events).to_a
-        list << activity(k, runs) if runs.any?
+        list << activity(k, runs.map { RunState.call(it, @now) }) if runs.any?
       end
       list
     end
 
-    def activity(key, runs)
-      states = runs.map { RunState.call(it, @now) }
-      { key:, label: ACTIVITIES.fetch(key), count: runs.size, on_road: states.count { RunState.on_road?(it) }, next: states.include?("scheduled") }
+    def activity(key, states)
+      { key:, label: ACTIVITIES.fetch(key), count: states.size, on_road: states.count { RunState.on_road?(it) }, next: states.include?("scheduled") }
     end
 
     def runs_for(key)
@@ -95,7 +98,7 @@ module Portal
     # one-off trips only from their own bookings.
     def trip_runs
       trips = Trip.kept.where(client_id: @client.id)
-      ids = @site ? [ @site.id ] : (@user.all_sites? ? nil : @user.picked_site_ids)
+      ids = site_ids
       trips = trips.where(client_site_id: ids).or(trips.where(id: TripStop.where(client_site_id: ids).select(:trip_id))) if ids
       unless @user.can?(:see_all)
         own = Trip.where(booking_trip_id: BookingTrip.joins(:booking).where(bookings: { created_by_client_user_id: @user.id }).select(:id))
@@ -104,13 +107,32 @@ module Portal
       TripOccurrence.visible.where(date: @today, trip_id: trips.select(:id)).where.not(status: "cancelled").joins(:trip)
     end
 
+    # The site ids in view: the site picked, else the ones the person covers (nil = every site).
+    def site_ids = @site ? [ @site.id ] : (@user.all_sites? ? nil : @user.picked_site_ids)
+
+    # The trip's own site, else the first stop site in view (a shuttle's own site comes first).
+    def run_site(trip)
+      ids = site_ids
+      site = ([ trip.client_site ] + trip.stops.map(&:client_site)).compact.find { ids.nil? || ids.include?(it.id) }
+      site&.slice(:id, :name)
+    end
+
+    # Bookings and Shuttles wording of the prototype: "Ad Hoc / Charter, Two Way", "Two Way, return", "Shuttle, morning".
+    def kind_label(o)
+      trip = o.trip
+      return o.trip_run&.direction == 2 ? "Shuttle, evening" : "Shuttle, morning" if trip.corporate_shuttle?
+      return "Two Way, return" if trip.is_return
+
+      trip.booking_trip&.kind_name || trip.kind_name
+    end
+
     def trip_row(o)
       state = RunState.call(o, @now)
       planned = Occurrences::Stops.planned(o)
       events = o.stop_events.index_by(&:position)
       nxt = planned.find { !(events[it[:position]]&.departed_at || events[it[:position]]&.skipped) }
       live = RunState.on_road?(state) && o.vehicle&.live_position
-      { id: o.id, date: o.date, kind: o.kind, title: o.trip.title, label: o.trip_label, site: o.trip.client_site&.slice(:id, :name),
+      { id: o.id, date: o.date, kind: o.kind, kind_label: kind_label(o), title: o.trip.title, label: o.trip_label, site: run_site(o.trip),
         starts_at: o.starts_at, ends_at: o.ends_at, state:, state_label: RunState::LABELS.fetch(state),
         booking: o.trip.booking_trip && { id: o.trip.booking_trip.booking_id, number: o.trip.booking_trip.booking.number },
         bus: o.vehicle && { plate: o.vehicle.plate, model: [ o.vehicle.make, o.vehicle.model ].compact.join(" ").presence, seats: o.vehicle.seats },
@@ -145,21 +167,31 @@ module Portal
       end
     end
 
-    def school_occurrences
-      @school_occurrences ||= schools.flat_map { |s| SchoolLive.runs(s, @today).values.flatten }
-    end
-
     def school_rows(session)
-      schools.flat_map do |school|
+      @school_rows ||= {}
+      @school_rows[session] ||= schools.flat_map do |school|
         board = SchoolLive::Board.new(school, @today, session:, now: @now).call
         next [] unless board[:session] == session
 
         board[:rows].map do |r|
-          state = { "arrived" => "ended", "not_started" => "scheduled" }.fetch(r.dig(:status, :key), "started")
-          r.merge(id: r[:occurrence_id], kind: "school_bus", title: "#{school.name} #{r[:label]}", school: { id: school.id, name: school.name },
-                  bus: r[:plate] && { plate: r[:plate] }, state:, state_label: RunState::LABELS.fetch(state))
+          state = school_state(r.dig(:status, :key))
+          r.merge(id: r[:occurrence_id], kind: "school_bus", kind_label: SCHOOL_KINDS.fetch(session), title: "#{school.name} #{r[:label]}",
+                  school: { id: school.id, name: school.name }, bus: r[:plate] && { plate: r[:plate] }, state:, state_label: RunState::LABELS.fetch(state))
         end
       end
+    end
+
+    # A School Bus run has no On the way: it is Scheduled until it starts, Started on the road, Ended once it arrived.
+    def school_state(status_key) = { "arrived" => "ended", "not_started" => "scheduled" }.fetch(status_key, "started")
+
+    # The Live Ops run detail with the list row's fields; students (not riders) at each stop; the bus only while it runs.
+    def school_run(school, occ)
+      session = occ.school_route.plan.session
+      d = SchoolLive::Board.new(school, @today, session:, now: @now).route(occ.id)
+      state = school_state(d.dig(:status, :key))
+      d.merge(id: d[:occurrence_id], kind: "school_bus", kind_label: SCHOOL_KINDS.fetch(session), title: "#{school.name} #{d[:label]}",
+              school: { id: school.id, name: school.name }, bus: d.dig(:bus, :plate) ? d[:bus] : nil, state:, state_label: RunState::LABELS.fetch(state),
+              position: (d[:position] if state == "started"), stops: d[:stops].map { |s| s.except(:riders).merge(students: s[:riders]) })
     end
   end
 end

@@ -10,16 +10,24 @@ with_company("SD") do
   plans = school.plans.where(session: %w[am pm], in_use: true).includes(routes: :stops).to_a
 
   if SchoolRouteRider.joins(school_route: :plan).where(school_plans: { school_id: school.id }).none?
-    riders = SchoolRider.of_school_on(school, Date.new(2026, 9, 14)).order(:rid).limit(18).to_a
+    everyone = SchoolRider.of_school_on(school, Date.new(2026, 9, 14)).order(:rid).to_a
+    # Each stop's riders are the students living at it (Year Setup sample): riders_count of the stop, fewer on PM for those without a PM ride.
     plans.each do |plan|
-      routes = plan.routes.sort_by(&:number)
-      riders.each_with_index do |r, i|
-        next if plan.session == "pm" && (i % 6) == 5
-
-        route = routes[i % routes.size]
-        SchoolRouteRider.create!(school_route: route, stop: route.stops[i % route.stops.size], rid: r.rid)
+      plan.routes.each do |route|
+        route.stops.each do |stop|
+          here = everyone.select { it.address.to_s.start_with?("#{stop.name} #") && (plan.session == "am" || it.pm) }
+          here.each { SchoolRouteRider.create!(school_route: route, stop:, rid: it.rid) }
+          stop.update_columns(riders_count: here.size)
+        end
+        route.update_columns(riders_count: route.stops.sum { it.riders.count })
       end
     end
+    # PUDO points for the AM riders (Stop Assignment), as the daily job does when the plan starts.
+    plans.select { it.session == "am" }.each do |plan|
+      plan.update_columns(riders_assigned_at: nil)
+      Plans::AssignRiders.call(plan)
+    end
+    riders = everyone.first(18)
     linked = FamilyRider.where(school:, rid: riders.map(&:rid)).pluck(:rid)
     riders.reject { linked.include?(it.rid) }[0...-2].each_slice(2) do |pair|
       last = pair.first.name.split.first

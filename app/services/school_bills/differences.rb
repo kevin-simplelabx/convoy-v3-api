@@ -8,7 +8,7 @@ module SchoolBills
     end
 
     def call
-      bills = SchoolBill.issued.where(academic_year: @year, kind: "period").includes(:family, :lines, :notes).to_a
+      bills = SchoolBill.issued.where(academic_year: @year, kind: "period").order(:id).includes(:family, :lines, :notes).to_a
       incl = FinanceSetting.current.gst_incl?
       bills.group_by(&:period_index).flat_map do |index, list|
         d = Draft.call(@year, index)
@@ -17,8 +17,8 @@ module SchoolBills
         list.filter_map do |b|
           o = d[:bills].find { b.payer == "school" ? it[:payer] == "school" : it[:family]&.id == b.family_id }
           now = o ? o[:amount] : 0.to_d
-          was = b.lines.reject(&:credit_note_id).sum(&:amount)
-          adj = b.notes.reject(&:voided?).sum { |n| (n.debit_note? ? 1 : -1) * (incl ? n.total : n.subtotal) }
+          was = b.lines.reject(&:credit_note_id).sum(0.to_d, &:amount)
+          adj = b.notes.reject(&:voided?).sum(0.to_d) { |n| (n.debit_note? ? 1 : -1) * (incl ? n.total : n.subtotal) }
           gap = (now - was - adj).round(2)
           next if gap.abs <= 0.005
 

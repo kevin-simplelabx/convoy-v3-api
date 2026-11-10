@@ -360,10 +360,14 @@ or `null` for users without `vehfin` and operator buses.
 `basis`: `profit` (depreciation and loan interest) or `cash` (purchase / down payment and loan instalments when paid out).
 
 Fleet: `{ period, basis, from, to, revenue, cost, profit, margin, vehicles [{ vehicle_id, plate, seats, revenue, cost, profit, break_even }] (weakest first),
-categories [{ kind, category, amount }], chart [{ month, revenue, cost, profit }] (12 months to `month`),
+categories [{ kind, category, amount }], chart [{ month, revenue, cost, profit, running_total }] (12 months to `month`),
+running_total (the Month period's "Running Total" card: profit to the end of `month`; `null` for other periods),
 cost_per_km [{ size: Minibus | Medium Bus | Coach, vehicles, km, cost_per_km, revenue_per_km, profit_per_km }] }`.
 Bus sizes by seats (the API's bands; the prototype's 15 / 30 are not used): **Minibus ≤ 13**, **Medium Bus 14–29**, **Coach 30+**.
-A bus with no seats set is in none. `chart`: `[{ month: "2026-10", revenue, cost, profit }]` × 12, oldest first.
+A bus with no seats set is in none. `chart`: `[{ month: "2026-10", revenue, cost, profit, running_total }]` × 12, oldest first. `running_total` is the profit from the
+first month on record (the earliest purchase, at most 36 months back) to the end of that month, so the first point may not be 0
+(prototype "Running Total", `fleet.js` `vfBody`). Draw it as the second line for Monthly Profit / Running Total; the Month card
+shows `running_total` ("Profit to the end of <month>"). A vehicle's view has the same two fields.
 Fleet `vehicles[]` also carry `categories [{ kind, category, amount }]` (the vehicle's bar, stacked by category).
 
 Vehicle: the same totals, `categories` **with the dive** (`children`), `chart`, `break_even { revenue, cost, trip_revenue, runs, per_run, runs_needed, gap }`

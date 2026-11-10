@@ -34,9 +34,9 @@ module SchoolBills
     def issue(bill, settings, credits)
       mine = credits.select { bill.payer == "school" ? it.payer == "school" : it.family_id == bill.family_id }
       credits.reject! { mine.include?(it) }
-      base = bill.lines.sum(&:amount)
+      base = bill.lines.sum(0.to_d, &:amount)
       split = FinanceSetting.split(base, on: settings.gst_on?, rate: settings.gst_rate, mode: settings.gst_mode)
-      used = mine.sum(&:total)
+      used = mine.sum(0.to_d, &:total)
       mine.each_with_index do |cn, i|
         bill.lines.create!(position: 1000 + i, description: "Credit from #{cn.number}", amount: -cn.total, credit_note: cn)
         cn.update!(applied_bill: bill)

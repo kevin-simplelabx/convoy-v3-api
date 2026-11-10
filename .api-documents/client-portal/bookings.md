@@ -54,7 +54,8 @@ in full:
 | Trip field | Shown as |
 | --- | --- |
 | `airport_direction`, `flight_number`, `terminal`, `wait_minutes`, `meet_and_greet`, `signboard_name` | Airport: Arrival / Departure, Flight, Terminal, Free Waiting (min after landing), Meet and Greet (+ signboard) |
-| `luggage_on`, `luggage { cabin, medium, large, extra_large, oversized }` | Luggage by size |
+| `luggage_on`, `luggage_cabin`, `luggage_medium`, `luggage_large`, `luggage_extra_large`, `luggage_oversized` | Luggage by size. **Flat**, the same names as the request and Convoy OS (no nested `luggage`) |
+| `own_way_back` | Two Way: `true` when the way back has its own points, `false` when it is the way there reversed; always a boolean (`false` for other kinds) |
 | `contact_name`, `contact_phone`, `note` | Contact on the Day (else "The coordinator"), Note to the Driver |
 | `points`, `back_points` (`[{ name, address, lat, lng, use, note }]`) | Route: Pick-up, Stop n, Drop-off (way back for Two Way) |
 | `vehicles [{ vehicle_type_id, name, seats, count }]`, `seats_requested` | "2 x 13-seater", "26 seats for 20 passengers" |
@@ -104,6 +105,13 @@ Only `can.book` roles (not Finance roles). `GET /portal/bookings/form`:
       "vehicles": [ { "vehicle_type_id": 3, "count": 1 } ], "contact_name": null, "contact_phone": null, "note": null } ] } ] }
 ```
 
+Trip luggage is **flat**, as in Convoy OS: `luggage_on`, `luggage_cabin`, `luggage_medium`, `luggage_large`, `luggage_extra_large`,
+`luggage_oversized` (integers). A trip with a nested `luggage { cabin, … }` object is refused with `422` code `luggage_flat`
+(on both `estimate` and Submit), never silently dropped.
+
+Service For: send `client_end_customer_id` (a customer from the form's `end_customers` or `POST /portal/end_customers`). `service_for`
+is optional free text; when it is blank and a customer is picked, the customer's name is stored in it.
+
 With files: send multipart, `booking` = that JSON as a string, `files[]` = up to 10 files of 5 MB each.
 
 Estimate answer: `{ trips: [{ date, kind, amount, lines, without_rate }], total, rate_card, billed_to, approval }`;
@@ -124,4 +132,4 @@ On Submit the booking gets its number (e.g. `SD26000008`) and its `approval` ([a
 ## 5. Accept Changes
 
 `PATCH /portal/booking_trips/:id/accept_changes` (a `changed` trip; `can_accept_changes`) → the booking (§ 3). The trip goes
-back to `sent` for the transport company to confirm; `acknowledgement` = `{ by: <you>, how: "Client Portal" }`.
+back to `sent` for the transport company to confirm; `acknowledgement` = `{ by: <you>, how: "Client Portal" }`. Toast: "Changes accepted".

@@ -95,7 +95,7 @@ class SchoolBill < ApplicationRecord
 
   def draft? = status == "draft"
   def issued? = status == "issued"
-  def paid_amount = payments.reject(&:voided?).sum(&:amount)
+  def paid_amount = payments.reject(&:voided?).sum(0.to_d, &:amount)
   # Paid in full (before any late fee); the first invoice turns a request Active once this is true.
   def paid? = issued? && paid_amount >= total - 0.005
   def to_name = bill_to.presence || family&.name || school.name

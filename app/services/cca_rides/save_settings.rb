@@ -20,7 +20,7 @@ module CcaRides
         raise Error, "Pick the days the CCA bus runs" if days.empty?
         raise Error, "Enter the seats per day" unless seats.positive?
       end
-      s.update!(enabled: on, price: [ price, 0 ].max, days:, seats: [ seats, 1 ].max, saved_by: @user)
+      s.update!(enabled: on, price: [ price, 0.to_d ].max, days:, seats: [ seats, 1 ].max, saved_by: @user)
       s
     end
   end

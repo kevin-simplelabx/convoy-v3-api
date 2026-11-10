@@ -12,7 +12,7 @@ module SchoolLive
   def runs(school, date)
     TripOccurrence.joins(school_route: :plan).where(school_plans: { school_id: school.id }, date:).where.not(status: LiveMap::NOT_DRIVEN)
                   .includes(:driver, :operator_driver, :stop_events, :passenger_marks, :ops_alerts, vehicle: %i[operator live_position],
-                                                                                                school_route: [ :attendant, :plan, { stops: :riders } ])
+                                                                                                school_route: [ :attendant, :plan, { stops: %i[riders stop_point] } ])
                   .order(:starts_at, :id).to_a
                   .group_by { it.school_route.plan.session }
   end

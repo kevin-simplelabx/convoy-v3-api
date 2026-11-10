@@ -83,7 +83,7 @@ RSpec.describe "School Bus finance payouts" do
     post path(:approve), params: { month: "2026-11" }, as: :json
     a = row(json[:data], "Alpha Bus")
     expect(a).to include(status: "Approved", base: "6400.0", net: "5955.0", can: hash_including(pay: true, reopen: true))
-    expect(a[:history].map { it[:text] }).to eq([ "Approved for S$6400.00", "Sent to Finance" ])
+    expect(a[:history].map { it[:text] }).to eq([ "Approved for S$5955.00", "Sent to Finance" ])
     post path(:payments), params: { month: "2026-11", paid_on: "2026-12-03", amount: 6000, method: "Bank Transfer" }, as: :json
     expect(json.dig(:error, :message)).to eq("Amount is more than the S$5955.00 left to pay")
     post path(:payments), params: { month: "2026-11", paid_on: "2026-12-03", amount: 5000, method: "Bank Transfer", reference: "FAST 1" }, as: :json
@@ -121,6 +121,17 @@ RSpec.describe "School Bus finance payouts" do
     expect(json[:meta][:schools].pluck(:name)).to eq([ "St. Stephen's School" ])
     get api_v1_finance_documents_path, params: { type: "payment_voucher" }
     expect(json[:data].sole).to include(number: "PV-2026-000001", to: "Alpha Bus", school: "St. Stephen's School", amount: "5000.0")
+  end
+
+  it "keeps balance and still to pay decimal when the net is not positive" do
+    at Time.zone.local(2026, 12, 2, 9, 0)
+    [ f[:a], f[:b] ].each do |op|
+      post path(:lines, op), params: { month: "2026-11", kind: "Taxi claim", adj_on: "2026-11-20", amount: 7000, reason: "Overcharge" }
+      expect(response).to have_http_status(:created)
+    end
+    d = board
+    expect(row(d, "Alpha Bus")).to include(net: "-900.0", balance: "0.0")
+    expect(d[:kpis]).to include(still_to_pay: "0.0")
   end
 
   it "shows the attendant included in a route's price and who provides the attendant" do

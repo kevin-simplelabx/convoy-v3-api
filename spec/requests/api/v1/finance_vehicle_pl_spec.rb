@@ -55,6 +55,15 @@ RSpec.describe "Finance vehicle P&L" do
     expect(json.dig(:data, :vehicles, 0, :break_even)).to include(runs: 2, per_run: "100.0", runs_needed: 8) # cash: 765 of costs
     expect(json.dig(:data, :vehicles, 0, :categories).first).to eq(kind: "revenue", category: "Ad Hoc / Charter (auto)", amount: "200.0")
     expect(json.dig(:data, :chart).size).to eq(12)
+    chart = json.dig(:data, :chart)
+    expect(chart.each_cons(2).map { |a, b| (b[:running_total].to_d - a[:running_total].to_d) - b[:profit].to_d }.uniq).to eq([ 0 ]) # cumulative profit
+    expect(chart.last[:running_total]).to eq(json.dig(:data, :running_total)) # the Month card
+    expect(chart.last[:month]).to eq("2026-10")
+    get api_v1_finance_vehicles_pl_path, params: { month: "2026-10", basis: "cash", period: "ytd" }
+    expect(json[:data]).to include(running_total: nil)
+    expect(json.dig(:data, :chart, 0)).to have_key(:running_total)
+    get api_v1_finance_vehicle_pl_path(data[:bus]), params: { month: "2026-10", basis: "cash" }
+    expect(json.dig(:data, :running_total)).to eq(json.dig(:data, :chart, -1, :running_total))
 
     get api_v1_finance_vehicles_due_path
     expect(json[:data].map { |d| d[:kind] }).to eq(%w[road_tax insurance])

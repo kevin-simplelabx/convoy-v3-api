@@ -6,17 +6,14 @@ module Api
       # GET /schools/:school_id/cca_rides?week_of=YYYY-MM-DD (any day of the week; default the next week with rides)
       def show
         school = authorize find_school, :show?
-        week = params[:week_of].present? ? CcaRides.monday(Date.parse(params[:week_of])) : CcaRides.default_week(school)
-        render json: { data: CcaRides.week(school, week) }
-      rescue Date::Error
-        raise ApplicationService::Error, "Pick a date for the week"
+        render json: { data: CcaRides.week(school, week_of(school)) }
       end
 
-      # PUT /schools/:school_id/cca_rides { enabled, price, days: [1..5], seats }
+      # PUT /schools/:school_id/cca_rides?week_of= { enabled, price, days: [1..5], seats } — answers the week being viewed
       def update
         school = authorize find_school, :setup?
         CcaRides::SaveSettings.call(school, params.permit(:enabled, :price, :seats, days: []).to_h.symbolize_keys, user: current_user)
-        render json: { data: CcaRides.week(school.reload, CcaRides.default_week(school)) }
+        render json: { data: CcaRides.week(school.reload, week_of(school)) }
       end
 
       # POST /schools/:school_id/cca_rides/not_running { date, reason: school | weather | bus | other | no_school, note }
@@ -27,6 +24,12 @@ module Api
       end
 
       private
+
+      def week_of(school)
+        params[:week_of].present? ? CcaRides.monday(Date.parse(params[:week_of].to_s)) : CcaRides.default_week(school)
+      rescue Date::Error
+        raise ApplicationService::Error, "Pick a date for the week"
+      end
 
       def find_school = policy_scope(School).includes(cca_ride_setting: :saved_by).find(params[:school_id])
     end

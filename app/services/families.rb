@@ -21,22 +21,22 @@ module Families
          .or(scope.where(id: FamilyRider.where(school:, rid: names).select(:family_id)))
   end
 
-  # Riders of the school not in this family, parent matches first (the rider's parent name, or the last 8 digits of the
-  # parent contact, matches a guardian), then the same last name, then the rest; searched by q.
+  # Link Existing Rider: the riders of the school who are in no family (HTML `pool`), parent matches first (the rider's
+  # parent name, or the last 8 digits of the parent contact, matches a guardian), then by name; searched by q. A rider
+  # sharing a guardian's last name is flagged `last_name` but is not ranked.
   def candidates(family, school, q: nil, date: Date.current)
     guardians = family.guardians.to_a
     names = guardians.map { it.name.downcase }.to_set
     tails = guardians.filter_map(&:phone_tail).to_set
     surnames = guardians.filter_map { it.last_name&.downcase }.to_set
-    taken = family.family_riders.where(school:).pluck(:rid).to_set
-    riders = SchoolRider.of_school_on(school, date).order(:name)
+    riders = SchoolRider.of_school_on(school, date).where.not(rid: FamilyRider.where(school:).select(:rid)).order(:name)
     riders = riders.search(q).or(riders.where("parent_name ILIKE ?", "%#{q}%")) if q.present?
-    riders.limit(200).to_a.reject { taken.include?(it.rid) }.map do |r|
+    riders.to_a.map do |r|
       parent = names.include?(r.parent_name.to_s.downcase) || tails.include?(r.parent_contact.to_s.gsub(/\D/, "")[-8..])
       same = surnames.any? { |s| r.name.downcase.split.include?(s) }
       { rid: r.rid, name: r.name, grade: r.grade, parent_name: r.parent_name, address: r.address, postal: r.postal,
         match: parent ? "parent" : (same ? "last_name" : nil) }
-    end.sort_by { [ { "parent" => 0, "last_name" => 1 }.fetch(it[:match], 2), it[:name] ] }
+    end.sort_by { [ it[:match] == "parent" ? 0 : 1, it[:name].to_s.downcase ] }.first(200)
   end
 
   def link(family, school, rids)

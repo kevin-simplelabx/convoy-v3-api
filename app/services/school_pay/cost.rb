@@ -126,7 +126,7 @@ module SchoolPay
       base = mode == "rider" ? src.base_price : src.monthly
       return nil if base.nil?
 
-      over = mode == "rider" ? [ route.riders_count.to_i - src.riders_included.to_i, 0 ].max * src.per_rider.to_d : 0
+      over = mode == "rider" ? [ route.riders_count.to_i - src.riders_included.to_i, 0 ].max * src.per_rider.to_d : 0.to_d
       base + over + attendant(route)
     end
 

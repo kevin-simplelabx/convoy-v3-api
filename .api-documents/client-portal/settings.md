@@ -27,7 +27,9 @@ User:
   Admins and Site Admins see people who share one of their sites (not the organisation-wide roles).
 - `can_edit` / `can_remove`: show the Edit icon and Remove from Portal. An Admin cannot change or remove a Super Admin; a site
   manager changes only people whose sites are all theirs and whose role they may give; nobody removes themselves.
-- `signed_in: false` → "Not signed in yet" (they get a one-time code at first sign-in; no password is set here).
+- `signed_in: false` → "Not signed in yet" (they get a one-time code at first sign-in; no password is set here). `signed_in`
+  means "a password is set", not "has signed in": `signed_in: true` with `last_sign_in_at: null` is valid (the password came
+  from an invitation, a reset or the seed and the person has not signed in since). Show "Last sign-in" only when it is set.
 - `wide: true` → "All sites" and hide Site Access ("covers every site, including sites added later"). Site roles need at
   least one site, and only the editor's own sites can be given (organisation-wide editors: any site).
 - Role pills: only the roles in the viewer's `gives` (default Member).
@@ -92,7 +94,9 @@ transport company.
 | A site | `PATCH /portal/settings/billing/sites/:site_id { billing: { … same } }` |
 
 - Answer: the entity again. `changed` → "Changed by <by> in the portal, <date>" (`in_portal: false`: by the transport company).
-- Legal Name, Billing Email and Billing Address are required; UEN optional (Singapore format, saved upper case); Attention
+- Legal Name, Billing Email and Billing Address are required **when saving**; the GET can still answer `billing_email` / `attention`
+  as `null` (data entered in Convoy OS or imported has none): show the fields empty.
+- UEN optional (Singapore format, saved upper case); Attention
   optional. `422`: "Enter the legal name", "Enter the billing email", "Check the billing email", "Enter the billing address",
   "Check the UEN".
 - The transport company keeps a list of people who get the invoices; Billing Email is the first one invoices go To and

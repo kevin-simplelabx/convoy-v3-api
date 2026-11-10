@@ -57,6 +57,10 @@ RSpec.describe "School Bus request accept" do
     expect(d[:rider]).to include(rid: "M-0001")
     expect(d[:family]).to include(code: "FAM-0001", name: "NG Family")
     family = d[:family][:id]
+    bill = within_tenant(company) { SchoolBill.find(d[:first_bill][:id]) } # the first invoice names the family and has its one line
+    expect(bill).to have_attributes(bill_to_code: "FAM-0001", family_id: family)
+    expect(within_tenant(company) { bill.lines.map { it.slice(:rid, :child_name, :description, :amount) } })
+      .to eq([ { "rid" => "M-0001", "child_name" => "Ng Jun Jie", "description" => "Ng Jun Jie | First month, Semester 1", "amount" => 504 } ])
     get api_v1_family_path(family)
     expect(json.dig(:data, :riders).sole).to include(unpaid: { request_id: f[:same].id, bill_number: "INV-2026-000001", overdue: false }, leave: nil)
     expect(d[:events].first[:text]).to eq("Ng Jun Jie added to the rider list as M-0001 (Unpaid) and linked to NG Family (FAM-0001)")
@@ -74,7 +78,12 @@ RSpec.describe "School Bus request accept" do
     post reoffer_api_v1_bus_request_path(f[:same])
     expect(json[:data]).to include(status: "Accepted", offer_by: "2026-11-06T10:00:00.000+08:00")
     expect(json.dig(:data, :first_bill, :number)).to eq("INV-2026-000001")
+    post record_payment_api_v1_bus_request_path(f[:same]), as: :json
+    expect(json.dig(:error, :message)).to eq("Pick how it was paid")
+    post record_payment_api_v1_bus_request_path(f[:same]), params: { method: "Barter" }, as: :json
+    expect(response).to have_http_status(:unprocessable_content)
     post record_payment_api_v1_bus_request_path(f[:same]), params: { method: "PayNow" }, as: :json
+    expect(json.dig(:meta, :methods)).to include("PayNow", "Bank Transfer", "Cash")
     expect(json[:data]).to include(status: "Active")
     expect(json.dig(:data, :first_bill)).to include(status: "paid", method: "PayNow")
     expect(json[:data][:events].second[:text]).to eq("First invoice paid by PayNow. Service is active")
@@ -87,6 +96,33 @@ RSpec.describe "School Bus request accept" do
     expect(within_tenant(company) { SchoolBill.pluck(:number).sort }).to eq(%w[INV-2026-000001 INV-2026-000002])
   end
 
+  it "writes a renewing child's first invoice to the family they are already in, with a start date from the year when none was asked" do
+    renewal = within_tenant(company) do
+      fam = f[:school].families.create!(code: "FAM-0040", name: "LIM Family", name_mode: "custom")
+      FamilyRider.create!(family: fam, school: f[:school], rid: "R1")
+      f[:school].bus_requests.create!(academic_year: f[:year], child_name: "Lim Kai", parent_name: "Lim Boon", postal: "460101", lat: 1.33, lng: 103.93, pm: false,
+                                      start_on: nil, submitted_at: 2.days.ago, level: "P4", source: "app", renew: true, school_rider: f[:school].riders.find_by!(rid: "R1"))
+    end
+    expect(detail(renewal)[:quote_default]).to include(start_on: "2027-01-04")
+    post accept_api_v1_bus_request_path(renewal), params: { amount: 504, start_on: "2027-01-04" }, as: :json
+    expect(json[:data]).to include(status: "Accepted", family: hash_including(code: "FAM-0040"))
+    bill = within_tenant(company) { SchoolBill.find(json.dig(:data, :first_bill, :id)) }
+    expect(bill.bill_to_code).to eq("FAM-0040")
+    expect(within_tenant(company) { bill.lines.sole }).to have_attributes(rid: "R1", child_name: "Lim Kai")
+  end
+
+  it "adds (part) to the route check only when some of the sessions cannot be checked" do
+    both, pm_only = within_tenant(company) do
+      mk = lambda do |child, am, pm|
+        f[:school].bus_requests.create!(academic_year: f[:year], child_name: child, parent_name: "Ng", postal: "460101", lat: 1.3301, lng: 103.9301, am:, pm:,
+                                        start_on: "2027-01-04", submitted_at: 2.days.ago, level: "P1", source: "console")
+      end
+      [ mk.("Both Ways", true, true), mk.("Afternoon Only", false, true) ]
+    end
+    expect(detail(both)[:check]).to include(label: "Fits (part)")
+    expect(detail(pm_only)[:check]).to include(label: "Not Checked")
+  end
+
   it "lists requests the scheduled registration would auto-accept" do
     within_tenant(company) do
       SchoolRegistrations.build(f[:year]).tap { it.assign_attributes(status: "scheduled", auto_siblings: true, siblings_need_cover: false) }.save!
@@ -94,7 +130,7 @@ RSpec.describe "School Bus request accept" do
     get api_v1_school_bus_requests_path(f[:school]), params: { academic_year_id: f[:year].id }
     expect(json.dig(:meta, :auto_accept)).to eq(count: 1, ids: [ f[:sib].id ])
     expect(json.dig(:meta, :service_check)).to eq(none: false, plan: "AM Plan 1 (current)")
-    expect(json[:data].first).to include(lat: be_present, lng: be_present, located: true)
+    expect(json[:data].first).to include(lat: be_present, lng: be_present, located: true, can: hash_including(accept: true, decline: true, record_payment: false))
     expect(json[:data].to_h { [ it[:child_name], it.dig(:check, :label) ] }).to eq("Ng Jun Jie" => "Fits", "Ng Xin Yi" => "New Stop", "Tan Ryan" => "New Stop")
     get api_v1_school_bus_requests_path(f[:school]), params: { academic_year_id: f[:year].id, check: "covered" }
     expect(json[:data].size).to eq(1)
