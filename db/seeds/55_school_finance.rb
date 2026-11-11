@@ -31,7 +31,7 @@ with_company("SD") do
     linked = FamilyRider.where(school:, rid: riders.map(&:rid)).pluck(:rid)
     riders.reject { linked.include?(it.rid) }[0...-2].each_slice(2) do |pair|
       last = pair.first.name.split.first
-      fam = school.families.create!(code: Family.next_code, name: "#{last.upcase} Family", name_mode: "custom", sample: true)
+      fam = school.families.create!(code: Family.next_code(school), name: "#{last.upcase} Family", name_mode: "custom", sample: true)
       fam.guardians.create!(first_name: "Parent", last_name: last, relationship: "Mother", email: "#{last.downcase}.family@mail.sg", phone: "+65 9#{rand(1_000_000..9_999_999)}")
       pair.each { FamilyRider.create!(family: fam, school:, rid: it.rid) }
     end

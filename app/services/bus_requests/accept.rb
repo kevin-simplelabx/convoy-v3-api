@@ -40,7 +40,7 @@ module BusRequests
                               quoted_at: now, quoted_by: @user)
       end
       hours = req.academic_year&.registration&.confirm_hours || 48
-      req.update!(status: "Accepted", offer_by: now + hours.hours, reason: nil, family: req.family || family_of_rider(req))
+      req.update!(status: "Accepted", offer_by: now + hours.hours, reason: nil, family: SchoolBills::FirstDetails.family_of(req))
       req.places.delete_all
       check.places(req).each { req.places.create!(it) }
       bill = write_bill(req, settings, now)
@@ -80,23 +80,11 @@ module BusRequests
                                                         issued_by: @user, issued_at: now)
       split = FinanceSetting.split(req.quote_amount, on: settings.gst_on?, rate: settings.gst_rate, mode: settings.gst_mode)
       period = Fare.first_period(req)
-      bill.update!(academic_year: req.academic_year, family: req.family, school_rider: req.school_rider, status: "issued", bill_to: req.parent_name, bill_to_code: req.family&.code,
+      bill.update!(academic_year: req.academic_year, family: req.family, school_rider: req.school_rider, status: "issued", bill_to: req.parent_name,
                    period_label: period[:label], period_starts_on: period[:starts_on], issued_on: now.to_date, due_at: req.offer_by, due_on: req.offer_by&.to_date,
                    subtotal: split[:sub], gst_rate: settings.gst_on? ? settings.gst_rate : 0, gst_amount: split[:gst], total: split[:total])
-      write_line(bill, req, split[:sub])
+      SchoolBills::FirstDetails.call(bill, req)
       bill
-    end
-
-    # The one line of a first invoice: the child's first month.
-    def write_line(bill, req, amount)
-      line = bill.lines.first || bill.lines.build
-      line.update!(rid: req.school_rider&.rid, child_name: req.child_name, description: "#{req.child_name} | First month, #{bill.period_label}", amount:)
-    end
-
-    # A renewing child is already in a family of the school.
-    def family_of_rider(req)
-      rider = req.school_rider or return
-      FamilyRider.find_by(school: req.school, rid: rider.rid)&.family
     end
 
     def fmt(d) = d&.strftime("%d/%m/%Y")

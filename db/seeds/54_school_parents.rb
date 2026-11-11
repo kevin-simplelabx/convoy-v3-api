@@ -100,7 +100,7 @@ with_company("SD") do
     kids = SchoolRider.of_school_on(school, Date.current).order(:rid).limit(10).to_a
     families = kids.each_slice(2).map do |pair|
       last = pair.first.name.split.first
-      fam = school.families.create!(code: Family.next_code, name: "#{last.upcase} Family", name_mode: "custom", sample: true)
+      fam = school.families.create!(code: Family.next_code(school), name: "#{last.upcase} Family", name_mode: "custom", sample: true)
       Families.link(fam, school, pair.map(&:rid))
       [ fam, pair ]
     end
