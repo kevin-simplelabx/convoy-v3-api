@@ -34,6 +34,24 @@ RSpec.describe "Trips" do
     expect(trip[:standby]).to include(location: "Pasir Panjang carpark", report_time: "07:45")
   end
 
+  describe "stop return names" do
+    [ true, false ].each do |shuttle_return|
+      it "saves and answers a stop's return name (shuttle_return #{shuttle_return})" do
+        stops = [ { position: 0, name: "Mapletree Business City", return_name: "CBP Bus Bay", use: "pu", lat: 1.2747, lng: 103.7993 },
+                  { position: 1, name: "Sentosa", use: "do", lat: 1.2494, lng: 103.8303 } ]
+        post api_v1_trips_path, params: { trip: base.merge(shuttle_return:, stops_attributes: stops) }, as: :json
+        expect(response).to have_http_status(:created)
+        expect(json[:data][:stops].pluck(:return_name)).to eq([ "CBP Bus Bay", nil ])
+
+        id = json.dig(:data, :id)
+        a, b = json.dig(:data, :stops).pluck(:id)
+        patch api_v1_trip_path(id), params: { trip: { stops_attributes: [ { id: b, return_name: "CBP Bus Bay" } ] } }, as: :json
+        expect(json.dig(:data, :stops).pluck(:return_name)).to eq([ "CBP Bus Bay", "CBP Bus Bay" ])
+        expect(json.dig(:data, :stops).pluck(:id)).to eq([ a, b ])
+      end
+    end
+  end
+
   describe "GET /trips/next_number" do
     it "starts at TID100001 and creates no sequence row" do
       get next_number_api_v1_trips_path

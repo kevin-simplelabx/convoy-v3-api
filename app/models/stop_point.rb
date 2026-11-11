@@ -48,6 +48,8 @@ class StopPoint < ApplicationRecord
   belongs_to :stop, inverse_of: :all_points
   has_many :photo_requests, class_name: "StopPhotoRequest", dependent: :destroy
 
+  normalizes :street_view_url, with: -> { it.presence }
+
   validates :suffix, inclusion: { in: LETTERS }
   validates :usage, inclusion: { in: USAGES }
   validates :lat, :lng, presence: true

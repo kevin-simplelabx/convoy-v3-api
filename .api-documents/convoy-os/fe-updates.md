@@ -4,6 +4,27 @@ Changes to existing Convoy OS endpoints made while building other apps (Convoy D
 on (renamed, removed or changed fields and endpoints). New optional fields are not listed here; they are in the menu
 documents. Newest first. Each item: what changed, before → after, and what the front-end has to do.
 
+## 11/11/2026 — Run `lock_version` after a time change (WIP 27a)
+
+| # | Endpoint / field | Before → after | Front-end |
+| --- | --- | --- | --- |
+| 1 | `PATCH /occurrences/:id/time` `{ scope: "from_here" }` → `data.lock_version` | stayed the same (2 → 2) → goes up (2 → 3) | Keep the `lock_version` from this response and send it with the next drawer action (Cancel, Restore, …). The old value now answers `409` |
+| 2 | `PATCH /occurrences/:id/time` `{ scope: "from_here", lock_version }` | the value sent was not checked → `409` when the run changed since the drawer loaded | Send `lock_version` on every time change (`today`, `from_here`, `reset`); reload the drawer on `409` |
+| 3 | Other runs of the trip (`GET /scheduler`, `GET /occurrences`) | a run changed through its trip (Save Time on another run, Edit Trip, assignment, replacement, calendar) kept its version → its version goes up | A drawer left open while its trip changed gets `409` on the next action: reload it (`GET /occurrences/:id`) |
+| 4 | A run the driver force ends or skips in the Driver app | kept its version → its version goes up | An office drawer open on that run gets `409` on Cancel / Restore: reload it |
+
+Details: [scheduler.md § 5.2](scheduler.md#52-drawer-actions).
+
+## 11/11/2026 — Trip stop return names, blank Street View links (API-ISSUES §22, §27b, §27c; WIP 27b, 22, 27c)
+
+| # | Endpoint / field | Before → after | Front-end |
+| --- | --- | --- | --- |
+| 1 | `POST` / `PATCH /trips`, `GET /trips/:id` `stops[].return_name` | saved but always `null` → the name sent (for example "CBP Bus Bay"), `null` when not set | Read `return_name` on every stop (the label on the way back); it is no longer `null` after a save |
+| 2 | `POST` / `PATCH /stops` `points[].street_view_url`, and trip stops `street_view_url` | `""` kept → `null` when the link is empty | Treat `null` as "no link" (an empty string is still accepted) |
+| 3 | `POST /trips` `return_trip.return_billing` | no change (documented only) | `two_way` \| `one_way`; the server works it out when every stop has a pin (200 m rule), and uses the form's value only when a stop has no lat/lng. Send it as before |
+
+Details: [scheduler.md § 7.2](scheduler.md#72-save), [scheduler.md § 7.1](scheduler.md#71-stops).
+
 ## 10/11/2026 — Bus Requests windows: registration state (API-ISSUES §24, WIP G4)
 
 **B** — `GET /schools/:id/bus_requests` → `meta.windows.registration`. Before: the saved status (`draft` / `scheduled`) or `null` when no registration was saved. Now: the registration's state, the same value as `meta.years[].registration`: `draft` until a registration is scheduled, then `upcoming`, `renewals_open`, `general_upcoming`, `open` or `closed`. `windows` is still `null` when the school has no academic year.

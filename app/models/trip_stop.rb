@@ -42,6 +42,8 @@ class TripStop < ApplicationRecord
   USES = { "pu" => "Pick-up", "do" => "Drop-off", "both" => "Pick-up and Drop-off", "via" => "Waypoint Only" }.freeze
   MAX_PHOTOS = 3
 
+  normalizes :street_view_url, with: -> { it.presence }
+
   belongs_to :trip, inverse_of: :stops
   belongs_to :client_site, optional: true
   has_many :photos, -> { order(:position) }, class_name: "TripStopPhoto", dependent: :destroy, inverse_of: :stop

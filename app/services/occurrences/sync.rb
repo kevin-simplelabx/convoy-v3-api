@@ -109,8 +109,15 @@ module Occurrences
       attrs[:status] = row.skip_reason ? "skipped" : "scheduled" if occ.removed? || ((occ.skipped? || occ.scheduled?) && !occ.overridden?(:status))
       attrs[:driver_seen_at] = nil if DRIVER_SEES.any? { |k| occ.public_send(k) != attrs[k] }
       @bell.updated(occ, attrs)
-      occ.update_columns(attrs.merge(source_digest: row.digest, updated_at: Time.current))
+      bump(occ, attrs.merge(source_digest: row.digest))
       occ.id
+    end
+
+    # A real change moves the run's lock_version on, so a drawer opened before it gets 409 on its next action (rows left
+    # alone keep theirs). Counted up in SQL: a drawer action does not take the trip's advisory lock.
+    def bump(occ, attrs)
+      TripOccurrence.where(id: occ.id, date: occ.date)
+                    .update_all(attrs.merge(lock_version: Arel.sql("lock_version + 1"), updated_at: Time.current))
     end
 
     # Rows with something on them stay, marked removed, for a person to look at (and come back with it when the run is made
@@ -118,7 +125,7 @@ module Occurrences
     def remove(occ, has_records)
       @bell.removed(occ)
       if has_records || occ.issue? || occ.overridden_fields.any? || occ.cancelled?
-        occ.update_columns(status: "removed", updated_at: Time.current)
+        bump(occ, status: "removed")
       else
         occ.delete
       end

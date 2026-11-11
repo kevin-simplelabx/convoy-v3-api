@@ -4,7 +4,7 @@ module Api
     class ExternalVehicleSubmissionsController < BaseController
       def index
         authorize ExternalVehicleSubmission
-        scope = policy_scope(ExternalVehicleSubmission).where(status: params[:status].presence || "pending").order(created_at: :desc)
+        scope = policy_scope(ExternalVehicleSubmission).where(status: params[:status].presence || "pending").order(created_at: :desc, id: :desc)
         render_page scope, ExternalVehicleSubmissionBlueprint
       end
 

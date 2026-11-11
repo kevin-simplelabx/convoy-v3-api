@@ -265,9 +265,9 @@ Drawer response = the run row plus:
 | More › Force End Trip | `PATCH /occurrences/:id/end` `{ lock_version }` | Show it on a run on the road (`grid_status: "live"`). The run ends now: `status: "completed"`, `grid_status: "done"`, `ended_at`, `ended_by`; the planned `ends_at` / `end_time` stay. No undo. `422`: "This run has not started", "This run has already ended", "This run has no bus", "This run is cancelled" |
 | Raise an Issue | `POST /occurrences/:id/issue` `{ reason }` | Only on a run that is done ("An issue can be raised on a completed run only"); holds the driver's pay. `422` "Driver pay for <Month YYYY> is confirmed. Reopen it in HR, Earnings first" once that month is confirmed; `422` "Say what the issue is" with no reason |
 | Clear Issue | `DELETE /occurrences/:id/issue` | |
-| Change the pick-up time: Today Only | `PATCH /occurrences/:id/time` `{ scope: "today", start_time: "08:20" }` | Recurring trips only. This run moves (`shift_minutes`, "Moved +20 min"); every stop moves by the same amount |
-| Change the pick-up time: Save (one-off trip) / Every Run From Today | `PATCH /occurrences/:id/time` `{ scope: "from_here", start_time: "07:45" }` | See "Save Time" below; shuttles: this timing only |
-| Undo time change | `PATCH /occurrences/:id/time` `{ scope: "reset" }` | Back to the planned time |
+| Change the pick-up time: Today Only | `PATCH /occurrences/:id/time` `{ scope: "today", start_time: "08:20", lock_version }` | Recurring trips only. This run moves (`shift_minutes`, "Moved +20 min"); every stop moves by the same amount |
+| Change the pick-up time: Save (one-off trip) / Every Run From Today | `PATCH /occurrences/:id/time` `{ scope: "from_here", start_time: "07:45", lock_version }` | See "Save Time" below; shuttles: this timing only |
+| Undo time change | `PATCH /occurrences/:id/time` `{ scope: "reset", lock_version }` | Back to the planned time |
 | Change Vehicle | Same as a drop: `move_preview` then `move` (section 3) | |
 | Back to Regular Bus | `PATCH /occurrences/:id/regular_bus` | Drops a bus set by hand on this run |
 | Assign External Vehicle | `POST /vehicles/external` (section 13), then `move` to it | |
@@ -282,6 +282,14 @@ Drawer response = the run row plus:
 
 All of them answer with the drawer data of 5.1 (except tracking link and delete). Time changes are refused on school route
 runs ("School route times are set in School Bus").
+
+**`lock_version` and `409`.** A run's `lock_version` goes up every time the run really changes: a drawer action, a drop,
+and also a change made through its trip (Save Time `from_here`, Edit Trip, an assignment, a replacement, a calendar
+change, and the driver ending (also Force End) or skipping the run in the Driver app). Runs a change leaves as they are keep their version. Every drawer action answers the drawer data with the new
+`lock_version`: keep that value and send it with the next action. An action sent with an older value answers `409`
+(`code: "conflict"`) and changes nothing; reload the drawer (`GET /occurrences/:id`) and let the person try again.
+`from_here` changes the other runs it moves too, so drawers open on those runs get `409` on their next action. A run
+completed by the clock (its end time passed) keeps its version. Leaving `lock_version` out skips the check.
 
 **Save Time (`scope: "from_here"`).** A one-off trip (`recurring: false`) shows one **Save** button; a recurring trip shows
 **Today Only** and **Every Run From Today**. What `from_here` does depends on the run:
@@ -366,7 +374,7 @@ Clicking a vehicle name opens the panel.
   "end_mode": "never", "ends_on": null, "occurrence_count": null, "repeat_text": "Every weekday",
   "skip_public_holidays": true, "calendar_id": 2, "pax": 0, "vehicles_count": 2, "vehicles_required_text": "2 x 23-seater",
   "stops": [ { "id": 14, "direction": 1, "position": 0, "name": "Labrador Park MRT Exit A", "use": "pu", "address": null,
-               "lat": "1.2722", "lng": "103.8026", "driver_note": "Exit A, across the road from the bus stop",
+               "lat": "1.2722", "lng": "103.8026", "driver_note": "Exit A, across the road from the bus stop", "return_name": null,
                "street_view_url": null, "client_site_id": null, "scheduled_time": null, "photos": [], "students": [] } ],
   "route_vias": [ { "id": 1, "direction": 1, "from_position": 0, "position": 0, "lat": "1.27", "lng": "103.80" } ],
   "vehicle_requirements": [ { "id": 8, "vehicle_type_id": 5, "count": 2, "label": "2 x 23-seater" } ],
@@ -393,8 +401,14 @@ Clicking a vehicle name opens the panel.
 
 `return_trip` (Two-Way Trip, new Ad Hoc / Charter only): `{ start_time, end_time, stops_attributes, route_vias_attributes,
 vehicle_slots_attributes, standby_attributes, return_billing }`. The rest is copied from the outbound trip; the return is
-titled "… (Return)" and the two trips point at each other (`pair_id`). `return_billing` is worked out by the server when
-every stop has a pin (two-way when every stop on the way back is within 200 m of one on the way there), else taken from the form.
+titled "… (Return)" and the two trips point at each other (`pair_id`).
+
+`return_billing` is `two_way` | `one_way`. The server works it out itself when
+every stop has a pin: `two_way` while every stop on the way back is within 200 m of a stop on the way there, else `one_way`.
+The form's value is used only when a stop on the way back has no lat/lng (or the outbound trip has no pinned stop yet).
+Send it anyway: it is the fallback.
+
+Every stop answers `return_name` (its label on the way back, `null` when not set), on Create, Save and the trip read.
 
 Validation messages follow the trip form: "Pick the client", "Enter the pick-up point", "Enter the drop-off point",
 "Enter how many vehicles are needed", "End time must be different from the start time", "Hours must be greater than 0",

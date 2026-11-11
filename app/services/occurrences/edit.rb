@@ -83,6 +83,8 @@ module Occurrences
     def change_from_here!(start_time)
       trip = @occ.trip
       raise ApplicationService::Error, "School route times are set in School Bus" if trip.nil?
+      # This path moves the trip, not this row, so save! never checks the version the drawer sent.
+      raise ActiveRecord::StaleObjectError.new(@occ, "update") if @occ.lock_version_changed?
 
       delta = Clock.minutes(start_time) - @occ.start_time
       raise ApplicationService::Error, "Pick a different time" if delta.zero?

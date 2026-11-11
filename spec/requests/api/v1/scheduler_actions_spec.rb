@@ -75,6 +75,68 @@ RSpec.describe "Scheduler drops and assignments" do
     expect(json.dig(:data, :start_time)).to eq("07:45")
   end
 
+  describe "lock_version after a time change (WIP 27a)" do
+    def lock(trip_id, date) = run(trip_id, date)[:lock_version]
+
+    def cancel(occ_id, lock_version)
+      patch cancel_api_v1_occurrence_path(occ_id), params: { lock_version: }, as: :json
+      response
+    end
+
+    it "changes on a one-off trip moved from here: the old version gets 409, the answered one works" do
+      id = create_trip(starts_on: "2026-11-04")
+      occ = run(id, "2026-11-04")
+      patch time_api_v1_occurrence_path(occ[:id]), params: { scope: "from_here", start_time: "08:30", lock_version: occ[:lock_version] }, as: :json
+      expect(response).to have_http_status(:ok)
+      fresh = json.dig(:data, :lock_version)
+      expect(fresh).to be > occ[:lock_version]
+      expect(lock(id, "2026-11-04")).to eq(fresh)
+
+      expect(cancel(occ[:id], occ[:lock_version])).to have_http_status(:conflict)
+      expect(cancel(occ[:id], fresh)).to have_http_status(:ok)
+      expect(json.dig(:data, :status)).to eq("cancelled")
+    end
+
+    it "refuses a from_here change sent with an old version" do
+      id = create_trip(starts_on: "2026-11-04")
+      occ = run(id, "2026-11-04")
+      patch time_api_v1_occurrence_path(occ[:id]), params: { scope: "today", start_time: "08:10" }, as: :json
+      patch time_api_v1_occurrence_path(occ[:id]), params: { scope: "from_here", start_time: "08:30", lock_version: occ[:lock_version] }, as: :json
+      expect(response).to have_http_status(:conflict)
+      expect(run(id, "2026-11-04")).to include(start_time: "08:10")
+    end
+
+    it "changes on the runs a recurring trip's split moves, and not on the runs it leaves" do
+      id = create_trip(days: [ 1, 2, 3, 4, 5 ], end_mode: "never", starts_on: "2026-11-05")
+      before = %w[2026-11-06 2026-11-09 2026-11-10].index_with { lock(id, it) }
+      occ = run(id, "2026-11-09")
+      patch time_api_v1_occurrence_path(occ[:id]), params: { scope: "from_here", start_time: "07:30", lock_version: occ[:lock_version] }, as: :json
+      expect(response).to have_http_status(:ok)
+      expect(json.dig(:data, :lock_version)).to be > before["2026-11-09"]
+      expect(lock(id, "2026-11-06")).to eq(before["2026-11-06"])
+      expect(lock(id, "2026-11-10")).to be > before["2026-11-10"]
+      expect(cancel(run(id, "2026-11-10")[:id], before["2026-11-10"])).to have_http_status(:conflict)
+    end
+
+    it "is not changed by a sync that changes nothing" do
+      id = create_trip(days: [ 1, 2, 3, 4, 5 ], end_mode: "never", starts_on: "2026-11-05")
+      before = lock(id, "2026-11-10")
+      within_tenant(company) { Occurrences::Sync.call(trips: [ id ]) }
+      expect(lock(id, "2026-11-10")).to eq(before)
+    end
+
+    it "keeps Today Only and Undo working with the version each one answers" do
+      id = create_trip(days: [ 1, 2, 3, 4, 5 ], end_mode: "never", starts_on: "2026-11-05")
+      occ = run(id, "2026-11-06")
+      patch time_api_v1_occurrence_path(occ[:id]), params: { scope: "today", start_time: "08:10", lock_version: occ[:lock_version] }, as: :json
+      expect(json[:data]).to include(shift_minutes: 10, lock_version: occ[:lock_version] + 1)
+      patch time_api_v1_occurrence_path(occ[:id]), params: { scope: "reset", lock_version: occ[:lock_version] }, as: :json
+      expect(response).to have_http_status(:conflict)
+      patch time_api_v1_occurrence_path(occ[:id]), params: { scope: "reset", lock_version: occ[:lock_version] + 1 }, as: :json
+      expect(json[:data]).to include(shift_minutes: 0, start_time: "08:00", lock_version: occ[:lock_version] + 2)
+    end
+  end
+
   it "moves a recurring run for one date or from that date on (as an assignment)" do
     id = create_trip(days: [ 1, 2, 3, 4, 5 ], end_mode: "never")
     post move_api_v1_occurrence_path(run(id, "2026-11-03")[:id]), params: { vehicle_id: f[:own2].id, scope: "one" }, as: :json

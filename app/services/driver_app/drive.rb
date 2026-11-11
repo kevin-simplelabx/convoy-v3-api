@@ -183,7 +183,7 @@ module DriverApp
       end
       feedback(@params[:feedback] || "Force ended: #{reason}")
       @occ.update_columns(ended_at: @at, status: "completed", overridden_fields: @occ.overridden_fields | [ "status" ], # rubocop:disable Rails/SkipsModelValidations
-                          driver_end: "forced", driver_end_reason: reason, end_on_board: on_board, updated_at: Time.current)
+                          driver_end: "forced", driver_end_reason: reason, end_on_board: on_board, updated_at: Time.current, **next_version)
     end
 
     def skip
@@ -193,10 +193,14 @@ module DriverApp
 
       @occ.update_columns(status: "cancelled", cancelled_at: @at, cancelled_by_id: nil, cancelled_by_client: false, # rubocop:disable Rails/SkipsModelValidations
                           overridden_fields: @occ.overridden_fields | [ "status" ], ended_at: @occ.started_at && @at,
-                          driver_end: "skipped", driver_end_reason: reason, updated_at: Time.current)
+                          driver_end: "skipped", driver_end_reason: reason, updated_at: Time.current, **next_version)
     end
 
     private
+
+    # A new status is a real change: an office drawer opened before it gets 409 on its next action. The row is held by
+    # lock! (call), so its lock_version is current.
+    def next_version = { lock_version: @occ.lock_version + 1 }
 
     # What was sent, for the log: files as their names.
     def payload

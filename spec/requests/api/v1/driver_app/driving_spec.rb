@@ -128,6 +128,29 @@ RSpec.describe "Driver app driving" do
     expect(json.dig(:data, :stops).map { it[:skip_reason] }).to eq([ nil, nil, "Trip force ended" ])
   end
 
+  it "moves the run's lock_version on when the driver force ends or skips it, so a drawer opened before gets 409" do
+    early = create_trip
+    late = create_trip(start_time: "10:00", end_time: "11:00")
+    token = driver_token("91234567")
+    travel_to Time.zone.local(2026, 11, 3, 9, 15)
+    act(token, early, :start)
+    act(token, early, :arrive, position: 0)
+    act(token, early, :leave, position: 0)
+    seen = { early => early.reload.lock_version, late => late.reload.lock_version }
+
+    act(token, early, :force_end, reason: "Vehicle breakdown", called_operations: true)
+    act(token, late, :skip, reason: "Traffic Congestion")
+
+    sign_in_as(create(:user, :admin, company:))
+    seen.each do |occ, version|
+      expect(occ.reload.lock_version).to eq(version + 1)
+      patch (occ == late ? restore_api_v1_occurrence_path(occ.id) : cancel_api_v1_occurrence_path(occ.id)), params: { lock_version: version }, as: :json
+      expect(response).to have_http_status(:conflict)
+    end
+    patch restore_api_v1_occurrence_path(late.id), params: { lock_version: seen[late] + 1 }, as: :json
+    expect(response).to have_http_status(:ok)
+  end
+
   describe "a School Bus run" do
     let!(:route) do
       within_tenant(company) do
