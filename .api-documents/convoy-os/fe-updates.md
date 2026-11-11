@@ -32,11 +32,15 @@ documents. Newest first. Each item: what changed, before → after, and what the
 
 The task is run by the backend team (not an endpoint): `DRY_RUN=1 bin/rails school_bills:backfill_first_details` counts, without `DRY_RUN` it writes; safe to run twice.
 
+**Status 11/11:** the task has run on staging (dry run and real run). Staging had no affected invoices (21 bills, 4 first invoices, none with a null `bill_to_code`), so nothing needed repair and no data changed. Any empty first invoice you still see is new: tell us its number.
+
 ## 11/11/2026 — School Bus Routes: routing service down is `503 routing_unavailable`
 
 | # | Endpoint / field | Before → after | Front-end |
 | --- | --- | --- | --- |
 | 1 | `POST /routes/:id/optimise`, `POST /plans/:id/optimise`, route edits, `GET /plans/:id/compare`, `GET /routing/settings` when the routing service is unreachable | `422` `"The routing service is not available (<upstream text>)"` (the upstream text could be "Cannot POST /optimise") → `503` `{ error: { code: "routing_unavailable", message: "Routing service is not available" } }` | Treat `503` / `routing_unavailable` as "try again later"; do not expect `422` or show upstream text |
+
+**Status 11/11:** the routing service on staging was running an old image without `/optimise`, which caused `Cannot POST /optimise`. It was rebuilt and restarted today (13:25 UTC) and now has the route. Optimise, compare and route edits on staging should work again. If you still get `503 routing_unavailable`, tell us the time and the plan / route id.
 
 ## 11/11/2026 — School Bus Payouts: no Send to Finance when nothing is payable (item 24c)
 
