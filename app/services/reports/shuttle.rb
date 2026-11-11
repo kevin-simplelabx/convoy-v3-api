@@ -138,7 +138,7 @@ module Reports
 
     def direction_label(dir)
       stops = @trip.stops_in(dir)
-      "To #{stops.last&.name || (dir == 1 ? 'destination' : 'origin')}"
+      "To #{stops.last&.name_in(dir) || (dir == 1 ? 'destination' : 'origin')}"
     end
 
     def status_counts(runs) = %w[ok early late edep skip].index_with { |k| runs.sum { |r| r.stops.count { |s| s[:status] == k } } }

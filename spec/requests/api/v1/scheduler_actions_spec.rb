@@ -149,7 +149,7 @@ RSpec.describe "Scheduler drops and assignments" do
     expect(run(id, "2026-11-06")).to include(operator_cost: "90.0", operator_id: f[:hup].id)
 
     get api_v1_trip_assignments_path(id), params: { from: "2026-11-06" }
-    expect(json.dig(:data, :slots, 0)).to include(key: "trip|1", assignee: "operator", plate: "PC7475L", pay_amount: "90.0")
+    expect(json.dig(:data, :slots, 0)).to include(key: "trip|1", assignee: "operator", plate: "PC7475L", pay_amount: "90.0", end_time: nil)
     expect(json.dig(:data, :history, 0)).to include(effective_from: "2026-11-05", slots: [ "trip|1" ])
   end
 
@@ -225,6 +225,18 @@ RSpec.describe "Scheduler drops and assignments" do
       get api_v1_trip_assignments_path(shuttle_id)
       delete api_v1_trip_assignment_path(shuttle_id, json.dig(:data, :history, 0, :id))
       expect(run(shuttle_id, "2026-11-10", run_key: "d1r0")).to include(plate: "PD3318K", operator_id: nil)
+    end
+
+    it "gives every Assign page slot its run label and end time, for a way-back run too" do
+      get api_v1_trip_assignments_path(shuttle_id)
+      expect(json.dig(:data, :slots).map { |x| x.values_at(:run_label, :end_time) }).to eq([ %w[07:30 08:00], %w[08:30 09:00], %w[17:30 18:00] ])
+
+      back = create_trip(
+        kind: "corporate_shuttle", shuttle_return: true, days: [ 1, 2, 3, 4, 5 ], end_mode: "never", vehicle_slots_attributes: [],
+        runs_attributes: [ { direction: 2, position: 0, times: %w[17:30 18:15], slots_attributes: [ { slot_no: 1, vehicle_id: f[:own].id } ] } ]
+      )
+      get api_v1_trip_assignments_path(back)
+      expect(json.dig(:data, :slots, 0)).to include(run_label: "Return 17:30", end_time: "18:15")
     end
 
     it "groups and ungroups runs from the drawer" do

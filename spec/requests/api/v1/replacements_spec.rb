@@ -153,4 +153,47 @@ RSpec.describe "Replacements" do
       [ "11-10", "PC7475L", "Kumar", "scheduled" ], [ "11-11", "PC7475L", "Kumar", "scheduled" ], [ "11-12", "PC7475L", "Kumar", "scheduled" ]
     ])
   end
+
+  describe "preview notify audiences" do
+    def preview(**params)
+      get preview_api_v1_replacements_path, params: params
+      json.dig(:data, :notify)
+    end
+
+    def mark_passengers(trip_id, date, names)
+      within_tenant(company) do
+        occ = TripOccurrence.find(run_id(trip_id, date))
+        names.each_with_index do |name, i|
+          OccurrencePassenger.create!(occurrence_id: occ.id, occurrence_date: occ.date, passenger_key: "p#{i}", state: "boarded", name:)
+        end
+      end
+    end
+
+    it "lists the trip's guest and the one trip" do
+      id = create_trip(guest_name: "Mr Tan")
+      occ = run_id(id, "2026-11-04")
+      expect(preview(occurrence_id: occ, replacement: { kind: "crew", vehicle_id: f[:b].id })).to eq(
+        guests: { names: [ "Mr Tan" ], count: 1, trips: 1 }, parents: { riders: 0, routes: 0 }
+      )
+    end
+
+    it "gives 3 names and the count of distinct guests when many are on the runs, over a date range" do
+      id = create_trip(guest_name: "Mr Tan")
+      mark_passengers(id, "2026-11-04", [ "Alice Lim", "Bob Ong", "bob ong", "", "Carol Ng", "Dan Yeo" ])
+      mark_passengers(id, "2026-11-05", [ "Eve Goh", "Alice Lim" ])
+      n = preview(replacement: { kind: "veh", scope: "range", original_vehicle_id: f[:a].id, starts_on: "2026-11-04", ends_on: "2026-11-05" })
+      expect(n[:guests]).to eq(names: [ "Mr Tan", "Alice Lim", "Bob Ong" ], count: 6, trips: 1)
+    end
+
+    it "is all zeros with no guests, no original vehicle chosen, or nothing on that bus" do
+      id = create_trip
+      occ = run_id(id, "2026-11-04")
+      empty = { guests: { names: [], count: 0, trips: 1 }, parents: { riders: 0, routes: 0 } }
+      expect(preview(occurrence_id: occ, replacement: { kind: "crew", vehicle_id: f[:b].id })).to eq(empty)
+
+      none = { guests: { names: [], count: 0, trips: 0 }, parents: { riders: 0, routes: 0 } }
+      expect(preview(replacement: { kind: "veh" })).to eq(none)
+      expect(preview(replacement: { kind: "veh", scope: "range", original_vehicle_id: f[:c].id, starts_on: "2026-11-04", ends_on: "2026-11-05" })).to eq(none)
+    end
+  end
 end

@@ -37,10 +37,11 @@ module Occurrences
       return [] unless trip
 
       times = occ.trip_run ? occ.trip_run.stop_minutes : []
-      trip.stops_in(occ.trip_run&.direction || 1).each_with_index.map do |s, i|
+      direction = occ.trip_run&.direction || 1
+      trip.stops_in(direction).each_with_index.map do |s, i|
         minute = times[i] || s.scheduled_time || (occ.start_time - occ.shift_minutes if i.zero?)
         minute += occ.shift_minutes if minute
-        [ { position: i, name: s.name, use: s.use, planned_time: Clock.hm(minute), planned_minute: minute, lat: s.lat, lng: s.lng,
+        [ { position: i, name: s.name_in(direction), use: s.use_in(direction), planned_time: Clock.hm(minute), planned_minute: minute, lat: s.lat, lng: s.lng,
             note: s.driver_note }, s ]
       end
     end
@@ -50,7 +51,8 @@ module Occurrences
 
       direction = occ.trip_run&.direction || 1
       vias = occ.trip.route_vias.select { |v| v.direction == direction && v.from_position == stop.position }
-      { address: stop.address, school: false, pickup: stop.use.in?(%w[pu both]), dropoff: stop.use.in?(%w[do both]), waypoint: stop.use == "via",
+      use = stop.use_in(direction)
+      { address: stop.address, school: false, pickup: use.in?(%w[pu both]), dropoff: use.in?(%w[do both]), waypoint: use == "via",
         photos: stop.photos.map { it.decorate.file_info(:photo, versions: [ :thumb ]) }, street_view_url: stop.street_view_url,
         vias: vias.map { { lat: it.lat&.to_f, lng: it.lng&.to_f } } }
     end

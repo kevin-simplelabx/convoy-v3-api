@@ -104,6 +104,7 @@ RSpec.describe "Maintenance, notices, tracking links and stop photos" do
 
       get api_v1_occurrence_path(run_on("2026-11-02")[:id])
       expect(json.dig(:data, :notice, :message)).to eq("Running 10 minutes late")
+      expect(json.dig(:data, :notice, :by)).to eq(ActsAsTenant.with_tenant(company) { Notice.find(notice[:id]).created_by.name })
 
       patch api_v1_notice_path(notice[:id]), params: { notice: { message: "x" } }, as: :json
       expect(json.dig(:error, :message)).to start_with("An active or ended notice can't be edited")

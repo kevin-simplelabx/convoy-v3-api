@@ -76,6 +76,40 @@ RSpec.describe "Corporate Shuttles" do
     expect(json.dig(:data, :runs, 1, :times)).to eq(%w[18:00 18:20])
   end
 
+  describe "route_stops of the way-back run" do
+    let(:date) { "2026-11-03" }
+
+    before { travel_to Time.zone.local(2026, 11, 2, 6, 0) }
+
+    def back_stops(trip)
+      post api_v1_trips_path, params: { trip: }, as: :json
+      expect(response).to have_http_status(:created)
+      get api_v1_scheduler_path, params: { from: date }
+      (json.dig(:data, :occurrences) + json.dig(:data, :unassigned)).find { it[:start_time] == "18:00" }[:route_stops]
+    end
+
+    let(:two_stops) do
+      shuttle.merge(shuttle_return: true, price_table: [], runs_attributes: [ shuttle[:runs_attributes][0].merge(times: %w[07:30 07:55]), shuttle[:runs_attributes][2].merge(times: %w[18:00 18:30]) ],
+                    stops_attributes: [ { position: 0, name: "ZZ A", use: "pu", return_name: "CBP Bus Bay" }, { position: 1, name: "ZZ B", use: "do" } ])
+    end
+
+    it "reverses the stops, swaps pick-up / drop-off and uses the return name" do
+      expect(back_stops(two_stops).map { it.slice(:name, :use) }).to eq([ { name: "ZZ B", use: "pu" }, { name: "CBP Bus Bay", use: "do" } ])
+    end
+
+    it "keeps the name when the return name is blank" do
+      trip = two_stops.merge(stops_attributes: [ { position: 0, name: "ZZ A", use: "pu", return_name: "" }, { position: 1, name: "ZZ B", use: "do" } ])
+      expect(back_stops(trip).map { it.slice(:name, :use) }).to eq([ { name: "ZZ B", use: "pu" }, { name: "ZZ A", use: "do" } ])
+    end
+
+    it "lists a separate return's own stops as entered" do
+      trip = two_stops.merge(shuttle_separate_return: true, stops_attributes: two_stops[:stops_attributes] + [
+        { direction: 2, position: 0, name: "MBC Tower 1", use: "pu", return_name: "ignored" }, { direction: 2, position: 1, name: "HarbourFront MRT", use: "do" }
+      ])
+      expect(back_stops(trip).map { it.slice(:name, :use) }).to eq([ { name: "MBC Tower 1", use: "pu" }, { name: "HarbourFront MRT", use: "do" } ])
+    end
+  end
+
   it "checks the timetable like the trip form" do
     bad = shuttle.merge(runs_attributes: [ { direction: 1, position: 0, times: [ "", "07:40", "07:55" ] } ], price_table: [])
     post api_v1_trips_path, params: { trip: bad }, as: :json

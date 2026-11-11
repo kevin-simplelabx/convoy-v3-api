@@ -4,6 +4,34 @@ Changes to existing Convoy OS endpoints made while building other apps (Convoy D
 on (renamed, removed or changed fields and endpoints). New optional fields are not listed here; they are in the menu
 documents. Newest first. Each item: what changed, before → after, and what the front-end has to do.
 
+## 11/11/2026 — Replace preview `notify` (API-ISSUES §27 "Replace"; no breaking change)
+
+| # | Endpoint / field | Before → after | Front-end |
+| --- | --- | --- | --- |
+| 1 | `GET /replacements/preview` → `data.notify` | Nothing about audiences → `notify: { guests: { names (first 3), count, trips }, parents: { riders, routes } }`; zeros / empty `names` when nothing matches | Use `notify` in the Notify box instead of generic text: "<names> \| N trips", "Parents of N riders on M school trips". Say "in the Parent App" only for the `push` channel |
+
+## 11/11/2026 — Assign page `end_time`, drawer `notice.by`, Trip ID per date (no breaking change)
+
+| # | Endpoint / field | Before → after | Front-end |
+| --- | --- | --- | --- |
+| 1 | `GET /trips/:id/assignments` → `slots[].end_time` | Only `run_label` ("07:45", "Return 17:30") → new optional `end_time` ("HH:MM", `null` without a run); `run_label` unchanged | Optional: show "07:45–08:15" from `run_label` + `end_time` |
+| 2 | `GET /occurrences/:id` → `notice.by` | `{ id, message, ends_at }` → also `by` (name of the sender, `null` for a system notice) | Optional: show "by <name>" in the drawer notice |
+| 3 | `trip_id` (trip) vs `trip_label` (run) | No change. `trip_id` is the Trip ID on the trip's first date; a recurring trip has a new number per day and each run's `trip_label` is the ID for its date | No change needed. Use `trip_label` for a date in lists and Assign page rows |
+
+## 11/11/2026 — Run rows: `route_stops` on a shuttle's way back (API-ISSUES §27 "Run rows"; no API shape change)
+
+| # | Endpoint / field | Before → after | Front-end |
+| --- | --- | --- | --- |
+| 1 | `route_stops` on scheduler run rows / drawer, Driver app and tracking-link stops of a corporate shuttle's way-back run (direction 2) without separate return stops | Way-there `use` and `name` in reverse order → `use` swapped (`pu` ⇄ `do`) and `name` = `return_name` when set, else `name` | No change needed. Drop any workaround that swaps `use` / `return_name` on run rows |
+
+## 11/11/2026 — School Bus first invoices issued before the details fix (API-ISSUES §24 "Bills"; no API change)
+
+| # | Endpoint / field | Before → after | Front-end |
+| --- | --- | --- | --- |
+| 1 | `GET /schools/:id/bills` and `GET /school_bills/:id` for a `kind: "first"` invoice issued before 10/11 | Still `lines: []`, `children: []`, `bill_to_code: null` → filled by the repair task `school_bills:backfill_first_details` (one line "<child> \| First month, <period>", the family, `bill_to_code`). Invoices issued after 10/11 were already correct | Nothing to change. Old data only: once the task has run on the server, reload and the invoice shows its line. If an old invoice is still empty after that, tell us its number. Do not build a workaround for empty `lines` on first invoices |
+
+The task is run by the backend team (not an endpoint): `DRY_RUN=1 bin/rails school_bills:backfill_first_details` counts, without `DRY_RUN` it writes; safe to run twice.
+
 ## 11/11/2026 — School Bus Routes: routing service down is `503 routing_unavailable`
 
 | # | Endpoint / field | Before → after | Front-end |

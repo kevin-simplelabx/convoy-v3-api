@@ -21,7 +21,7 @@ module Api
         render_data authorize(find), ReplacementBlueprint
       end
 
-      # GET /replacements/preview?occurrence_id=&replacement[...] — runs touched, message, who gets the trip value, deduction.
+      # GET /replacements/preview?occurrence_id=&replacement[...] — runs touched, message, who gets the trip value, deduction, who would be notified.
       def preview
         authorize Replacement
         rep = Replacement.new(rep_params)
@@ -30,14 +30,15 @@ module Api
                                 slot_no: occ.slot_no, original_vehicle_id: occ.original_vehicle_id || occ.vehicle_id, starts_on: occ.date, ends_on: occ.date)
         end
         rep.validate
-        runs = rep.original_vehicle_id ? Replacements::Affected.runs(rep).order(:starts_at).limit(200) : []
+        affected = rep.original_vehicle_id ? Replacements::Affected.runs(rep) : TripOccurrence.none
+        runs = affected.order(:starts_at).limit(200)
         d = rep.decorate
         render json: {
           data: {
             affected: runs.size, runs: runs.map { |o| { id: o.id, trip_label: o.trip_label, date: o.date, start_time: o.start_time_hm } },
             message: rep.original_vehicle_id ? d.wording.message : nil, pay_text: rep.original_vehicle_id ? d.pay_text : nil,
             operator: rep.original_vehicle&.operator&.slice(:id, :name), deduction_default: rep.original_vehicle_id ? d.default_deduction : 0,
-            errors: rep.errors.full_messages
+            notify: Replacements::NotifyAudiences.call(affected), errors: rep.errors.full_messages
           }
         }
       end

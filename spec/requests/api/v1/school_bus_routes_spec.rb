@@ -63,6 +63,12 @@ RSpec.describe "School Bus routes on the Scheduler" do
     expect(json.dig(:data, :trip)).to be_nil
   end
 
+  it "previews a replacement over a date range with the riders and school runs the parents are told about" do
+    get preview_api_v1_replacements_path, params: { replacement: { kind: "veh", scope: "range", original_vehicle_id: f[:a].id,
+                                                                    starts_on: "2026-11-03", ends_on: "2026-11-04" } }
+    expect(json.dig(:data, :notify)).to eq(guests: { names: [], count: 0, trips: 0 }, parents: { riders: 46, routes: 2 })
+  end
+
   describe "drops" do
     let(:tue) { route_runs("2026-11-03", "2026-11-03").first[:id] }
 

@@ -30,9 +30,10 @@ class TripOccurrenceDecorator < ApplicationDecorator
     return school_route_stops if school_route
     return [] unless trip
 
-    stops = trip.stops_in(trip_run&.direction || 1)
+    direction = trip_run&.direction || 1
+    stops = trip.stops_in(direction)
     times = stop_times(stops)
-    stops.each_with_index.map { |s, i| { name: s.name, address: s.address, use: s.use, time: Clock.hm(times[i]) } }
+    stops.each_with_index.map { |s, i| { name: s.name_in(direction), address: s.address, use: s.use_in(direction), time: Clock.hm(times[i]) } }
   end
 
   def recurring = school_route ? true : trip.recurring?

@@ -39,12 +39,12 @@ class TripOccurrenceBlueprint < ApplicationBlueprint
     # The banner notice active on this run now (shown at the top of the drawer).
     field(:notice) do |o|
       n = if o.school_route_id
-            Notice.active_at(Time.current).for_school.where(school_id: o.school&.id, banner: true).includes(:route_targets)
+            Notice.active_at(Time.current).for_school.where(school_id: o.school&.id, banner: true).includes(:route_targets, :created_by)
                   .order(:starts_at).find { |x| x.covers_route?(o.school_route_id) }
       else
-            Notice.active_at(Time.current).where(trip_id: o.trip_id, banner: true).includes(runs: :trip_run).order(:starts_at).find { |x| x.covers_run?(o.trip_run_id) }
+            Notice.active_at(Time.current).where(trip_id: o.trip_id, banner: true).includes(:created_by, runs: :trip_run).order(:starts_at).find { |x| x.covers_run?(o.trip_run_id) }
       end
-      n && { id: n.id, message: n.message, ends_at: n.ends_at }
+      n && { id: n.id, message: n.message, ends_at: n.ends_at, by: n.created_by&.name }
     end
     field(:trip) { |o| o.trip && TripBlueprint.render_as_hash(o.trip.decorate, view: :full) }
     field(:route) { |o| o.route_detail }

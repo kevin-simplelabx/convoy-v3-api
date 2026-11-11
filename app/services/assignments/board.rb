@@ -2,7 +2,7 @@
 # trip's own plan), and the assignment history.
 module Assignments
   class Board < ApplicationService
-    Slot = Data.define(:key, :trip_run_id, :run_key, :run_label, :slot_no, :assignee, :vehicle_id, :plate, :operator_id,
+    Slot = Data.define(:key, :trip_run_id, :run_key, :run_label, :end_time, :slot_no, :assignee, :vehicle_id, :plate, :operator_id,
                        :operator_name, :pay_amount, :pay_basis, :assignment_id, :from)
 
     def initialize(trip, as_of)
@@ -23,6 +23,7 @@ module Assignments
       assignee = a ? a.assignee : (vehicle.nil? ? "none" : (vehicle.own? ? "own" : "operator"))
       operator = a&.operator || vehicle&.operator
       Slot.new(key: "#{run&.key || 'trip'}|#{n}", trip_run_id: run&.id, run_key: run&.key, run_label: run && label(run),
+               end_time: run&.end_time_hm,
                slot_no: n, assignee:, vehicle_id: vehicle&.id, plate: vehicle&.plate, operator_id: operator&.id,
                operator_name: operator&.name, pay_amount: a&.pay_amount, pay_basis: a&.pay_basis, assignment_id: a&.id,
                from: a&.effective_from)

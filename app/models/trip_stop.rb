@@ -63,7 +63,16 @@ class TripStop < ApplicationRecord
 
   def waypoint? = use_via?
 
+  RETURN_USE = { "pu" => "do", "do" => "pu" }.freeze
+
+  # The stop as a run of `run_direction` travels it. Outbound stops walked on the way back (no separate return stops) swap
+  # pick-up / drop-off and take the return name; own direction 2 stops are as entered.
+  def use_in(run_direction) = back_view?(run_direction) ? RETURN_USE.fetch(use, use) : use
+  def name_in(run_direction) = back_view?(run_direction) ? return_name.presence || name : name
+
   private
+
+  def back_view?(run_direction) = run_direction == 2 && direction == 1
 
   def photo_limit
     errors.add(:photos, "can be up to #{MAX_PHOTOS} per stop") if photos.reject(&:marked_for_destruction?).size > MAX_PHOTOS

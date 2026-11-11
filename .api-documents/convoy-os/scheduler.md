@@ -249,7 +249,7 @@ Drawer response = the run row plus:
     "trip": { "full trip, same as GET /trips/:id (section 7.1); null for a school route run" },
     "route": null,
     "replacement": null,
-    "notice": { "id": 3, "message": "Running 10 minutes late", "ends_at": "2026-11-02T08:15:00+08:00" },
+    "notice": { "id": 3, "message": "Running 10 minutes late", "ends_at": "2026-11-02T08:15:00+08:00", "by": "Rachel Tan" },
     "bus_pattern": { "no_fixed_bus": false, "dates": 5, "moved": 3, "suggest": true, "top_vehicle_id": 15, "top_plate": "PD4472H" },
     "cancelled_by": null, "issue_raised_by": null, "ended_by": null,
     "changes": [ { "at": "2026-11-01T09:12:00+08:00", "by": "Rachel Tan", "action": "update",
@@ -265,7 +265,7 @@ Drawer response = the run row plus:
   Arranged by us at <daily_rate> a day / by the operator". On the ghost view (the run's `original_vehicle_id` row) show
   "Covered by `plate` (`operator.name`), <range>". Back to the regular bus: `move` to `regular_vehicle_id`, `scope: "one"`.
 - `replacement`: the replacement on this run (section 9 shape) — the box at the top of the drawer.
-- `notice`: the banner notice active on this run now ("Notice on this trip").
+- `notice`: the banner notice active on this run now ("Notice on this trip"). `by` = name of the user who sent it (`null` for a system notice).
 - `bus_pattern` (recurring shuttle runs): `suggest: true` → show "A different bus on `moved` of its last `dates` dates" with
   "Make `top_plate` the Regular Bus" (= move with `scope: later` to `top_vehicle_id`) and "Set No Fixed Bus" (5.9).
 - `changes`: Changes to This Trip / history of this run.
@@ -431,7 +431,7 @@ Validation messages follow the trip form: "Pick the client", "Enter the pick-up 
 "Wait minutes must be entered for an arrival", "The return starts before the outbound trip ends"...
 
 `driver.photo` (grid vehicle rows, run rows and the drawer) is the driver's thumbnail link (`/api/v1/downloads/:token`), `null`
-when the driver has no photo or is a replacement / external driver typed by name. `client_name` is on every run row. `route_stops` is the run's stops in travel order, `[{ name, address, use, time }]` (`use` = `pu` / `do` / `both` / `via`; `time` = "HH:MM" or `null`: the run's time at the stop, moved with a Today Only change; `null` on a handover's second part): build "A > +N > B" from them with the prototype's `street(name, address)` / `routeSum` (`format.js`) and the hover card list. School Bus route runs list their stops as `{ name, address: null, use, time, riders }` with the school last (AM, `use: "do"`) or first (PM, `use: "pu"`, `riders: null`, with the school's `address`). `route_text` stays as it was.
+when the driver has no photo or is a replacement / external driver typed by name. `client_name` is on every run row. `route_stops` is the run's stops in travel order, `[{ name, address, use, time }]` (`use` = `pu` / `do` / `both` / `via`; `time` = "HH:MM" or `null`: the run's time at the stop, moved with a Today Only change; `null` on a handover's second part): build "A > +N > B" from them with the prototype's `street(name, address)` / `routeSum` (`format.js`) and the hover card list. On a corporate shuttle's way-back run (direction 2) without separate return stops, the way-there stops come in reverse with `use` swapped (`pu` ⇄ `do`; `both` / `via` unchanged) and `name` = the stop's `return_name` when set, else its `name`; with separate return stops they are listed as entered. School Bus route runs list their stops as `{ name, address: null, use, time, riders }` with the school last (AM, `use: "do"`) or first (PM, `use: "pu"`, `riders: null`, with the school's `address`). `route_text` stays as it was.
 
 **Next Trip ID preview:** `GET /trips/next_number` → `{ "data": { "trip_id": "TID100731" } }` for the New Trip header. It
 reserves nothing (the number is taken when the trip is saved) so another save can take it first; show it as informational
@@ -611,7 +611,7 @@ Opened from Assign Trips (section 2), Save and Assign in the trip form, or Assig
 ```json
 { "data": {
   "as_of": "2026-10-30", "operator_cancel_rule": "done",
-  "slots": [ { "key": "d1r0|2", "trip_run_id": 1, "run_key": "d1r0", "run_label": "07:45", "slot_no": 2,
+  "slots": [ { "key": "d1r0|2", "trip_run_id": 1, "run_key": "d1r0", "run_label": "07:45", "end_time": "08:15", "slot_no": 2,
                "assignee": "operator", "vehicle_id": 17, "plate": "PC7475L", "operator_id": 5, "operator_name": "Hup Seng Coaches",
                "pay_amount": "4500.0", "pay_basis": "month", "assignment_id": 1, "from": "2026-09-07" } ],
   "history": [ { "id": 1, "effective_from": "2026-09-07", "assignee": "operator", "operator_id": 5, "operator_name": "Hup Seng Coaches",
@@ -620,8 +620,10 @@ Opened from Assign Trips (section 2), Save and Assign in the trip form, or Assig
 } }
 ```
 
-- `slots`: every run × vehicle slot with who runs it on `as_of` (`run_label`: "07:45" or "Return 17:30"). Non-shuttle trips have one key per vehicle: `trip|1`.
+- `slots`: every run × vehicle slot with who runs it on `as_of` (`run_label`: "07:45" or "Return 17:30"; `end_time`: "HH:MM" end of the run, `null` for a non-shuttle `trip|n` slot, so the page can show "07:45–08:15"). Non-shuttle trips have one key per vehicle: `trip|1`.
 - `assignee`: `own`, `operator` (bus may be empty: operator named, bus not known yet), `none`.
+- **Trip ID per date:** `trip_id` on a trip is the Trip ID on its first date. A recurring trip gets a new number per day, so each run's
+  `trip_label` is the ID for that run's date. Lists and the Assign page rows must show `trip_label` for the date, not the trip's `trip_id`.
 
 | Action | Call |
 | --- | --- |
@@ -645,11 +647,20 @@ Pay per day is shared over the slots of the entry; per month also over the month
 { "data": { "affected": 1, "runs": [ { "id": 490, "trip_label": "TID103716-1", "date": "2026-11-02", "start_time": "07:45" } ],
             "message": "Convoy update: MBC Campus Shuttle on 02/11/2026. Your bus is now PD4472H, driven by Siti. Sorry for the change.",
             "pay_text": "Trip value goes to the new crew, Siti", "operator": { "id": 5, "name": "Hup Seng" },
-            "deduction_default": "120.0", "errors": [] } }
+            "deduction_default": "120.0",
+            "notify": { "guests": { "names": ["Mr Tan", "Alice Lim", "Bob Ong"], "count": 6, "trips": 1 },
+                        "parents": { "riders": 46, "routes": 2 } },
+            "errors": [] } }
 ```
 
 - `affected` / `runs`: only runs up to the horizon; a date range past it still applies to later runs when they are added.
 - `message`: the text guests / parents will get (Notify box).
+- `notify`: who the message would reach, for the Notify box (always present; zeros / empty `names` when nothing matches or no
+  original vehicle is chosen yet). `guests.names` = the first 3 distinct guest names (the trips' guest name and the names
+  on the runs' passenger lists), `guests.count` = all distinct guests, `guests.trips` = affected trips. `parents.riders` =
+  riders on the affected School Bus runs (each run counts its route's riders), `parents.routes` = those runs. Show
+  "<names> | N trips" (and "+ N more" from `count`) and "Parents of N riders on M school trips". "in the Parent App" is
+  true only for the `push` channel; with `email` do not say it.
 - `operator` + `deduction_default`: when the run is an operator's, ask "Who found the replacement: [operator] / Us"; when Us,
   prefill Deduction with `deduction_default` (their pay for the runs covered) and allow a Premium.
 
