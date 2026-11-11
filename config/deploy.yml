@@ -49,6 +49,8 @@ env:
     WEB_CONCURRENCY: 2
     # FE runs from localhost (any port) and mobile apps while the team tests.
     CORS_ALLOW_LOCALHOST: true
+    # Firebase Hosting front ends (Transport Company web app and the other staging web apps)
+    CORS_ORIGINS: https://convoy-v3-transport-company.web.app
     # Staging only: the Client Portal sign-in code is returned as dev_code until SMTP is set up. Never in production.
     PORTAL_SHOW_CODE: 1
     # Staging only: seeds / live_map:simulate may write sample GPS data (Live Map, Ops Control). Never in production.
