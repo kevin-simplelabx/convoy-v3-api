@@ -40,3 +40,8 @@ unless CompanyLead.exists?
   end
   CompanyLeadDomain.create!(domain: "brightminds.edu.sg", status: "demo", note: "Demo on Thursday with the centre manager", updated_by: admin)
 end
+
+# Add-ons: SimpleDrive has both; Island Coaches has Import Route List off and School Run on, Comfort Charter has both off (to test the off state).
+sd.update!(school_run_enabled: true, route_list_import_enabled: true)
+Company.find_by(code: "ICS")&.update!(school_run_enabled: true, route_list_import_enabled: false)
+Company.find_by(code: "CCS")&.update!(school_run_enabled: false, route_list_import_enabled: false)

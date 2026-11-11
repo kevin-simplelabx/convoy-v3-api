@@ -17,6 +17,7 @@ module Api
       # POST { trip: {...}, return_trip: {...} } — return_trip makes a two-way Ad Hoc / Charter trip.
       def create
         trip = authorize Trip.new
+        ensure_school_run_on! if trip_params[:kind] == "school_run"
         result = Trips::Save.call(trip:, attributes: trip_params, return_attributes: return_params, user: current_user)
         render json: {
           data: TripBlueprint.render_as_hash(present(reload(result.trip)), view: :full),
@@ -26,6 +27,7 @@ module Api
 
       def update
         trip = authorize kept.includes(*FULL).find(params[:id])
+        ensure_school_run_on! if trip.school_run? || trip_params[:kind] == "school_run"
         Trips::Save.call(trip:, attributes: trip_params, user: current_user)
         render_data reload(trip), TripBlueprint, view: :full
       end
@@ -62,6 +64,11 @@ module Api
       end
 
       private
+
+      # School Run is a paid add-on: 403 when Convoy Admin has it off for the company.
+      def ensure_school_run_on!
+        raise Pundit::NotAuthorizedError, "School Run is not enabled for this company" unless current_company.school_run_enabled?
+      end
 
       def kept = policy_scope(Trip).kept
 

@@ -4,6 +4,71 @@ Changes to existing Convoy OS endpoints made while building other apps (Convoy D
 on (renamed, removed or changed fields and endpoints). New optional fields are not listed here; they are in the menu
 documents. Newest first. Each item: what changed, before → after, and what the front-end has to do.
 
+## 11/11/2026 — School Bus Routes: routing service down is `503 routing_unavailable`
+
+| # | Endpoint / field | Before → after | Front-end |
+| --- | --- | --- | --- |
+| 1 | `POST /routes/:id/optimise`, `POST /plans/:id/optimise`, route edits, `GET /plans/:id/compare`, `GET /routing/settings` when the routing service is unreachable | `422` `"The routing service is not available (<upstream text>)"` (the upstream text could be "Cannot POST /optimise") → `503` `{ error: { code: "routing_unavailable", message: "Routing service is not available" } }` | Treat `503` / `routing_unavailable` as "try again later"; do not expect `422` or show upstream text |
+
+## 11/11/2026 — School Bus Payouts: no Send to Finance when nothing is payable (item 24c)
+
+| # | Endpoint / field | Before → after | Front-end |
+| --- | --- | --- | --- |
+| 1 | `GET /schools/:id/payouts` row `can.send` | `true` for any open run → `false` when `net` is `0` or below | Nothing if the button follows `can.send`; show the deductions-only state (e.g. "Nothing to pay") |
+| 2 | `POST /schools/:id/payouts/:operator_id/send` | accepted → `422` "Nothing to pay (deductions only)" when the net is `0` or below | Show the message |
+
+Details: [school-bus-finance.md](school-bus-finance.md).
+
+## 11/11/2026 — Scheduler parity list (API-ISSUES "Front end to do")
+
+API changes (all in [scheduler.md](scheduler.md)):
+
+| # | Endpoint / field | Before → after | Front-end |
+| --- | --- | --- | --- |
+| 1 | Run rows `route_stops[]` (grid, drawer, `GET /occurrences`) | `{ name, address }` → `{ name, address, use, time }`; School Bus route runs: `[]` → stops with `riders`, the school last (AM) or first (PM) | Hover card: show time and Pick-up / Drop-off; a `use: "via"` pin is "Waypoint, no stop" |
+| 2 | Drawer `route.replacement` (School Bus route run) | `{ id, vehicle_id, starts_on, ends_on, arranged_by, daily_rate, reason }` → also `plate`, `operator { id, name }` | Replacement box and the ghost view "Covered by <plate> (<operator>), <range>" |
+| 3 | `grid_status` of a School Bus route run on a replacement bus | `ok` → `replacement` (as for trip runs) | Draw it with the replacement colour; the ghost is still `original_vehicle_id` |
+| 4 | `GET /occurrences/:id/move_preview` `scopes` for a recurring trip on the first date of the series | `["one"]` → `["one", "later"]` | Offer From This Date On there too |
+
+Already in the API, front end only (nothing changed):
+
+| Item | What to do |
+| --- | --- |
+| Handover link line | Part 1 and part 2 are two rows (same `trip_run_id`, `slot_no`, `date`; `part` 1 and 2): orange line from part 1 to part 2. Part 2 has `original_vehicle_id` too, but draw **no ghost** for it |
+| "Given to <operator>" on tray cards | Unassigned run with `operator_id` set: name from `GET /operators` |
+| Empty-slot menu in View Only | View Only is front end only: keep the menu, disable what writes |
+| Quick pick-up time on shuttle runs | `PATCH /occurrences/:id/time` works on shuttle runs (`today`, `from_here` moves that timing only) |
+| Put the Ticked Runs on <plate> | `move_preview` then `move` with this run's own `vehicle_id`; the group moves with it |
+| Make <plate> the Regular Bus | `move` `{ vehicle_id: bus_pattern.top_vehicle_id, scope: "later", lock_version }` |
+| Move dialog "same operator" (shuttle) | Run `operator_id` = target bus `operator.id` → no cost field, send no `cost`, "Their pay stays as agreed" |
+| Maintenance blocks purple | `data.maintenance[]` of `GET /scheduler` |
+| Edit Vehicle | Open `GET /vehicles/:id` of the vehicle clicked (grid `vehicles[].id`), not the list |
+| Maintenance warnings | `POST` / `PATCH /maintenance_visits` answers `meta.warnings` (invoice for another plate, odometer lower than the last): show them after Save. `GET` and cancel have none |
+| Live Calendar hint in the trip form | `GET /calendars/:id?year=` has the days (`kind`, `starts_on`, `ends_on`, `time_change`); the list `GET /calendars` has none. Off days are kinds `hol`, `ns`, `off`, `oil` (`off?` rule). Tell us if you want a server preview instead |
+| Shuttle form "N of M runs assigned" | `GET /scheduler/assign_summary` row `{ assigned, total }` of the trip, or count `assignee != "none"` over `slots` of `GET /trips/:id/assignments`. The trip payload has no count; a new trip has none. Hiding Default Vehicle / Vehicle for Each Run in edit is front end only |
+
+## 11/11/2026 — School Bus Requests counts and the early window (API-ISSUES §24a, §27c; no API change)
+
+**24a** — `GET /schools/:id/bus_requests` `meta` has no `renewals` and no `accepted` key (its keys are `page`, `limit`, `count`, `pages`, `kind`, `year`, `academic_year_id`, `tiles`, `tabs`, `windows`, `years`, `levels`, `mid`, `service_check`, `auto_accept`, `cover`). Read the numbers from:
+
+- **Renewals count**: `meta.tiles[]`, the tile with `label: "Renewing"` → `count` (its click filter is `{ tag: "Renewing" }`).
+- **Accepted count**: `meta.tiles[]`, the tile with `label: "Accepted"` → `count` (filter `{ status: "Accepted" }`). `Active` has its own tile.
+- **Early window (renewals)**: `meta.windows.list[0]` → `name` ("Early window (renewals)"), `from`, `to`, `state` (`upcoming` / `open` / `closed`). `meta.windows.registration` is the state of the whole registration.
+
+Notes: `tiles` is sent only when `meta.kind` is `"new"` (it is `null` for Change of Address, Change of Service and Stop Service). `windows` is `null` when the school has no academic year. If a number is still missing, tell us the screen and the field and we will add it.
+
+**27c** — already answered in row 3 of the 11/11 "Trip stop return names" entry below. `return_billing` is `two_way` | `one_way`; the server works it out when every stop has a pin, and the form's value is used only otherwise. The FE's values are correct; no change.
+
+## 11/11/2026 — Company add-ons: School Run and Import Route List (WIP 27d)
+
+| # | Endpoint / field | Before → after | Front-end |
+| --- | --- | --- | --- |
+| 1 | `GET /session`, `POST /session`, `GET /companies/:id` → `company.addons` | not there → `{ school_run: bool, import_route_list: bool }` (read-only for the company's own users; Convoy Admin edits `school_run_enabled` / `route_list_import_enabled` on `PATCH /companies/:id`, unchanged) | Replace the always-on `featOn('sr')` / `featOn('rli')` with `company.addons.*`: hide the School Run trip kind when `school_run` is false, hide Import Route List when `import_route_list` is false. Default is on (as the prototype) |
+| 2 | `POST` / `PATCH /trips` with `kind: "school_run"` (and editing a saved School Run) | allowed → `403` when `school_run` is off | Hide the kind, so this is not reached |
+| 3 | `POST /route_lists/review`, `POST /trips/:id/route_list`, `GET .../route_list_versions`, `GET .../school_run_bill` | allowed → `403` when `import_route_list` is off | Hide Import Route List, so this is not reached |
+
+Details: [scheduler.md § 7.9](scheduler.md#79-school-run-import-route-list), [convoy-admin.md](convoy-admin.md).
+
 ## 11/11/2026 — Run `lock_version` after a time change (WIP 27a)
 
 | # | Endpoint / field | Before → after | Front-end |

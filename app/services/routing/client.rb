@@ -15,7 +15,7 @@ module Routing
 
     # How a solve is going ({ step, frac, run, runs, elapsed, left, work: { phase, i, n, extra, evals }, log }), or nil.
     def progress(key)
-      parse(conn(2).get("/progress/#{key}"))
+      request { conn(2).get("/progress/#{key}") }
     rescue Unavailable
       nil
     end
@@ -34,19 +34,23 @@ module Routing
       end
     end
 
-    def post(path, body, timeout:)
-      parse(conn(timeout).post(path, body.to_json, "Content-Type" => "application/json"))
-    end
+    def post(path, body, timeout:) = request { conn(timeout).post(path, body.to_json, "Content-Type" => "application/json") }
 
-    def get(path) = parse(conn(10).get(path))
+    def get(path) = request { conn(10).get(path) }
+
+    def request
+      parse(yield)
+    rescue Faraday::Error => e # no connection, timeout
+      raise Unavailable, e.message
+    end
 
     def parse(res)
       body = JSON.parse(res.body)
-      raise Unavailable, body["error"] || "Routing service answered #{res.status}" unless res.success?
+      raise Unavailable, "#{res.env.method.upcase} #{res.env.url.path} answered #{res.status}: #{body["error"]}" unless res.success?
 
       body
-    rescue Faraday::Error, JSON::ParserError => e
-      raise Unavailable, e.message
+    rescue JSON::ParserError
+      raise Unavailable, "#{res.env.method.upcase} #{res.env.url.path} answered #{res.status} with a non-JSON body: #{res.body.to_s.squish.first(120)}"
     end
   end
 end

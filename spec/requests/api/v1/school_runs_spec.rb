@@ -149,4 +149,24 @@ RSpec.describe "School Runs" do
     expect(TripStopStudent.unscoped.where(name: "Kept Too Long")).to be_empty
     expect(TripStopStudent.unscoped.where(name: "Tan Wei")).to exist
   end
+
+  describe "add-ons" do
+    it "shows the add-ons to the company's own users" do
+      get api_v1_session_path
+      expect(json.dig(:data, :company, :addons)).to eq(school_run: true, import_route_list: true)
+    end
+
+    it "answers 403 for School Run trips and route lists when the add-ons are off" do
+      company.update!(school_run_enabled: false, route_list_import_enabled: false)
+      get api_v1_session_path
+      expect(json.dig(:data, :company, :addons)).to eq(school_run: false, import_route_list: false)
+
+      post api_v1_trips_path, params: { trip: school_run }, as: :json
+      expect(response).to have_http_status(:forbidden)
+      patch api_v1_trip_path(f[:other]), params: { trip: { title: "x" } }, as: :json
+      expect(response).to have_http_status(:forbidden)
+      post api_v1_route_list_review_path, params: { document_read_id: 1 }, as: :json
+      expect(response).to have_http_status(:forbidden)
+    end
+  end
 end

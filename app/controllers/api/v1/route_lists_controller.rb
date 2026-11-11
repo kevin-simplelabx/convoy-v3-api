@@ -3,6 +3,11 @@
 module Api
   module V1
     class RouteListsController < BaseController
+      # Import Route List is a paid add-on: 403 when Convoy Admin has it off for the company.
+      before_action do
+        raise Pundit::NotAuthorizedError, "Import Route List is not enabled for this company" unless current_company.route_list_import_enabled?
+      end
+
       # POST /route_lists/review { document_read_id, joins: [bool per row], trip_id }
       def review
         authorize Trip, :create?

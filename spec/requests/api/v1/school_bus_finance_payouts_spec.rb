@@ -161,6 +161,29 @@ RSpec.describe "School Bus finance payouts" do
     expect(d[:kpis]).to include(still_to_pay: "0.0")
   end
 
+  it "does not let a pay run with a negative or zero net be sent to Finance" do
+    at Time.zone.local(2026, 12, 2, 9, 0)
+    post path(:lines), params: { month: "2026-11", kind: "Taxi claim", adj_on: "2026-11-20", amount: 7000, reason: "Overcharge" }
+    a = row(board, "Alpha Bus")
+    expect(a).to include(net: "-900.0", can: hash_including(edit: true, send: false, pay: false))
+    post path(:send_to_finance), params: { month: "2026-11" }, as: :json
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(json[:error][:message]).to eq("Nothing to pay (deductions only)")
+    expect(row(board, "Alpha Bus")).to include(status: "To Check")
+
+    post path(:lines, f[:b]), params: { month: "2026-11", kind: "Taxi claim", adj_on: "2026-11-20", amount: 2300, reason: "Overcharge" }
+    expect(row(board, "Beta Coaches")).to include(net: "0.0", can: hash_including(send: false))
+    post path(:send_to_finance, f[:b]), params: { month: "2026-11" }, as: :json
+    expect(response).to have_http_status(:unprocessable_entity)
+
+    # A positive net is unchanged
+    post path(:lines, f[:b]), params: { month: "2026-11", kind: "Extra trips", adj_on: "2026-11-21", amount: 100, reason: "Extra" }
+    expect(row(board, "Beta Coaches")).to include(net: "100.0", can: hash_including(send: true))
+    post path(:send_to_finance, f[:b]), params: { month: "2026-11" }, as: :json
+    expect(response).to have_http_status(:ok)
+    expect(row(board, "Beta Coaches")).to include(status: "With Finance", can: hash_including(send: false, pay: false, recall: true))
+  end
+
   it "shows the attendant included in a route's price and who provides the attendant" do
     within_tenant(company) do
       school.bus_size_rates.sole.update!(ba_operator: 400, ba_us: 350)

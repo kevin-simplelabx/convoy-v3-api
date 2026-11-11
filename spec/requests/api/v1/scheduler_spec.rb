@@ -31,7 +31,7 @@ RSpec.describe "Scheduler and runs" do
     expect(json.dig(:data, :occurrences, 0)).to include(start_time: "08:00", plate: "PD1A", grid_status: "ok")
     expect(json.dig(:data, :occurrences, 0, :driver)).to include(kind: "own", name: "Eric", photo: nil)
     expect(json.dig(:data, :occurrences, 0)).to include(client_name: "Google")
-    expect(json.dig(:data, :occurrences, 0, :route_stops)).to eq([ { name: "A", address: nil }, { name: "B", address: nil } ])
+    expect(json.dig(:data, :occurrences, 0, :route_stops)).to eq([ { name: "A", address: nil, use: "pu", time: "08:00" }, { name: "B", address: nil, use: "do", time: "09:00" } ])
     expect(json.dig(:data, :vehicles, 0, :driver)).to include(kind: "own", name: "Eric", photo: nil)
     expect(json.dig(:data, :unassigned).size).to eq(1)
     expect(json[:meta]).to include(unassigned_before: nil, unassigned_after: nil)

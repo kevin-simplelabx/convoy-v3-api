@@ -17,6 +17,7 @@ module ErrorHandling
     rescue_from Pundit::NotAuthorizedError, with: :render_forbidden
     rescue_from ApplicationService::Error, with: ->(e) { render_error(:unprocessable_content, e.message, code: e.code || "invalid", details: e.details) }
     rescue_from ActsAsTenant::Errors::NoTenantSet, with: -> { render_error(:unprocessable_content, "Pick a company first") }
+    rescue_from Routing::Client::Unavailable, with: :render_routing_unavailable
   end
 
   private
@@ -45,6 +46,13 @@ module ErrorHandling
     message = current_user.try(:convoy_admin?) && exception.query.to_s != "show?" ?
       "View only. Convoy Admin cannot change company data" : "You do not have access to this"
     render_error(:forbidden, message)
+  end
+
+  # The routing service is down, or answered something that is not its API (an old image: "Cannot POST /optimise").
+  # The upstream text goes to the error log only, never to the screen.
+  def render_routing_unavailable(exception)
+    Rails.error.report(exception, handled: true)
+    render_error(:service_unavailable, "Routing service is not available", code: "routing_unavailable")
   end
 
   def render_internal_error(exception)

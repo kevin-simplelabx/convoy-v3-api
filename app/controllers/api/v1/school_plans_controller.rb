@@ -109,8 +109,6 @@ module Api
         other = find(params.require(:with))
         diff = Routing::Client.current.diff(Plans::EngineShape.call(plan), Plans::EngineShape.call(other))
         render json: { data: diff.merge("a" => plan.name, "b" => other.name) }
-      rescue Routing::Client::Unavailable => e
-        raise ApplicationService::Error, "The routing service is not available (#{e.message})"
       end
 
       private

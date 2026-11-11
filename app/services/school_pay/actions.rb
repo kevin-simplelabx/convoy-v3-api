@@ -61,7 +61,10 @@ module SchoolPay
       prepare!
       raise Error, "Only an open pay run can be sent to Finance" unless payout.draft? && payout.payments.none?
 
-      payout.update!(status: "ready", **snapshot, sent_by: @user, sent_at: @now, prepared_by: payout.prepared_by || @user)
+      snap = snapshot
+      raise Error, "Nothing to pay (deductions only)" unless SchoolPay.net(snap[:base], snap[:auto_lines].map(&:symbolize_keys), payout.adjustments.to_a).positive?
+
+      payout.update!(status: "ready", **snap, sent_by: @user, sent_at: @now, prepared_by: payout.prepared_by || @user)
     end
 
     def recall

@@ -64,7 +64,7 @@ module SchoolPay
         voucher: p&.voucher_number && { number: p.voucher_number, on: p.voucher_on }, batch: batch&.except(:paid),
         routes: routes.map { route_row(it) }, lines: auto.map { auto_row(it) } + adjustments.map { adj_row(it, locked) },
         history: history(p, auto),
-        can: payable ? actions(p, st, paid, locked, rights, mine, batch) : {},
+        can: payable ? actions(p, st, paid, locked, rights, mine, batch, net) : {},
         note: { "none" => "Assign an operator to these routes in Operator Pay before paying", "own" => "Our own buses: nothing to pay" }[key] }
     end
 
@@ -82,9 +82,9 @@ module SchoolPay
       @today > @month.end_of_month ? "To Check" : "Open"
     end
 
-    def actions(p, st, paid, locked, rights, mine, batch)
+    def actions(p, st, paid, locked, rights, mine, batch, net)
       approver = rights[:approve] && !mine
-      { edit: !locked && rights[:prepare], send: st == "draft" && paid.zero? && rights[:prepare], recall: st == "ready" && paid.zero? && rights[:prepare],
+      { edit: !locked && rights[:prepare], send: st == "draft" && paid.zero? && net.positive? && rights[:prepare], recall: st == "ready" && paid.zero? && rights[:prepare],
         send_back: st == "ready" && paid.zero? && approver, approve: st == "ready" && paid.zero? && approver,
         reopen: st == "approved" && paid.zero? && rights[:approve] && batch.nil?, pay: st == "approved" && batch.nil?,
         need_other: st == "ready" && paid.zero? && !approver }.tap { it[:pay] &&= !p.nil? }

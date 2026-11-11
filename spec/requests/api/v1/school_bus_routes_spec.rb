@@ -75,6 +75,21 @@ RSpec.describe "School Bus routes on the Scheduler" do
       expect(route_runs("2026-11-04", "2026-11-04").first[:plate]).to eq("PD6604E")
     end
 
+    it "a replacement bus shows as a replacement with its plate and operator in the drawer, and its stops list the school" do
+      post move_api_v1_occurrence_path(tue), params: { vehicle_id: f[:b].id, scope: "one" }, as: :json
+      expect(json.dig(:data, 0)).to include(grid_status: "replacement", original_plate: "PD6604E")
+
+      get api_v1_occurrence_path(tue)
+      expect(json.dig(:data, :route, :replacement)).to include(vehicle_id: f[:b].id, plate: "PD1125G", arranged_by: "operator")
+      expect(json.dig(:data, :route_stops).last).to include(name: "St. Stephen's School", use: "do", time: "07:20")
+      expect(json.dig(:data, :route_stops).first).to include(use: "pu")
+
+      post move_api_v1_occurrence_path(tue), params: { vehicle_id: f[:a].id, scope: "one" }, as: :json
+      get api_v1_occurrence_path(tue)
+      expect(json.dig(:data, :route, :replacement)).to be_nil
+      expect(json.dig(:data, :grid_status)).to eq("ok")
+    end
+
     it "a date range on an operator's bus we arrange needs the cost per day, and later drops cut it" do
       post move_api_v1_occurrence_path(tue), params: { vehicle_id: f[:c].id, scope: "range", starts_on: "2026-11-03", ends_on: "2026-11-06", arranged_by: "us" }, as: :json
       expect(json.dig(:error, :message)).to eq("Enter the cost per day")

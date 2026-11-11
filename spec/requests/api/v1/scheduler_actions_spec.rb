@@ -52,8 +52,10 @@ RSpec.describe "Scheduler drops and assignments" do
     timed = [ { position: 0, name: "A", use: "pu", scheduled_time: "08:00" }, { position: 1, name: "B", use: "do", scheduled_time: "08:40" } ]
     id = create_trip(starts_on: "2026-11-04", stops_attributes: timed)
     occ = run(id, "2026-11-04")
+    expect(occ[:route_stops].pluck(:time)).to eq(%w[08:00 08:40])
     patch time_api_v1_occurrence_path(occ[:id]), params: { scope: "today", start_time: "08:10" }, as: :json
     expect(json[:data]).to include(shift_minutes: 10)
+    expect(json.dig(:data, :route_stops).pluck(:time)).to eq(%w[08:10 08:50])
 
     patch time_api_v1_occurrence_path(occ[:id]), params: { scope: "from_here", start_time: "08:30" }, as: :json
     expect(json[:data]).to include(start_time: "08:30", end_time: "09:30", shift_minutes: 0, overridden_fields: [])
@@ -160,6 +162,8 @@ RSpec.describe "Scheduler drops and assignments" do
     get move_preview_api_v1_occurrence_path(run(id, "2026-11-23")[:id]), params: { vehicle_id: f[:small].id }
     expect(json.dig(:data, :warnings).first).to start_with("SX1 already has Google at 08:30–09:30")
     expect(json.dig(:data, :warnings).last).to eq("SX1 has 4 seats. This trip has 12 passengers")
+    expect(json.dig(:data, :scopes)).to eq(%w[one later])
+    get move_preview_api_v1_occurrence_path(run(id, "2026-11-05")[:id]), params: { vehicle_id: f[:small].id }
     expect(json.dig(:data, :scopes)).to eq(%w[one later])
 
     get move_preview_api_v1_occurrence_path(run(id, "2026-11-23")[:id]), params: { vehicle_id: f[:managed].id }

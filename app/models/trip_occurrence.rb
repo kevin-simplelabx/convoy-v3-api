@@ -171,7 +171,7 @@ class TripOccurrence < ApplicationRecord
     return "unassigned" if vehicle_id.nil?
     return "live" if starts_at <= now
 
-    replacement_id && original_vehicle_id ? "replacement" : "ok"
+    (replacement_id || school_route_id) && original_vehicle_id ? "replacement" : "ok"
   end
 
   # Status chip on the Trips page (RunSearch::STATUS_SQL is the same in SQL).

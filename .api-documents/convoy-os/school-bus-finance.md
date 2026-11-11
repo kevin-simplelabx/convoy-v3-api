@@ -282,7 +282,7 @@ Every action returns the whole month again, like `GET` (adding a line and paying
     For example, `days` 11 `of` 21 with the `note` `"Took over from Beta Coaches on 16/11/2026"`.
   - `lines`: `[{ id, kind, sign, adj_on, route, amount, reason, auto, paired_with, by, can_remove, files: [{ id, name, url, size, content_type }] }]`. Auto lines (`auto: true`) carry only `id`, `kind`, `sign`, `adj_on`, `route`, `amount`, `reason`, `auto` and `can_remove`.
   - `history`: newest first, with `kind` `sent`, `returned` (sent back to Ops), `approved` or `paid`. "Approved for S$…" is the **net** (route pay plus additions less deductions), as the prototype's `runNet`.
-  - `can: { edit, send, recall, send_back, approve, reopen, pay, need_other }`.
+  - `can: { edit, send, recall, send_back, approve, reopen, pay, need_other }`. `send` is `false` when the net is `0` or below (deductions only): the send call answers `422` "Nothing to pay (deductions only)". `pay` needs an approved run.
   - `note`: shown for `own` and `none`.
 
 **Route pay.** Each school day a route runs earns that day's price, spread over the month's school days:

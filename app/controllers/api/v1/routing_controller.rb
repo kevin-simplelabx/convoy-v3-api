@@ -10,8 +10,6 @@ module Api
         # The bus types shown are the engine's defaults (the prototype's RE.DEFAULTS.types, Fewest Buses), not its base table.
         meta = meta.merge("types" => meta.dig("defaults", "types")) if meta.dig("defaults", "types").present?
         render json: { data: meta.merge(params: RoutingSetting.first&.params || {}) }
-      rescue Routing::Client::Unavailable => e
-        raise ApplicationService::Error, "The routing service is not available (#{e.message})"
       end
 
       # PUT /routing/settings { params: { …engine parameters… } } — Save Parameters ({} = Convoy Defaults).

@@ -2,6 +2,9 @@ class CompanyBlueprint < ApplicationBlueprint
   fields :name, :short_name, :display_name, :code, :country, :timezone, :theme_color,
          :date_format, :time_format, :observed_holidays, :business_units_enabled, :status
 
+  # Paid add-ons Convoy Admin switched on for this company (read-only here): the trip form hides School Run / Import Route List when off.
+  field(:addons) { |company| { school_run: company.school_run_enabled, import_route_list: company.route_list_import_enabled } }
+
   field(:logo) { |company| company.logo_info }
 
   # Company Settings page. Pass actor: (the signed-in user) for can_edit.

@@ -59,7 +59,7 @@ the unassigned runs (bottom or right tray) and the workshop visits (purple block
                        "trip_id": 8, "trip_run_id": 1, "run_key": "d1r0", "slot_no": 1, "part": 1, "school_route_id": null,
                        "trip_label": "TID103716-1", "kind": "corporate_shuttle", "title": "MBC Campus Shuttle",
                        "route_text": "Labrador Park MRT Exit A to Mapletree Business City",
-                       "route_stops": [ { "name": "Labrador Park MRT Exit A", "address": "Labrador Villa Rd, Singapore 119187" }, { "name": "Mapletree Business City", "address": "10 Pasir Panjang Rd, #01-01, Singapore 117438" } ], "client_id": 2, "client_name": "Google Asia Pacific", "school_name": null,
+                       "route_stops": [ { "name": "Labrador Park MRT Exit A", "address": "Labrador Villa Rd, Singapore 119187", "use": "pu", "time": "07:45" }, { "name": "Mapletree Business City", "address": "10 Pasir Panjang Rd, #01-01, Singapore 117438", "use": "do", "time": "08:00" } ], "client_id": 2, "client_name": "Google Asia Pacific", "school_name": null,
                        "start_time": "07:45", "end_time": "08:00", "starts_at": "2026-11-02T07:45:00+08:00",
                        "ends_at": "2026-11-02T08:00:00+08:00", "ends_next_day": false, "shift_minutes": 0,
                        "vehicle_id": 14, "plate": "PC8841T", "original_vehicle_id": null, "original_plate": null,
@@ -86,9 +86,14 @@ How to draw it:
 
 - **Block position**: `vehicle_id` (row / lane), `date`, `start_time` / `end_time` (`ends_next_day` when it crosses midnight).
 - **Colour / pattern**: `grid_status` — `ok`, `live` (running now), `done`, `unassigned`, `cancel`, `cancel_unassigned`,
-  `replacement` (moved to another bus by a replacement: Vehicle Down, Crew Swap, Handover). A driver-only replacement
-  (Driver Unavailable) stays `ok`; use `replacement_id` and `driver` to show it.
-- **Ghost of a replaced run**: when `original_vehicle_id` is set, also draw a ghost block on that vehicle's row.
+  `replacement` (moved to another bus by a replacement: Vehicle Down, Crew Swap, Handover; also a School Bus route run on a
+  replacement bus). A driver-only replacement (Driver Unavailable) stays `ok`; use `replacement_id` and `driver` to show it.
+- **Ghost of a replaced run**: when `original_vehicle_id` is set, also draw a ghost block on that vehicle's row. Exception: the
+  second part of a handover (`part: 2`) also has `original_vehicle_id`, but part 1 is already on that bus: draw no ghost for it.
+- **Handover line**: part 1 and part 2 of a handover are two rows with the same `trip_run_id`, `slot_no` and `date`
+  (`part` 1 and 2). Draw the orange line from part 1 to part 2.
+- **Given to an operator, bus not named yet**: an unassigned run (`vehicle_id: null`) with `operator_id` set was given to that
+  operator on the Assign page. Tray card: "Given to <operator name>. Bus not named yet" (name from `GET /operators`).
 - **Link lines**: teal between runs with the same `group_key` (Runs That Move Together); orange from the ghost
   (`original_vehicle_id`) to the run; purple from a run to the run of `pair_trip_id` (two-way trips, `is_return` on the way back).
 - **School Bus routes** come in the same lists: `kind: "school_route"`, `school_route_id`, `trip_id: null`, `school_name`, `pax` = riders.
@@ -139,6 +144,8 @@ Returns run rows (same shape as the grid) ordered by start, with `meta` paging. 
 ```
 
 `status`: `all` (every run slot has a bus or operator), `some`, `none`. `meta.open` = shuttles not `all` (button badge).
+The shuttle form's "N of M runs assigned" is `assigned` of `total` of the trip's row here (or count `assignee != "none"` over `slots` of
+`GET /trips/:id/assignments`); a trip that is not saved yet has no count.
 
 ---
 
@@ -159,12 +166,17 @@ Trip run:
             "cost": { "amount": "95.0", "basis": "run", "source": "agreed" } } }
 ```
 
-- `scopes`: the choices to offer. `one` = Just this date; `later` = From this date on (recurring trips, from the day after
-  the first date). A one-off trip, or the first date of a series, only has `one` ("Move this trip").
+- `scopes`: the choices to offer. `one` = Just this date; `later` = From this date on (every recurring trip, on any date,
+  also the first). A one-off trip only has `one` ("Move this trip").
 - `members`: runs that move together (the run plus its Runs That Move Together group on that date).
 - `warnings`: show them in the dialog; the drop is still allowed.
 - `cost`: for a bus that is not ours, the cost to prefill: the pay agreed with that operator on this trip (`source: agreed`),
   else the trip's operator cost (`source: trip`; `basis: hour` for Disposal). `null` for own buses.
+
+- **Same operator** (shuttle runs): when the run's `operator_id` equals the target bus's `operator.id`, that operator already runs
+  the slot: hide the cost field, send no `cost`, show "<operator> already runs this. <plate> is named for this date. Their pay stays as agreed".
+- **Put the Ticked Runs on <plate>** (Runs That Move Together on different buses): `move` with this run's own `vehicle_id` moves
+  the whole group to it (`scope: "one"`, or `"later"` for a recurring trip).
 
 School Bus route run:
 
@@ -248,6 +260,10 @@ Drawer response = the run row plus:
 
 - `route` (school route runs): `{ school {id, name, short_name}, plan {id, name, session}, label, riders, regular_vehicle_id,
   regular_plate, attendant {id, name, phone}, replacement {...} | null, stops: [{ name, time, riders, lat, lng }] }`.
+  `route.replacement` = the route's replacement bus on that date: `{ id, vehicle_id, plate, operator: { id, name } | null,
+  starts_on, ends_on, arranged_by, daily_rate, reason }`. Box text: "Covering for `regular_plate`, <starts_on> to <ends_on>.
+  Arranged by us at <daily_rate> a day / by the operator". On the ghost view (the run's `original_vehicle_id` row) show
+  "Covered by `plate` (`operator.name`), <range>". Back to the regular bus: `move` to `regular_vehicle_id`, `scope: "one"`.
 - `replacement`: the replacement on this run (section 9 shape) — the box at the top of the drawer.
 - `notice`: the banner notice active on this run now ("Notice on this trip").
 - `bus_pattern` (recurring shuttle runs): `suggest: true` → show "A different bus on `moved` of its last `dates` dates" with
@@ -265,7 +281,7 @@ Drawer response = the run row plus:
 | More › Force End Trip | `PATCH /occurrences/:id/end` `{ lock_version }` | Show it on a run on the road (`grid_status: "live"`). The run ends now: `status: "completed"`, `grid_status: "done"`, `ended_at`, `ended_by`; the planned `ends_at` / `end_time` stay. No undo. `422`: "This run has not started", "This run has already ended", "This run has no bus", "This run is cancelled" |
 | Raise an Issue | `POST /occurrences/:id/issue` `{ reason }` | Only on a run that is done ("An issue can be raised on a completed run only"); holds the driver's pay. `422` "Driver pay for <Month YYYY> is confirmed. Reopen it in HR, Earnings first" once that month is confirmed; `422` "Say what the issue is" with no reason |
 | Clear Issue | `DELETE /occurrences/:id/issue` | |
-| Change the pick-up time: Today Only | `PATCH /occurrences/:id/time` `{ scope: "today", start_time: "08:20", lock_version }` | Recurring trips only. This run moves (`shift_minutes`, "Moved +20 min"); every stop moves by the same amount |
+| Change the pick-up time: Today Only | `PATCH /occurrences/:id/time` `{ scope: "today", start_time: "08:20", lock_version }` | Recurring trips, shuttle runs included (a one-off trip shows Save, below); not School Bus route runs. This run moves (`shift_minutes`, "Moved +20 min"); every stop moves by the same amount |
 | Change the pick-up time: Save (one-off trip) / Every Run From Today | `PATCH /occurrences/:id/time` `{ scope: "from_here", start_time: "07:45", lock_version }` | See "Save Time" below; shuttles: this timing only |
 | Undo time change | `PATCH /occurrences/:id/time` `{ scope: "reset", lock_version }` | Back to the planned time |
 | Change Vehicle | Same as a drop: `move_preview` then `move` (section 3) | |
@@ -415,7 +431,7 @@ Validation messages follow the trip form: "Pick the client", "Enter the pick-up 
 "Wait minutes must be entered for an arrival", "The return starts before the outbound trip ends"...
 
 `driver.photo` (grid vehicle rows, run rows and the drawer) is the driver's thumbnail link (`/api/v1/downloads/:token`), `null`
-when the driver has no photo or is a replacement / external driver typed by name. `client_name` is on every run row. `route_stops` is the run's stops in travel order (`[{ name, address }]`, `[]` for School Bus route runs): build "A > +N > B" from them with the prototype's `street(name, address)` / `routeSum` (`format.js`); `route_text` stays as it was.
+when the driver has no photo or is a replacement / external driver typed by name. `client_name` is on every run row. `route_stops` is the run's stops in travel order, `[{ name, address, use, time }]` (`use` = `pu` / `do` / `both` / `via`; `time` = "HH:MM" or `null`: the run's time at the stop, moved with a Today Only change; `null` on a handover's second part): build "A > +N > B" from them with the prototype's `street(name, address)` / `routeSum` (`format.js`) and the hover card list. School Bus route runs list their stops as `{ name, address: null, use, time, riders }` with the school last (AM, `use: "do"`) or first (PM, `use: "pu"`, `riders: null`, with the school's `address`). `route_text` stays as it was.
 
 **Next Trip ID preview:** `GET /trips/next_number` → `{ "data": { "trip_id": "TID100731" } }` for the New Trip header. It
 reserves nothing (the number is taken when the trip is saved) so another save can take it first; show it as informational
@@ -549,6 +565,8 @@ Quote response (`km` = road distance from your route, for distance bands; `extra
 - `end_time` is not in the message: work it out from the route as usual. Undo Fill is front end only.
 
 ### 7.9 School Run: Import Route List
+
+**Add-ons.** School Run and Import Route List are paid add-ons. Read `company.addons.school_run` / `import_route_list` from `GET /session`: hide the School Run trip kind and the Import Route List button when false. The server answers `403` for School Run trips and the route list endpoints when the add-on is off. Convoy Admin switches them in [convoy-admin.md](convoy-admin.md).
 
 1. `POST /document_reads` (multipart) `kind=route_list`, `file` (PDF, xlsx, csv, photo) → poll.
 2. Review: `POST /route_lists/review` `{ document_read_id, joins: [bool per row] (optional), trip_id (when importing onto a saved trip) }`

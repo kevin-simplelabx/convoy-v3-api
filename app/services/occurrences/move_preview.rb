@@ -12,7 +12,7 @@ module Occurrences
 
       trip = @occ.trip
       {
-        scopes: trip.recurring? && @occ.date > trip.starts_on ? %w[one later] : %w[one],
+        scopes: trip.recurring? ? %w[one later] : %w[one],
         members: Members.slots(@occ).size,
         warnings: warnings,
         cost: cost_prefill(trip)

@@ -56,6 +56,17 @@ RSpec.describe "School Bus route edits" do
     expect(json.dig(:data, :summary)).to include(routes: 1, assigned: 6, unassigned: 6, riders: 12)
   end
 
+  it "answers 503 routing_unavailable, without the service's own text, when Optimise cannot reach the routing service" do
+    fake_routing.down = true
+    get api_v1_plan_path(plan_id)
+    am1 = json.dig(:data, :routes, 0, :id)
+    [ optimise_api_v1_route_path(am1), api_v1_plan_optimise_path(plan_id) ].each do |path|
+      post path
+      expect(response).to have_http_status(:service_unavailable)
+      expect(json[:error]).to eq(code: "routing_unavailable", message: "Routing service is not available")
+    end
+  end
+
   it "optimises the stop order of a route or of every route, and resets every edit" do
     get api_v1_plan_path(plan_id)
     am1 = json.dig(:data, :routes, 0, :id)

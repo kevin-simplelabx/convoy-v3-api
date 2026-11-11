@@ -2,7 +2,7 @@
 # later dates have none yet: the daily job adds one date each night, from the trips and their rules.
 class OccurrenceWindow
   INCLUDES = [ :vehicle, :original_vehicle, :driver, :operator_driver, :client,
-               { trip_run: :slots, trip: %i[stops client], school_route: { plan: :school } } ].freeze
+               { trip_run: %i[slots times], trip: %i[stops client], school_route: [ :stops, { plan: :school } ] } ].freeze
 
   def initialize(from:, to:, scope: TripOccurrence.all)
     @from = from

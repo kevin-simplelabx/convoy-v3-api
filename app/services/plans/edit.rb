@@ -74,8 +74,6 @@ module Plans
         finish([]) if out.any?
       end
       optimise_message(routes, list, out)
-    rescue Routing::Client::Unavailable => e
-      raise ApplicationService::Error, "The routing service is not available (#{e.message})"
     end
 
     # Reset All: routes drawn by hand go, every other route goes back to the engine's result (keeping its bus size), and so
@@ -184,8 +182,6 @@ module Plans
       base = route.engine_route || { "id" => route.route_key, "type" => type || route.bus_type }
       payload = { base:, stops:, school: { lat: @school.lat.to_f, lng: @school.lng.to_f }, params:, vias: vias.presence, type: }.compact
       Plans.write_route(route, Routing::Client.current.retime(payload))
-    rescue Routing::Client::Unavailable => e
-      raise ApplicationService::Error, "The routing service is not available (#{e.message})"
     end
 
     def params = (@plan.params.presence || RoutingSetting.first&.params || {}).merge("session" => Routing::SESSION_KEYS[@plan.session])

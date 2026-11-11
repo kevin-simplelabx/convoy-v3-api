@@ -147,7 +147,7 @@ with no riders at all gives the same: a plan with no routes and an empty `unassi
 ```
 
 `avg` / `max` = journey minutes, `cost` = the engine's cost figure, `fill` = average fill (0–1), `moved` = riders on another
-stop, `shifted` = riders whose time changes by more than 5 minutes. `503`-like `422` "The routing service is not available (…)".
+stop, `shifted` = riders whose time changes by more than 5 minutes. `503` `{ error: { code: "routing_unavailable", message: "Routing service is not available" } }` when the routing service cannot be reached (see [Routing service errors](#routing-service-errors)).
 
 **State badges:**
 
@@ -500,3 +500,16 @@ Not built yet:
 - Moving stops between routes in the Feasibility map view (prototype `fzMove`).
 - Applying confirmed mid-year changes from Requests to the plan in use: this comes with Families & Requests.
 - Self-hosted OSRM: in the backlog.
+
+
+## Routing service errors
+
+Every endpoint that calls the routing service live (`GET /routing/settings`, Optimise, Optimise All, Edit Stops, Change Type,
+Reset Route / Reset All, Compare) answers **`503`** when the service is down, times out, or does not answer its API:
+
+```json
+{ "error": { "code": "routing_unavailable", "message": "Routing service is not available" } }
+```
+
+Show the message and let the user retry; nothing was saved. Run Routing and Feasibility are not live calls: the run ends
+`failed` with "The routing service is not available…" (see [Run Routing](#2-run-routing)).
