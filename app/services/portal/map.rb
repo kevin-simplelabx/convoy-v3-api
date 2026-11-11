@@ -94,10 +94,12 @@ module Portal
       trip_runs.where(trip: { kind: kinds }).includes(*INCLUDES).chronological.map { trip_row(it) }
     end
 
-    # The client's own runs today: trips on the sites the person covers (the trip's site or a stop's); Members see
+    # The client's own runs today: trips on the sites the person covers (the trip's site or a stop's). Bookings are the
+    # trips made from a Portal booking (a trip made in Convoy OS has no booking to open, so it is not listed); Members see
     # one-off trips only from their own bookings.
     def trip_runs
       trips = Trip.kept.where(client_id: @client.id)
+      trips = trips.where(kind: "corporate_shuttle").or(trips.where.not(booking_trip_id: nil))
       ids = site_ids
       trips = trips.where(client_site_id: ids).or(trips.where(id: TripStop.where(client_site_id: ids).select(:trip_id))) if ids
       unless @user.can?(:see_all)

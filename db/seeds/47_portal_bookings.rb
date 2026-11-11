@@ -64,4 +64,11 @@ with_company("SD") do
   late = submit.("PO-GP-1003", "marcus.lim@google.com", mbc, Date.current + 1,
                  { kind: "one_way", start_time: "09:00", pax: 8, points: [ pt.("Mapletree Business City", "pu", 1.2747, 103.7993), pt.("Suntec City", "do", 1.2935, 103.8572) ] })
   Portal::Approval.for(late).decline!(user.("linh.tran@google.com"), note: "Please use the 08:30 shuttle tomorrow") if late.approval&.waiting?
+
+  # Today: an approved one-off booking, so the Portal Map's Bookings activity has a run (it lists only trips made from a booking).
+  today = submit.("PO-GP-1004", "marcus.lim@google.com", mbc, Date.current,
+                  { kind: "one_way", start_time: "17:00", pax: 10, points: [ pt.("Mapletree Business City", "pu", 1.2747, 103.7993), pt.("Resorts World Sentosa", "do", 1.2554, 103.8205) ] })
+  Portal::Approval.for(today).approve!(user.("linh.tran@google.com"), note: "Client dinner") if today.approval&.waiting?
+  trip = today.trips.first
+  Bookings::Approve.call(trip:, user: ops, trip_value: 180) if trip.pending?
 end

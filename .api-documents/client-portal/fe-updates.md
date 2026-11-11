@@ -4,6 +4,14 @@ Answers to the front-end's findings (API-ISSUES.md) about the Client Portal, and
 make. Newest first. Each row: the claim, the class, the answer and, for a BE bug, what changed.
 Class: **BE bug** (fixed), **Doc gap** (documented now), **FE answer** (works as designed), **Not valid**. **B** = breaking.
 
+## 11/11/2026 — Portal Map: Bookings runs always carry their booking (item 21)
+
+Doc: [map.md](map.md). Not breaking.
+
+| # | FE claim | Class | Answer / what changed |
+| --- | --- | --- | --- |
+| 1 | Map: Bookings run 30 (TID100036, drop-off Mapletree Business City) has `site: null` and `booking: null` | **BE bug** + data | The run was a trip made in the Convoy OS trip form for the client: no booking behind it and its stops were free text (no client site), so both fields were null. The Bookings activity listed every non-shuttle trip. Now **Bookings lists only trips made from a Portal booking**, so `booking { id, number }` is never null there (Shuttles keep `booking: null`). `site` is still the trip's site, else the first stop site in view; `null` only when no stop has a client site. A trip made in Convoy OS is not on the client's Map and `GET /portal/map/runs/:id` answers `404` for it. FE: hide nothing; if you guarded a null `booking` on Bookings rows you can drop it |
+
 ## 10/11/2026 — Portal Map, Home, Luggage, §21 (phase Q11)
 
 Docs: [map.md](map.md), [home.md](home.md), [bookings.md](bookings.md), [approval-flows.md](approval-flows.md),

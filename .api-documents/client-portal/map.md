@@ -19,7 +19,7 @@ may run for other clients the rest of the day). Poll every 20–30 s while the p
 
 - **Site** pills (when `sites` has more than one): All Sites, or `site_id` = one site (its trips, its school).
 - **Activities** pills (when more than one): `am` AM, `pm` PM, `asa` CCA (school bus sessions of the schools linked to the
-  client or the person's sites), `bookings` Bookings (the client's one-off trips; Members see only trips from their own
+  client or the person's sites), `bookings` Bookings (the client's one-off trips made from a Portal booking, so `booking` is always set; Members see only trips from their own
   bookings), `shuttles` Shuttles. Without `activity`: the one with buses on the road, else the next to start, else the first.
 - `count` / `on_road` of an activity are counted from the same runs the list shows (`state` of each run), so a pill and its
   list always agree. **School Bus runs have no On the way**: they are `scheduled` until the bus starts, `started` while
@@ -43,7 +43,7 @@ A run (Bookings, Shuttles):
 `kind` is the trip kind (`ad_hoc`, `airport_transfer`, `disposal`, `corporate_shuttle`) and `kind_label` the text for the
 row ("Ad Hoc / Charter", "Ad Hoc / Charter, Two Way", "Two Way, return", "Airport Transfer", "Disposal", "Shuttle, morning",
 "Shuttle, evening"). `site` is the trip's own site, else the first stop site the person covers (a site picked in
-`site_id` wins); `null` only when no site of the run is in view.
+`site_id` wins); `null` only when no site of the run is in view (no stop has a client site either, e.g. a trip made in Convoy OS with free-text stops).
 
 A School Bus run: the [School Live Ops row](../convoy-os/school-bus-live.md) (`occurrence_id`, `label`, `plate`,
 `driver`, `status`, `late_minutes`, `points`, `points_done`, `counts` of children, `next_stop { name, at_stop, expected_at }`,

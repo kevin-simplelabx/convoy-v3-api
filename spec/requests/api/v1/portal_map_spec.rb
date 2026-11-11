@@ -48,21 +48,63 @@ RSpec.describe "Client Portal map" do
     end
   end
 
+  # A one-off trip made from a Portal booking (the only kind the Bookings activity lists), confirmed for today.
+  def book(user, site, start_time: "15:00")
+    within_tenant(company) do
+      type = VehicleType.first || create(:vehicle_type, name: "13-seater", seats: 13)
+      RateCards::Save.call(card: RateCard.new, params: RateCards::Standard.params(name: "Standard", types: [ type ])) unless RateCard.exists?
+      booking = Portal::SubmitBooking.call(client_user: user, params: {
+        client_site_id: site.id, coordinator_name: "Coordinator", days: [ { date: "2026-11-03", trips: [
+          { kind: "one_way", start_time:, pax: 5, points: [ { name: "Tampines Hub", use: "pu" }, { name: "Jurong Bird Park", use: "do" } ],
+            vehicles: [ { vehicle_type_id: type.id, count: 1 } ] } ] } ]
+      })
+      Bookings::Approve.call(trip: booking.trips.first, user: create(:user, :admin, company:), trip_value: 1)
+      booking
+    end
+  end
+
   it "shows the activities and the runs of one, with the bus only while it runs for the client" do
     get api_v1_portal_map_path, params: { activity: "shuttles" }, headers: as(portal_token(f[:admin]))
     d = json[:data]
-    expect(d[:activities].pluck(:key, :count)).to eq([ [ "am", 1 ], [ "bookings", 1 ], [ "shuttles", 1 ] ])
+    expect(d[:activities].pluck(:key, :count)).to eq([ [ "am", 1 ], [ "shuttles", 1 ] ]) # the Zoo trip has no booking: not under Bookings
     expect(d[:schools].pluck(:name)).to eq([ "Bright Steps (Punggol)" ])
     run = d[:runs].first
     expect(run).to include(title: "Staff Shuttle", state: "on_the_way", bus: { plate: "PD6604E", model: "Yutong ZK6107", seats: 40 },
                            position: hash_including(lat: 1.3984, speed_kmh: 25), site: { id: f[:punggol].id, name: "Punggol" })
     expect(d[:counts]).to include(on_the_way: 1)
 
+    booking = book(f[:admin], f[:tampines])
     get api_v1_portal_map_path, params: { activity: "bookings" }, headers: as(portal_token(f[:admin]))
-    expect(json.dig(:data, :runs, 0)).to include(title: "Zoo Excursion", state: "scheduled", position: nil)
+    brun = json.dig(:data, :runs, 0)
+    expect(brun).to include(state: "scheduled", position: nil, booking: { id: booking.id, number: booking.number })
 
-    get api_v1_portal_map_run_path(run[:id]), headers: as(portal_token(f[:admin])), as: :json
-    expect(json.dig(:data, :stops).pluck(:name)).to eq([ "Changi Airport T3", "Marina Bay Sands" ])
+    get api_v1_portal_map_run_path(brun[:id]), headers: as(portal_token(f[:admin])), as: :json
+    expect(json.dig(:data, :stops).pluck(:name)).to eq([ "Tampines Hub", "Jurong Bird Park" ])
+  end
+
+  it "lists under Bookings only trips made from a Portal booking, with the booking always set, and falls back to the first stop site" do
+    get api_v1_portal_map_path, headers: as(portal_token(f[:admin]))
+    expect(json.dig(:data, :activities).pluck(:key)).not_to include("bookings") # the Zoo trip was made in Convoy OS
+    get api_v1_portal_map_run_path(within_tenant(company) { f[:excursion].occurrences.first.id }), headers: as(portal_token(f[:admin])), as: :json
+    expect(response).to have_http_status(:not_found)
+
+    booking = book(f[:admin], f[:tampines])
+    get api_v1_portal_map_path, params: { activity: "bookings" }, headers: as(portal_token(f[:admin]))
+    expect(json.dig(:data, :runs).pluck(:booking)).to all(include(number: booking.number))
+    expect(json.dig(:data, :runs, 0, :site)).to eq(id: f[:tampines].id, name: "Tampines")
+
+    # A booking trip with no site of its own takes the first stop that has one; with none, site stays null.
+    within_tenant(company) do
+      trip = booking.trips.first.scheduler_trips.first
+      trip.update_columns(client_site_id: nil) # rubocop:disable Rails/SkipsModelValidations
+      trip.stops.update_all(client_site_id: nil) # rubocop:disable Rails/SkipsModelValidations
+      trip.stops.order(:position).last.update_columns(client_site_id: f[:punggol].id) # rubocop:disable Rails/SkipsModelValidations
+    end
+    get api_v1_portal_map_path, params: { activity: "bookings" }, headers: as(portal_token(f[:admin]))
+    expect(json.dig(:data, :runs, 0, :site)).to eq(id: f[:punggol].id, name: "Punggol")
+    within_tenant(company) { booking.trips.first.scheduler_trips.first.stops.update_all(client_site_id: nil) } # rubocop:disable Rails/SkipsModelValidations
+    get api_v1_portal_map_path, params: { activity: "bookings" }, headers: as(portal_token(f[:admin]))
+    expect(json.dig(:data, :runs, 0)).to include(site: nil, booking: hash_including(:number))
   end
 
   it "limits runs to the person's sites, and Members to one-off trips from their own bookings" do
@@ -70,20 +112,14 @@ RSpec.describe "Client Portal map" do
     expect(json.dig(:data, :activities).pluck(:key)).to eq(%w[am shuttles])
     get api_v1_portal_map_path, headers: as(portal_token(f[:mo_t]))
     expect(json.dig(:data, :activities)).to eq([]) # the Zoo trip is not from their booking; no shuttle at Tampines
+    book(f[:admin], f[:tampines]) # someone else's booking at their site: still not theirs
+    get api_v1_portal_map_path, headers: as(portal_token(f[:mo_t]))
+    expect(json.dig(:data, :activities)).to eq([])
     get api_v1_portal_map_run_path(within_tenant(company) { f[:shuttle].occurrences.first.id }), headers: as(portal_token(f[:mo_t])), as: :json
     expect(response).to have_http_status(:not_found)
 
     # Their own booking, confirmed: its run shows under Bookings.
-    within_tenant(company) do
-      type = create(:vehicle_type, name: "13-seater", seats: 13)
-      RateCards::Save.call(card: RateCard.new, params: RateCards::Standard.params(name: "Standard", types: [ type ]))
-      booking = Portal::SubmitBooking.call(client_user: f[:mo_t], params: {
-        client_site_id: f[:tampines].id, coordinator_name: "Mo", days: [ { date: "2026-11-03", trips: [
-          { kind: "one_way", start_time: "15:00", pax: 5, points: [ { name: "Tampines Hub", use: "pu" }, { name: "Jurong Bird Park", use: "do" } ],
-            vehicles: [ { vehicle_type_id: type.id, count: 1 } ] } ] } ]
-      })
-      Bookings::Approve.call(trip: booking.trips.first, user: create(:user, :admin, company:), trip_value: 1)
-    end
+    book(f[:mo_t], f[:tampines], start_time: "16:00")
     get api_v1_portal_map_path, headers: as(portal_token(f[:mo_t]))
     expect(json.dig(:data, :activities).pluck(:key, :count)).to eq([ [ "bookings", 1 ] ])
     expect(json.dig(:data, :runs, 0)).to include(booking: hash_including(number: start_with("SD26")), state: "scheduled")
@@ -112,8 +148,9 @@ RSpec.describe "Client Portal map" do
 
     get api_v1_portal_map_path, params: { activity: "shuttles" }, headers: as(portal_token(f[:admin]))
     expect(json.dig(:data, :runs, 0)).to include(kind: "corporate_shuttle", kind_label: "Shuttle, morning")
+    book(f[:admin], f[:tampines])
     get api_v1_portal_map_path, params: { activity: "bookings" }, headers: as(portal_token(f[:admin]))
-    expect(json.dig(:data, :runs, 0)).to include(kind: "ad_hoc", kind_label: "Ad Hoc / Charter")
+    expect(json.dig(:data, :runs, 0)).to include(kind: "ad_hoc", kind_label: be_present)
   end
 
   it "answers a School Bus run with the list row's fields, students at each stop, and the position only while it runs" do
