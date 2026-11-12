@@ -14,7 +14,8 @@ module Occurrences
 
       last = TripOccurrence.visible.where(trip_id: trip.id, trip_run_id: @occ.trip_run_id, slot_no: @occ.slot_no, part: 1)
                            .where(date: ..@occ.date).order(date: :desc).limit(LOOK_BACK).to_a
-      moved = last.select { |o| o.overridden?(:vehicle_id) && o.vehicle_id }
+      # Only moves to a bus other than this run's own count: once the run is on the bus it was moved to, nothing differs.
+      moved = last.select { |o| o.overridden?(:vehicle_id) && o.vehicle_id && o.vehicle_id != @occ.vehicle_id }
       top_id, = moved.map(&:vehicle_id).tally.max_by { |_, n| n }
       top = top_id && Vehicle.find_by(id: top_id)
       {

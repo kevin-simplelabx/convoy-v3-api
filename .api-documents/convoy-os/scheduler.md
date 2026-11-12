@@ -266,7 +266,7 @@ Drawer response = the run row plus:
   "Covered by `plate` (`operator.name`), <range>". Back to the regular bus: `move` to `regular_vehicle_id`, `scope: "one"`.
 - `replacement`: the replacement on this run (section 9 shape) — the box at the top of the drawer.
 - `notice`: the banner notice active on this run now ("Notice on this trip"). `by` = name of the user who sent it (`null` for a system notice).
-- `bus_pattern` (recurring shuttle runs): `suggest: true` → show "A different bus on `moved` of its last `dates` dates" with
+- `bus_pattern` (recurring shuttle runs): `moved` counts only the dates moved by hand to a bus other than this run's own, so after "Make … the Regular Bus" it drops and `suggest` turns `false`. `suggest: true` → show "A different bus on `moved` of its last `dates` dates" with
   "Make `top_plate` the Regular Bus" (= move with `scope: later` to `top_vehicle_id`) and "Set No Fixed Bus" (5.9).
 - `changes`: Changes to This Trip / history of this run.
 - `ended_at` (every run row) is when the run ended: the driver pressed End in the app, or someone used Force End Trip.

@@ -4,6 +4,12 @@ Changes to existing Convoy OS endpoints made while building other apps (Convoy D
 on (renamed, removed or changed fields and endpoints). New optional fields are not listed here; they are in the menu
 documents. Newest first. Each item: what changed, before → after, and what the front-end has to do.
 
+## 12/11/2026 — Drawer `bus_pattern` after "Make <plate> the Regular Bus" (API-ISSUES §29; bug fix, no breaking change)
+
+| # | Endpoint / field | Before → after | Front-end |
+| --- | --- | --- | --- |
+| 1 | `GET /occurrences/:id` `bus_pattern` (`moved`, `suggest`, `top_*`) | hand moves to the bus the run is already on still counted, so `suggest` stayed `true` → only moves to a different bus count; `suggest` is `false` once the run is on its regular bus | Nothing |
+
 ## 12/11/2026 — Replace preview / save on a School Bus route run (API-ISSUES §28; bug fix, no breaking change)
 
 | # | Endpoint / field | Before → after | Front-end |
