@@ -108,6 +108,13 @@ class Replacement < ApplicationRecord
   scope :overlapping, ->(from, to) { where("starts_on <= ? AND ends_on >= ?", to, from) }
 
   def kind_name = KINDS[kind]
+
+  # Point this replacement at one run (a trip run or a School Bus route run). The run's own bus before any replacement is
+  # the original vehicle.
+  def attach_run(occ)
+    assign_attributes(scope: "run", trip_id: occ.trip_id, school_route_id: occ.school_route_id, run_date: occ.date, trip_run_id: occ.trip_run_id,
+                      slot_no: occ.slot_no, original_vehicle_id: occ.original_vehicle_id || occ.vehicle_id)
+  end
   def new_driver_label = driver&.name || operator_driver&.name || driver_name
 
   # Does it cover a run? A run replacement matches the run itself; a range one every run on the original bus.

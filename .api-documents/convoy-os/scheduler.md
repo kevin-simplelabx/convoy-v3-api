@@ -641,6 +641,7 @@ Pay per day is shared over the slots of the entry; per month also over the month
 ### 9.1 Preview (while the dialog is filled in)
 
 `GET /replacements/preview?occurrence_id=490&replacement[kind]=crew&replacement[vehicle_id]=15&replacement[arranged_by]=us`
+`occurrence_id` may be a School Bus route run as well as a trip run.
 (for Driver Away / Vehicle Down send `replacement[scope]=range&replacement[original_vehicle_id]=&replacement[starts_on]=&replacement[ends_on]=` instead of `occurrence_id`).
 
 ```json

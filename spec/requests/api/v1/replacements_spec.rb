@@ -196,4 +196,31 @@ RSpec.describe "Replacements" do
       expect(preview(replacement: { kind: "veh", scope: "range", original_vehicle_id: f[:c].id, starts_on: "2026-11-04", ends_on: "2026-11-05" })).to eq(none)
     end
   end
+
+  describe "on a School Bus route run" do
+    let!(:run) do
+      school = school_with_stops(company)
+      within_tenant(company) do
+        plan = engine_plan(school)
+        route = plan.routes.first
+        route.vehicle_changes.create!(vehicle: f[:a], effective_from: Date.current)
+        plan.update!(in_use: true)
+        Occurrences::Sync.call(routes: [ route.id ], from: Date.new(2026, 11, 4), to: Date.new(2026, 11, 4))
+        TripOccurrence.where(school_route_id: route.id, date: Date.new(2026, 11, 4)).first
+      end
+    end
+
+    it "previews the one run with the parents it reaches, then replaces the bus" do
+      get preview_api_v1_replacements_path, params: { occurrence_id: run.id, replacement: { kind: "veh", vehicle_id: f[:b].id } }
+      expect(json[:data]).to include(affected: 1, errors: [])
+      expect(json.dig(:data, :notify, :parents)).to include(routes: 1)
+      expect(json.dig(:data, :notify, :parents, :riders)).to be_positive
+
+      replace(occurrence_id: run.id, kind: "veh", vehicle_id: f[:b].id)
+      expect(response).to have_http_status(:created)
+      expect(json.dig(:data, :school_route_id)).to eq(run.school_route_id)
+      get api_v1_occurrence_path(run.id)
+      expect(json.dig(:data, :plate)).to eq("PD4472H")
+    end
+  end
 end

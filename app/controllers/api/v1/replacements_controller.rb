@@ -25,10 +25,8 @@ module Api
       def preview
         authorize Replacement
         rep = Replacement.new(rep_params)
-        if (occ = occurrence)
-          rep.assign_attributes(scope: "run", trip_id: occ.trip_id, run_date: occ.date, trip_run_id: occ.trip_run_id,
-                                slot_no: occ.slot_no, original_vehicle_id: occ.original_vehicle_id || occ.vehicle_id, starts_on: occ.date, ends_on: occ.date)
-        end
+        occ = occurrence
+        rep.attach_run(occ) if occ
         rep.validate
         affected = rep.original_vehicle_id ? Replacements::Affected.runs(rep) : TripOccurrence.none
         runs = affected.order(:starts_at).limit(200)

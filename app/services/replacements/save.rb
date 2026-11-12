@@ -32,8 +32,7 @@ module Replacements
 
     # The run's own bus before any replacement is the original vehicle.
     def attach_run
-      @rep.assign_attributes(scope: "run", trip_id: @occ.trip_id, school_route_id: @occ.school_route_id, run_date: @occ.date,
-                             trip_run_id: @occ.trip_run_id, slot_no: @occ.slot_no, original_vehicle_id: @occ.original_vehicle_id || @occ.vehicle_id)
+      @rep.attach_run(@occ)
       raise Error, "This run has no bus to replace" if @rep.original_vehicle_id.nil?
     end
 

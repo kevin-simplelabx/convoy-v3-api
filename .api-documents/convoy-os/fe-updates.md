@@ -4,6 +4,17 @@ Changes to existing Convoy OS endpoints made while building other apps (Convoy D
 on (renamed, removed or changed fields and endpoints). New optional fields are not listed here; they are in the menu
 documents. Newest first. Each item: what changed, before → after, and what the front-end has to do.
 
+## 12/11/2026 — Replace preview / save on a School Bus route run (API-ISSUES §28; bug fix, no breaking change)
+
+| # | Endpoint / field | Before → after | Front-end |
+| --- | --- | --- | --- |
+| 1 | `GET /replacements/preview?occurrence_id=` for a School Bus route run | `affected: 0`, `errors: ["Pick the run"]`, `notify` zeros (the preview did not know the route) → `affected: 1`, the run in `runs`, `message`, `notify.parents` (riders on the route), `errors: []` | Yes, a School Bus run can be replaced from its drawer: use the same Replace dialog and `POST /replacements` with `occurrence_id` as for a shuttle run |
+| 2 | `POST` / `PATCH /replacements` response | `school_route_id` was documented but missing → returned (`null` for a trip run) | Nothing; optional |
+
+Optimise (`POST /routes/:id/optimise`, `/plans/:id/optimise`): no API change. Checked against the real routing service
+(its `/optimise` test passes, the Rails side is specced). It only rewrites a plan, so test it on a plan you can edit;
+it answers `503 routing_unavailable` when the routing service cannot be reached.
+
 ## 11/11/2026 — Replace preview `notify` (API-ISSUES §27 "Replace"; no breaking change)
 
 | # | Endpoint / field | Before → after | Front-end |
