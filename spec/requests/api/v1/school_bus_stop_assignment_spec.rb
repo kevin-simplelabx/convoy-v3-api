@@ -93,7 +93,7 @@ RSpec.describe "School Bus stop assignment" do
     expect(json[:data]).to eq(unassigned: 1)
     expect(within_tenant(company) { sss.rider_point_links.pluck(:kind, :postal) }).to eq([ %w[disconnected 460101] ])
     post api_v1_school_remove_rider_links_path(sss), params: { links: [ { point_id: f[:s1].points.first.id } ] }, as: :json
-    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response).to have_http_status(:unprocessable_content)
   end
 
   it "unassigns the riders of the stop's points when it is unlinked, and only those" do

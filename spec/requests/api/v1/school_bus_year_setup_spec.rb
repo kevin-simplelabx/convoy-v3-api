@@ -72,7 +72,7 @@ RSpec.describe "School Bus year setup" do
 
   it "does not save or lock Bus Attendants from an empty body" do
     patch api_v1_school_bus_attendants_path(school), params: {}, as: :json
-    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response).to have_http_status(:unprocessable_content)
     expect(json.dig(:error, :message)).to eq("Send needs, sizes or provided_by")
     get api_v1_school_bus_attendants_path(school)
     expect(json[:data]).to include(saved: false, locked: nil)

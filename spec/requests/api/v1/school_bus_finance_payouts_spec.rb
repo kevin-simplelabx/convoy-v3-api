@@ -167,14 +167,14 @@ RSpec.describe "School Bus finance payouts" do
     a = row(board, "Alpha Bus")
     expect(a).to include(net: "-900.0", can: hash_including(edit: true, send: false, pay: false))
     post path(:send_to_finance), params: { month: "2026-11" }, as: :json
-    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response).to have_http_status(:unprocessable_content)
     expect(json[:error][:message]).to eq("Nothing to pay (deductions only)")
     expect(row(board, "Alpha Bus")).to include(status: "To Check")
 
     post path(:lines, f[:b]), params: { month: "2026-11", kind: "Taxi claim", adj_on: "2026-11-20", amount: 2300, reason: "Overcharge" }
     expect(row(board, "Beta Coaches")).to include(net: "0.0", can: hash_including(send: false))
     post path(:send_to_finance, f[:b]), params: { month: "2026-11" }, as: :json
-    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response).to have_http_status(:unprocessable_content)
 
     # A positive net is unchanged
     post path(:lines, f[:b]), params: { month: "2026-11", kind: "Extra trips", adj_on: "2026-11-21", amount: 100, reason: "Extra" }
