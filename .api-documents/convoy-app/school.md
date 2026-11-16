@@ -269,7 +269,8 @@ SimpleDrive will contact you"). `422` "This request is not waiting for the paren
 | Send Change | `POST /app/school/service_changes` | `{ service_change: { from, children: [ { dependant_id, service, cca } ] } }` |
 | Send Request to Stop | `POST /app/school/stops` | `{ stop: { last_on, why, why_note, children: [ { dependant_id } ] } }` |
 
-→ `201 { data: [request] }`. `422`: "Choose at least one child", "Choose a child who rides the school bus", "Choose the
+→ `201 { data: [request] }`. `422`: "Choose at least one child", "Choose a child who rides the school bus", "Pay the first
+invoice for <first> first" (accepted, first invoice not paid: nothing to renew, change or stop yet), "Choose the
 level for 2028", "<school> is not taking renewals now", "<first> already has a renewal for 2028", "Pick the date from the
 list", "Pick a different service for at least one child", "Pick a last day from tomorrow", "Say why the bus is no longer
 needed", "<first> already has a request to stop".

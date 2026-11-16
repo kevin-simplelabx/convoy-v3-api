@@ -209,6 +209,33 @@ RSpec.describe "Convoy App CCA bus" do
     expect(tenant { CcaStandingDay.count }).to eq(0)
   end
 
+  # Only children who ride: not one whose offer waits for its first invoice (on the rider list, not riding yet), and never a
+  # day before the rider's start or after the last bus day. Renew / Change Service / Stop refuse a pending offer too.
+  it "leaves out a child whose offer is unpaid and the days outside a rider's dates" do
+    tenant do
+      f[:school].riders.find_by!(rid: "R1").update!(starts_on: "2027-01-21")
+      f[:school].bus_requests.create!(academic_year: f[:year], kind: "new", source: "app", status: "Accepted", submitted_at: 2.days.ago,
+                                      offer_by: 1.day.from_now, household: home, dependant: lucas, child_name: "Lucas Tan")
+    end
+    kids = week[:kids]
+    expect(kids.pluck(:name)).to eq([ "Ethan Tan" ])
+    expect(kids.first[:days].map { it.slice(:label, :tag, :can_pick) }).to eq([
+      { label: "Tue 19 Jan", tag: "No Bus Yet", can_pick: false }, { label: "Thu 21 Jan", tag: nil, can_pick: true }
+    ])
+    expect(kids.first[:days].first[:sub]).to eq("Ethan's bus starts on 21 Jan")
+
+    api(:post, api_v1_convoy_app_cca_quote_path, school_id: f[:school].id, method: "paynow", picks: [ pick(ethan, "2027-01-19") ])
+    expect(json.dig(:error, :message)).to eq("Ethan's bus starts on 21 Jan")
+    api(:post, api_v1_convoy_app_cca_quote_path, school_id: f[:school].id, method: "paynow", picks: [ pick(lucas, "2027-01-21") ])
+    expect(json.dig(:error, :message)).to eq("Pick a child who rides this school's bus")
+    tenant { f[:school].riders.find_by!(rid: "R1").update!(starts_on: "2027-01-04", ends_on: "2027-01-19") }
+    api(:post, api_v1_convoy_app_cca_quote_path, school_id: f[:school].id, method: "paynow", picks: [ pick(ethan, "2027-01-21") ])
+    expect(json.dig(:error, :message)).to eq("Ethan's last bus day is 19 Jan")
+
+    expect { ConvoyApp::Parents::StopService.call(member: home.members.first, params: { children: [ { dependant_id: lucas.id } ] }) }
+      .to raise_error(ApplicationService::Error, "Pay the first invoice for Lucas first")
+  end
+
   it "checks the Billing Contact, the children and the school" do
     api(:post, api_v1_convoy_app_cca_payments_path, token: david[1], school_id: f[:school].id, method: "paynow", picks: [ pick(ethan, "2027-01-19") ])
     expect(response).to have_http_status(:forbidden)

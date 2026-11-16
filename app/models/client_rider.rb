@@ -48,4 +48,7 @@ class ClientRider < ApplicationRecord
 
   # The links a person can still act on or see: waiting for them, or accepted.
   scope :open_links, -> { where(status: %w[invited accepted]) }
+  # Accepted links of a kept client at an active company: the employers the app shows and the shuttle alert jobs write
+  # to (the work email's 12 months are checked per account: ConvoyApp::Shuttles.email_live?).
+  scope :live, -> { accepted.where(client_id: Client.kept.select(:id), company_id: Company.active.select(:id)) }
 end

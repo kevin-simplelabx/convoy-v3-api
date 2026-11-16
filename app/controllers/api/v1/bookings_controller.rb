@@ -5,7 +5,7 @@ module Api
     class BookingsController < BaseController
       LIST_INCLUDES = [ :client, :client_site, :days, { trips: :day, approval: ::Portal::Approval::INCLUDES } ].freeze
       FULL_INCLUDES = [ :client, :client_site, :created_by, :attachments, :bill_fund, :copied_from, :payments, :change_replies,
-                        { cancel_requests: %i[booking_trip booking_day resolved_by] },
+                        { cancel_requests: %i[booking_trip booking_day resolved_by request_trips] },
                         { approval: ::Portal::Approval::INCLUDES },
                         { trips: :day, days: { trips: [ :day, :points, :standbys, :approved_by, :rejected_by, { vehicles: :vehicle_type },
                                                         { changes_made: :changed_by }, { scheduler_trips: [] } ] } } ].freeze

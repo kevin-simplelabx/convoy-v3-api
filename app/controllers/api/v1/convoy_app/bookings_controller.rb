@@ -34,14 +34,18 @@ module Api
         end
 
         # POST /app/bookings { account, payer: client|self, method (self), booking: {...}, contact: { me } | { name, phone },
-        #   receipt: { name, uen, address } (Personal), agree: true, copied_from_id } → booking detail (201)
+        #   receipt: { name, uen, address } (Personal), agree: true, copied_from_id, submit_token (one per form) }
+        #   → booking detail (201; 200 with the booking already made when the same submit_token comes again)
         def create
-          body = params.permit(:payer, :method, :agree, :copied_from_id, contact: %i[me name phone], receipt: %i[name uen address]).to_h
+          body = params.permit(:payer, :method, :agree, :copied_from_id, :submit_token, contact: %i[me name phone], receipt: %i[name uen address]).to_h
+          repeated = false
           data = within do
-            booking = ::ConvoyApp::Bookings::Submit.call(account:, params: body.merge(booking: booking_params.to_h))
+            submit = ::ConvoyApp::Bookings::Submit.new(account:, params: body.merge(booking: booking_params.to_h))
+            booking = submit.call
+            repeated = submit.repeated
             detail(account, booking)
           end
-          render json: { data: }, status: :created
+          render json: { data: }, status: repeated ? :ok : :created
         end
       end
     end

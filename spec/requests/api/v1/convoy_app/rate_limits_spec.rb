@@ -56,6 +56,22 @@ RSpec.describe "Convoy App rate limits" do
     expect(response).to have_http_status(:too_many_requests)
   end
 
+  it "limits Manual Invite checks to 10 per 10 minutes per account (from any IP) and Quick Invite links to 20 a minute per IP" do
+    account, token = app_user(mobile: "9188 2045", name: %w[Rachel Tan])
+    home = Household.create!(name: "Tan Family", postal: "460412", block: "412", street: "Bedok North Ave 2", created_by: account)
+    home.members.create!(app_account: account, status: :active, admin: true, billing_contact: true, invited_via: :creator)
+    check = ->(ip) { post "/api/v1/app/household/invites/check", params: { contacts: [ { name: "David", phone: "9177 3301" } ] }, headers: app_as(token).merge("REMOTE_ADDR" => ip), as: :json }
+    10.times { |i| check.call("10.0.6.#{i}") }
+    expect(response).to have_http_status(:ok)
+    check.call("10.0.6.99")
+    expect(response).to have_http_status(:too_many_requests)
+
+    20.times { get "/api/v1/app/household/links/TAN-ZZZZZZ", headers: app_as(token).merge("REMOTE_ADDR" => "10.0.7.1") }
+    expect(response).to have_http_status(:not_found)
+    get "/api/v1/app/household/links/TAN-ZZZZZZ", headers: app_as(token).merge("REMOTE_ADDR" => "10.0.7.1")
+    expect(response).to have_http_status(:too_many_requests)
+  end
+
   it "stops a 6th code in an hour for one mobile even from other IPs" do
     5.times { |i| ask_code("9188 2045", ip: "10.0.5.#{i}") }
     ask_code("9188 2045", ip: "10.0.5.9")

@@ -33,6 +33,7 @@
 #  luggage_oversized              :integer          default(0), not null
 #  meet_and_greet                 :boolean          default(FALSE), not null
 #  note                           :text
+#  paid_amount                    :decimal(12, 2)
 #  pax                            :integer          default(0), not null
 #  position                       :integer          default(0), not null
 #  rejected_at                    :datetime
@@ -144,6 +145,8 @@ class BookingTrip < ApplicationRecord
   def status_label = approved? ? "Approved, #{unassigned ? 'Unassigned' : 'Assigned'}" : STATUS_LABELS[status]
   def kind_name = KIND_NAMES[kind]
   def date = day.date
+  # What the trip paid (prepaid booking), else its estimate.
+  def paid_share = paid_amount || estimate_amount
   def out_points = points.select { |p| p.leg == "out" }.sort_by(&:position)
 
   # The way back: its own points once changed, else the way there reversed (pick-up and drop-off swapped).

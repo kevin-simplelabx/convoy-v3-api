@@ -18,10 +18,7 @@ class AppAccountsPurgeJob < ApplicationJob
       household.with_lock do
         next if household.members.active.exists?
 
-        household.dependants.each(&:discard!)
-        household.members.delete_all
-        household.invite_links.delete_all
-        household.discard!
+        ConvoyApp::Households::Delete.discard!(household)
       end
     end
   end

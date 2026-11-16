@@ -1,6 +1,6 @@
 # Money of a prepaid booking (payer self: Personal, or Pay Myself from a school account), simulated like every Convoy App
 # payment (ConvoyApp::Payments::Simulator stands in for the provider). Paid once when it is sent: the estimate plus the
-# method's card fee. Refunded when trips go: the trips' share of what was paid (their estimate), less any cancellation
+# method's card fee. Refunded when trips go: what those trips paid (booking_trips.paid_amount), less any cancellation
 # charge, card fee back in proportion. Settled here, never on a Client Invoice (ClientInvoices::Billable leaves them out).
 #   Bookings::Prepaid.pay!(booking:, option:)            -> BookingPayment (payment)
 #   Bookings::Prepaid.refund!(booking:, trips:, fee: 0) -> BookingPayment (refund) or nil (nothing to give back)
@@ -10,6 +10,8 @@ module Bookings
 
     def pay!(booking:, option:)
       charge = ConvoyApp::Payments::Simulator.call(option:, amount: booking.estimate_amount)
+      # Each trip keeps what it paid (its estimate now): refunds never follow an estimate worked out again later.
+      booking.trips.each { it.update!(paid_amount: it.estimate_amount) }
       booking.payments.create!(company_id: booking.company_id, kind: "payment", method: option.key, method_label: option.label,
                                amount: charge.amount, card_fee: charge.admin_fee, reference: charge.reference, paid_at: charge.paid_at)
     end
@@ -18,7 +20,7 @@ module Bookings
       return unless booking.paid_by_self?
 
       payment = booking.payments.find(&:payment?) or return
-      share = trips.sum(&:estimate_amount).to_d
+      share = trips.sum(&:paid_share).to_d
       amount = [ [ share - fee.to_d, 0 ].max, left(booking) ].min.round(2)
       return unless amount.positive?
 

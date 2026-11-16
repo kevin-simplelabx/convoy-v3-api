@@ -33,6 +33,11 @@ module RateCards
       end
     end
 
+    # Whether the card has a rate above 0 for this vehicle type in any period (trip or hourly).
+    def priced?(vehicle_type)
+      card.periods.any? { |p| p.rates.any? { |r| r.vehicle_type_id == vehicle_type.id && (r.trip_rate.to_d.positive? || r.hourly_rate.to_d.positive?) } }
+    end
+
     # The distance band amount for the route km (each one-way leg); the last band may charge per km beyond the one before.
     def distance_add(km, vehicle_type)
       return 0.to_d unless card.distance_pricing? && km.to_f.positive?

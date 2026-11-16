@@ -310,6 +310,10 @@ start, fee). CCA, the fixed-start reason and the form answers come only from the
 | `POST /bus_requests/:id/reoffer` | A lapsed offer again: the same quote and invoice number, new hours to pay |
 | `POST /bus_requests/:id/record_payment` | Record First Invoice Paid: `{ method }`, required (`422` "Pick how it was paid" when empty or not one of `meta.methods`). The request becomes Active |
 
+Accept (one or many) of a Convoy App request whose Family was deleted in the app → `422` "<child>'s Family was deleted in
+the Convoy App. This request can't be accepted" (deleting the Family also withdraws its open applications, logged
+"Withdrawn: the Family was deleted in the Convoy App").
+
 **Add Application.**
 
 - Body: `{ academic_year_id, child_name, parent_name, parent_phone, parent_email, level, address, postal, am, pm, start_on, fee_paid }`.

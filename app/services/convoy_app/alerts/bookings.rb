@@ -26,14 +26,20 @@ module ConvoyApp
                                           target_id: @booking.id, dedupe_key: "booking:#{@kind}:#{key}"))
       end
 
-      # The app accounts of the booking: Pay Myself / app booker, the Individual client's person, the linked client user.
+      # The app accounts of the booking: Pay Myself / app booker, the Individual client's person, the linked client user while
+      # the link can still open the booking (Bookings.link_live?: a paused or removed link is not told).
       def accounts
-        user = @booking.created_by_client_user
-        linked = user&.app_account_id if user&.app_link_status == "accepted"
-        [ @booking.created_by_app_account_id, @booking.client&.app_account_id, linked ].compact.uniq
+        [ @booking.created_by_app_account_id, @booking.client&.app_account_id, linked_account_id ].compact.uniq
       end
 
       private
+
+      def linked_account_id
+        user = @booking.created_by_client_user
+        return unless user&.app_account && @booking.client&.kept? && Company.active.exists?(id: @booking.company_id)
+
+        user.app_account_id if ConvoyApp::Bookings.link_live?(user, user.app_account, @at.to_date)
+      end
 
       def tc = @booking.company.decorate.display_name
       def name = [ @booking.number, @booking.title ].compact_blank.join(" ")

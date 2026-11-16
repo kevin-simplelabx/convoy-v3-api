@@ -78,7 +78,8 @@ module ConvoyApp
         ns = ctx.calendar.(date)
         ph = CcaRides.phase(date, ctx.today)
         left = [ s.seats - ctx.taken[date].to_i, 0 ].max
-        can = b.nil? && off.nil? && ns.nil? && (ph == "open" || (ph == "late" && left.positive?))
+        out = Cca.outside(kid, date)
+        can = b.nil? && off.nil? && ns.nil? && out.nil? && (ph == "open" || (ph == "late" && left.positive?))
         picked = can && ctx.upcoming && standing.include?(date.cwday)
         row = { date:, label: CcaRides.label(date), phase: ph, seats_left: left, can_pick: can, picked_by_same_days: picked, tag: nil, tone: "neutral", sub: nil,
                 booking: b && { id: b.id, paid_on: b.paid_on, method: b.method, late: b.late, not_riding: b.not_riding, price: b.price, bill_id: b.school_bill_id },
@@ -91,6 +92,8 @@ module ConvoyApp
           row.merge(tag: ph == "past" ? (b.not_riding ? "Did Not Ride" : "Rode") : (b.not_riding ? "Not Riding" : "Booked"), tone: b.not_riding ? "neutral" : "success",
                     sub: (b.not_riding ? "Charged · the bus will not wait" : "Paid #{b.paid_on.strftime('%-d %b %Y')} · #{b.method}") + (b.late ? " · added after the cut-off" : ""),
                     can_not_riding: ph != "past", not_riding_label: b.not_riding ? "Riding After All" : "Not Riding")
+        elsif out
+          row.merge(tag: "No Bus Yet", sub: out)
         elsif %w[past today].include?(ph)
           row.merge(tag: ph == "today" ? "Closed" : "Not Booked", sub: ph == "today" ? "Rides for today can no longer be added" : "Not booked")
         elsif !can

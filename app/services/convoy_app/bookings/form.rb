@@ -1,7 +1,8 @@
 # Convoy App › New Booking: what the form offers on a booking account. Who Pays: a school / company account offers the
 # organisation (invoiced after the trip, its approval flow) and Pay Myself (prepaid, no approval, billed to the person's
 # Individual client at that company); Personal offers Pay Myself only (Bill to My Company opens the add-work-email sheet,
-# FE). Each payer has its vehicle types (the client's Bookable Vehicles; Pay Myself: every type the company offers).
+# FE). Each payer has its vehicle types (the client's Bookable Vehicles; Pay Myself: every type the company offers that
+# the rate card prices).
 # The organisation also brings its Bill To funds, its sites (a client with sites needs one, as in the Client Portal) and
 # its default PO. Pay Myself brings the ways to pay (Finance Settings). Waiting time policy from the rate card.
 # Inside `within`.
@@ -36,8 +37,12 @@ module ConvoyApp
           default_po: @account.client.default_po, methods: [] }
       end
 
+      # Only the vehicle types the person's rate card (their Individual client's, else the default) has a rate for: a
+      # prepaid booking is charged its estimate, so a vehicle without a price can't be booked here.
       def self_payer
-        types = VehicleType.enabled_for(@account.company).order(:seats, :name).map { { id: it.id, name: it.name, seats: it.seats } }
+        pricer = ::Bookings::Estimate.pricer_for(Bookings.individual_of(@account.app_account))
+        types = VehicleType.enabled_for(@account.company).order(:seats, :name).select { pricer&.priced?(it) }
+                           .map { { id: it.id, name: it.name, seats: it.seats } }
         { key: "self", label: "Pay Myself", sub: @account.personal? ? "Card or PayNow" : "Pay now by card or PayNow · no approval", prepaid: true,
           vehicle_types: types, funds: [], fund_required: false, sites: [], site_required: false, default_po: nil,
           methods: Bookings.payment_options.map { it.json.merge(fee_text: it.fee_kind == "pct" ? "+#{it.fee.to_s('F').sub(/\.0\z/, '')}% card fee" : "No fee") },

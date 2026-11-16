@@ -17,10 +17,17 @@ module ConvoyApp
         Parents.companies(household).flat_map do |company|
           Parents.within(company) do
             day = today || Date.current
-            FamilyRider.where(dependant_id: deps.keys, family_id: Family.where(household_id: household.id).select(:id)).includes(:family, school: :company)
-                       .order(:id).filter_map do |fr|
-              rider = SchoolRider.of_school_on(fr.school, day).find_by(rid: fr.rid) ||
-                      SchoolRider.where(school: fr.school, rid: fr.rid).where(starts_on: day..).order(:starts_on).first
+            frs = FamilyRider.where(dependant_id: deps.keys, family_id: Family.where(household_id: household.id).select(:id)).includes(:family, school: :company)
+                             .order(:id).to_a
+            # Per school: the riders on the list that day, else the first one starting later (one query each, not per child).
+            riders = frs.group_by(&:school).to_h do |school, list|
+              rids = list.map(&:rid)
+              now = SchoolRider.of_school_on(school, day).where(rid: rids).index_by(&:rid)
+              later = SchoolRider.where(school:, rid: rids - now.keys).where(starts_on: day..).order(:starts_on).to_a.group_by(&:rid).transform_values(&:first)
+              [ school.id, later.merge(now) ]
+            end
+            frs.filter_map do |fr|
+              rider = riders.dig(fr.school_id, fr.rid)
               rider && Kid.new(dependant: deps[fr.dependant_id], rider:, family: fr.family, school: fr.school, company:)
             end
           end
@@ -41,7 +48,17 @@ module ConvoyApp
         raise Error, "Choose at least one child" if ids.empty?
 
         kids = self.class.kids(@household)
-        ids.uniq.map { |id| kids.find { it.dependant.id == id } or raise Error, "Choose a child who rides the school bus" }
+        chosen = ids.uniq.map { |id| kids.find { it.dependant.id == id } or raise Error, "Choose a child who rides the school bus" }
+        not_pending!(chosen)
+        chosen
+      end
+
+      # A child whose offer waits for its first invoice is listed but does not ride yet: nothing to renew, change or stop.
+      def not_pending!(chosen)
+        chosen.group_by(&:company).each do |company, list|
+          pending = Parents.within(company) { Parents.pending_offer_ids(list.map { it.dependant.id }) }
+          (kid = list.find { pending.include?(it.dependant.id) }) and raise Error, "Pay the first invoice for #{kid.dependant.first_name} first"
+        end
       end
 
       def per(kid) = Array(@params[:children]).map { it.respond_to?(:to_h) ? it.to_h.symbolize_keys : {} }.find { it[:dependant_id].to_i == kid.dependant.id } || {}

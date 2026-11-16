@@ -165,12 +165,14 @@ Household › Adults › Add Family Members opens Quick Invite or Manual Invite.
 ### 5.1 Quick Invite: `POST /app/household/invite_link`
 
 ```json
-{ "data": { "token": "TAN-7KQ2", "url": "https://convoy.sg/j/TAN-7KQ2", "expires_at": "2026-11-23T10:15:00+08:00",
-            "message": "Rachel Tan has invited you to join their Convoy for Family account to manage the family travel needs. Join here: https://convoy.sg/j/TAN-7KQ2" } }
+{ "data": { "token": "TAN-7KQ2XM", "url": "https://convoy.sg/j/TAN-7KQ2XM", "expires_at": "2026-11-23T10:15:00+08:00",
+            "message": "Rachel Tan has invited you to join their Convoy for Family account to manage the family travel needs. Join here: https://convoy.sg/j/TAN-7KQ2XM" } }
 ```
 
 Show `message`; Copy Link / Messages / WhatsApp / Telegram / More share it from the phone. The link works **7 days**; the same live
 link is returned while it lasts, a new one after it ends. Nobody joins without the Admin approving.
+The token is the family name's first letters + 6 characters (links made before 17/11/2026 have 4 and still work); never
+validate its length in the app.
 
 ### 5.2 The person opens the link
 
@@ -181,7 +183,7 @@ The link opens the app (deep link `convoy.sg/j/<token>`): the person signs in (o
 - `POST /app/household/links/:token/join` → `201` `{ "data": { "status": "requested", "family": "Tan Family" } }`. Show
   "Waiting for the Admin to approve". Sending it again changes nothing.
 
-Errors: `404` no such link; `422` with `code: "link_expired"` ("This invite link has expired. Ask for a new one"; also when the Family
+Errors: `429` after 20 link calls a minute from one IP (the usual `too_many_requests` body); `404` no such link; `422` with `code: "link_expired"` ("This invite link has expired. Ask for a new one"; also when the Family
 was deleted); `422` "You are already in a Family". These calls work for a person without a Family.
 
 ### 5.3 Asked to Join (Admin)
@@ -222,6 +224,9 @@ hand, mobile `8` or `9` + 7 digits): the API never searches Convoy users.
 - `link_for`: contacts without an account. Go to the "Invite the Rest by Link" step and show the Quick Invite message ([§ 5.1](#51-quick-invite-post-apphouseholdinvite_link)); they ask to join and the Admin approves. When `link_for` is empty, finish.
 - Sending the same person again re-sends (a declined invite becomes Invited again). A person already in the Family is skipped.
 - `422` "Choose at least one contact", "Choose how <first> is related", "Check the mobile number of <name>".
+- Both calls: up to **50 contacts** a call (`422 too_many_contacts` "Pick up to 50 contacts at a time"), and **10 calls per 10
+  minutes** per account (`429 too_many_requests` with `retry_after`): check only the contacts the person picked, never the whole
+  address book.
 
 ### 5.5 Accept / Not Me
 
@@ -283,6 +288,8 @@ requests are removed for every adult in it. Your own account stays, with your sh
 transport company must keep stay with them."
 
 → `200` `{ "data": { "deleted": true } }`; then `GET /app/household` answers `null` and the person can Set Up Your Family again.
+Bus service applications still open (Requested, Under Review, Waitlisted, a lapsed offer) are **withdrawn** with it, so the
+transport company can't accept one for a child who is no longer in the app.
 
 **Blocked** while a child has an active bus service, an accepted request or an unpaid bill: `422`
 `{ "error": { "code": "family_blocked", "message": "This Family can't be deleted yet. Stop the service with the transport company and settle invoices first.", "details": { "reasons": [ { "code": "active_service", "label": "..." } ] } } }`

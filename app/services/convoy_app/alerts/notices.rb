@@ -37,7 +37,7 @@ module ConvoyApp
         trip = notice.trip
         return 0 unless notice.to_riders && trip&.kind == "corporate_shuttle"
 
-        riders = ClientRider.where(status: "accepted", client_id: trip.client_id).to_a
+        riders = ClientRider.live.where(client_id: trip.client_id).to_a
         accounts = AppAccount.where(id: riders.map(&:app_account_id)).includes(:identities).index_by(&:id)
         saved = ShuttleAlertSetting.includes(:setting_runs).where(app_account_id: accounts.keys, trip_id: trip.id).index_by(&:app_account_id)
         usuals = ShuttleUsual.includes(:trip_run).where(app_account_id: accounts.keys, client_id: trip.client_id).index_by(&:app_account_id)
@@ -54,10 +54,7 @@ module ConvoyApp
       end
 
       # The rider's work email is verified within 12 months and Pause Alerts is not set.
-      def live?(account, rider)
-        identity = account.identities.find { it.email? && it.work? && it.value == rider.matched_email }
-        identity && !identity.links_paused?(Date.current) && Shuttles::AlertSettings.paused_until(account).nil?
-      end
+      def live?(account, rider) = Shuttles.email_live?(account, rider) && Shuttles::AlertSettings.paused_until(account).nil?
 
       def base(notice)
         { body: notice.message, company_id: @company.id, notice_id: notice.id, banner_until: notice.banner ? notice.ends_at : nil,

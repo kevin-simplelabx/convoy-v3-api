@@ -155,6 +155,8 @@ bus **per ride** (OS CCA Rides on, price above 0) and the Family has a child rid
   only on Next Week before the cut-off, and `urgent` is true the day before and the day of (orange). The cut-off is
   **Saturday 23:59 in the company's time** (`closes_at`); from Sunday 00:00 the week is "late": a ride can still be added
   while the bus has a seat, and is paid at once. Never decide the cut-off from the phone's clock: use `phase`.
+- **Children** are those who ride: a child whose offer waits for its first invoice (Accepted / Lapsed, not paid) is not
+  listed until it is paid.
 - **Each child**: `same_days` (the switch under the name, only `shown` on Next Week) and `days`: the school's CCA bus days of
   the week. A day's fields:
   - `can_pick`: **Add Ride** / **Riding** pill (the FE keeps what is picked locally). `picked_by_same_days`: start it as
@@ -163,7 +165,8 @@ bus **per ride** (OS CCA Rides on, price above 0) and the Family has a child rid
     not run, "<why> · S$8.00 credit" when booked), **No School** (holiday, "No Service" day, outside CCA periods), **Booked**
     (success, "Paid 13 Jan 2027 · PayNow", " · added after the cut-off"), **Not Riding** (neutral, "Charged · the bus will
     not wait"), **Rode** / **Did Not Ride** (the day is past), **Closed** (today), **Not Booked** (past), **Full** (danger,
-    seats gone). A pickable day has `tag: null`; after the cut-off its `sub` is "After the cut-off · 2 seats left · paid at once".
+    seats gone), **No Bus Yet** (the day is before the child's bus starts, "Ethan's bus starts on 21 Jan", or after their
+    last bus day, "Ethan's last bus day is 19 Jan"). A pickable day has `tag: null`; after the cut-off its `sub` is "After the cut-off · 2 seats left · paid at once".
   - `booking { id, paid_on, method, late, not_riding, price, bill_id }` when booked. `can_not_riding` shows the ghost button
     labelled `not_riding_label` ("Not Riding" / "Riding After All"). `phase`: `past`, `today`, `late`, `open`. `seats_left`
     counts riders who did not say Not Riding.
@@ -207,7 +210,8 @@ and paid at once, listed in Fees.
 Rules checked (`422` messages the HTML shows): not charged per ride at this school; pick at least one day; the CCA bus does
 not run on <weekday>s; <day> can no longer be booked (today or past); only next week can be booked; the CCA bus is not running
 on <day> (Bus Not Running); there is no CCA bus on <day> (no school); <child> is already booked on <day>; the CCA bus on <day>
-is full (after the cut-off only). Paying checks again under a lock, so two parents cannot take the last seat together.
+is full (after the cut-off only); "<first>'s bus starts on <d Mon>" / "<first>'s last bus day is <d Mon>" (outside the rider's
+dates); "Pick a child who rides this school's bus" (also a child whose first invoice is not paid yet). Paying checks again under a lock, so two parents cannot take the last seat together.
 
 ## 7. Not Riding and Same Days Every Week
 

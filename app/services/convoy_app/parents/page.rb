@@ -66,7 +66,7 @@ module ConvoyApp
 
       def request_card(req)
         Parents.within(req.company) do
-          req = BusRequest.includes(:registration_bill, :academic_year, school: :company, first_bill: :payments).find(req.id)
+          req = BusRequest.includes({ registration_bill: :lines }, :academic_year, school: :company, first_bill: :payments).find(req.id)
           st = req.live_status
           tc = req.school.company.name
           b = Present.badge(req)

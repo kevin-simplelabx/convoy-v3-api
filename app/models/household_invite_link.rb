@@ -1,4 +1,4 @@
-# The Quick Invite link of a Household ("convoy.sg/j/TAN-7KQ2"): works 7 days. Whoever opens it signs in and asks to join;
+# The Quick Invite link of a Household ("convoy.sg/j/TAN-7KQ2XM"): works 7 days. Whoever opens it signs in and asks to join;
 # the Admin approves (Asked to Join), nobody joins without approval.
 # == Schema Information
 #
@@ -26,6 +26,7 @@
 #
 class HouseholdInviteLink < ApplicationRecord
   VALID_FOR = 7.days
+  TOKEN_CHARS = 6
   URL = "https://convoy.sg/j/%s".freeze
 
   belongs_to :household
@@ -42,13 +43,14 @@ class HouseholdInviteLink < ApplicationRecord
 
   def set_expiry = self.expires_at ||= VALID_FOR.from_now
 
-  # "TAN-7KQ2": the first letters of the family name and 4 characters that are easy to read out (no 0 / O / 1 / I).
+  # "TAN-7KQ2XM": the first letters of the family name and 6 characters that are easy to read out (no 0 / O / 1 / I); about
+  # 887 million per prefix, so a link can't be guessed (links made before 17/11/2026 have 4 and keep working).
   def set_token
     return if token.present?
 
     prefix = household.name.to_s.upcase.gsub(/[^A-Z]/, "")[0, 3].presence || "FAM"
     loop do
-      self.token = "#{prefix}-#{Array.new(4) { %w[2 3 4 5 6 7 8 9 A B C D E F G H J K L M N P Q R S T U V W X Y Z].sample }.join}"
+      self.token = "#{prefix}-#{Array.new(TOKEN_CHARS) { %w[2 3 4 5 6 7 8 9 A B C D E F G H J K L M N P Q R S T U V W X Y Z].sample }.join}"
       break unless self.class.exists?(token:)
     end
   end

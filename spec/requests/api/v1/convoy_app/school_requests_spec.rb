@@ -163,6 +163,39 @@ RSpec.describe "Convoy App school bus requests" do
     expect(response).to have_http_status(:not_found)
   end
 
+  # Each check runs again on the rows as they are now (household / request lock): a second submission sent at the same
+  # time, or a withdraw after the first invoice was paid, is refused; a deleted Family's open applications are withdrawn
+  # so Convoy OS can't accept one for a child who no longer exists.
+  it "sends a child's application once, withdraws only an open one, and withdraws open ones when the Family is deleted" do
+    calls = 0
+    allow_any_instance_of(ConvoyApp::Parents::Submit).to receive(:open_request?).and_wrap_original do |m, *args| # rubocop:disable RSpec/AnyInstance
+      (calls += 1) == 1 ? false : m.call(*args) # the first check ran before the other submission was saved
+    end
+    apply(child(ethan))
+    expect(response).to have_http_status(:created), json.inspect
+    apply(child(ethan))
+    expect(json.dig(:error, :message)).to eq("Ethan already has a bus request for 2027")
+    expect(tenant { BusRequest.where(dependant_id: ethan.id).count }).to eq(1)
+
+    stale = tenant { BusRequest.find_by!(dependant_id: ethan.id) }
+    tenant { BusRequest.where(id: stale.id).update_all(status: "Active") } # rubocop:disable Rails/SkipsModelValidations -- paid meanwhile
+    expect { tenant { ConvoyApp::Parents::Withdraw.call(stale, account: rachel[0]) } }
+      .to raise_error(ApplicationService::Error, "This request can no longer be withdrawn")
+    tenant { BusRequest.where(id: stale.id).update_all(status: "Requested") } # rubocop:disable Rails/SkipsModelValidations
+
+    allow(ConvoyApp::Households::BusService).to receive(:delete_blockers).and_return([])
+    api(:delete, api_v1_convoy_app_household_path)
+    expect(response).to have_http_status(:ok), json.inspect
+    req = tenant { BusRequest.find(stale.id) }
+    expect(req.status).to eq("Withdrawn")
+    expect(tenant { req.events.map(&:text) }).to include("Withdrawn: the Family was deleted in the Convoy App")
+
+    tenant { BusRequest.where(id: stale.id).update_all(status: "Requested") } # rubocop:disable Rails/SkipsModelValidations -- as if left open
+    sign_in_as(staff)
+    post accept_api_v1_bus_request_path(stale.id), params: { amount: 840, start_on: "2027-01-04" }, as: :json
+    expect(json.dig(:error, :message)).to eq("Ethan Tan's Family was deleted in the Convoy App. This request can't be accepted")
+  end
+
   it "withdraws, and links the Family into the company's families when Convoy OS accepts" do
     apply(child(ethan), child(lucas))
     ids = json[:data].pluck(:id)

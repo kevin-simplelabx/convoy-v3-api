@@ -30,6 +30,7 @@ module Bookings
         @old_trips = @old_days.values.flat_map(&:trips).index_by(&:id)
         @days = build_days
         remove_missing
+        check_prepaid
         check_days
         estimate
         persist
@@ -87,6 +88,7 @@ module Bookings
       end
 
       before = TripSummary.call(trip, trip.day.date) if trip.persisted?
+      (@old_vehicles ||= {})[trip.id] = vehicle_counts(trip.vehicles) if trip.persisted?
       trip.day = day
       trip.position = position
       [ trip.points, trip.standbys, trip.vehicles ].each(&:delete_all) if trip.persisted?
@@ -115,6 +117,25 @@ module Bookings
       @remove_trips = @old_trips.values - kept_trips
       @remove_days = @old_days.values - kept_days
     end
+
+    # A booking paid in the Convoy App (prepaid) keeps what was paid: a trip can't be removed (decline it, which refunds
+    # it) and no trip or vehicle can be added (a new booking does that). Times, stops and contact may still change.
+    def check_prepaid
+      return unless @booking.persisted? && @booking.paid_by_self?
+
+      raise Error, "This booking was paid in the Convoy App. Decline the trip instead of removing it: the client is refunded" if @remove_trips.any?
+
+      trips = @days.flat_map(&:last)
+      raise Error, "This booking was paid in the Convoy App. Trips can't be added: make a new booking" if trips.any?(&:new_record?)
+
+      added = trips.any? do |t|
+        before = @old_vehicles&.dig(t.id) or next false
+        vehicle_counts(t.vehicles).any? { |type_id, count| count > before.fetch(type_id, 0) }
+      end
+      raise Error, "This booking was paid in the Convoy App. Vehicles can't be added or changed to another type: make a new booking" if added
+    end
+
+    def vehicle_counts(vehicles) = vehicles.each_with_object(Hash.new(0)) { |v, h| h[v.vehicle_type_id] += v.count.to_i }
 
     def check_days
       dates = @days.map { |d, _| d.date }

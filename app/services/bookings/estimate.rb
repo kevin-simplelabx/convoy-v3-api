@@ -7,7 +7,8 @@
 module Bookings
   class Estimate < ApplicationService
     TWO_WAY_METRES = 200
-    Result = Data.define(:amount, :lines, :without_rate, :card)
+    # without_rate: how many vehicles have no rate (priced 0); unpriced: their vehicle type names.
+    Result = Data.define(:amount, :lines, :without_rate, :card, :unpriced)
 
     def initialize(client:, trip:, date:, pricer: nil)
       @client = client
@@ -18,24 +19,28 @@ module Bookings
 
     def call
       pricer = @pricer || pricer_for(@client)
-      return Result.new(0.to_d, [], @trip.vehicles_count, nil) if pricer.nil?
+      return Result.new(0.to_d, [], @trip.vehicles_count, nil, @trip.vehicles.map { it.vehicle_type.name }.uniq) if pricer.nil?
 
       @p = pricer
       lines = []
       without = 0
+      unpriced = []
       @trip.vehicles.each do |v|
         next if v.count.to_i <= 0
 
         legs = vehicle_legs(v.vehicle_type)
         each = legs.sum(&:amount)
-        without += v.count if each.zero? || legs.any?(&:missing)
+        if each.zero? || legs.any?(&:missing)
+          without += v.count
+          unpriced |= [ v.vehicle_type.name ]
+        end
         lines << { kind: "vehicles", text: "#{v.count} x #{v.vehicle_type.name}", vehicle_type_id: v.vehicle_type_id, count: v.count,
                    amount: (each * v.count).round(2).to_s, lines: legs.map { |l| { text: l.text, amount: l.amount.round(2).to_s } } }
       end
       if @trip.arrival_with_meet_and_greet? && (fee = @p.meet_and_greet_fee).positive?
         lines << { kind: "meet_and_greet", text: "Meet and Greet", amount: fee.round(2).to_s, lines: [ { text: "Once per trip", amount: fee.round(2).to_s } ] }
       end
-      Result.new(lines.sum { |l| l[:amount].to_d }.round(2), lines, without, @p.card)
+      Result.new(lines.sum { |l| l[:amount].to_d }.round(2), lines, without, @p.card, unpriced)
     end
 
     def self.pricer_for(client)

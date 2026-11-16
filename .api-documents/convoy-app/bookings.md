@@ -164,7 +164,8 @@ The card fields plus:
 ```
 
 - **Who Pays**: a school account offers `client` (the organisation) and `self` (**Pay Myself**); Personal offers `self` only
-  (the design's "Bill to My Company" opens the `link` sheet, not a payer). Each payer has its own `vehicle_types`.
+  (the design's "Bill to My Company" opens the `link` sheet, not a payer). Each payer has its own `vehicle_types`; Pay
+  Myself lists only the types the rate card has a price for (it is charged its estimate when sent).
 - **Bill To** = `funds` (required when `fund_required`). **Approver**: no picker. The client's Approval Flow decides; the
   estimate shows who (§4.2), read only. **PO**: free text (prefill `default_po`).
 - **Site**: only when `site_required` (the organisation has sites, as in the Client Portal): pick one of `sites` (one = preselect it).
@@ -189,7 +190,7 @@ Body: `{ account, payer, method (self), booking }` (the booking as in §4.3). No
 ### 4.3 Send: `POST /app/bookings`
 
 ```json
-{ "account": "link-10", "payer": "client", "agree": true, "contact": { "me": true },
+{ "account": "link-10", "payer": "client", "agree": true, "contact": { "me": true }, "submit_token": "8c1f2b9e-4d2a-4e0b-9a51-3f1d0c7e6a10",
   "booking": { "title": "P4 Learning Journey", "client_bill_fund_id": 1, "po_number": "PO-1", "notes": "…", "client_site_id": null,
                "days": [ { "date": "2026-11-20", "trips": [
                  { "kind": "two_way", "start_time": "08:30", "return_time": "13:30", "pax": 82, "adults": 4, "note": "…",
@@ -209,6 +210,11 @@ Body: `{ account, payer, method (self), booking }` (the booking as in §4.3). No
 - `agree: true` is required (charter terms + cancellation policy).
 - Pay Myself: `"payer": "self", "method": "card" | "paynow"`; Personal may add `"receipt": { "name", "uen", "address" }`.
 - Book Again: add `"copied_from_id": <booking id>` (§8).
+- `submit_token`: make one (a UUID) when the New Booking form opens and send it with every Pay / Send for Approval of that
+  form, retries included. The same token again → `200` with the booking already made (nothing new, nothing charged twice):
+  open it as if it had just been sent. Start a new token for the next booking (Book Again included).
+- Pay Myself: a vehicle with no price on the rate card → `422 no_price` "We can't price a Van online. Call SimpleDrive or
+  pick another vehicle" (only happens if the form's list is out of date).
 - Answer: `201` + the booking (§3). Organisation: `pending` with the approver (or straight to the company when no flow
   applies); Pay Myself / Personal: paid at once (simulated), `pending` until the company confirms.
 - The submit button reads **Send for Approval** (organisation) or **Pay** (Pay Myself).
@@ -335,6 +341,7 @@ new dates are `null`).
 | `404` | not one of your accounts / bookings; Track Buses with nothing on the road |
 | `422 terms` | "Agree to the charter terms to continue" |
 | `422` | "Pick the fund to bill", "Pick who pays", "Personal bookings are paid by you", "Pick how to pay", "Enter the contact name and an 8-digit mobile number", "Enter the company name and billing address for the receipt", "Add a mobile or email to your account first", the booking rules of §4.1 (date from today, seats, …), "Pick a date from today" |
+| `422 no_price` | Pay Myself with a vehicle the rate card has no price for: "We can't price a <type> online. Call <company> or pick another vehicle" |
 | `422 no_changes` | Accept / reply with nothing changed |
 | `422 not_cancellable` | the scope can't be cancelled any more |
 | `403` | saving an organisation point without being its booking admin |

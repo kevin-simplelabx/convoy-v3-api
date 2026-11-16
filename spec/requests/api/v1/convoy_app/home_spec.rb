@@ -281,6 +281,26 @@ RSpec.describe "Convoy App home, alerts and live tracking" do
       expect(json.dig(:data, :tiles, 0, :badge)).to be_nil
     end
 
+    # Two riding children with their bills: Home, Activity, the School page and Fees read them without a query per child
+    # (Bullet raises in specs on an N+1).
+    it "reads two riding children without a query per child" do
+      lucas = home.dependants.create!(name: "Lucas Tan", birth_date: "2019-05-01", level: "P2", school_id: f[:school].id, school_name: "St. Stephen's School")
+      within_tenant(company) do
+        f[:school].riders.create!(rid: "L-2", name: "Lucas Tan", grade: "P2", postal: "460412", am: true, pm: true, source: "manual")
+        SchoolRouteRider.create!(school_route: f[:route], stop: f[:stops][2], rid: "L-2")
+        FamilyRider.create!(family:, school: f[:school], rid: "L-2", dependant: lucas)
+        %w[INV-1 INV-2].each { SchoolBill.create!(school: f[:school], family:, payer: "family", kind: "period", status: "issued", number: it, issued_on: day, subtotal: 300, total: 300, due_on: day + 14) }
+        Occurrences::Sync.call(routes: [ f[:route] ])
+      end
+      travel_to Time.zone.local(2026, 11, 3, 6, 40)
+      [ api_v1_convoy_app_home_path, api_v1_convoy_app_activity_path, api_v1_convoy_app_school_path, api_v1_convoy_app_fees_path ].each do |path|
+        api(path)
+        expect(response).to have_http_status(:ok), "#{path}: #{json.inspect}"
+      end
+      api(api_v1_convoy_app_school_path)
+      expect(json.dig(:data, :riders).size).to eq(2) # both ride
+    end
+
     it "offers Get Started to a person with nothing yet and lists a Family invite to answer" do
       newbie = app_user(mobile: "8123 4567", name: %w[Mei Tan])
       home.members.create!(app_account: newbie[0], status: :invited, relationship: "Relative", invited_via: :manual, invited_by: rachel[0])

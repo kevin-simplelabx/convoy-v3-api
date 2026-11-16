@@ -7,7 +7,7 @@ module ConvoyApp
   module Bookings
     class Present
       INCLUDES = [ :client, :bill_fund, :copied_from, :payments, :change_replies, :created_by_client_user, :created_by_app_account,
-                   { cancel_requests: %i[booking_trip booking_day], days: { trips: [ :day, :points, :changes_made, { vehicles: :vehicle_type } ] },
+                   { cancel_requests: %i[booking_trip booking_day request_trips], days: { trips: [ :day, :points, :changes_made, { vehicles: :vehicle_type } ] },
                      trips: [ :day, :changes_made, { vehicles: :vehicle_type } ], approval: ::Portal::Approval::INCLUDES } ].freeze
       ICONS = { "one_way" => "arrow_forward", "two_way" => "sync_alt", "disposal" => "schedule", "airport" => "flight" }.freeze
 

@@ -63,9 +63,12 @@ module ConvoyApp
       end
     end
 
+    # The person's booking accounts, built once per Home.
+    def booking_accounts = @booking_accounts ||= Bookings.accounts(@account)
+
     # Open bookings of every account (a trip still to run), each as its list card with the account kind.
     def upcoming_bookings
-      @upcoming_bookings ||= Bookings.accounts(@account).flat_map do |acc|
+      @upcoming_bookings ||= booking_accounts.flat_map do |acc|
         Bookings.within(acc) do
           today = Time.zone.today
           open = BookingTrip.joins(:day).where(booking_days: { date: today.. }).where.not(status: %w[cancelled rejected]).select(:booking_id)
@@ -80,7 +83,7 @@ module ConvoyApp
       links, personal = bookings.partition { |acc, *| acc.link? }
       cards = []
       cards << booking_card(*links.first) if links.any?
-      cards << no_booking_card(Bookings.accounts(@account).find(&:link?)) if links.empty? && Bookings.accounts(@account).any?(&:link?)
+      cards << no_booking_card(booking_accounts.find(&:link?)) if links.empty? && booking_accounts.any?(&:link?)
       cards.concat(school_cards)
       cards.concat(employers.map { shuttle_card(it) })
       cards << booking_card(*personal.first) if personal.any?

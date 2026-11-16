@@ -186,7 +186,7 @@ RSpec.describe "Convoy App household" do
       api(:post, invite_link_api_v1_convoy_app_household_path)
       link = json[:data]
       expect(link).to include(url: "https://convoy.sg/j/#{link[:token]}")
-      expect(link[:token]).to match(/\ATAN-[A-Z0-9]{4}\z/)
+      expect(link[:token]).to match(/\ATAN-[A-Z2-9]{6}\z/)
       expect(link[:message]).to eq("Rachel Tan has invited you to join their Convoy for Family account to manage the family travel needs. Join here: #{link[:url]}")
       expect(Time.zone.parse(link[:expires_at])).to be_within(1.minute).of(7.days.from_now)
 
@@ -289,6 +289,12 @@ RSpec.describe "Convoy App household" do
         { name: "Bad", phone: nil, valid: false, on_convoy: false, in_household: false },
         { name: "Me", phone: "+6591882045", valid: true, on_convoy: true, in_household: true }
       ])
+
+      many = Array.new(51) { |i| { name: "Contact #{i}", phone: format("9100%04d", i) } }
+      api(:post, invites_check_api_v1_convoy_app_household_path, contacts: many)
+      expect(json[:error]).to include(code: "too_many_contacts", message: "Pick up to 50 contacts at a time")
+      api(:post, invites_api_v1_convoy_app_household_path, contacts: many)
+      expect(json.dig(:error, :code)).to eq("too_many_contacts")
     end
 
     it "invites contacts with an account in the app and hands the rest the link; they accept and join without approval" do

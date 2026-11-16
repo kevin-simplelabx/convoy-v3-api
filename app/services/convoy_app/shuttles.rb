@@ -27,15 +27,20 @@ module ConvoyApp
 
     # The employers a person can use: accepted links whose work email is not overdue, of active companies and kept clients.
     def employers(account, today: Date.current)
-      identities = account.identities.select { it.email? && it.work? }.index_by(&:value)
-      links = ActsAsTenant.without_tenant { ClientRider.where(app_account_id: account.id, status: "accepted").to_a }
-      links = links.select { (identity = identities[it.matched_email]) && !identity.links_paused?(today) }
+      links = ActsAsTenant.without_tenant { ClientRider.live.where(app_account_id: account.id).to_a }
+      links = links.select { email_live?(account, it, today) }
       companies = Company.active.where(id: links.map(&:company_id).uniq).index_by(&:id)
       links.filter_map do |link|
         company = companies[link.company_id] or next
         client = ActsAsTenant.with_tenant(company) { Client.kept.find_by(id: link.client_id) } or next
         Employer.new(link:, company:, client:)
       end.sort_by { [ it.client.name.downcase, it.id ] }
+    end
+
+    # The link's matched work email is still on the account and verified within 12 months (else the link is paused).
+    def email_live?(account, link, today = Date.current)
+      identity = account.identities.find { it.email? && it.work? && it.value == link.matched_email }
+      identity.present? && !identity.links_paused?(today)
     end
 
     def employer!(account, id) = employers(account).find { it.id == id.to_i } || raise(ActiveRecord::RecordNotFound)

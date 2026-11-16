@@ -5,6 +5,7 @@ module ConvoyApp
   module Households
     class Contacts < ApplicationService
       MOBILE = /\A\+65[89]\d{7}\z/
+      MAX = 50 # contacts per call: picked by hand, never a whole address book (no lookup of who is on Convoy in bulk)
 
       def initialize(household:, contacts:)
         @household = household
@@ -12,6 +13,8 @@ module ConvoyApp
       end
 
       def call
+        raise Error.new("Pick up to #{MAX} contacts at a time", code: "too_many_contacts") if @contacts.size > MAX
+
         phones = @contacts.map { phone_of(it) }
         accounts = AppIdentity.where(kind: "mobile", value: phones.compact).index_by(&:value)
         taken = taken_ids(accounts.values.map(&:app_account_id))

@@ -69,7 +69,7 @@ module ConvoyApp
         late = ->(at) { at > now && at - now < hours.hours }
         if booking.paid_by_self?
           legs = trip.two_way? ? [ trip.start_time, trip.return_time ] : [ trip.start_time ]
-          share = trip.estimate_amount / legs.size
+          share = trip.paid_share / legs.size
           legs.sum { |m| late.call(trip.date.in_time_zone + m.minutes) ? share : 0 }.to_d
         else
           runs.for(trip).select { it.scheduled? && late.call(it.starts_at) }.sum(0.to_d, &:price)
@@ -98,7 +98,7 @@ module ConvoyApp
           now_trips, ask = scope.trips.partition { !it.approved? }
           quote = self.class.quote(@account, @booking, ask, runs, now: @now)
           cancel_now(now_trips) if now_trips.any?
-          request = ask.any? ? send_request(scope, quote[:fee]) : nil
+          request = ask.any? ? send_request(scope, quote[:fee], ask) : nil
           @booking.trips.reset
           @booking.update!(estimate_amount: @booking.estimate_total, updated_at: Time.current) unless @booking.paid_by_self?
           { cancelled: now_trips.map(&:id), requested: request }
@@ -128,11 +128,12 @@ module ConvoyApp
         approval.update!(status: "none", decided_at: @now)
       end
 
-      def send_request(scope, fee)
+      # The confirmed trips of the scope, as quoted: only those are cancelled when the company accepts.
+      def send_request(scope, fee, trips)
         kind, id = @key.split("-")
         trip = kind == "trip" ? @booking.trips.find(id) : nil
         day = kind == "day" ? @booking.days.find(id) : nil
-        ::Bookings::CancelRequest.record(booking: @booking, trip:, day:, scope: kind, reason: @reason, note: @note, fee:, by_name:, actor:, at: @now)
+        ::Bookings::CancelRequest.record(booking: @booking, trip:, day:, scope: kind, reason: @reason, note: @note, fee:, trips:, by_name:, actor:, at: @now)
       end
     end
   end

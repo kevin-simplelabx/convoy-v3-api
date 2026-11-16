@@ -63,12 +63,14 @@ module ConvoyApp
           f[:unpaid] |= [ r.registration_bill.number ] if r.registration_bill && !r.fee_paid
           f[:unpaid] |= [ r.first_bill.number ] if r.first_bill&.issued? && !r.first_bill.paid? && r.live_status(now) == "Accepted"
         end
-        FamilyRider.where(dependant_id: ids, family_id: Family.where(household_id: household.id).select(:id)).find_each do |fr|
-          rider = SchoolRider.where(school_id: fr.school_id, rid: fr.rid).where(ends_on: [ nil, today.. ]).exists?
-          next unless rider
+        frs = FamilyRider.where(dependant_id: ids, family_id: Family.where(household_id: household.id).select(:id)).to_a
+        listed = SchoolRider.where(school_id: frs.map(&:school_id).uniq, rid: frs.map(&:rid).uniq).where(ends_on: [ nil, today.. ])
+                            .pluck(:school_id, :rid).to_set
+        frs.each do |fr|
+          next unless listed.include?([ fr.school_id, fr.rid ])
 
           f = out[fr.dependant_id]
-          f[:riding] = true unless f[:request] && %w[Accepted Lapsed].include?(f[:request].live_status(now))
+          f[:riding] = true unless ConvoyApp::Parents.pending_offer?(f[:request], now)
         end
       end
     end

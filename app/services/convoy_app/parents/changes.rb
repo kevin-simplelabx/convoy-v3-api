@@ -64,7 +64,7 @@ module ConvoyApp
       def mine
         Parents.companies(@household).flat_map do |company|
           Parents.within(company) do
-            scope = BusRequest.from_household(@household).not_withdrawn.includes(:registration_bill, :answer_moves, academic_year: :registration, school: :company, first_bill: :payments)
+            scope = BusRequest.from_household(@household).not_withdrawn.includes({ registration_bill: :lines }, :answer_moves, academic_year: :registration, school: :company, first_bill: :payments)
             scope = @kind == "renew" ? scope.where(kind: "new", renew: true) : scope.where(kind: @kind)
             scope.order(submitted_at: :desc).map { Present.call(it, billing: Parents.billing?(@member)) }
           end

@@ -355,7 +355,7 @@ Convoy App fields (also on the list row: `title`, `payer`):
 | `title` | the booker's name for it ("P4 Learning Journey"); `null` for OS / Portal bookings. Show it beside the number when set |
 | `payer` | `client` (billed to the client after the trip, as before) or `self` (**paid in the Convoy App** when sent: a Personal booking, or "Pay Myself" from a school account; the client is the person's Individual client). `self` bookings are **never** on a Client Invoice |
 | `bill_fund` | `{ id, name }` the school / company fund it is billed to ("Bill to: CCA Fund"), or `null` |
-| `payments` | `self` only: `[{ id, kind: payment\|refund, method: card\|paynow, method_label, amount, card_fee, charged, reference, paid_at, note }]` (simulated). Refunds are made by the system: unconfirmed trips cancelled in the app, a trip you reject, a cancellation you accept (less the charge quoted) |
+| `payments` | `self` only: `[{ id, kind: payment\|refund, method: card\|paynow, method_label, amount, card_fee, charged, reference, paid_at, note }]` (simulated). Refunds are made by the system: unconfirmed trips cancelled in the app, a trip you reject, a cancellation you accept (less the charge quoted). A refund is what the trip **paid** when the booking was sent, not its estimate now |
 | `change_replies` | Can't Accept replies to your changes: `[{ id, reason, message, replied_by_name, created_at }]`. The trip stays `awaiting_ack`; send another option (edit the trip) |
 | `copied_from` | `{ id, number }` when made with Book Again |
 | `terms_accepted_at`, `receipt_name`, `receipt_uen`, `receipt_address` | charter terms accepted in the app; the company name a Personal booking's receipt is made out to |
@@ -432,6 +432,10 @@ with their `id`; their fields are ignored) and can't be removed.
 ```
 
 - New booking: `number` is given by the server (company code, 2-digit year, 6 digits: `SD26000001`); every trip starts `pending`.
+- `payer: "self"` (paid in the Convoy App): what was paid stays as paid. Times, stops, contact and notes may change (the client
+  accepts the changes in the app), but a trip can't be removed (reject it: the client is refunded what it paid) and no trip or
+  vehicle can be added or switched to another vehicle type (422, see below). Hide Add Trip / Add Day / Remove and lock the
+  vehicle rows on such a booking.
 - `back_points`: send only when the way back was changed (at least 2 points; the first is replaced by the last point of the way there). Empty = the way there reversed.
 - `standby` / `return_standby`: `null` when the switch is off.
 - `distance_km` / `return_distance_km`: road km from the map (OSRM), each way; used for distance pricing. Leave empty when not known.
@@ -441,7 +445,10 @@ with their `id`; their fields are ignored) and can't be removed.
 422 messages (first broken rule; trip rules start with the day's date `DD/MM/YYYY: `): `"Pick the client"`,
 `"Enter the booking coordinator"`, `"Pick a site of this client"`, `"Add at least one day"`, `"No more than 10 days in a booking"`,
 `"Pick the date of each day"`, `"Two days have the same date"`, `"Days must be no more than 10 days apart"`,
-`"No more than 10 trips a day"`, `"An approved or rejected trip can't be removed"`, and per trip: `add at least one trip`,
+`"No more than 10 trips a day"`, `"An approved or rejected trip can't be removed"`,
+`"This booking was paid in the Convoy App. Decline the trip instead of removing it: the client is refunded"`,
+`"This booking was paid in the Convoy App. Trips can't be added: make a new booking"`,
+`"This booking was paid in the Convoy App. Vehicles can't be added or changed to another type: make a new booking"`, and per trip: `add at least one trip`,
 `enter the pick-up time`, `enter the pick-up point`, `enter the drop-off point`, `name every stop, or remove it`,
 `up to 5 stops`, `each point needs a pick-up, a drop-off or both`, `the return time must be after the pick-up time`,
 `enter the drop-off on the way back`, `enter the standby area, or turn it off`,
@@ -503,12 +510,14 @@ trips you have not confirmed are cancelled at once there and you get a `client_c
 behalf. The booking shows them in `cancel_requests`:
 
 ```json
-"cancel_requests": [ { "id": 2, "scope": "day", "booking_trip_id": null, "booking_day_id": 31, "trip_date": "2026-11-04", "reason": "Trip called off",
+"cancel_requests": [ { "id": 2, "scope": "day", "booking_trip_id": null, "booking_day_id": 31, "trip_ids": [ 7, 8 ], "trip_date": "2026-11-04", "reason": "Trip called off",
                        "note": "Rain", "fee_quoted": "276.0", "requested_by_name": "Priya Nair", "requested_by_kind": "client_user",
                        "requested_at": "...", "status": "open", "resolved_at": null, "resolved_by": null, "resolution_note": null } ]
 ```
 
 `scope`: `booking` | `day` (`booking_day_id`) | `trip` (`booking_trip_id`); `trip_date` = the trip's or day's date.
+`trip_ids`: the trips the request is for (what the client was quoted, or, recorded here, the scope's trips not cancelled,
+declined or started yet); show "Cancel requested" only on these. Requests made before 17/11/2026 may have `[]`: the whole scope.
 `fee_quoted`: the charge the client was shown before sending (runs starting within the client's `late_cancel_hours` in full,
 else 0); accepting it bills exactly that (the runs count as cancelled when the client asked). `requested_by_kind`: `user`,
 `client_user` or `app_account` (Personal booking).
@@ -519,7 +528,9 @@ else 0); accepting it bills exactly that (the runs count as cancelled when the c
 | Accept | `PATCH /bookings/:booking_id/cancel_requests/:id` `{ "decision": "accept", "note": "Told Alex" }` |
 | Decline | `PATCH /bookings/:booking_id/cancel_requests/:id` `{ "decision": "decline" }` |
 
-Accept cancels the trips of the scope (status `cancelled`; a day = its trips); for approved trips their Scheduler runs not started yet are cancelled
+Recording a request when nothing in the scope is left to cancel → 422 `"Nothing left to cancel: every trip has gone, was declined or has started"`.
+
+Accept cancels the request's `trip_ids` only (status `cancelled`), never a trip that had already run when it was sent; for approved trips their Scheduler runs not started yet are cancelled
 (they show as Cancelled on the Scheduler), or the Scheduler trip is removed when it has no runs yet. A booking whose
 trips are all cancelled shows "Cancelled" (Rejected tab). A resolved request can't be resolved again (422).
 

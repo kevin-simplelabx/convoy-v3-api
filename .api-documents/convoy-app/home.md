@@ -148,10 +148,10 @@ in the app (withdrew a request, cancelled a booking) is not told about it. Each 
 | `school_boarded` / `school_alighted` | Ethan Tan boarded / alighted | the driver or attendant ticks the child (morning: boarded at the stop, arrived at school; afternoon: boarded at school, dropped off at the stop) |
 | `school_notice` | Notice from SimpleDrive | a School Bus notice to parents comes into force (school, or the routes picked). Home banner until it ends |
 | `shuttle_notice` | Notice · <route> | a shuttle route notice to riders comes into force, for riders whose Alert Settings for the route are on with **Notices** ticked and a ticked timing covered; not while Pause Alerts is set. Home banner |
-| `shuttle_bus_change`, `shuttle_cancelled`, `shuttle_service_day` | see [shuttles § 8](shuttles.md#8-alerts-the-app-receives-inbox) | Home banner until the run / day ends |
+| `shuttle_bus_change`, `shuttle_cancelled`, `shuttle_service_day` | see [shuttles § 8](shuttles.md#8-alerts-the-app-receives-inbox) | Home banner until the run / day ends. Shuttle alerts and notices only for a live employer (the same rule as `GET /app/shuttles`: not a client the office removed) |
 | `bill_issued` | Invoice INV-2026-0901 issued · "Term 4 · S$600.00 · due 17 Nov." | a Family bill is issued (Billing Contact) |
 | `request_update` | Ethan Tan · Accepted | a bus request (application, renewal, change, stop, address) changes status |
-| `booking_confirmed` | SD26000141 confirmed by SimpleDrive | the company confirms a trip |
+| `booking_confirmed` | SD26000141 confirmed by SimpleDrive | the company confirms a trip. Booking alerts reach a school link only while it can open the booking (accepted, booking role, work email verified within 12 months) |
 | `booking_changed` | Changes to SD26000149 Sports Day | the company changes trips (Accept Changes / Can't Accept) |
 | `booking_declined` | SD26000150 declined | the company declines a trip |
 | `booking_cancelled` / `booking_cancel_declined` | Cancellation accepted / not accepted | the company answers a cancellation request |

@@ -27,7 +27,7 @@ module ConvoyApp
 
       # How many alerts were written.
       def call
-        riders = ActsAsTenant.without_tenant { ClientRider.where(status: "accepted").to_a }
+        riders = ActsAsTenant.without_tenant { ClientRider.live.to_a }
         return 0 if riders.empty?
 
         accounts = AppAccount.where(id: riders.map(&:app_account_id).uniq).includes(:identities).index_by(&:id)
@@ -61,10 +61,7 @@ module ConvoyApp
         ConvoyApp::Alerts.write(rows)
       end
 
-      def live?(account, rider, today)
-        identity = account.identities.find { it.email? && it.work? && it.value == rider.matched_email }
-        identity && !identity.links_paused?(today) && AlertSettings.paused_until(account, today:).nil?
-      end
+      def live?(account, rider, today) = Shuttles.email_live?(account, rider, today) && AlertSettings.paused_until(account, today:).nil?
 
       def days_of(trip, today) = @days[trip.id] ||= Days.new(trip, today, today + STRIP_DAYS - 1)
 
@@ -100,15 +97,16 @@ module ConvoyApp
       def bus_changes(rider:, company:, trip:, setting:, usual:, days:, today:)
         (today..(today + 1)).flat_map do |date|
           ticked(trip, setting, days, date).flat_map do |run, occs|
-            stop = rider_stop(rider, trip, run.direction, usual, occs.first) or next []
             occs.filter_map do |occ|
               change = days.change(occ)
               next unless change&.dig(:kind) == "bus" && occ.ends_at > @now
 
+              # Only worked out for a run whose bus changed (rare), once per rider and run.
+              stop = rider_stop(rider, trip, run, usual, occs.first) or next
               alert_at = LiveMap.at_minute(occ, stop[:minute]) - BUS_LEAD
               next if @now < alert_at
 
-              regular = Vehicle.find_by(id: change[:regular_vehicle_id])
+              regular = vehicle(change[:regular_vehicle_id])
               body = "Look for #{occ.vehicle.plate} on the #{occ.start_time_hm} #{trip.title} shuttle #{day_name(date, today)}#{regular ? " instead of #{regular.plate}" : ''}. It reaches #{stop[:name]} at #{Clock.hm(stop[:minute])}."
               row(rider, "shuttle_bus_change", "Different bus", body, key: self.class.key("bus", occ), trip:, occ:, company:)
             end
@@ -141,8 +139,15 @@ module ConvoyApp
         end
       end
 
+      def vehicle(id) = (@vehicles ||= {}).fetch(id) { @vehicles[id] = id && Vehicle.find_by(id:) }
+
       # The usual boarding stop on this route and direction, else the first belled stop, else the first boarding stop.
-      def rider_stop(rider, trip, direction, usual, occ)
+      def rider_stop(rider, trip, run, usual, occ)
+        key = [ rider.app_account_id, trip.id, run.id, occ.date ]
+        (@stops ||= {}).fetch(key) { @stops[key] = find_stop(rider, trip, run.direction, usual, occ) }
+      end
+
+      def find_stop(rider, trip, direction, usual, occ)
         planned = Occurrences::Stops.planned(occ)
         stops = trip.stops_in(direction)
         belled = (@bells[[ rider.app_account_id, trip.id, direction ]] || []).map(&:last)

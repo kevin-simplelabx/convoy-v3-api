@@ -30,7 +30,7 @@ class BookingBlueprint < ApplicationBlueprint
     end
     field(:cancel_requests) do |b|
       b.cancel_requests.map do |r|
-        { id: r.id, scope: r.scope, booking_trip_id: r.booking_trip_id, booking_day_id: r.booking_day_id,
+        { id: r.id, scope: r.scope, booking_trip_id: r.booking_trip_id, booking_day_id: r.booking_day_id, trip_ids: r.request_trips.map(&:booking_trip_id),
           trip_date: r.booking_trip&.date || r.booking_day&.date, reason: r.reason, note: r.note, fee_quoted: r.fee_quoted,
           requested_by_name: r.requested_by_name, requested_by_kind: r.requested_by_kind,
           requested_at: r.requested_at, status: r.status, resolved_at: r.resolved_at, resolved_by: r.resolved_by&.name, resolution_note: r.resolution_note }

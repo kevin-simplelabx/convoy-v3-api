@@ -35,11 +35,23 @@ module ConvoyApp
       found or raise ActiveRecord::RecordNotFound
     end
 
-    # Children with a rider on the list today or later; inside the company.
+    # Children with a rider on the list today or later who ride: not a child whose offer waits for its first invoice
+    # (Parents.pending_offer?). Inside the company.
     def kids_of(family, school, deps)
       frs = FamilyRider.where(family:).where.not(dependant_id: nil).to_a
       riders = SchoolRider.where(school_id: school.id, rid: frs.map(&:rid)).where(ends_on: [ nil, Date.current.. ]).index_by(&:rid)
-      frs.filter_map { |fr| (r = riders[fr.rid]) && (d = deps[fr.dependant_id]) && Kid.new(d, r) }.sort_by { it.dependant.id }
+      pending = Parents.pending_offer_ids(frs.map(&:dependant_id).uniq)
+      frs.filter_map { |fr| !pending.include?(fr.dependant_id) && (r = riders[fr.rid]) && (d = deps[fr.dependant_id]) && Kid.new(d, r) }
+         .sort_by { it.dependant.id }
+    end
+
+    # Why a child has no bus on this date (before the rider's start, after the last day), else nil.
+    def outside(kid, date)
+      first = kid.dependant.first_name
+      r = kid.rider
+      if r.starts_on && date < r.starts_on then "#{first}'s bus starts on #{r.starts_on.strftime('%-d %b')}"
+      elsif r.ends_on && date > r.ends_on then "#{first}'s last bus day is #{r.ends_on.strftime('%-d %b')}"
+      end
     end
 
     # Card: the school's ways to pay without Bank Transfer (too slow to confirm a seat), PayNow when none is left.
@@ -64,6 +76,7 @@ module ConvoyApp
         kid = offer.kids.find { it.dependant.id == p["dependant_id"].to_i || it.dependant.id == p[:dependant_id].to_i } or
           raise ApplicationService::Error, "Pick a child who rides this school's bus"
         date = Date.iso8601(p["date"].presence || p[:date].to_s)
+        (why = outside(kid, date)) and raise ApplicationService::Error, why
         { child_name: kid.rider.name, class_name: kid.rider.grade || kid.dependant.level, school_rider: kid.rider, date: }
       end.uniq { [ it[:child_name], it[:date] ] }
     rescue Date::Error

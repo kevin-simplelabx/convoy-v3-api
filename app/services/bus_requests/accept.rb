@@ -17,6 +17,9 @@ module BusRequests
       list = @reqs.select { it.kind == "new" && (@reoffer ? it.live_status == "Lapsed" : ELIGIBLE.include?(it.live_status)) }
       raise Error, (@reoffer ? "Only a lapsed offer can be sent again" : "Nothing to accept in the selection") if list.empty?
       raise Error, "Accept one request at a time to change its fare or start" if @quote && list.size > 1
+      if (gone = list.find { it.household&.discarded? })
+        raise Error, "#{gone.child_name}'s Family was deleted in the Convoy App. This request can't be accepted"
+      end
 
       check = Check.new(list.first.school)
       settings = FinanceSetting.current

@@ -25,9 +25,13 @@ module Bookings
 
     def call
       raise Error, "Unknown action" unless (@portal ? PORTAL_ACTIONS : ACTIONS).include?(@action)
-      raise Error, "This trip is #{@trip.status_label.downcase}, so it can't be changed here" unless @trip.public_send(:"may_#{@action}?")
 
       BookingTrip.transaction do
+        # Under the booking's row lock (as the app's Cancel and Approve), checked on the trip as it is now.
+        @booking = Booking.lock.find(@trip.booking_id)
+        @trip.reload
+        raise Error, "This trip is #{@trip.status_label.downcase}, so it can't be changed here" unless @trip.public_send(:"may_#{@action}?")
+
         send(@action)
         @trip.save!
         @booking.trips.reset

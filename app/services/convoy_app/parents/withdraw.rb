@@ -12,9 +12,11 @@ module ConvoyApp
 
       def call
         raise Error, "Only a bus service application can be withdrawn here" unless @req.kind == "new"
-        raise Error, "This request can no longer be withdrawn" unless ALLOWED.include?(@req.live_status)
 
         @req.with_lock do
+          # Checked on the row as it is now: a first invoice paid meanwhile made it Active.
+          raise Error, "This request can no longer be withdrawn" unless ALLOWED.include?(@req.live_status)
+
           @req.update!(status: "Withdrawn")
           @req.log!("Withdrawn by the parent (#{@account.display_name})", by: "Parent")
         end

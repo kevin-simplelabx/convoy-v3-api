@@ -59,6 +59,7 @@ class BookingCancelRequest < ApplicationRecord
   belongs_to :booking_trip, optional: true
   belongs_to :booking_day, optional: true
   belongs_to :resolved_by, class_name: "User", optional: true
+  has_many :request_trips, class_name: "BookingCancelRequestTrip", dependent: :delete_all, inverse_of: :request
   include ActorStamp
   actor_stamp :requested, app_account: true
 
@@ -71,9 +72,12 @@ class BookingCancelRequest < ApplicationRecord
   validates :booking_trip, presence: true, if: :for_trip?
   validates :booking_day, presence: true, if: :for_day?
 
-  # The trips it asks to cancel: the trip, the day's trips, or every trip of the booking.
+  # The trips it asks to cancel: those recorded with it (what was quoted); a request from before they were recorded falls
+  # back to the trip, the day's trips, or every trip of the booking.
   def trips
-    if for_trip? then [ booking_trip ]
+    ids = request_trips.map(&:booking_trip_id)
+    if ids.any? then booking.trips.select { ids.include?(it.id) }
+    elsif for_trip? then [ booking_trip ]
     elsif for_day? then booking.trips.select { it.booking_day_id == booking_day_id }
     else booking.trips.to_a
     end

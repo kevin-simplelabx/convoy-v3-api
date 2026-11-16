@@ -127,6 +127,18 @@ module ConvoyApp
       { parent_name: account.display_name, parent_phone: account.mobile&.value, parent_email: email&.value }
     end
 
+    # Accepted from an app application but its first invoice not paid (Accepted, or Lapsed once the offer ran out): the child is
+    # on the rider list already, yet does not ride. Takes the child's latest bus service application.
+    def pending_offer?(request, now = Time.current) = request.present? && %w[Accepted Lapsed].include?(request.live_status(now))
+
+    # Children (dependant ids) whose latest bus service application is a pending offer. Inside the company.
+    def pending_offer_ids(dependant_ids, now = Time.current)
+      return Set.new if dependant_ids.empty?
+
+      BusRequest.where(dependant_id: dependant_ids, kind: "new").where.not(status: "Withdrawn").includes(first_bill: :payments)
+                .order(:submitted_at, :id).to_a.group_by(&:dependant_id).filter_map { |id, reqs| id if pending_offer?(reqs.last, now) }.to_set
+    end
+
     # Money on requests and bills is the Billing Contact's only (registration fee and first invoice amounts, Pay).
     def billing?(member) = member&.billing_contact?
 

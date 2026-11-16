@@ -12,7 +12,7 @@ module Api
         def with_request(id)
           ::ConvoyApp::Parents.companies(household).each do |company|
             found = ::ConvoyApp::Parents.within(company) do
-              req = BusRequest.from_household(household).includes(:registration_bill, :answer_moves, academic_year: :registration, school: :company, first_bill: :payments)
+              req = BusRequest.from_household(household).includes({ registration_bill: :lines }, :answer_moves, academic_year: :registration, school: :company, first_bill: :payments)
                               .find_by(id:)
               req && [ yield(req) ]
             end
@@ -25,7 +25,7 @@ module Api
 
         # Requests just written (in several companies): each presented inside its own company.
         def present_all(reqs)
-          reqs.map { |r| ::ConvoyApp::Parents.within(r.company) { present(BusRequest.includes(:registration_bill, academic_year: :registration, school: :company).find(r.id)) } }
+          reqs.map { |r| ::ConvoyApp::Parents.within(r.company) { present(BusRequest.includes({ registration_bill: :lines }, academic_year: :registration, school: :company).find(r.id)) } }
         end
       end
     end

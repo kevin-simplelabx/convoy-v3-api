@@ -71,6 +71,27 @@ class Rack::Attack
     end
   end
 
+  # The account of a Convoy App Bearer token (the JWT's subject), else nil. Only decoded on the paths limited per account.
+  def self.app_account_id(req)
+    token = req.get_header("HTTP_AUTHORIZATION").to_s[/\ABearer\s+(\S+)\z/i, 1] or return
+    payload = Warden::JWTAuth::TokenDecoder.new.call(token)
+    payload["sub"] if payload["scp"] == "app_account"
+  rescue JWT::DecodeError
+    nil
+  end
+
+  # Convoy App Manual Invite (which contacts are on Convoy, send invites): 10 calls per 10 minutes per account (else per IP),
+  # so nobody can look up who uses Convoy in bulk.
+  APP_CONTACTS = [ "/api/v1/app/household/invites", "/api/v1/app/household/invites/check" ].freeze
+  throttle("app_contacts/account", limit: 10, period: 600) do |req|
+    (app_account_id(req) || req.ip).to_s if req.post? && APP_CONTACTS.include?(req.path)
+  end
+
+  # Convoy App Quick Invite link (open it, ask to join): 20 per minute per IP, so links can't be guessed.
+  throttle("app_invite_links/ip", limit: 20, period: 60) do |req|
+    req.ip if req.path.start_with?("/api/v1/app/household/links/")
+  end
+
   # Share Form answers from hired drivers (public): 10 per hour per IP
   throttle("share_forms/ip", limit: 10, period: 1.hour) do |req|
     req.ip if req.post? && req.path.start_with?("/api/v1/public/share_forms/")

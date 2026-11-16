@@ -4,6 +4,18 @@ Changes to existing Convoy OS endpoints made while building other apps (Convoy D
 on (renamed, removed or changed fields and endpoints). New optional fields are not listed here; they are in the menu
 documents. Newest first. Each item: what changed, before → after, and what the front-end has to do.
 
+## 17/11/2026 — Convoy App review fixes (bookings, School Bus requests; new field and 422 messages, no breaking change)
+
+| # | Endpoint / field | Before → after | Front-end |
+| --- | --- | --- | --- |
+| 1 | `GET /bookings/:id` → `cancel_requests[].trip_ids` | new: the trips the request is for (what the client was quoted; recorded in OS: the scope's trips not cancelled, declined or started). Old requests may have `[]` | Show "Cancel requested" only on these trips; Accept cancels only these (a day of the booking that already ran is never cancelled) |
+| 2 | `POST /bookings/:id/cancel_requests` | new 422 `"Nothing left to cancel: every trip has gone, was declined or has started"` | Show the message |
+| 3 | `PATCH /bookings/:id` on a `payer: "self"` booking | anything could change → a trip can't be removed (reject it: refunded what it paid), no trip / day / vehicle added or switched to another type (422, three messages in [trips.md](trips.md)) | Hide Add Trip / Add Day / Remove and lock the vehicle rows when `payer` is `self` |
+| 4 | Approve, Reject, Client Acknowledged, Accept / Decline a cancel request | unchanged calls; now checked under the booking's lock, so one that came in second answers 422 (`"This trip is cancelled already"`, `"This request is accepted already"` …) | Show the message and reload the booking |
+| 5 | `POST /bus_requests/:id/accept`, `POST /schools/:id/bus_requests/accept` | new 422 "<child>'s Family was deleted in the Convoy App. This request can't be accepted"; deleting a Family in the app withdraws its open applications (status `Withdrawn`, timeline "Withdrawn: the Family was deleted in the Convoy App") | Show the message; nothing else |
+
+Details: [trips.md § 4](trips.md#4-bookings), [school-bus-parents.md § 4](school-bus-parents.md#4-new-service-review-accept-first-invoice).
+
 ## 16/11/2026 — Bookings from the Convoy App (Convoy App Phase 7; new fields and values, no breaking change)
 
 Teachers / bookers and anyone personally book from the Convoy App. OS calls keep their shape; these are new fields and values.

@@ -211,7 +211,9 @@ of `date`), `date` (the picked day, default today).
 - `setting` is what applies. `saved: false` = never saved: the **usual route** is on with the usual timing, Mon–Fri, 5 minutes and all
   four changes on; every other route is off. `weekdays`: **0 Sunday … 6 Saturday** (the same as a route's days).
 - `PUT …/alerts { enabled, run_ids: [..], weekdays: [..], lead_minutes: 5|10|15, bus_change, service_days, late, notices }` → the same body as GET.
-  A field that is missing keeps its saved value; `run_ids` replaces the ticked timings. The HTML's messages (422): on with no timing
+  A field that is missing keeps what the sheet showed: the saved value, or on a route never saved (`saved: false`) the
+  default above, so the list switch `{ enabled }` keeps the usual timing; switching on a route that has no default timing that
+  way ticks **every** timing of the route. `run_ids` replaces the ticked timings. The HTML's messages (422): on with no timing
   and no change type → "Pick a timing to be reminded for, or a change to hear about, or turn alerts off"; timings but no day →
   "Pick at least one day"; a timing of another route → "Pick a timing of this route"; `lead_minutes` other than 5 / 10 / 15 → 422.
   Turning alerts off is always allowed ("Nothing for this route. Safety notices from <company> still come").

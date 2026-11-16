@@ -331,6 +331,23 @@ RSpec.describe "Convoy App shuttles" do
       expect(json.dig(:data, :routes)).to contain_exactly(a_hash_including(route: { id: f[:trip].id, name: "MBC Campus Shuttle" }, enabled: true, timings: 1, saved: true))
     end
 
+    # The list's switch sends { enabled } only: a route never saved keeps the defaults the screen showed (the usual timing),
+    # and a route with no default timing switched on gets every timing.
+    it "keeps the shown defaults when only the switch is sent on a route never saved" do
+      r = rider
+      put "#{base(r)}/usual", params: { trip_id: f[:trip].id, run_id: f[:am1].id }, headers: r[:h], as: :json
+      put "#{base(r)}/routes/#{f[:trip].id}/alerts", params: { enabled: false }, headers: r[:h], as: :json
+      expect(json.dig(:data, :setting)).to include(enabled: false, saved: true, run_ids: [ f[:am1].id ], weekdays: [ 1, 2, 3, 4, 5 ])
+      put "#{base(r)}/routes/#{f[:trip].id}/alerts", params: { enabled: true }, headers: r[:h], as: :json
+      expect(json.dig(:data, :setting)).to include(enabled: true, run_ids: [ f[:am1].id ])
+
+      other = rider(mobile: "9177 3301", email: "david@google.com") # no usual: the route is off by default
+      put "#{base(other)}/routes/#{f[:trip].id}/alerts", params: { enabled: true }, headers: other[:h], as: :json
+      expect(response).to have_http_status(:ok), json.inspect
+      expect(json.dig(:data, :setting)).to include(enabled: true, saved: true, run_ids: contain_exactly(f[:am1].id, f[:am2].id, f[:pm].id),
+                                                  weekdays: [ 1, 2, 3, 4, 5 ], lead_minutes: 5)
+    end
+
     it "refuses on without a timing or a change, timings without a day, a lead other than 5 / 10 / 15, and a timing of another route" do
       r = rider
       put "#{base(r)}/routes/#{f[:trip].id}/alerts", params: { enabled: true, run_ids: [], bus_change: false, service_days: false, late: false, notices: false }, headers: r[:h], as: :json
@@ -414,6 +431,10 @@ RSpec.describe "Convoy App shuttles" do
       ActsAsTenant.without_tenant { r[:link].update!(status: "removed") }
       expect { ConvoyApp::Shuttles::Alerts.call }.not_to change(AppNotification, :count)
       ActsAsTenant.without_tenant { r[:link].update!(status: "accepted") }
+
+      within_tenant(company) { f[:client].discard! } # the office removed the client: its link stays accepted
+      expect { ConvoyApp::Shuttles::Alerts.call }.not_to change(AppNotification, :count)
+      within_tenant(company) { f[:client].undiscard! }
       expect(ConvoyApp::Shuttles::Alerts.call).to eq(1) # everything back on: the bus change comes
     end
 
@@ -433,6 +454,28 @@ RSpec.describe "Convoy App shuttles" do
       expect(ConvoyApp::Shuttles::Alerts.call).to be >= 1
       expect(AppNotification.where(kind: "shuttle_service_day").pluck(:title)).to eq([ "No service tomorrow" ])
       expect(ConvoyApp::Shuttles::Alerts.call).to eq(0)
+    end
+
+    # The job runs every 5 minutes over every rider: its queries must not grow with riders × days × timings.
+    it "reads the same few queries however many riders it checks" do
+      count = lambda do
+        n = 0
+        cb = ->(*, payload) { n += 1 unless payload[:name].in?(%w[SCHEMA TRANSACTION]) || payload[:sql].match?(/\A\s*(BEGIN|COMMIT|SAVEPOINT|RELEASE)/) }
+        ActiveSupport::Notifications.subscribed(cb, "sql.active_record") { ConvoyApp::Shuttles::Alerts.call }
+        n
+      end
+      travel_to Time.zone.local(2026, 11, 16, 5, 30) # no alert due yet: the bus change of tomorrow is checked, not written
+      one = count.call
+      others = [ %w[9177 3301 david], %w[9650 1187 mei], %w[9166 7720 priya] ].map do |a, b, name|
+        o = rider(mobile: "#{a} #{b}", email: "#{name}@google.com")
+        put "#{base(o)}/usual", params: { trip_id: f[:trip].id, run_id: f[:am1].id, stop_id: f[:alexandra].id }, headers: o[:h], as: :json
+        put "#{base(o)}/routes/#{f[:trip].id}/alerts", params: { enabled: true, run_ids: [ f[:am1].id, f[:am2].id, f[:pm].id ], weekdays: [ 0, 1, 2, 3, 4, 5, 6 ] }, headers: o[:h], as: :json
+        o
+      end
+      travel_to Time.zone.local(2026, 11, 16, 5, 30)
+      four = count.call
+      expect(others.size).to eq(3)
+      expect(four - one).to be <= 2 # 17/11/2026: 19 and 20 (was 31 and 56)
     end
 
     it "keeps each person's inbox apart" do

@@ -17,11 +17,15 @@ module Bookings
     end
 
     def call
-      raise Error, "This trip is #{@trip.status_label.downcase} already" unless @trip.pending? || @trip.awaiting_ack?
       raise Error, "Enter the trip value" if !@value.positive? || (@trip.two_way? && !@return_value.positive?)
-      raise Error, "Say how the client agreed to the changes" if @trip.awaiting_ack? && !BookingTrip::APPROVAL_HOW.include?(@how)
 
       BookingTrip.transaction do
+        # Under the booking's row lock (as the app's Cancel): a trip the client cancelled meanwhile is not approved.
+        @booking = Booking.lock.find(@trip.booking_id)
+        @trip.reload
+        raise Error, "This trip is #{@trip.status_label.downcase} already" unless @trip.pending? || @trip.awaiting_ack?
+        raise Error, "Say how the client agreed to the changes" if @trip.awaiting_ack? && !BookingTrip::APPROVAL_HOW.include?(@how)
+
         result = Trips::Save.call(trip: Trip.new, attributes: trip_attributes, return_attributes:, user: @user)
         @trip.approve
         @trip.update!(approved_at: Time.current, approved_by: @user, approval_how: @how, approval_note: @note)

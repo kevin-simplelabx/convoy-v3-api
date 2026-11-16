@@ -24,6 +24,7 @@
 #  receipt_uen               :string
 #  service_for               :string
 #  source                    :string           default("console"), not null
+#  submit_token              :string
 #  terms_accepted_at         :datetime
 #  title                     :string
 #  created_at                :datetime         not null
@@ -53,6 +54,7 @@
 #  index_bookings_on_created_by_app_account_id  (created_by_app_account_id)
 #  index_bookings_on_created_by_client_user_id  (created_by_client_user_id)
 #  index_bookings_on_created_by_id              (created_by_id)
+#  index_bookings_on_submit_token               (submit_token) UNIQUE WHERE (submit_token IS NOT NULL)
 #
 # Foreign Keys
 #

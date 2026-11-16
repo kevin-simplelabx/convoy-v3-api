@@ -15,8 +15,13 @@ module ConvoyApp
         @from = from
         @to = to
         @runs = trip.runs.index_by(&:id)
-        @by_date = TripOccurrence.where(trip_id: trip.id, date: from..(to + RESUME_DAYS)).where.not(status: "removed").includes(:replacement, :school_route)
-                                 .order(:date, :starts_at, :slot_no, :part).to_a.group_by(&:date)
+        rows = TripOccurrence.where(trip_id: trip.id, date: from..(to + RESUME_DAYS)).where.not(status: "removed").includes(:replacement, :school_route, :vehicle)
+                             .order(:date, :starts_at, :slot_no, :part).to_a
+        rows.each do |occ| # the route as loaded (stops, runs and their times), not read again per run
+          occ.association(:trip).target = trip
+          occ.association(:trip_run).target = @runs[occ.trip_run_id] if occ.trip_run_id
+        end
+        @by_date = rows.group_by(&:date)
         @occurrences = @by_date
       end
 

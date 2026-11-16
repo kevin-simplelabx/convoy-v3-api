@@ -778,6 +778,39 @@ ALTER SEQUENCE public.booking_attachments_id_seq OWNED BY public.booking_attachm
 
 
 --
+-- Name: booking_cancel_request_trips; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.booking_cancel_request_trips (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    booking_cancel_request_id bigint NOT NULL,
+    booking_trip_id bigint NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: booking_cancel_request_trips_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.booking_cancel_request_trips_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: booking_cancel_request_trips_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.booking_cancel_request_trips_id_seq OWNED BY public.booking_cancel_request_trips.id;
+
+
+--
 -- Name: booking_cancel_requests; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1177,6 +1210,7 @@ CREATE TABLE public.booking_trips (
     acknowledged_by_client_user_id bigint,
     rejected_by_client_user_id bigint,
     adults integer DEFAULT 0 NOT NULL,
+    paid_amount numeric(12,2),
     CONSTRAINT booking_trips_acknowledged_by_one CHECK ((num_nonnulls(acknowledged_by_id, acknowledged_by_client_user_id) <= 1)),
     CONSTRAINT booking_trips_rejected_by_one CHECK ((num_nonnulls(rejected_by_id, rejected_by_client_user_id) <= 1))
 );
@@ -1238,6 +1272,7 @@ CREATE TABLE public.bookings (
     receipt_name character varying,
     receipt_uen character varying,
     receipt_address text,
+    submit_token character varying,
     CONSTRAINT bookings_created_by_one CHECK ((num_nonnulls(created_by_id, created_by_client_user_id, created_by_app_account_id) <= 1)),
     CONSTRAINT bookings_payer CHECK (((payer)::text = ANY (ARRAY[('client'::character varying)::text, ('self'::character varying)::text])))
 );
@@ -12272,6 +12307,13 @@ ALTER TABLE ONLY public.booking_attachments ALTER COLUMN id SET DEFAULT nextval(
 
 
 --
+-- Name: booking_cancel_request_trips id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_cancel_request_trips ALTER COLUMN id SET DEFAULT nextval('public.booking_cancel_request_trips_id_seq'::regclass);
+
+
+--
 -- Name: booking_cancel_requests id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -14285,6 +14327,14 @@ ALTER TABLE ONLY public.booking_approvals
 
 ALTER TABLE ONLY public.booking_attachments
     ADD CONSTRAINT booking_attachments_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: booking_cancel_request_trips booking_cancel_request_trips_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_cancel_request_trips
+    ADD CONSTRAINT booking_cancel_request_trips_pkey PRIMARY KEY (id);
 
 
 --
@@ -17170,6 +17220,27 @@ CREATE INDEX index_booking_attachments_on_uploaded_by_id ON public.booking_attac
 
 
 --
+-- Name: index_booking_cancel_request_trips_on_booking_trip_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_booking_cancel_request_trips_on_booking_trip_id ON public.booking_cancel_request_trips USING btree (booking_trip_id);
+
+
+--
+-- Name: index_booking_cancel_request_trips_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_booking_cancel_request_trips_on_company_id ON public.booking_cancel_request_trips USING btree (company_id);
+
+
+--
+-- Name: index_booking_cancel_request_trips_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_booking_cancel_request_trips_unique ON public.booking_cancel_request_trips USING btree (booking_cancel_request_id, booking_trip_id);
+
+
+--
 -- Name: index_booking_cancel_requests_on_booking_day_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -17524,6 +17595,13 @@ CREATE INDEX index_bookings_on_created_by_client_user_id ON public.bookings USIN
 --
 
 CREATE INDEX index_bookings_on_created_by_id ON public.bookings USING btree (created_by_id);
+
+
+--
+-- Name: index_bookings_on_submit_token; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_bookings_on_submit_token ON public.bookings USING btree (submit_token) WHERE (submit_token IS NOT NULL);
 
 
 --
@@ -24377,6 +24455,14 @@ ALTER TABLE ONLY public.cca_credits
 
 
 --
+-- Name: booking_cancel_request_trips fk_rails_19027a1695; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_cancel_request_trips
+    ADD CONSTRAINT fk_rails_19027a1695 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
 -- Name: client_approval_flows fk_rails_1912b2d1ba; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -24990,6 +25076,14 @@ ALTER TABLE ONLY public.booking_events
 
 ALTER TABLE ONLY public.bus_requests
     ADD CONSTRAINT fk_rails_341e0adbc4 FOREIGN KEY (registration_bill_id) REFERENCES public.school_bills(id) ON DELETE SET NULL;
+
+
+--
+-- Name: booking_cancel_request_trips fk_rails_3462a24034; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_cancel_request_trips
+    ADD CONSTRAINT fk_rails_3462a24034 FOREIGN KEY (booking_trip_id) REFERENCES public.booking_trips(id) ON DELETE CASCADE;
 
 
 --
@@ -25886,6 +25980,14 @@ ALTER TABLE ONLY public.notices
 
 ALTER TABLE ONLY public.trip_standby_photos
     ADD CONSTRAINT fk_rails_58f10f94a3 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: booking_cancel_request_trips fk_rails_58f9ca0df3; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_cancel_request_trips
+    ADD CONSTRAINT fk_rails_58f9ca0df3 FOREIGN KEY (booking_cancel_request_id) REFERENCES public.booking_cancel_requests(id) ON DELETE CASCADE;
 
 
 --
@@ -29911,6 +30013,9 @@ ALTER TABLE public.trip_occurrences
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261117120200'),
+('20261117120100'),
+('20261117120000'),
 ('20261117110100'),
 ('20261117110000'),
 ('20261117100200'),

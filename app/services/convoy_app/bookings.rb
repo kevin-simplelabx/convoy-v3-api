@@ -55,7 +55,10 @@ module ConvoyApp
 
     # The account a booking id belongs to and the booking (inside that account's company), else 404.
     def find!(app_account, id)
-      accounts(app_account).each do |account|
+      # The account the booking points to is tried first (only the order changes: each account still checks it is visible).
+      client_id, via_id = ActsAsTenant.without_tenant { ::Booking.where(id:).pick(:client_id, :booked_via_client_user_id) }
+      first = ->(a) { a.client&.id == client_id || (a.link? && a.client_user.id == via_id) ? 0 : 1 }
+      accounts(app_account).each_with_index.sort_by { |a, i| [ first.(a), i ] }.each do |account, _|
         found = within(account) { visible(account).find_by(id:) }
         return [ account, found ] if found
       end
@@ -104,12 +107,26 @@ module ConvoyApp
 
     def money(amount) = "S$#{format('%.2f', amount.to_d)}"
 
+    # One Personal account per company taking personal bookings; the person's Individual clients read in one query.
     def personal(app_account)
       companies = Company.active.where(accepts_personal_bookings: true).order(:name).to_a
+      clients = ActsAsTenant.without_tenant do
+        Client.kept.individual.where(app_account_id: app_account.id, company_id: companies.map(&:id)).index_by(&:company_id)
+      end
       companies.map do |company|
-        client = Parents.within(company) { individual_of(app_account) }
+        client = clients[company.id]
         Account.new(key: "personal-#{company.id}", kind: "personal", company:, client_user: nil, client:, app_account:)
       end
+    end
+
+    # A school / company link the person may book with: the client user is kept, accepted by this person, has a booking role,
+    # and its matched work email is on the account and verified within 12 months (else paused). The company (active) and
+    # client (kept) are checked where the account is built (links) or by the caller (booking alerts).
+    def link_live?(user, app_account, today = Date.current, identities: nil)
+      return false unless user.kept? && user.app_link_status == "accepted" && user.app_account_id == app_account.id && ClientUserAccess::BOOK.include?(user.role)
+
+      identity = identities ? identities[user.app_matched_email] : app_account.identities.find { it.email? && it.work? && it.value == user.app_matched_email }
+      identity.present? && !identity.links_paused?(today)
     end
 
     def links(app_account, today)
@@ -117,11 +134,12 @@ module ConvoyApp
       users = ActsAsTenant.without_tenant do
         ClientUser.kept.where(app_account_id: app_account.id, app_link_status: "accepted", role: ClientUserAccess::BOOK).to_a
       end
-      users = users.select { (identity = identities[it.app_matched_email]) && !identity.links_paused?(today) }
+      users = users.select { link_live?(it, app_account, today, identities:) }
       companies = Company.active.where(id: users.map(&:company_id).uniq).index_by(&:id)
+      clients = ActsAsTenant.without_tenant { Client.kept.where(id: users.map(&:client_id)).index_by(&:id) }
       users.filter_map do |user|
         company = companies[user.company_id] or next
-        client = Parents.within(company) { Client.kept.find_by(id: user.client_id) } or next
+        client = clients[user.client_id] or next
         Account.new(key: "link-#{user.id}", kind: "link", company:, client_user: user, client:, app_account:)
       end.sort_by { [ it.client.name.downcase, it.tc.downcase ] }
     end

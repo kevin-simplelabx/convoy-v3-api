@@ -10,9 +10,10 @@ module ConvoyApp
 
       module_function
 
-      # The setting of a trip for the account (inside the employer's company). `usual` = UsualOf.
-      def effective(account, trip, usual, saved: nil)
-        saved ||= ShuttleAlertSetting.includes(:setting_runs).find_by(app_account_id: account.id, trip_id: trip.id)
+      # The setting of a trip for the account (inside the employer's company). `usual` = UsualOf. saved: the row when the caller
+      # loaded them in bulk (nil = none saved); left out, it is read here.
+      def effective(account, trip, usual, saved: :find)
+        saved = ShuttleAlertSetting.includes(:setting_runs).find_by(app_account_id: account.id, trip_id: trip.id) if saved == :find
         return from_row(saved) if saved
 
         mine = usual.trip_id == trip.id
@@ -53,14 +54,21 @@ module ConvoyApp
       end
 
       # Save: enabled, run_ids (timings), weekdays (0 Sun .. 6 Sat), lead_minutes (5/10/15), bus_change, service_days, late, notices.
+      # A field left out keeps what the screen showed: the saved row, or for a route never saved the default (`effective`), so
+      # the list switch ({ enabled } only) keeps the usual timing; a route that has no default timing switched on that way
+      # gets every timing of the route.
       def save(account:, employer:, trip_id:, params:)
         Shuttles.within(employer) do
           trip = Shuttles.trip!(employer, trip_id, Time.zone.today)
           row = ShuttleAlertSetting.includes(:setting_runs).find_or_initialize_by(app_account_id: account.id, trip_id: trip.id)
-          run_ids = params.key?(:run_ids) ? Array(params[:run_ids]).map(&:to_i).uniq : row.run_ids
+          base = row.persisted? ? from_row(row) : effective(account, trip, UsualOf.for(account, employer.client), saved: nil)
+          attrs = attributes(base, params)
+          run_ids = if params.key?(:run_ids) then Array(params[:run_ids]).map(&:to_i).uniq
+          elsif row.new_record? && attrs[:enabled] && base.run_ids.empty? then timing_ids(trip)
+          else base.run_ids
+          end
           raise ApplicationService::Error, "Pick a timing of this route" unless (run_ids - trip.runs.map(&:id)).empty?
 
-          attrs = attributes(row, params)
           check!(attrs, run_ids)
           ShuttleAlertSetting.transaction do
             row.assign_attributes(attrs.merge(company_id: employer.company.id, client_id: employer.client.id))
@@ -85,13 +93,17 @@ module ConvoyApp
         raise ApplicationService::Error, "Pick at least one day" if run_ids.any? && attrs[:weekdays].empty?
       end
 
-      def attributes(row, params)
+      # The row's values: each param sent, else what `base` (Effective: saved or default) has.
+      def attributes(base, params)
         flag = ->(key, current) { params.key?(key) ? ActiveModel::Type::Boolean.new.cast(params[key]) : current }
-        { enabled: flag.call(:enabled, row.enabled), weekdays: params.key?(:weekdays) ? Array(params[:weekdays]).map(&:to_i).uniq.sort : (row.persisted? ? row.weekdays : ShuttleAlertSetting::DEFAULT_WEEKDAYS),
-          lead_minutes: params[:lead_minutes].presence&.to_i || (row.persisted? ? row.lead_minutes : 5),
-          notify_bus_change: flag.call(:bus_change, row.notify_bus_change), notify_service_days: flag.call(:service_days, row.notify_service_days),
-          notify_late: flag.call(:late, row.notify_late), notify_notices: flag.call(:notices, row.notify_notices) }
+        { enabled: flag.call(:enabled, base.enabled), weekdays: params.key?(:weekdays) ? Array(params[:weekdays]).map(&:to_i).uniq.sort : base.weekdays,
+          lead_minutes: params[:lead_minutes].presence&.to_i || base.lead_minutes,
+          notify_bus_change: flag.call(:bus_change, base.bus_change), notify_service_days: flag.call(:service_days, base.service_days),
+          notify_late: flag.call(:late, base.late), notify_notices: flag.call(:notices, base.notices) }
       end
+
+      # Every timing the route's screen lists (its directions' runs).
+      def timing_ids(trip) = Shuttles.directions(trip).flat_map { |d| trip.runs.select { it.direction == d }.map(&:id) }
 
       # Pause Alerts: "Alerts Start Again On" a date after today (company time is not needed: the person picks a calendar day).
       def pause(account:, until_date:)

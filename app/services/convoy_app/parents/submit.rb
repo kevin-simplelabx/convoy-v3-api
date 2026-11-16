@@ -39,6 +39,9 @@ module ConvoyApp
 
         now = Time.current
         ApplicationRecord.transaction do
+          # One submission at a time per Family: a double tap (or two adults at once) finds the first one's requests.
+          @household.lock!
+          rows.each { |r| raise Error, "#{r[:dependant].first_name} already has a bus request for #{win.year.key}" if open_request?(r[:dependant], win.year) }
           reqs = rows.map { create(school, win, policy, now, it) }
           bill = registration_bill(school, win, policy, reqs, now) if policy&.registration_fee.to_d.positive?
           reqs.each do |req|
