@@ -7,96 +7,111 @@
 # Table name: bus_requests
 # Database name: primary
 #
-#  id               :bigint           not null, primary key
-#  ack_note         :text
-#  ack_plan_weeks   :integer
-#  acked_at         :timestamptz
-#  address          :string
-#  adds             :boolean          default(FALSE), not null
-#  agree            :string
-#  am               :boolean          default(TRUE), not null
-#  answer_by        :date
-#  birth_date       :date
-#  cca              :boolean          default(FALSE), not null
-#  cca_days         :integer          default([]), not null, is an Array
-#  child_name       :string           not null
-#  class_name       :string
-#  code             :string           not null
-#  confirm_note     :text
-#  confirmed_at     :timestamptz
-#  current_fare     :decimal(12, 2)
-#  earliest_on      :date
-#  early            :boolean          default(FALSE), not null
-#  effective_on     :date
-#  ended_at         :timestamptz
-#  ended_on         :date
-#  estimate         :decimal(12, 2)
-#  fee_paid         :boolean          default(TRUE), not null
-#  fix_note         :string
-#  fix_why          :string
-#  kind             :string           default("new"), not null
-#  km               :decimal(6, 2)
-#  last_on          :date
-#  lat              :decimal(10, 7)
-#  level            :string
-#  level_moved_on   :date
-#  lng              :decimal(10, 7)
-#  medical          :text
-#  mid              :boolean          default(FALSE), not null
-#  new_stop         :string
-#  notice_n         :integer
-#  notice_unit      :string
-#  offer_by         :timestamptz
-#  old_address      :string
-#  old_am           :boolean
-#  old_cca          :boolean
-#  old_pm           :boolean
-#  old_postal       :string
-#  parent_email     :string
-#  parent_name      :string
-#  parent_phone     :string
-#  pay_to           :date
-#  plan_lines       :string           default([]), not null, is an Array
-#  planned_at       :timestamptz
-#  planned_ok       :boolean
-#  pm               :boolean          default(TRUE), not null
-#  policy_version   :integer
-#  postal           :string
-#  quote_amount     :decimal(12, 2)
-#  quote_base       :decimal(12, 2)
-#  quote_note       :text
-#  quote_unit       :string
-#  quoted_at        :timestamptz
-#  reason           :string
-#  renew            :boolean          default(FALSE), not null
-#  rider_patched_on :date
-#  same             :boolean          default(FALSE), not null
-#  source           :string           default("app"), not null
-#  start_on         :date
-#  start_when       :string
-#  status           :string           default("Requested"), not null
-#  stop_why         :string
-#  stop_why_note    :string
-#  student_no       :string
-#  submitted_at     :timestamptz      not null
-#  tags             :string           default([]), not null, is an Array
-#  created_at       :datetime         not null
-#  updated_at       :datetime         not null
-#  academic_year_id :bigint
-#  acked_by_id      :bigint
-#  company_id       :bigint           not null
-#  confirmed_by_id  :bigint
-#  ended_by_id      :bigint
-#  family_id        :bigint
-#  quoted_by_id     :bigint
-#  school_id        :bigint           not null
-#  school_rider_id  :bigint
+#  id                   :bigint           not null, primary key
+#  ack_note             :text
+#  ack_plan_weeks       :integer
+#  acked_at             :timestamptz
+#  address              :string
+#  adds                 :boolean          default(FALSE), not null
+#  agree                :string
+#  am                   :boolean          default(TRUE), not null
+#  answer_by            :date
+#  birth_date           :date
+#  cca                  :boolean          default(FALSE), not null
+#  cca_days             :integer          default([]), not null, is an Array
+#  cca_from             :date
+#  child_name           :string           not null
+#  class_name           :string
+#  code                 :string           not null
+#  confirm_note         :text
+#  confirmed_at         :timestamptz
+#  current_fare         :decimal(12, 2)
+#  dropoff_address      :string
+#  dropoff_lat          :decimal(10, 7)
+#  dropoff_lng          :decimal(10, 7)
+#  dropoff_postal       :string
+#  earliest_on          :date
+#  early                :boolean          default(FALSE), not null
+#  effective_on         :date
+#  ended_at             :timestamptz
+#  ended_on             :date
+#  estimate             :decimal(12, 2)
+#  fee_paid             :boolean          default(TRUE), not null
+#  fix_note             :string
+#  fix_why              :string
+#  kind                 :string           default("new"), not null
+#  km                   :decimal(6, 2)
+#  last_on              :date
+#  lat                  :decimal(10, 7)
+#  level                :string
+#  level_moved_on       :date
+#  lng                  :decimal(10, 7)
+#  medical              :text
+#  mid                  :boolean          default(FALSE), not null
+#  new_home             :jsonb
+#  new_stop             :string
+#  notice_n             :integer
+#  notice_unit          :string
+#  offer_by             :timestamptz
+#  old_address          :string
+#  old_am               :boolean
+#  old_cca              :boolean
+#  old_pm               :boolean
+#  old_postal           :string
+#  parent_email         :string
+#  parent_name          :string
+#  parent_phone         :string
+#  pay_to               :date
+#  plan_lines           :string           default([]), not null, is an Array
+#  planned_at           :timestamptz
+#  planned_ok           :boolean
+#  pm                   :boolean          default(TRUE), not null
+#  policy_version       :integer
+#  postal               :string
+#  quote_amount         :decimal(12, 2)
+#  quote_base           :decimal(12, 2)
+#  quote_note           :text
+#  quote_unit           :string
+#  quoted_at            :timestamptz
+#  reason               :string
+#  renew                :boolean          default(FALSE), not null
+#  rider_patched_on     :date
+#  same                 :boolean          default(FALSE), not null
+#  source               :string           default("app"), not null
+#  start_on             :date
+#  start_when           :string
+#  status               :string           default("Requested"), not null
+#  stop_why             :string
+#  stop_why_note        :string
+#  student_no           :string
+#  submitted_at         :timestamptz      not null
+#  tags                 :string           default([]), not null, is an Array
+#  terms_agreed_at      :timestamptz
+#  created_at           :datetime         not null
+#  updated_at           :datetime         not null
+#  academic_year_id     :bigint
+#  acked_by_id          :bigint
+#  app_account_id       :bigint
+#  company_id           :bigint           not null
+#  confirmed_by_id      :bigint
+#  dependant_id         :bigint
+#  ended_by_id          :bigint
+#  family_id            :bigint
+#  household_id         :bigint
+#  quoted_by_id         :bigint
+#  registration_bill_id :bigint
+#  school_id            :bigint           not null
+#  school_rider_id      :bigint
 #
 # Indexes
 #
 #  index_bus_requests_on_academic_year_id               (academic_year_id)
+#  index_bus_requests_on_app_account_id                 (app_account_id)
 #  index_bus_requests_on_company_id_and_code            (company_id,code) UNIQUE
+#  index_bus_requests_on_dependant_id                   (dependant_id)
 #  index_bus_requests_on_family_id                      (family_id)
+#  index_bus_requests_on_household_id                   (household_id)
+#  index_bus_requests_on_registration_bill_id           (registration_bill_id)
 #  index_bus_requests_on_school_id                      (school_id)
 #  index_bus_requests_on_school_id_and_kind_and_status  (school_id,kind,status)
 #  index_bus_requests_on_school_rider_id                (school_rider_id)
@@ -105,11 +120,15 @@
 #
 #  fk_rails_...  (academic_year_id => academic_years.id)
 #  fk_rails_...  (acked_by_id => users.id)
+#  fk_rails_...  (app_account_id => app_accounts.id) ON DELETE => nullify
 #  fk_rails_...  (company_id => companies.id)
 #  fk_rails_...  (confirmed_by_id => users.id)
+#  fk_rails_...  (dependant_id => dependants.id) ON DELETE => nullify
 #  fk_rails_...  (ended_by_id => users.id)
 #  fk_rails_...  (family_id => families.id) ON DELETE => nullify
+#  fk_rails_...  (household_id => households.id) ON DELETE => nullify
 #  fk_rails_...  (quoted_by_id => users.id)
+#  fk_rails_...  (registration_bill_id => school_bills.id) ON DELETE => nullify
 #  fk_rails_...  (school_id => schools.id)
 #  fk_rails_...  (school_rider_id => school_riders.id) ON DELETE => nullify
 #
@@ -131,6 +150,11 @@ class BusRequest < ApplicationRecord
   belongs_to :academic_year, optional: true
   belongs_to :family, optional: true
   belongs_to :school_rider, optional: true
+  # Sent from the Convoy App: the Family, the child and the adult who sent it (platform ids; nil for console requests).
+  belongs_to :household, optional: true
+  belongs_to :dependant, optional: true
+  belongs_to :app_account, optional: true
+  belongs_to :registration_bill, class_name: "SchoolBill", optional: true
   belongs_to :acked_by, class_name: "User", optional: true
   belongs_to :quoted_by, class_name: "User", optional: true
   belongs_to :confirmed_by, class_name: "User", optional: true
@@ -149,9 +173,19 @@ class BusRequest < ApplicationRecord
   validates :child_name, presence: true
 
   before_validation { self.code ||= format("REQ-%04d", CompanySequence.next!(:bus_request)) }
+  # The Family of an app request hears about every status change (ConvoyApp::Alerts::Requests), once the change is committed;
+  # remembered on save because a later save in the same transaction would hide it from saved_changes.
+  after_update { @status_moved = true if saved_change_to_status? }
+  after_commit(on: :update) do
+    next unless @status_moved
+
+    @status_moved = false
+    ConvoyApp::Alerts.safely { ConvoyApp::Alerts::Requests.call(self) } if household_id
+  end
 
   scope :of_kind, ->(kind) { where(kind:) }
   scope :not_withdrawn, -> { where.not(status: "Withdrawn") }
+  scope :from_household, ->(household) { where(household_id: household.id) }
 
   # The status as people read it: an accepted new request not paid by the end of the offer has Lapsed; a stop past its
   # last day has Stopped.

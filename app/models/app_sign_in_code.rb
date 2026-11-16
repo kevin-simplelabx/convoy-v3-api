@@ -45,7 +45,7 @@ class AppSignInCode < ApplicationRecord
     end
 
     transaction do
-      where(target:, used_at: nil).update_all(used_at: Time.current) # rubocop:disable Rails/SkipsModelValidations
+      where(target:, purpose:, app_account_id: account&.id, used_at: nil).update_all(used_at: Time.current) # rubocop:disable Rails/SkipsModelValidations
       create!(target:, purpose:, app_account: account, code_digest: digest(ConvoyApp.otp_code), expires_at: TTL.from_now, ip:)
     end
   end
@@ -61,11 +61,11 @@ class AppSignInCode < ApplicationRecord
     record
   end
 
-  # True when the code matches (and marks it used); counts the try otherwise.
+  # True when the code matches (and marks it used, once: two requests with the same code can't both pass); counts the
+  # try otherwise.
   def check!(code)
     if ActiveSupport::SecurityUtils.secure_compare(code_digest, self.class.digest(code.to_s.strip))
-      update!(used_at: Time.current)
-      true
+      self.class.where(id:, used_at: nil).update_all(used_at: Time.current) == 1 # rubocop:disable Rails/SkipsModelValidations
     else
       increment!(:attempts) # rubocop:disable Rails/SkipsModelValidations
       false

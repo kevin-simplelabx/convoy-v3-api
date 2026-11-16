@@ -9,6 +9,7 @@ module ApiDocs
     DOCS = Rails.root.join(".api-documents")
     MENUS = { "convoy-os/scheduler.md" => "Scheduler", "convoy-os/trips.md" => "Trips", "convoy-os/fleet.md" => "Fleet", "convoy-os/settings.md" => "Settings", "convoy-os/clients.md" => "Clients", "convoy-os/hr.md" => "HR", "convoy-os/finance.md" => "Finance", "convoy-os/reports.md" => "Reports", "convoy-os/live-map.md" => "Live Map", "convoy-os/ops-control.md" => "Ops Control", "convoy-os/school-bus-setup.md" => "School Bus", "convoy-os/school-bus-money.md" => "School Bus", "convoy-os/school-bus-stops.md" => "School Bus", "convoy-os/school-bus-routes.md" => "School Bus", "convoy-os/school-bus-parents.md" => "School Bus", "convoy-os/school-bus-finance.md" => "School Bus", "convoy-os/school-bus-live.md" => "School Bus", "convoy-os/dashboard.md" => "Dashboard", "convoy-os/convoy-admin.md" => "Convoy Admin",
               "driver/auth.md" => "Driver App", "driver/profile.md" => "Driver App", "driver/runs.md" => "Driver App", "driver/driving.md" => "Driver App", "driver/gps.md" => "Driver App", "driver/disposal.md" => "Driver App", "driver/vehicle.md" => "Driver App", "driver/notifications.md" => "Driver App",
+              "convoy-app/auth.md" => "Convoy App", "convoy-app/account.md" => "Convoy App", "convoy-app/household.md" => "Convoy App", "convoy-app/organisations.md" => "Convoy App", "convoy-app/school.md" => "Convoy App", "convoy-app/fees.md" => "Convoy App", "convoy-app/shuttles.md" => "Convoy App", "convoy-app/bookings.md" => "Convoy App", "convoy-app/home.md" => "Convoy App",
               "client-portal/auth.md" => "Client Portal", "client-portal/shell.md" => "Client Portal", "client-portal/settings.md" => "Client Portal", "client-portal/approval-flows.md" => "Client Portal", "client-portal/bookings.md" => "Client Portal", "client-portal/approvals.md" => "Client Portal", "client-portal/home.md" => "Client Portal",
               "client-portal/shuttles.md" => "Client Portal", "client-portal/notices.md" => "Client Portal", "client-portal/invoices.md" => "Client Portal", "client-portal/map.md" => "Client Portal", "README.md" => "Common" }.freeze
     # Folder = the Convoy OS menu that owns the resource (.notes/data-ownership.md), not the doc that first names it.
@@ -22,7 +23,7 @@ module ApiDocs
                     vehicle_driver_schedules vehicle_types vehicle_type_requests drivers operator_drivers operators attendants
                     fuel fuel_entries fuel_alerts fuel_companies maintenance_visits workshops
                     external_share_links external_vehicle_submissions public/share_forms],
-      "Clients" => %w[clients client_sites client_end_customers client_pickup_points client_users pickup_points],
+      "Clients" => %w[clients client_sites client_end_customers client_pickup_points client_users client_riders pickup_points],
       "HR" => %w[pay_rate_plans pay_schemes pay_drivers pay_earnings pay_simulator pay_bonuses pay_points pay_rewards pay_audit_log],
       "Finance" => %w[finance_settings client_invoices client_billing finance_documents finance_school_collections operator_payments vehicle_financials vehicle_pl],
       "Reports" => %w[reports],
@@ -37,15 +38,17 @@ module ApiDocs
       "Convoy Admin" => %w[message_terms discover company_leads],
       "Client Portal" => %w[portal/sessions portal/passwords portal/me portal/roles portal/users portal/teams portal/settings portal/approval_flows portal/bookings portal/end_customers portal/approvals portal/pages portal/map],
       "Driver App" => %w[driver_app/sessions driver_app/companies driver_app/company driver_app/profiles driver_app/licences driver_app/vehicle driver_app/runs driver_app/positions driver_app/config driver_app/vehicle_handovers driver_app/notifications driver_app/notices],
+      "Convoy App" => %w[convoy_app/sessions convoy_app/profiles convoy_app/identities convoy_app/devices convoy_app/company_suggestions convoy_app/households convoy_app/household_dependants convoy_app/household_members convoy_app/household_invites convoy_app/household_links convoy_app/household_invitations convoy_app/household_guardians convoy_app/organisations convoy_app/school convoy_app/school_applications convoy_app/school_requests convoy_app/school_changes convoy_app/school_address_changes convoy_app/fees convoy_app/cca convoy_app/shuttles convoy_app/shuttle_usuals convoy_app/shuttle_routes convoy_app/shuttle_alerts convoy_app/bookings convoy_app/booking_actions convoy_app/booking_points convoy_app/home convoy_app/alerts],
       "Settings" => %w[users profiles companies countries country_requests calendars calendar_days public_holidays]
     }.flat_map { |folder, names| names.map { [ "api/v1/#{it}", folder ] } }.to_h.freeze
-    ORDER = %w[Common Dashboard Ops\ Control Live\ Map Scheduler Trips School\ Bus Fleet Clients Reports Finance HR Settings Convoy\ Admin Client\ Portal Driver\ App Other].freeze
+    ORDER = %w[Common Dashboard Ops\ Control Live\ Map Scheduler Trips School\ Bus Fleet Clients Reports Finance HR Settings Convoy\ Admin Client\ Portal Driver\ App Convoy\ App Other].freeze
     MENTION = %r{`(GET|POST|PATCH|PUT|DELETE) (/[^`\s?]*)}
     PUBLIC = %w[api/v1/sessions#create api/v1/downloads#show api/v1/portal/sessions#lookup api/v1/portal/sessions#code
                 api/v1/portal/sessions#verify api/v1/portal/sessions#create api/v1/portal/passwords#create
-                api/v1/driver_app/sessions#code api/v1/driver_app/sessions#create api/v1/driver_app/sessions#email].freeze
-    # Each app signs in with its own token (Convoy OS, Client Portal, Driver app); a public endpoint takes none.
-    TOKEN_SCHEMES = { "api/v1/portal/" => "portalAuth", "api/v1/driver_app/" => "driverAuth" }.freeze
+                api/v1/driver_app/sessions#code api/v1/driver_app/sessions#create api/v1/driver_app/sessions#email
+                api/v1/convoy_app/sessions#code api/v1/convoy_app/sessions#create].freeze
+    # Each app signs in with its own token (Convoy OS, Client Portal, Driver app, Convoy App); a public endpoint takes none.
+    TOKEN_SCHEMES = { "api/v1/portal/" => "portalAuth", "api/v1/driver_app/" => "driverAuth", "api/v1/convoy_app/" => "appAuth" }.freeze
 
     CRUD = { "index" => "List %s", "show" => "Get %s", "create" => "Create %s", "update" => "Update %s",
              "destroy" => "Delete %s" }.freeze
@@ -146,7 +149,7 @@ module ApiDocs
       return false if PUBLIC.include?("#{route[:controller]}##{route[:action]}")
 
       klass = controller_class(route[:controller])
-      klass.nil? || [ Api::V1::BaseController, Api::V1::Portal::BaseController, Api::V1::DriverApp::BaseController ].any? { klass <= it }
+      klass.nil? || [ Api::V1::BaseController, Api::V1::Portal::BaseController, Api::V1::DriverApp::BaseController, Api::V1::ConvoyApp::BaseController ].any? { klass <= it }
     end
 
     # nil = the default (Convoy OS bearerAuth).
@@ -350,7 +353,7 @@ module ApiDocs
     # ---- folders and tags ---------------------------------------------------------------------------------------
 
     # "Driver App / Sessions", not "Driver App / Driver App Sessions": an app's namespace is its folder already.
-    APP_NAMESPACES = %w[portal driver_app].freeze
+    APP_NAMESPACES = %w[portal driver_app convoy_app].freeze
 
     def resource_name(controller)
       parts = controller.delete_prefix("api/v1/").split("/")
@@ -410,7 +413,9 @@ module ApiDocs
           portalAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT",
                         description: "Client Portal: data.token from POST /portal/session or /portal/password." },
           driverAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT",
-                        description: "Convoy Driver app: data.token from POST /driver/session (mobile + code 123456) or /driver/session/email." }
+                        description: "Convoy Driver app: data.token from POST /driver/session (mobile + code 123456) or /driver/session/email." },
+          appAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT",
+                     description: "Convoy App: data.token from POST /app/session (mobile or email + code 123456)." }
         },
         schemas: {
           Error: {

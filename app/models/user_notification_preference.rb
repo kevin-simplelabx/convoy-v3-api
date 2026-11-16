@@ -5,18 +5,20 @@
 # Table name: user_notification_preferences
 # Database name: primary
 #
-#  id              :bigint           not null, primary key
-#  acknowledged    :boolean          default(TRUE), not null
-#  cancel_request  :boolean          default(TRUE), not null
-#  client_approved :boolean          default(TRUE), not null
-#  client_declined :boolean          default(TRUE), not null
-#  email           :boolean          default(TRUE), not null
-#  new_booking     :boolean          default(TRUE), not null
-#  seen_at         :datetime
-#  created_at      :datetime         not null
-#  updated_at      :datetime         not null
-#  company_id      :bigint           not null
-#  user_id         :bigint           not null
+#  id               :bigint           not null, primary key
+#  acknowledged     :boolean          default(TRUE), not null
+#  cancel_request   :boolean          default(TRUE), not null
+#  change_reply     :boolean          default(TRUE), not null
+#  client_approved  :boolean          default(TRUE), not null
+#  client_cancelled :boolean          default(TRUE), not null
+#  client_declined  :boolean          default(TRUE), not null
+#  email            :boolean          default(TRUE), not null
+#  new_booking      :boolean          default(TRUE), not null
+#  seen_at          :datetime
+#  created_at       :datetime         not null
+#  updated_at       :datetime         not null
+#  company_id       :bigint           not null
+#  user_id          :bigint           not null
 #
 # Indexes
 #

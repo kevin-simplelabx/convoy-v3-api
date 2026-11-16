@@ -3,7 +3,8 @@
 module Bookings
   class Notify < ApplicationService
     SUBJECTS = { "new_booking" => "New booking", "client_approved" => "Client approval done", "client_declined" => "Declined by the client",
-                 "acknowledged" => "Changes accepted", "cancel_request" => "Cancellation request" }.freeze
+                 "acknowledged" => "Changes accepted", "cancel_request" => "Cancellation request", "change_reply" => "Changes not accepted",
+                 "client_cancelled" => "Cancelled by the client" }.freeze
 
     def initialize(booking:, kind:, message:, actor_name: nil, trip: nil, at: Time.current)
       @booking = booking

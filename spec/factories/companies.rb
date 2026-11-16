@@ -4,6 +4,7 @@
 # Database name: primary
 #
 #  id                        :bigint           not null, primary key
+#  accepts_personal_bookings :boolean          default(FALSE), not null
 #  business_units_enabled    :boolean          default(FALSE), not null
 #  code                      :string(6)        not null
 #  country                   :string           default("SG"), not null

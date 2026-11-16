@@ -2,7 +2,8 @@
 # in a company, users with the Users permission edit their company's settings (everyone else: view only).
 # The country is picked once, then locked: a change is a CompanyCountryRequest.
 class CompanyPolicy < ApplicationPolicy
-  PLATFORM_FIELDS = %i[code country status school_run_enabled route_list_import_enabled external_vehicle_cap].freeze
+  # accepts_personal_bookings: the company takes Convoy App Personal bookings (people with no school / company link).
+  PLATFORM_FIELDS = %i[code country status school_run_enabled route_list_import_enabled external_vehicle_cap accepts_personal_bookings].freeze
   SETTINGS_FIELDS = %i[name short_name theme_color logo remove_logo timezone date_format time_format
                        observed_holidays business_units_enabled
                        ops_phone ops_hours ops_whatsapp ops_email depot_address].freeze

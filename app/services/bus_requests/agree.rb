@@ -12,7 +12,10 @@ module BusRequests
 
       @req.update!(agree: @yes ? "yes" : "no", status: @yes ? "Active" : "Not Agreed")
       @req.log!(@yes ? "Parent agreed to the new fare" : "Parent did not agree to the new fare", by: "Parent")
-      PlanSync.call(@req) if @yes
+      if @yes
+        PlanSync.call(@req)
+        ConvoyApp::Parents::MoveHome.call(@req)
+      end
       @req
     end
   end

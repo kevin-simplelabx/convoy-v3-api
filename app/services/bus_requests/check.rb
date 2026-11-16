@@ -57,11 +57,13 @@ module BusRequests
 
     private
 
+    # The afternoon is checked at the drop-off point when the parent gave a different one (Convoy App).
     def sessions(req, date)
       ll = req.lat && [ req.lat.to_f, req.lng.to_f ]
       { "AM" => req.am, "PM" => req.pm }.select { _2 }.keys.to_h do |s|
         rt = @routes.for(s, date)
-        f = rt ? RouteFit.fit(session: s, home: { ll:, postal: req.postal }, school: rt[:school], p: rt[:p], routes: rt[:routes]) : nil
+        home = s == "PM" && req.dropoff_postal ? { ll: req.dropoff_lat && [ req.dropoff_lat.to_f, req.dropoff_lng.to_f ], postal: req.dropoff_postal } : { ll:, postal: req.postal }
+        f = rt ? RouteFit.fit(session: s, home:, school: rt[:school], p: rt[:p], routes: rt[:routes]) : nil
         [ s, f ? f.except(:x).merge(tm: f[:tm] && Clock.hm(f[:tm].round)) : { kind: "none", impact: [ "No #{s} route plan yet, so this session is not checked" ] } ]
       end
     end

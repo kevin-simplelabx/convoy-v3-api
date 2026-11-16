@@ -1,5 +1,6 @@
 # A School Bus bill: a family's bill for a billing period (or the school's, when the school pays per rider or per bus;
-# billed to its Managed Client), the first invoice of an accepted bus request, or a CCA rides payment. Period bills are
+# billed to its Managed Client), the first invoice of an accepted bus request, a CCA rides payment, or the registration fee
+# of requests sent from the Convoy App (one bill per submission, a line per child). Period bills are
 # drafted by Convoy (no number yet) and issued by Finance, which numbers them from Finance Settings (INV-2026-000001)
 # with GST. Payments, waivers and the credit / debit notes raised on it decide what is still owed (SchoolBills::Calc).
 # == Schema Information
@@ -68,7 +69,7 @@ class SchoolBill < ApplicationRecord
   include TenantScoped
   audited associated_with: :school
 
-  KINDS = %w[first cca period].freeze
+  KINDS = %w[first cca period registration].freeze
   STATUSES = %w[draft issued].freeze
   PAYERS = %w[family school].freeze
 
@@ -80,6 +81,7 @@ class SchoolBill < ApplicationRecord
   belongs_to :bus_request, optional: true, inverse_of: :first_bill
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :issued_by, class_name: "User", optional: true
+  has_many :registration_requests, class_name: "BusRequest", foreign_key: :registration_bill_id, dependent: :nullify, inverse_of: :registration_bill
   has_many :lines, -> { order(:position, :id) }, class_name: "SchoolBillLine", dependent: :delete_all, inverse_of: :school_bill
   has_many :payments, -> { order(:paid_on, :id) }, class_name: "SchoolBillPayment", dependent: :delete_all, inverse_of: :school_bill
   has_many :waivers, -> { order(:id) }, class_name: "SchoolBillWaiver", dependent: :delete_all, inverse_of: :school_bill

@@ -7,6 +7,7 @@
 # Database name: primary
 #
 #  id             :bigint           not null, primary key
+#  admin_fee      :decimal(12, 2)   default(0.0), not null
 #  amount         :decimal(12, 2)   not null
 #  method         :string
 #  paid_on        :date             not null

@@ -5,29 +5,32 @@
 # Table name: family_guardians
 # Database name: primary
 #
-#  id             :bigint           not null, primary key
-#  app_joined_at  :timestamptz
-#  app_joined_how :string
-#  email          :string
-#  first_name     :string
-#  last_name      :string
-#  name_order     :string           default("last"), not null
-#  phone          :string
-#  position       :integer          default(0), not null
-#  relationship   :string           default("Parent"), not null
-#  created_at     :datetime         not null
-#  updated_at     :datetime         not null
-#  family_id      :bigint           not null
+#  id                  :bigint           not null, primary key
+#  app_joined_at       :timestamptz
+#  app_joined_how      :string
+#  email               :string
+#  first_name          :string
+#  last_name           :string
+#  name_order          :string           default("last"), not null
+#  phone               :string
+#  position            :integer          default(0), not null
+#  relationship        :string           default("Parent"), not null
+#  created_at          :datetime         not null
+#  updated_at          :datetime         not null
+#  family_id           :bigint           not null
+#  household_member_id :bigint
 #
 # Indexes
 #
-#  index_family_guardians_on_email      (email)
-#  index_family_guardians_on_family_id  (family_id)
-#  index_family_guardians_on_phone      (phone)
+#  index_family_guardians_on_email                (email)
+#  index_family_guardians_on_family_id            (family_id)
+#  index_family_guardians_on_household_member_id  (household_member_id)
+#  index_family_guardians_on_phone                (phone)
 #
 # Foreign Keys
 #
 #  fk_rails_...  (family_id => families.id) ON DELETE => cascade
+#  fk_rails_...  (household_member_id => household_members.id) ON DELETE => nullify
 #
 class FamilyGuardian < ApplicationRecord
   audited associated_with: :family
@@ -36,6 +39,7 @@ class FamilyGuardian < ApplicationRecord
   RELATIONSHIPS = %w[Parent Mother Father Guardian Grandparent Relative Helper Other].freeze
 
   belongs_to :family, inverse_of: :guardians
+  belongs_to :household_member, optional: true
 
   validates :relationship, inclusion: { in: RELATIONSHIPS }
   validates :name_order, inclusion: { in: %w[first last] }

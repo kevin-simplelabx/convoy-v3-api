@@ -39,23 +39,30 @@ Add: `POST /clients`. Edit: `PATCH /clients/:id`.
 ```json
 { "client": { "kind": "company", "name": "St. Stephen's School", "uen": "T08GB0047K", "contact_name": "Mrs Lee",
               "billing_address": "20 Siglap View", "phone": "+65 6241 1243", "email": "transport@ststephens.edu.sg",
-              "school_id": 3, "school_calendar_id": 7 } }
+              "school_id": 3, "school_calendar_id": 7, "email_domains": ["google.com"] } }
 ```
 
 - `kind`: `company`, `individual` (name label "Full Name"; no UEN / contact), `transport_company` (Main Contractor).
 - `uen` is upper-cased; `422` "Uen looks wrong. Examples: 53012345A, 201912345K, T09LL1234A".
-- An individual needs a phone or an email.
+- An individual needs a phone or an email. Individuals may share a name (the name stays unique among the other kinds). The
+  Convoy App makes one **Individual** per person who books personally (named after them, their mobile / email); its bookings
+  are paid in the app (`payer: "self"`).
 - **This Client Is a School** (only `company`, shown when School Bus has schools): `school_id` links the school to this client
   (`null` / empty unlinks it). `422` "<school> is already linked to <client>".
 - **School Calendar** (only with a school): `school_calendar_id`, a calendar with `kind: school` (`422` "Pick a school calendar").
   It is the school's calendar: its holidays stop the school's buses (they re-sync in the background).
 - Changing `kind` away from `company` unlinks the school.
+- **Email Domains** (optional, `company` clients; `email_domains: []` when none): the work-email domains of the client's staff,
+  for the Convoy App staff shuttle. A person whose verified work email is on one of them is **invited** to the client's shuttle
+  and accepts in the app (§ 3.1). Typed as chips or comma text; `@Google.com` is cleaned to `google.com`. `422` "Email domains
+  include google, which is not a domain like google.com" / "Email domains include gmail.com, a personal mail provider". Leave the
+  field out of a `PATCH` to keep the domains.
 - Response: the record (§ 1.3), `201` when added.
 
 ### 1.3 Record page: `GET /clients/:id`
 
 The row fields plus `school { id, name }`, `school_calendar { id, name }`, `sites`, `end_customers`, `pickup_points`
-(§ 2). Details card: Client Is, Client Code (`code`), UEN, Contact Person, Phone, Email, Billing Address, School, School Calendar
+(§ 2), `email_domains`. Details card: Client Is, Client Code (`code`), UEN, Contact Person, Phone, Email, Billing Address, School, School Calendar
 (show only those with a value).
 
 **On-Time Allowance** (−1 / +1, 0–15 minutes): `PATCH /clients/:id { client: { on_time_allowance: 4 } }`. Text: "Within 4 min".
@@ -119,6 +126,8 @@ Text: none picked → "The client sees every vehicle type you offer…", some �
 `POST /clients/:client_id/pickup_points { client_pickup_point: { name, address, postal_code, lat, lng, note } }`,
 `DELETE /clients/:client_id/pickup_points/:id`. Each point has `created_by { id, name }` and `created_at`:
 "Added by Rachel Tan on 2 Nov 2026"; `note` → "Note for the driver: …".
+`created_by` is `null` for a point a booking admin saved in the Convoy App (the client user is not shown yet): show
+"Added on <date>".
 
 ## 3. Client Users
 
@@ -146,6 +155,22 @@ Portal (Settings › Users), shown read-only here. The list's Users column: `use
 - `422`: "Email is already a user of this client", "<email> belongs to a Convoy OS user of your company",
   "Keep at least one Super Admin for <client>" (changing or removing the last one), "Some sites are not sites of <client>".
 - After adding: "They sign in to the Client Portal with this email, get a one-time code the first time and set their own password."
+
+### 3.1 Staff Riders (Convoy App): `GET /clients/:client_id/riders`
+
+People the Convoy App matched to the client's `email_domains` (a verified work email on one of them). A row is an
+invitation: the person taps Accept / Not Me in the app; nobody is linked without it. **No HTML screen exists yet** (see
+§ 7); these two calls are ready for one.
+
+| Action | Call |
+| --- | --- |
+| List (newest first, paged like other lists) | `GET /clients/:client_id/riders` |
+| Remove (ends the link in the app at once; confirm "Remove <name> from <client>'s staff shuttle?") | `DELETE /clients/:client_id/riders/:id` → `204` |
+
+Rider: `{ id, client_id, name, matched_email, status, responded_at, created_at }`; `status` is `invited` (not answered),
+`accepted`, `declined` (Not Me) or `removed`. A removed rider stays in the list as history and is **not invited again** by the
+same domain. `422` "This rider is already removed". Removing a **client user** (§ 3) also ends that person's booking link
+in the app (a teacher found by their work email); no extra call.
 
 ## 4. Values reference
 
@@ -183,6 +208,7 @@ Client users added here (§ 3) sign in there.
 ## 7. Not built yet
 
 - Connected Clients (Coming Soon in the prototype).
+- A Staff Riders screen and an Email Domains field in the OS HTML (the API of § 1.2 / § 3.1 is ready; the prototype has neither).
 - Everything inside the Client Portal after sign-in (bookings, approvals, invoices, live map) and managing users from the Portal.
 - Real email sending (the sign-in code is only shown on dev / staging, see § 5).
 - Portal API after sign-in (no Portal data endpoints yet besides the session).

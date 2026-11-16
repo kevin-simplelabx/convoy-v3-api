@@ -2,23 +2,26 @@
 # works out the approval it needs (Portal::ApprovalRoute: the booking's site, the booker, its trip types, the estimate,
 # days ahead) and keeps it on the booking (Portal::Approval.start!). Needs approval: the trips wait for it
 # (awaiting_client). Else they go to the transport company (pending) and its coordinators are told (bell: New booking).
-# Files: up to 5 MB each.
+# Files: up to 5 MB each. The Convoy App (a teacher's school account) sends with source "app" and its own booking fields
+# (title, Bill To fund, charter terms, Book Again source) in `attributes`.
 module Portal
   class SubmitBooking < ApplicationService
     MAX_FILE = 5.megabytes
 
-    def initialize(client_user:, params:, files: [])
+    def initialize(client_user:, params:, files: [], source: "portal", attributes: {})
       @user = client_user
       @client = client_user.client
       @params = params.to_h.deep_symbolize_keys
       @files = Array(files).compact_blank
+      @source = source
+      @attributes = attributes
     end
 
     def call
       check_files
       Booking.transaction do
-        booking = Bookings::Save.call(booking: @client.bookings.new(company_id: @client.company_id),
-                                      params: @params.merge(client_id: @client.id), actor: @user)
+        booking = Bookings::Save.call(booking: @client.bookings.new(company_id: @client.company_id, **@attributes),
+                                      params: @params.merge(client_id: @client.id), actor: @user, source: @source)
         @files.each { booking.attachments.new(file: it).stamp_actor(:uploaded, @user).save! }
         route = ApprovalRoute.call(client: @client, booking: self.class.route_input(booking, @user))
         Approval.start!(booking:, route:)
@@ -48,7 +51,7 @@ module Portal
 
     def send_on(booking)
       Bookings::Notify.call(booking:, kind: "new_booking", actor_name: @user.name,
-                            message: "New booking from #{@user.name} (#{@client.name}) in the Client Portal")
+                            message: "New booking from #{@user.name} (#{@client.name}) in the #{@source == 'app' ? 'Convoy App' : 'Client Portal'}")
     end
   end
 end

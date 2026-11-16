@@ -21,7 +21,7 @@ module ConvoyApp
     # Two phones signing up with the same value at once: the second finds the first one's account.
     def create_account
       tag = @target.kind == "email" && !ConvoyApp.free_mail?(@target.domain) ? "work" : "personal"
-      AppAccount.transaction do
+      AppAccount.transaction(requires_new: true) do
         account = AppAccount.create!
         account.identities.create!(kind: @target.kind, tag:, value: @target.value, verified_at: Time.current)
         account

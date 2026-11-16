@@ -2,7 +2,8 @@
 # Month mode (Ready to Invoice): runs of the month up to today. Trip mode (Invoice Now): every run of one trip, also future.
 # A run is billed when it has a client price, no issue raised (month mode) and is not on an invoice that is not void.
 # A run the client cancelled inside their cut-off (late_cancel_hours, 24 by default) is billed in full as a late
-# cancellation; other cancelled runs are not billed. Runs that can't be billed are listed with why.
+# cancellation; other cancelled runs are not billed. Runs that can't be billed are listed with why. Runs of a prepaid
+# booking (paid in the Convoy App: Personal, Pay Myself) are settled there and never billed here.
 module ClientInvoices
   class Billable < ApplicationService
     Entity = Struct.new(:client, :site, :bill, :late, :blocked, keyword_init: true) do
@@ -37,6 +38,7 @@ module ClientInvoices
 
     def scope
       s = TripOccurrence.visible.where.not(client_id: nil).includes(:client, trip: :client_site).chronological
+      s = s.where.not(trip_id: Trip.joins(booking_trip: :booking).where(bookings: { payer: "self" }).select(:id))
       s = s.where(client_id: @client_id) if @client_id
       return s.where(trip_id: @trip.id) if @trip
 

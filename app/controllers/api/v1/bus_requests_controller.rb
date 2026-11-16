@@ -145,7 +145,7 @@ module Api
       def find_school = policy_scope(School).find(params[:school_id])
 
       def find(id = params[:id])
-        BusRequest.where(school: policy_scope(School)).includes(:family, :school_rider, :events, :acked_by, :quoted_by, :confirmed_by, :places, { first_bill: :payments },
+        BusRequest.where(school: policy_scope(School)).includes(:family, :school_rider, :events, :acked_by, :quoted_by, :confirmed_by, :places, :registration_bill, { first_bill: :payments },
                                                                 answer_moves: :moved_by, academic_year: %i[registration terms])
                                 .find(id)
       end

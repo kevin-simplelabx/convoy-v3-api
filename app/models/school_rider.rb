@@ -31,12 +31,14 @@
 #  updated_at       :datetime         not null
 #  company_id       :bigint           not null
 #  created_by_id    :bigint
+#  dependant_id     :bigint
 #  rider_dataset_id :bigint
 #  school_id        :bigint           not null
 #
 # Indexes
 #
 #  index_school_riders_manual_rid                         (school_id,rid) UNIQUE WHERE (rider_dataset_id IS NULL)
+#  index_school_riders_on_dependant_id                    (dependant_id)
 #  index_school_riders_on_postal                          (postal)
 #  index_school_riders_on_rider_dataset_id_and_rid        (rider_dataset_id,rid) UNIQUE WHERE (rider_dataset_id IS NOT NULL)
 #  index_school_riders_on_school_id_and_rider_dataset_id  (school_id,rider_dataset_id)
@@ -45,6 +47,7 @@
 #
 #  fk_rails_...  (company_id => companies.id)
 #  fk_rails_...  (created_by_id => users.id)
+#  fk_rails_...  (dependant_id => dependants.id) ON DELETE => nullify
 #  fk_rails_...  (rider_dataset_id => rider_datasets.id) ON DELETE => cascade
 #  fk_rails_...  (school_id => schools.id)
 #
@@ -58,6 +61,7 @@ class SchoolRider < ApplicationRecord
   belongs_to :school
   belongs_to :rider_dataset, optional: true
   belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :dependant, optional: true
 
   enum :source, { csv: "csv", manual: "manual" }, validate: true
 

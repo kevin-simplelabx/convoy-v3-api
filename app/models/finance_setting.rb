@@ -8,6 +8,9 @@
 #  account_name           :string
 #  account_number         :string
 #  approval               :string           default("single"), not null
+#  booking_card_fee_pct   :decimal(5, 2)    default(3.7), not null
+#  booking_card_on        :boolean          default(TRUE), not null
+#  booking_paynow_on      :boolean          default(TRUE), not null
 #  brand_address          :text
 #  brand_email            :string
 #  brand_name             :string
@@ -60,6 +63,10 @@ class FinanceSetting < ApplicationRecord
 
   enum :gst_mode, { excl: "excl", incl: "incl" }, prefix: :gst, validate: true
   enum :approval, { single: "single", maker: "maker" }, prefix: :approval, validate: true
+
+  # Convoy App Personal bookings (Pay Myself): card with a fee in %, PayNow (no fee); at least one stays on.
+  validates :booking_card_fee_pct, numericality: { in: 0..20 }
+  validate { errors.add(:base, "Keep card or PayNow on for personal bookings") unless booking_card_on || booking_paynow_on }
 
   DOC_TYPES.each_key { |t| normalizes :"prefix_#{t}", with: ->(v) { v.to_s.upcase.gsub(/[^A-Z0-9]/, "")[0, 6] } }
 

@@ -1,22 +1,26 @@
 # What is done to one booking trip besides approving it (Bookings::Approve). By the coordinator (actor: a User): reject
 # (the reason is shown to the client), and Client Acknowledged: the client accepted our changes (with how they told us),
-# recorded for them. By the client in the Client Portal (actor: a ClientUser): Accept Changes. The client's own approval
-# is decided only in the Client Portal (Portal::Approval).
+# recorded for them. By the client in the Client Portal or the Convoy App (actor: a ClientUser, or the AppAccount of a
+# Personal booking; via: "Convoy App"): Accept Changes. The client's own approval is decided only in the Client Portal
+# (Portal::Approval). Rejecting a trip of a prepaid booking refunds its share.
 module Bookings
   class TripAction < ApplicationService
     ACTIONS = %w[reject acknowledge].freeze
 
     PORTAL_ACTIONS = %w[acknowledge].freeze
 
-    def initialize(trip:, action:, actor:, reason: nil, how: nil, by_name: nil)
+    def initialize(trip:, action:, actor:, reason: nil, how: nil, by_name: nil, via: "Client Portal")
       @trip = trip
       @booking = trip.booking
       @action = action.to_s
       @actor = actor
-      @portal = actor.is_a?(ClientUser)
+      @portal = actor.is_a?(ClientUser) || actor.is_a?(AppAccount)
       @reason = reason.to_s.squish
-      @how = @portal ? "Client Portal" : how.to_s.squish
-      @by = @portal ? actor.name : by_name.to_s.squish.presence || @booking.coordinator_name
+      @how = @portal ? via : how.to_s.squish
+      @by = if actor.is_a?(AppAccount) then actor.display_name
+      elsif @portal then actor.name
+      else by_name.to_s.squish.presence || @booking.coordinator_name
+      end
     end
 
     def call
@@ -40,6 +44,8 @@ module Bookings
       @trip.reject
       @trip.assign_attributes(rejected_at: Time.current, rejection_reason: @reason)
       @trip.stamp_actor(:rejected, @actor)
+      Prepaid.refund!(booking: @booking, trips: [ @trip ], note: "Declined by #{@booking.company.name}: #{@reason}")
+      ConvoyApp::Alerts.safely { ConvoyApp::Alerts::Bookings.call(booking: @booking, kind: "declined", trip: @trip) }
     end
 
     def acknowledge

@@ -10,10 +10,11 @@ module Occurrences
     end
 
     # by_client: cancelled at the client's request (Trip History: Cancelled by Client), else by us.
-    def cancel!(by_client: false)
+    # at: when it counts as cancelled (a client's cancellation request: when the client asked, for the late-cancel rule).
+    def cancel!(by_client: false, at: Time.current)
       raise ApplicationService::Error, "This run is already cancelled" if @occ.cancelled?
 
-      save!(status: "cancelled", cancelled_at: Time.current, cancelled_by: @user, cancelled_by_client: by_client, overridden_fields: add(:status))
+      save!(status: "cancelled", cancelled_at: at, cancelled_by: @user, cancelled_by_client: by_client, overridden_fields: add(:status))
         .tap { DriverApp::RunNotifications.cancelled(it) }
     end
 

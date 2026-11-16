@@ -56,7 +56,8 @@ module Api
       def find_client = policy_scope(Client).kept.find(params[:id])
 
       def client_params
-        params.expect(client: %i[kind name uen contact_name phone email billing_address on_time_allowance school_id school_calendar_id])
+        params.expect(client: [ :kind, :name, :uen, :contact_name, :phone, :email, :billing_address, :on_time_allowance, :school_id, :school_calendar_id,
+                                { email_domains: [] } ])
       end
     end
   end

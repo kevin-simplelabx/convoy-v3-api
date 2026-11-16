@@ -38,7 +38,7 @@ class AppIdentity < ApplicationRecord
   belongs_to :app_account, inverse_of: :identities
 
   enum :kind, { mobile: "mobile", email: "email" }, validate: true
-  enum :tag, { personal: "personal", work: "work" }, validate: true, prefix: false
+  enum :tag, { personal: "personal", work: "work" }, validate: true
 
   normalizes :value, with: ->(v) { v.to_s.strip }
 
@@ -46,7 +46,11 @@ class AppIdentity < ApplicationRecord
   validates :verified_at, presence: true
   validate :value_format
 
-  before_validation { self.domain = email? ? value.to_s.split("@").last&.downcase : nil }
+  # Stored as the services look it up ("+6591882045", lower-case email), whoever writes it (seed, console).
+  before_validation do
+    self.value = ConvoyApp.normalize(kind, value) if kind.present? && value.present?
+    self.domain = email? ? value.to_s.split("@").last : nil
+  end
 
   # "+6591882045" for a Singapore mobile typed as "9188 2045" / "+65 9188 2045", else the digits as typed.
   def self.normalize_mobile(value)
@@ -80,6 +84,7 @@ class AppIdentity < ApplicationRecord
   def value_format
     if mobile?
       errors.add(:value, "is not an 8-digit Singapore mobile number") unless self.class.valid_mobile?(value)
+      errors.add(:tag, "of a mobile is always personal") if work?
     elsif !self.class.valid_email?(value)
       errors.add(:value, "is not a valid email")
     elsif work? && ConvoyApp.free_mail?(domain)

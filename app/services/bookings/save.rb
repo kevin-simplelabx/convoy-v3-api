@@ -1,21 +1,24 @@
 # Record a booking or save changes from the booking form: the booking, its days and their trips with points, standby
 # areas and vehicles (all sent each time; days and trips matched by id). Approved and rejected trips are locked: they
 # keep their values and can't be removed. Each open trip's estimate is worked out again from the client's rate card.
-# actor: a Convoy OS user (Trips › Bookings) or a client user (Client Portal › New Booking, new bookings only). The
-# portal also needs: the site (one the person covers) when the client has sites, the first day today or later,
-# passengers and enough seats for them, vehicle types the client may book (Bookable Vehicles); no standby areas.
+# actor: a Convoy OS user (Trips › Bookings), a client user (Client Portal / Convoy App school account, new bookings only)
+# or an app account (Convoy App Personal / Pay Myself, new bookings only). Self-service (client user, app account) also
+# needs: the first day today or later, passengers and enough seats for them, vehicle types the client may book (Bookable
+# Vehicles); no standby areas; a client user also the site (one they cover) when the client has sites.
+# source: where it was made (console, portal, app); default by actor.
 module Bookings
   class Save < ApplicationService
     BOOKING_FIELDS = %i[client_id client_site_id client_end_customer_id service_for coordinator_name coordinator_org
-                        coordinator_email coordinator_phone po_number cost_centre notes].freeze
+                        coordinator_email coordinator_phone po_number cost_centre notes title client_bill_fund_id].freeze
     PERMIT = [ *BOOKING_FIELDS, { days: [ :id, :date, { trips: [ :id, *TripBuilder::PERMIT ] } ] } ].freeze
 
-    def initialize(booking:, params:, actor:, lock_version: nil)
+    def initialize(booking:, params:, actor:, lock_version: nil, source: nil)
       @booking = booking
       @params = params.to_h.deep_symbolize_keys
       @actor = actor
-      @portal = actor.is_a?(ClientUser)
+      @portal = actor.is_a?(ClientUser) || actor.is_a?(AppAccount)
       @lock_version = lock_version
+      @source = source || ({ ClientUser => "portal", AppAccount => "app" }[actor.class])
     end
 
     def call
@@ -30,6 +33,7 @@ module Bookings
         check_days
         estimate
         persist
+        ConvoyApp::Alerts.safely { ConvoyApp::Alerts::Bookings.call(booking: @booking, kind: "changed") } if @changed
         @booking
       end
     end
@@ -52,7 +56,8 @@ module Bookings
       raise Error, "Enter the booking coordinator" if @booking.coordinator_name.blank?
       raise Error, "Pick a site of this client" if @booking.client_site && @booking.client_site.client_id != @booking.client_id
       raise Error, "Pick a customer of this client" if @booking.client_end_customer && @booking.client_end_customer.client_id != @booking.client_id
-      check_portal_site if @portal
+      raise Error, "Pick a fund of this client" if @booking.bill_fund && (@booking.bill_fund.client_id != @booking.client_id || @booking.bill_fund.discarded?)
+      check_portal_site if @actor.is_a?(ClientUser)
 
       @booking.service_for = @booking.client_end_customer.name if @booking.client_end_customer && @booking.service_for.blank?
     end
@@ -96,6 +101,7 @@ module Bookings
       return if items.empty?
 
       trip.mark_changed
+      @changed = true
       trip.assign_attributes(acknowledged_at: nil, acknowledged_by_name: nil, acknowledged_how: nil)
       trip.changes_made.build(items:, changed_by: @actor)
     end
@@ -186,7 +192,7 @@ module Bookings
     def persist
       if @booking.new_record?
         @booking.number = Booking.next_number(ActsAsTenant.current_tenant)
-        @booking.source = "portal" if @portal
+        @booking.source = @source if @source
         @booking.stamp_actor(:created, @actor)
       end
       @booking.save!

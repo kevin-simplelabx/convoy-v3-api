@@ -3,7 +3,7 @@
 module Bookings
   class TripBuilder
     FIELDS = %i[kind label start_time return_time hours airport_direction flight_number terminal wait_minutes meet_and_greet
-                signboard_name pax luggage_on luggage_cabin luggage_medium luggage_large luggage_extra_large luggage_oversized
+                signboard_name pax adults luggage_on luggage_cabin luggage_medium luggage_large luggage_extra_large luggage_oversized
                 contact_name contact_phone note distance_km return_distance_km].freeze
     POINT_FIELDS = %i[name address lat lng use note].freeze
     STANDBY_FIELDS = %i[location minutes lat lng note].freeze

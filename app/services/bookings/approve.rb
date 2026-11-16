@@ -26,6 +26,7 @@ module Bookings
         @trip.approve
         @trip.update!(approved_at: Time.current, approved_by: @user, approval_how: @how, approval_note: @note)
         @booking.update!(updated_at: Time.current)
+        ConvoyApp::Alerts.safely { ConvoyApp::Alerts::Bookings.call(booking: @booking, kind: "confirmed", trip: @trip) }
         [ result.trip, result.return_trip ].compact
       end
     end

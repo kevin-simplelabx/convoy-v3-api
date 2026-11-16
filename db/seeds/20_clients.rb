@@ -5,7 +5,7 @@ with_company("SD") do
   end
 
   google = client("Google Asia Pacific", kind: :company, uen: "200817984R", contact_name: "Priya Raman",
-                  phone: "+65 6521 8000", email: "transport@google.com", billing_address: "70 Pasir Panjang Road, #03-71 Mapletree Business City, Singapore 117371")
+                  phone: "+65 6521 8000", email: "transport@google.com", email_domains: [ "google.com" ], billing_address: "70 Pasir Panjang Road, #03-71 Mapletree Business City, Singapore 117371")
   [
     [ "Mapletree Business City", "70 Pasir Panjang Road, Singapore 117371", 1.2747, 103.7993 ],
     [ "Google Asia Pacific (Pasir Panjang)", "3 Pasir Panjang Road, Singapore 117438", 1.2768, 103.7952 ]

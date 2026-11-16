@@ -1,7 +1,8 @@
 # Mobile and Emails, step 2: the code for a mobile / email from step 1 (same kind, tag, value, replace). Adds it verified,
 # replaces the personal one on Change, or renews a work email on Verify Again. A mobile on another account moves here
 # (numbers get reissued; nothing else comes with it and the old owner is told by email); an email on another account is
-# refused (accounts are not joined). Returns { identity, outcome: added | changed | reverified | moved }.
+# refused (accounts are not joined). A work email (added or verified again) is then matched to employers and schools
+# (Links::Match: invitations only). Returns { identity, outcome: added | changed | reverified | moved }.
 module ConvoyApp
   module Identities
     class Verify < ApplicationService
@@ -17,7 +18,7 @@ module ConvoyApp
         tag = ok[:tag]
         AppSignInCode.check!(input.value, @code, purpose: :verify, account: @account)
 
-        AppAccount.transaction do
+        result = AppAccount.transaction do
           @account.lock!
           existing = AppIdentity.lock.find_by(kind: input.kind, value: input.value)
           if existing&.app_account_id == @account.id
@@ -40,6 +41,11 @@ module ConvoyApp
           identity = @account.identities.create!(kind: input.kind, tag:, value: input.value, verified_at: Time.current)
           { identity:, outcome: }
         end
+        Links::Match.call(account: @account) if result[:identity].email? && result[:identity].work?
+        result
+      rescue ActiveRecord::RecordNotUnique
+        # Check ran before the lock: the same value / work domain was added by another request just now.
+        raise Error, "This was added just now. Reload Mobile and Emails"
       end
 
       private

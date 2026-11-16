@@ -27,7 +27,7 @@ module SchoolBills
 
     def history(b)
       pays = b.payments.reject(&:voided?).map do |p|
-        { kind: "payment", on: p.paid_on, amount: p.amount, method: p.method, reference: p.reference, receipt: p.receipt&.number, source: p.source, by: p.recorded_by&.name }
+        { kind: "payment", on: p.paid_on, amount: p.amount, method: p.method, reference: p.reference, receipt: p.receipt&.number, source: p.source, admin_fee: p.admin_fee, by: p.recorded_by&.name }
       end
       notes = b.notes.reject(&:voided?).map do |d|
         { kind: d.doc_type, on: d.issued_on, amount: d.total, number: d.number, credit_use: d.credit_use, description: d.description, reason: d.reason, by: d.created_by&.name }

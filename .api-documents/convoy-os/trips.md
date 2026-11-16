@@ -344,8 +344,23 @@ Each trip is approved, edited or rejected **on its own** (see [Approve, reject a
 
 ### Booking details — `GET /bookings/:id`
 
-`created_by` / `created_by_kind`: who recorded the booking — a Convoy OS user (`user`), or the client user who booked it in
-the Client Portal (`client_user`, with `source: "portal"`).
+`created_by` / `created_by_kind`: who recorded the booking — a Convoy OS user (`user`), the client user who booked it in
+the Client Portal or the Convoy App (`client_user`, `source: "portal"` / `"app"`), or a person booking personally in the
+Convoy App (`app_account`, `source: "app"`).
+
+Convoy App fields (also on the list row: `title`, `payer`):
+
+| Field | Meaning |
+| --- | --- |
+| `title` | the booker's name for it ("P4 Learning Journey"); `null` for OS / Portal bookings. Show it beside the number when set |
+| `payer` | `client` (billed to the client after the trip, as before) or `self` (**paid in the Convoy App** when sent: a Personal booking, or "Pay Myself" from a school account; the client is the person's Individual client). `self` bookings are **never** on a Client Invoice |
+| `bill_fund` | `{ id, name }` the school / company fund it is billed to ("Bill to: CCA Fund"), or `null` |
+| `payments` | `self` only: `[{ id, kind: payment\|refund, method: card\|paynow, method_label, amount, card_fee, charged, reference, paid_at, note }]` (simulated). Refunds are made by the system: unconfirmed trips cancelled in the app, a trip you reject, a cancellation you accept (less the charge quoted) |
+| `change_replies` | Can't Accept replies to your changes: `[{ id, reason, message, replied_by_name, created_at }]`. The trip stays `awaiting_ack`; send another option (edit the trip) |
+| `copied_from` | `{ id, number }` when made with Book Again |
+| `terms_accepted_at`, `receipt_name`, `receipt_uen`, `receipt_address` | charter terms accepted in the app; the company name a Personal booking's receipt is made out to |
+
+Trips have `adults` (of `pax`, the teachers / adults).
 
 The list fields plus:
 
@@ -483,21 +498,28 @@ Saving the booking form with changes to a trip that is not locked moves it to `a
 
 ### Cancellation requests
 
-A client asks to cancel the booking or one trip (from the Client Portal later; recorded here on their behalf). The booking
-shows them in `cancel_requests`:
+A client asks to cancel the booking (the rest of it), **one day** or one trip: from the Convoy App (confirmed trips only;
+trips you have not confirmed are cancelled at once there and you get a `client_cancelled` bell), or recorded here on their
+behalf. The booking shows them in `cancel_requests`:
 
 ```json
-"cancel_requests": [ { "id": 2, "booking_trip_id": 7, "trip_date": "2026-11-04", "reason": "Event moved", "requested_by_name": "Alex", "requested_by_kind": "user",
+"cancel_requests": [ { "id": 2, "scope": "day", "booking_trip_id": null, "booking_day_id": 31, "trip_date": "2026-11-04", "reason": "Trip called off",
+                       "note": "Rain", "fee_quoted": "276.0", "requested_by_name": "Priya Nair", "requested_by_kind": "client_user",
                        "requested_at": "...", "status": "open", "resolved_at": null, "resolved_by": null, "resolution_note": null } ]
 ```
 
+`scope`: `booking` | `day` (`booking_day_id`) | `trip` (`booking_trip_id`); `trip_date` = the trip's or day's date.
+`fee_quoted`: the charge the client was shown before sending (runs starting within the client's `late_cancel_hours` in full,
+else 0); accepting it bills exactly that (the runs count as cancelled when the client asked). `requested_by_kind`: `user`,
+`client_user` or `app_account` (Personal booking).
+
 | Action | Call |
 | --- | --- |
-| Record a request | `POST /bookings/:booking_id/cancel_requests` `{ "booking_trip_id": 7, "reason": "Event moved", "requested_by_name": "Alex" }` (omit `booking_trip_id` for the whole booking; name defaults to the coordinator) → 201 |
+| Record a request | `POST /bookings/:booking_id/cancel_requests` `{ "booking_trip_id": 7 \| "booking_day_id": 31, "reason": "Event moved", "requested_by_name": "Alex" }` (omit both for the whole booking; name defaults to the coordinator) → 201 |
 | Accept | `PATCH /bookings/:booking_id/cancel_requests/:id` `{ "decision": "accept", "note": "Told Alex" }` |
 | Decline | `PATCH /bookings/:booking_id/cancel_requests/:id` `{ "decision": "decline" }` |
 
-Accept cancels the trips (status `cancelled`); for approved trips their Scheduler runs not started yet are cancelled
+Accept cancels the trips of the scope (status `cancelled`; a day = its trips); for approved trips their Scheduler runs not started yet are cancelled
 (they show as Cancelled on the Scheduler), or the Scheduler trip is removed when it has no runs yet. A booking whose
 trips are all cancelled shows "Cancelled" (Rejected tab). A resolved request can't be resolved again (422).
 
@@ -521,6 +543,8 @@ For coordinators (users who work on trips). Events of the last 14 days, newest f
 | `client_declined` | block | Declined in the client's approval |
 | `acknowledged` | task_alt | The client accepted our changes |
 | `cancel_request` | event_busy | A cancellation request |
+| `change_reply` | feedback | The client can't accept your changes (Convoy App "Can't Accept": reason + message) |
+| `client_cancelled` | event_busy | The client cancelled trips you had not confirmed yet (Convoy App) |
 
 - Badge = `meta.unseen_count`. Opening the bell: `PATCH /booking_notifications/seen`.
 - Clicking an item: open Bookings on `tab`, booking `booking_id`.

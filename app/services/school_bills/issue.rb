@@ -1,6 +1,7 @@
 # Issue drafted bills of a period: each gets its INV number and GST (Finance Settings), and takes off the payer's credit
 # notes waiting for their next bill. A school bill (the school pays) needs the school linked to a Managed Client, whose
-# billing details it carries. Parents see their bills in the Convoy App; the school in the Client Portal.
+# billing details it carries. Parents see their bills in the Convoy App (the Billing Contact gets an alert); the school in
+# the Client Portal.
 module SchoolBills
   class Issue < ApplicationService
     def initialize(year, index, bill_ids: nil, user:, now: Time.current)
@@ -26,6 +27,7 @@ module SchoolBills
       ApplicationRecord.transaction do
         drafts.each { issue(it, settings, credits) }
       end
+      ConvoyApp::Alerts.safely { ConvoyApp::Alerts::Bills.call(drafts) }
       drafts
     end
 

@@ -41,6 +41,7 @@ module Api
         raise ApplicationService::Error, "Only an active notice can be ended" unless notice.state == "active"
 
         notice.update!(ended_at: Time.current, ended_by: current_user)
+        ::ConvoyApp::Alerts.safely { ::ConvoyApp::Alerts.notice_ended(notice) }
         render_data notice, NoticeBlueprint
       end
 

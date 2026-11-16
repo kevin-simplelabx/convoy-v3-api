@@ -1,6 +1,7 @@
 # Confirm a Change of Address (the new pick-up point and the fare from the move date) or a Change of Service (the fare
 # after it). A higher fare waits for the parent to agree in the Convoy App; otherwise it is Active and goes into the
-# route plans from its date. From Not Agreed this is Change the Fare.
+# route plans from its date (and a move sent with "Update the Family's residential address" moves the app Family's home).
+# From Not Agreed this is Change the Fare.
 module BusRequests
   class ConfirmChange < ApplicationService
     def initialize(req, amount:, note:, user:, stop: nil)
@@ -31,7 +32,10 @@ module BusRequests
                      reason: nil)
         @req.log!(text, by: @user)
       end
-      PlanSync.call(@req, user: @user) unless up
+      unless up
+        PlanSync.call(@req, user: @user)
+        ConvoyApp::Parents::MoveHome.call(@req)
+      end
       @req
     end
   end

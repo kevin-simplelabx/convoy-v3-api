@@ -157,10 +157,7 @@ module Occurrences
       [ row, second ]
     end
 
-    # The assignment in force for the slot on the date: the latest effective_from <= date covering it.
-    def assignment_on(trip, run, slot, date)
-      trip.assignments.select { |a| a.effective_from <= date && a.covers?(run&.id, slot) }.max_by { |a| [ a.effective_from, a.id ] }
-    end
+    def assignment_on(trip, run, slot, date) = Regular.assignment_on(trip, run, slot, date)
 
     # Agreed pay per run: per run as is; per day shared over the slots it covers; per month also over the month's run days.
     def assignment_pay(trip, assignment, date)
@@ -176,13 +173,7 @@ module Occurrences
       amount.round(2)
     end
 
-    # Vehicle for Each Run, else the trip's vehicle slot (used when no assignment covers the slot).
-    def planned_vehicle(trip, run, slot)
-      run_slot = run&.slots&.find { |s| s.slot_no == slot }
-      return nil if run_slot&.unassigned?
-
-      run_slot&.vehicle_id || trip.vehicle_slots.find { |s| s.slot_no == slot }&.vehicle_id
-    end
+    def planned_vehicle(trip, run, slot) = Regular.planned_vehicle(trip, run, slot)
 
     # The latest Every Run From This Date change on or before the date (for this run, or for every run).
     def time_change(trip, run, date)

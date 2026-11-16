@@ -11,7 +11,6 @@ RSpec.describe "School Bus CCA rides" do
       year = AcademicYears::Create.call(school:, start_year: 2026, start_month: 1)
       year.terms.first.update!(starts_on: "2026-01-02", ends_on: "2026-05-29")
       year.terms.second.update!(starts_on: "2026-06-29", ends_on: "2026-11-20")
-      year.holidays.create!(name: "Sports Day (no school)", starts_on: "2026-11-19", ends_on: "2026-11-19")
       tan = school.families.create!(code: "FAM-0001", name: "TAN Family", name_mode: "custom")
       lim = school.families.create!(code: "FAM-0002", name: "LIM Family", name_mode: "custom")
       { school:, tan:, lim: }
@@ -57,10 +56,12 @@ RSpec.describe "School Bus CCA rides" do
     post not_running_api_v1_school_cca_rides_path(f[:school]), params: { date: "2026-11-12", reason: "weather" }, as: :json
     expect(json.dig(:error, :message)).to eq("The CCA bus is already marked as not running on Thu 12 Nov")
 
-    # The Tan family's S$16 credit pays the next week's two rides; Sports Day has no school
+    # The Tan family's S$16 credit pays the next week's two rides; then Sports Day is declared a day without school
     next_bill = pay(f[:tan], [ pick("Ethan Tan", "2026-11-17"), pick("Ethan Tan", "2026-11-19") ], Date.new(2026, 11, 12))
     expect(next_bill).to have_attributes(gross: 16, credit_used: 16, total: 0, payments: [])
     expect(within_tenant(company) { CcaBooking.where(school_bill: next_bill).pluck(:method).uniq }).to eq([ "Credit" ])
+    within_tenant(company) { f[:school].academic_years.first.holidays.create!(name: "Sports Day (no school)", starts_on: "2026-11-19", ends_on: "2026-11-19") }
+    expect { pay(f[:lim], [ pick("Amelia Lim", "2026-11-19") ], Date.new(2026, 11, 12)) }.to raise_error(ApplicationService::Error, "There is no CCA bus on Thu 19 Nov: Sports Day (no school)")
     get path, params: { week_of: "2026-11-18" }
     expect(json.dig(:data, :days).last).to include(status: "No School", no_school: { run: false, kind: "school_holiday", label: "Sports Day (no school)", sub: "School holiday" }, can_no_school_credit: true)
     post not_running_api_v1_school_cca_rides_path(f[:school]), params: { date: "2026-11-19", reason: "no_school", note: "Sports Day" }, as: :json

@@ -20,11 +20,12 @@ These are Convoy's own records, so no company needs to be picked first.
 | --- | --- |
 | List | `GET /companies` (`q[name_i_cont]`) |
 | New Company → Create Company | `POST /companies { company: { name, code? }, admin: { name, email, password } }` |
-| External Vehicles limit, School Run / Route List Import switches | `PATCH /companies/:id { company: { external_vehicle_cap, school_run_enabled, route_list_import_enabled } }` |
+| External Vehicles limit, School Run / Route List Import switches, Personal Bookings | `PATCH /companies/:id { company: { external_vehicle_cap, school_run_enabled, route_list_import_enabled, accepts_personal_bookings } }` |
 | Open (work inside a company) | `PATCH /session { company_id }` |
 
 Row (Convoy Admin view): the company fields plus `admin { name, email }`, `schools_count`, `users_count`, `created_at`,
-`external_vehicle_cap`, `school_run_enabled`, `route_list_import_enabled`, `is_current` (the company opened for this
+`external_vehicle_cap`, `school_run_enabled`, `route_list_import_enabled`, `accepts_personal_bookings` (the company takes
+Convoy App Personal bookings from anyone; SimpleDrive in the seed), `is_current` (the company opened for this
 sign-in: badge Open). The new company's admin is its Super Admin with every permission ("<name> created. Its admin can sign in
 with <email>"). `code` is made from the name when left out. `422`: "Password needs at least 8 characters", "Enter the admin's
 name", `details.email` "is already used by another user".

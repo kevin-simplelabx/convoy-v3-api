@@ -43,6 +43,7 @@ Fields (save body = response):
 | --- | --- |
 | GST | `gst_on`, `gst_rate` (default 9), `gst_mode` (`excl` Fares Are Before GST / `incl` Fares Include GST), `gst_reg_no` |
 | Payment Details | `bank_id` (`GET /banks`), `account_number`, `account_name`, `paynow`, `payment_note` |
+| Convoy App personal bookings | `booking_card_on` (default true), `booking_card_fee_pct` (default 3.7, 0–20: "+3.7% card fee"), `booking_paynow_on` (default true); at least one on (`422` "Keep card or PayNow on for personal bookings") |
 | Operator Pay Run Approval | `approval` (`single` One Person / `maker` Maker-Checker), `approvers [{ user_id, can_prepare, can_approve }]` (response adds `name`, `email`, `active`) |
 | On Documents | `brand_name`, `brand_uen`, `brand_address`, `brand_phone`, `brand_email`, `brand_note` (+ the company logo) |
 | Document Numbers | `prefix_inv`, `prefix_cn`, `prefix_dn`, `prefix_rcp`, `prefix_pv`, `prefix_pn`, `prefix_pb` (upper-cased, A–Z 0–9, up to 6); `doc_types` (read only) = the label of each prefix |
@@ -90,6 +91,8 @@ range); one-off trips can be invoiced any time, before or after the trip (Invoic
   raised on this run"). These come back in `blocked` for the tooltip.
 - A run **the client cancelled** (`cancelled_by_client`) less than the client's cut-off (`late_cancel_hours`, 24 by default)
   before its start → billed in full as a **late cancellation** (can be waived run by run on the draft). Other cancelled runs are not billed.
+- Runs of a booking **paid in the Convoy App** (`payer: "self"`: Personal / Pay Myself) are never billed here: the person paid
+  when booking (refunds and cancellation charges are settled in the app).
 - A trip whose site is billed as its own entity (Clients > site > own billing) bills that site; otherwise the client.
 
 Ready to Invoice row: `{ client_id, client_site_id, name ("<billing name> | <site>" for a site), trips, runs, late_cancels, amount,

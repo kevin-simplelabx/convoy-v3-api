@@ -5,6 +5,8 @@ class ClientBlueprint < ApplicationBlueprint
   field(:users_count, if: ->(_name, _c, options) { options.key?(:users_count) }) { |c, options| options[:users_count][c.id].to_i }
 
   view :full do
+    # Work-email domains for the Convoy App staff shuttle: [] = nobody is found by domain.
+    field :email_domains
     field(:school) { |c| c.school && { id: c.school.id, name: c.school.name } }
     field(:school_calendar) { |c| c.school&.calendar && { id: c.school.calendar.id, name: c.school.calendar.name } }
     # Bookable Vehicles: [] = All Vehicle Types.

@@ -1,6 +1,7 @@
 # Attendance on a run with names (School Bus, School Run), from the Driver app or the Scheduler's Passenger List.
 # marks: [{ key, state, method, lat, lng, at }]; state boarded | alighted | not_boarded | not_boarding, or expected to clear
 # the mark. A child must be on the run's list. Boarding keeps its first time; alighting boards too when not ticked.
+# A child newly boarded / alighted on a School Bus run is told to their Family in the Convoy App (ConvoyApp::Alerts::Attendance).
 module Occurrences
   class MarkPassengers < ApplicationService
     STATES = (OccurrencePassenger::STATES + %w[expected]).freeze
@@ -15,6 +16,7 @@ module Occurrences
     def call
       names = roster
       rows = @occ.passenger_marks.where(passenger_key: @marks.map { it[:key].to_s }).index_by(&:passenger_key)
+      @changed = []
       OccurrencePassenger.transaction do
         @marks.each do |m|
           key = m[:key].to_s
@@ -24,6 +26,7 @@ module Occurrences
           mark(rows[key] || @occ.passenger_marks.build(company_id: @occ.company_id, passenger_key: key), m, names[key])
         end
       end
+      ConvoyApp::Alerts.safely { ConvoyApp::Alerts::Attendance.call(occ: @occ, marks: @changed) } if @changed.any?
       @occ.passenger_marks.reset
     end
 
@@ -36,6 +39,7 @@ module Occurrences
 
       at = m[:at] || Time.current
       method = m[:method].presence || "tick"
+      @changed << [ row.passenger_key, state ] if %w[boarded alighted].include?(state) && row.state != state
       row.assign_attributes(name:, state:, marked_by: @by, source: @source)
       case state
       when "boarded"

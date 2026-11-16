@@ -194,6 +194,12 @@ There is one registration per school academic year.
 | `GET /bus_requests/:id` | One request with its history |
 | `POST /bus_requests/:id/open` | Opening it the first time: Requested → Under Review. A mid-year request waits for Acknowledge |
 
+**From the Convoy App** (`source: "app"`, 16/11/2026): the detail also has `dropoff { address, postal, lat, lng }` (null =
+the same point as the pick-up; Route Fit checks the PM session there), `cca_from`, `app_family: true` and
+`registration_bill { id, number, paid }` (the registration fee bill, kind `registration`; `fee_paid` turns true when it is
+paid). Accepting such a request makes the app Family the school's family (named like it, every adult a guardian, linked by
+app ids) instead of matching guardians by phone.
+
 **Filters.**
 
 - `kind`: `new` (default), `adr`, `svc` or `stop`.
@@ -500,11 +506,9 @@ only on days with requests waiting. It is recorded in notification emails and no
 
 - **Front end only.** These are screen state: map pins, the dialogs, and the words around deadlines. The server gives
   `deadline` and `text`.
-- **Convoy App endpoints, not built yet.**
-  - Sending, withdrawing and renewing requests.
-  - Paying first invoices.
-  - Agreeing to a higher fare.
-  - CCA booking, Not Riding, and Same Days Every Week.
-  - Auto-accept as requests arrive.
+- **Convoy App endpoints** ([../convoy-app/school.md](../convoy-app/school.md)): sending, withdrawing and renewing
+  requests, Change of Address / Service / Stop and Agree to a higher fare are built (Phase 4a). Not built yet: paying
+  first invoices and registration fees in the app, CCA booking, Not Riding, Same Days Every Week (Phase 5), and
+  auto-accept as requests arrive.
 - **Sending.** Parent messages and the 08:00 email are recorded, not sent.
 - **Family fees.** These come with School Finance.

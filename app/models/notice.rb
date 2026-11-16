@@ -5,6 +5,7 @@
 #
 #  id                 :bigint           not null, primary key
 #  all_runs           :boolean          default(TRUE), not null
+#  app_sent_at        :datetime
 #  audience           :string           default("trip"), not null
 #  banner             :boolean          default(TRUE), not null
 #  ended_at           :datetime

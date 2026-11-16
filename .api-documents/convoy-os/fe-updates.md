@@ -4,6 +4,58 @@ Changes to existing Convoy OS endpoints made while building other apps (Convoy D
 on (renamed, removed or changed fields and endpoints). New optional fields are not listed here; they are in the menu
 documents. Newest first. Each item: what changed, before → after, and what the front-end has to do.
 
+## 16/11/2026 — Bookings from the Convoy App (Convoy App Phase 7; new fields and values, no breaking change)
+
+Teachers / bookers and anyone personally book from the Convoy App. OS calls keep their shape; these are new fields and values.
+
+| # | Endpoint / field | Before → after | Front-end |
+| --- | --- | --- | --- |
+| 1 | `GET /bookings` (row) and `/bookings/:id` → `title`, `payer` | not there → `title` (string or null), `payer` `client` \| `self` | Show `title` beside the number. `payer: "self"`: chip "Paid in the app" (never invoiced; see 3) |
+| 2 | `GET /bookings/:id` → `bill_fund`, `payments`, `change_replies`, `copied_from`, `terms_accepted_at`, `receipt_*`; trips → `adults`; `created_by_kind` | new fields; `created_by_kind` gains `app_account` | Rows "Bill to: <fund>", "Copied from <number>", "Receipt for <name>"; a Payments list for `self`; a **Client replies** box when `change_replies` is not empty (the trip stays Pending Client Acknowledgement: edit it to send another option) |
+| 3 | `GET /bookings/:id` → `cancel_requests[]` | `{ booking_trip_id, … }` → also `scope` (`booking` \| `day` \| `trip`), `booking_day_id`, `note`, `fee_quoted`; `requested_by_kind` may be `app_account` | Label the request "Whole booking" / "Day <trip_date>" / "Trip <trip_date>", show the reason + note and "Charge quoted: S$x" (0 = no charge). Accept bills exactly that (runs cancelled as of the request time) |
+| 4 | `POST /bookings/:id/cancel_requests` | `booking_trip_id` or nothing → also **`booking_day_id`** | Optional: offer "a day" when recording for a client |
+| 5 | `GET /booking_notifications` / preferences | 5 kinds → also **`change_reply`** ("Changes not accepted") and **`client_cancelled`** ("Cancelled by the client") | Icons for the two kinds; the preferences dialog lists them from `kinds` |
+| 6 | `GET` / `PATCH /finance/settings` → `booking_card_on`, `booking_card_fee_pct`, `booking_paynow_on` | new | A "Convoy App personal bookings" card (card on + fee %, PayNow on) |
+| 7 | Client Invoices (Ready to Invoice, drafts) | runs of `payer: "self"` bookings are no longer billable | Nothing |
+| 8 | `GET /companies` (Convoy Admin) / `PATCH /companies/:id` → `accepts_personal_bookings` | new platform field | Optional: a "Personal Bookings" switch on Transport Companies |
+| 9 | Clients | an `individual` client's name is no longer unique | Nothing (two "Tan Wei Ming" may exist; show the phone / email to tell them apart) |
+| 10 | `GET /clients/:client_id/pickup_points` → `created_by` | always an OS user → `null` for a point a booking admin saved in the Convoy App (Pick a Point › Save This Point) | When `created_by` is null show "Added on <date>" (no name) |
+
+Details: [trips.md § 4](trips.md#4-bookings), [finance.md](finance.md), [../convoy-app/bookings.md](../convoy-app/bookings.md).
+
+## 16/11/2026 — School Bus: payments made in the Convoy App (Convoy App Phase 5; new optional field, no breaking change)
+
+Parents pay bills in the app (simulated: collected at once). Nothing in the OS calls changes shape.
+
+| # | Endpoint / field | Before → after | Front-end |
+| --- | --- | --- | --- |
+| 1 | `GET /school_bills/:id` (history, `kind: "payment"`) → `source`, `admin_fee`, `by` | `source` was `console` (or `app` for CCA rides) → also **`app`** for any bill paid in the Convoy App (`by: null`, `reference` `SIM-…`); **`admin_fee`** (new) = the card / PayNow surcharge the parent paid on top, `"0.0"` otherwise | Optional: a chip "Paid in the app" for `source: "app"`, and "+S$x admin fee" beside the amount when `admin_fee` is above 0. The bill's own balance is unaffected (the fee is not part of it) |
+| 2 | First invoice / registration fee bill paid by the app | — | Same effect as Record Payment: the request turns Active (first invoice) / its registration fee is marked paid. Refresh the request when it was open |
+
+Details: [../convoy-app/fees.md](../convoy-app/fees.md).
+
+## 16/11/2026 — School Bus: requests from the Convoy App (Convoy App Phase 4a; new fields and a new bill kind, no breaking change)
+
+Parents now send requests from the Convoy App (`source: "app"`). Accepting one links the app Family into the school's
+families (every adult a guardian); nothing changes in the OS calls themselves.
+
+| # | Endpoint / field | Before → after | Front-end |
+| --- | --- | --- | --- |
+| 1 | `GET /bus_requests/:id` → `dropoff` | not there → `{ address, postal, lat, lng }` or `null` (same as the pick-up) | Show a **Drop-off Point** row under the address when not null. Route Fit's PM session is already checked at that point. The rider keeps one address: place the PM stop by hand |
+| 2 | `GET /bus_requests/:id` → `cca_from`, `app_family`, `registration_bill` | not there → CCA bus start date (or null); `true` when sent by a Convoy App Family; `{ id, number, paid }` of the registration fee bill (or null) | Optional: "CCA bus from <date>", a "Convoy App Family" chip, "Registration fee <number> · paid / unpaid" |
+| 3 | `GET /schools/:school_id/bills` and Collections → `kind` | `first`, `cca`, `period` → also **`registration`** (the registration fee of app requests: one bill per submission, a line per child, numbered from the invoice counter, due at once) | Label `registration` as "Registration fee". Recording its payment (Record Payment) also marks the requests' fee as paid |
+| 4 | `GET /families/:id` | — → families created from the app are named like the app Family (`source: "app"`) and their guardians are the app adults | Nothing |
+
+Details: [school-bus-parents.md § 3](school-bus-parents.md#3-bus-service-requests-list-and-detail), [../convoy-app/school.md](../convoy-app/school.md).
+
+## 16/11/2026 — Clients: `email_domains` and Staff Riders (Convoy App Phase 3; new optional field, no breaking change)
+
+| # | Endpoint / field | Before → after | Front-end |
+| --- | --- | --- | --- |
+| 1 | `GET /clients/:id` (record), `POST` / `PATCH /clients` → `email_domains` | not there → `string[]`, `[]` when none. **Optional**: nothing breaks if the field is never shown or sent; a client with no domains is simply not found by the Convoy App. `PATCH` without the key keeps the domains | Optional but recommended: an **Email Domains** field (chips) on Add / Edit Client for `company` clients, hint "Staff with a work email on these domains can join this client's staff shuttle in the Convoy App". `422` per bad domain (details in `clients.md` § 1.2) |
+| 2 | `GET /clients/:client_id/riders` (new), `DELETE /clients/:client_id/riders/:id` (new) | not there → the people the app matched to the domains (`status` invited / accepted / declined / removed) and a Remove that ends their link in the app | Optional: a **Staff Riders** list on the client record with Remove (`clients.md` § 3.1). The HTML has no such screen yet |
+| 3 | `DELETE /clients/:client_id/users/:id` | removed the Portal person → also ends that person's booking link in the Convoy App if the app offered / linked them by work email | Nothing |
+
 ## 12/11/2026 — Drawer `bus_pattern` after "Make <plate> the Regular Bus" (API-ISSUES §29; bug fix, no breaking change)
 
 | # | Endpoint / field | Before → after | Front-end |
@@ -137,7 +189,7 @@ Details: [scheduler.md § 5.2](scheduler.md#52-drawer-actions).
 | 2 | `POST` / `PATCH /stops` `points[].street_view_url`, and trip stops `street_view_url` | `""` kept → `null` when the link is empty | Treat `null` as "no link" (an empty string is still accepted) |
 | 3 | `POST /trips` `return_trip.return_billing` | no change (documented only) | `two_way` \| `one_way`; the server works it out when every stop has a pin (200 m rule), and uses the form's value only when a stop has no lat/lng. Send it as before |
 
-Details: [scheduler.md § 7.2](scheduler.md#72-save), [scheduler.md § 7.1](scheduler.md#71-stops).
+Details: [scheduler.md § 7.2](scheduler.md#72-save), [scheduler.md § 7.4](scheduler.md#74-nested-lists-send-the-whole-list-existing-rows-with-id-_destroy-true-to-remove).
 
 ## 10/11/2026 — Bus Requests windows: registration state (API-ISSUES §24, WIP G4)
 

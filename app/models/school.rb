@@ -59,6 +59,7 @@ class School < ApplicationRecord
   has_many :bus_requests, dependent: :destroy
   has_one :cca_ride_setting, dependent: :delete
   has_many :cca_bookings, dependent: :delete_all
+  has_many :cca_standing_days, dependent: :delete_all
   has_many :cca_off_days, dependent: :delete_all
   has_many :cca_credits, dependent: :delete_all
   has_many :family_riders, dependent: :delete_all

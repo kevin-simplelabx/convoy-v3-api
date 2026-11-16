@@ -1,6 +1,7 @@
 # On accepting a new child: add them to the rider list (Unpaid until the first invoice is paid) from the start date and
-# to a family — the school's family with a guardian of the same phone (last 8 digits) or email, else a new family with
-# the parent as guardian. The family gets the first invoice too.
+# to a family — for a request from the Convoy App, the app Family's (ConvoyApp::Parents::LinkFamily: every adult a
+# guardian, the child linked by id); otherwise the school's family with a guardian of the same phone (last 8 digits) or
+# email, else a new family with the parent as guardian. The family gets the first invoice too.
 module BusRequests
   class Link < ApplicationService
     def initialize(req, user:)
@@ -18,8 +19,9 @@ module BusRequests
                                        remarks: "#{@req.source == 'app' ? 'From the Convoy App' : 'Added in Convoy OS'}, #{@req.code}"
                                      })
       rider.update!(lat: @req.lat, lng: @req.lng) if rider.lat.nil? && @req.lat
-      family = @req.family || match(school) || create_family(school)
+      family = @req.family || ConvoyApp::Parents::LinkFamily.family(@req) || match(school) || create_family(school)
       Families.link(family, school, [ rider.rid ])
+      ConvoyApp::Parents::LinkFamily.rider(@req, rider)
       @req.update!(school_rider: rider, family:)
       if (bill = @req.first_bill)
         bill.update!(school_rider: rider, family:, bill_to_code: family.code)

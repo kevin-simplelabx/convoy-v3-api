@@ -17,35 +17,53 @@
 #  lock_version              :integer          default(0), not null
 #  notes                     :text
 #  number                    :string           not null
+#  payer                     :string           default("client"), not null
 #  po_number                 :string
+#  receipt_address           :text
+#  receipt_name              :string
+#  receipt_uen               :string
 #  service_for               :string
 #  source                    :string           default("console"), not null
+#  terms_accepted_at         :datetime
+#  title                     :string
 #  created_at                :datetime         not null
 #  updated_at                :datetime         not null
+#  booked_via_client_user_id :bigint
+#  client_bill_fund_id       :bigint
 #  client_end_customer_id    :bigint
 #  client_id                 :bigint           not null
 #  client_site_id            :bigint
 #  company_id                :bigint           not null
+#  copied_from_booking_id    :bigint
+#  created_by_app_account_id :bigint
 #  created_by_client_user_id :bigint
 #  created_by_id             :bigint
 #
 # Indexes
 #
+#  index_bookings_on_booked_via_client_user_id  (booked_via_client_user_id)
+#  index_bookings_on_client_bill_fund_id        (client_bill_fund_id)
 #  index_bookings_on_client_end_customer_id     (client_end_customer_id)
 #  index_bookings_on_client_id                  (client_id)
 #  index_bookings_on_client_site_id             (client_site_id)
 #  index_bookings_on_company_id                 (company_id)
 #  index_bookings_on_company_id_and_created_at  (company_id,created_at)
 #  index_bookings_on_company_id_and_number      (company_id,number) UNIQUE
+#  index_bookings_on_copied_from_booking_id     (copied_from_booking_id)
+#  index_bookings_on_created_by_app_account_id  (created_by_app_account_id)
 #  index_bookings_on_created_by_client_user_id  (created_by_client_user_id)
 #  index_bookings_on_created_by_id              (created_by_id)
 #
 # Foreign Keys
 #
+#  fk_rails_...  (booked_via_client_user_id => client_users.id)
+#  fk_rails_...  (client_bill_fund_id => client_bill_funds.id)
 #  fk_rails_...  (client_end_customer_id => client_end_customers.id)
 #  fk_rails_...  (client_id => clients.id)
 #  fk_rails_...  (client_site_id => client_sites.id)
 #  fk_rails_...  (company_id => companies.id)
+#  fk_rails_...  (copied_from_booking_id => bookings.id) ON DELETE => nullify
+#  fk_rails_...  (created_by_app_account_id => app_accounts.id) ON DELETE => nullify
 #  fk_rails_...  (created_by_client_user_id => client_users.id)
 #  fk_rails_...  (created_by_id => users.id)
 #
@@ -64,20 +82,33 @@ class Booking < ApplicationRecord
   belongs_to :client_site, optional: true
   belongs_to :client_end_customer, optional: true
   belongs_to :created_by, class_name: "User", optional: true
+  # Convoy App: the Bill To fund; the client-user link a Pay Myself booking was made from; Book Again's source.
+  belongs_to :bill_fund, class_name: "ClientBillFund", foreign_key: :client_bill_fund_id, optional: true
+  belongs_to :booked_via_client_user, class_name: "ClientUser", optional: true
+  belongs_to :copied_from, class_name: "Booking", foreign_key: :copied_from_booking_id, optional: true
   include ActorStamp
-  actor_stamp :created
+  actor_stamp :created, app_account: true
   has_many :days, -> { order(:date) }, class_name: "BookingDay", dependent: :destroy, inverse_of: :booking
   has_many :trips, class_name: "BookingTrip", dependent: :destroy, inverse_of: :booking
   has_many :attachments, class_name: "BookingAttachment", dependent: :destroy, inverse_of: :booking
   has_many :cancel_requests, -> { order(:requested_at) }, class_name: "BookingCancelRequest", dependent: :destroy, inverse_of: :booking
   has_many :events, class_name: "BookingEvent", dependent: :delete_all, inverse_of: :booking
   has_one :approval, class_name: "BookingApproval", dependent: :destroy, inverse_of: :booking
+  has_many :change_replies, -> { order(:created_at) }, class_name: "BookingChangeReply", dependent: :destroy, inverse_of: :booking
+  has_many :payments, -> { order(:paid_at, :id) }, class_name: "BookingPayment", dependent: :restrict_with_error, inverse_of: :booking
 
   enum :source, { console: "console", portal: "portal", app: "app" }, prefix: :from, validate: true
+  # client: billed to the client (invoiced after the trip); self: paid in the Convoy App when sent (Personal, Pay Myself).
+  enum :payer, { client: "client", self: "self" }, prefix: :paid_by, validate: true
+
+  normalizes :title, with: ->(v) { v.to_s.squish.presence }
+  normalizes :receipt_uen, with: ->(v) { Uen.normalize(v) }
 
   validates :number, presence: true
   validates :coordinator_name, presence: true
   validates :coordinator_email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
+  validates :title, length: { maximum: 120 }
+  validates :receipt_uen, format: { with: Uen::FORMAT, message: Uen::MESSAGE }, allow_nil: true
 
   # Tab of each booking, from its trips (same rules as #tab):
   # pending — a trip waits (for us or the client); rejected — no trip approved; completed — every approved trip's date

@@ -1,5 +1,6 @@
 # The bell for bookings: events of the last 14 days the user wants (new bookings from the Portal or the App, client
-# approval done or declined, changes accepted, cancellation requests), newest first, and how many are unseen.
+# approval done or declined, changes accepted or not, cancellation requests, trips the client cancelled before they were
+# confirmed), newest first, and how many are unseen.
 module Api
   module V1
     class BookingNotificationsController < BaseController
@@ -8,7 +9,9 @@ module Api
         "client_approved" => [ "Client approval done", "The client's own approval flow approves a booking and sends it to you" ],
         "client_declined" => [ "Declined by the client", "A booking is declined in the client's approval flow before it reaches you" ],
         "acknowledged" => [ "Changes accepted", "The client accepts the changes you made to a trip" ],
-        "cancel_request" => [ "Cancellation request", "The client asks to cancel a booking, a day or a trip" ]
+        "cancel_request" => [ "Cancellation request", "The client asks to cancel a booking, a day or a trip" ],
+        "change_reply" => [ "Changes not accepted", "The client can't accept the changes you made and says why" ],
+        "client_cancelled" => [ "Cancelled by the client", "The client cancels trips you have not confirmed yet (in the Convoy App)" ]
       }.freeze
 
       before_action :set_preference
@@ -36,7 +39,8 @@ module Api
         render_preferences
       end
 
-      # PATCH /booking_notifications/preferences { new_booking, client_approved, client_declined, acknowledged, cancel_request, email }
+      # PATCH /booking_notifications/preferences { new_booking, client_approved, client_declined, acknowledged, cancel_request,
+      #   change_reply, client_cancelled, email }
       def update_preferences
         authorize @pref, :update?
         @pref.update!(params.permit(*BookingEvent::KINDS, :email))

@@ -7,19 +7,20 @@
 # Table name: app_accounts
 # Database name: primary
 #
-#  id                  :bigint           not null, primary key
-#  delete_requested_at :datetime
-#  first_name          :string
-#  last_name           :string
-#  last_sign_in_at     :datetime
-#  name_order          :string           default("first"), not null
-#  notify_email        :boolean          default(TRUE), not null
-#  notify_push         :boolean          default(TRUE), not null
-#  notify_sms          :boolean          default(FALSE), not null
-#  photo               :string
-#  terms_accepted_at   :datetime
-#  created_at          :datetime         not null
-#  updated_at          :datetime         not null
+#  id                          :bigint           not null, primary key
+#  delete_requested_at         :datetime
+#  first_name                  :string
+#  last_name                   :string
+#  last_sign_in_at             :datetime
+#  name_order                  :string           default("first"), not null
+#  notify_email                :boolean          default(TRUE), not null
+#  notify_push                 :boolean          default(TRUE), not null
+#  notify_sms                  :boolean          default(FALSE), not null
+#  photo                       :string
+#  shuttle_alerts_paused_until :date
+#  terms_accepted_at           :datetime
+#  created_at                  :datetime         not null
+#  updated_at                  :datetime         not null
 #
 # Indexes
 #
@@ -37,6 +38,10 @@ class AppAccount < ApplicationRecord
   has_many :identities, -> { order(:kind, :tag, :id) }, class_name: "AppIdentity", dependent: :delete_all, inverse_of: :app_account
   has_many :jwts, class_name: "AppJwt", dependent: :delete_all
   has_many :devices, class_name: "AppDevice", dependent: :delete_all
+  has_many :household_members, dependent: :delete_all
+  has_many :client_riders, dependent: nil # the database cascades; company data is read per company
+  has_many :notifications, class_name: "AppNotification", dependent: :delete_all
+  has_many :saved_points, -> { order(:name) }, class_name: "AppSavedPoint", dependent: :delete_all
 
   normalizes :first_name, :last_name, with: ->(v) { v.to_s.squish.presence }
 
@@ -44,6 +49,13 @@ class AppAccount < ApplicationRecord
   validates :first_name, :last_name, length: { maximum: 60 }
 
   scope :due_for_deletion, -> { where(delete_requested_at: ...DELETE_AFTER.ago) }
+  # Nobody can come back to it: no phone signed in, and either no mobile / email left (its last one moved to another
+  # account) or Create Your Account never finished; older than 30 days.
+  scope :abandoned, lambda {
+    where(created_at: ...DELETE_AFTER.ago)
+      .where.not(id: AppJwt.where(exp: Time.current..).select(:app_account_id))
+      .merge(where(terms_accepted_at: nil).or(where.not(id: AppIdentity.select(:app_account_id))))
+  }
 
   # Create Your Account done (name and terms).
   def profile_complete? = first_name.present? && last_name.present? && terms_accepted_at.present?
@@ -53,6 +65,14 @@ class AppAccount < ApplicationRecord
     parts = name_order == "last" ? [ last_name, first_name ] : [ first_name, last_name ]
     parts.compact_blank.join(" ").presence
   end
+
+  # No mobile or email left (moved to another account): the app asks to add one, else the account is lost on sign-out.
+  def needs_identity? = identities.empty?
+
+  # Their Family membership (the one they are active in), and the Family.
+  def household_member = household_members.active.includes(:household).find { it.household.kept? }
+
+  def household = household_member&.household
 
   def mobile = identities.find { it.kind == "mobile" }
 

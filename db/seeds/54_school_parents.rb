@@ -110,10 +110,14 @@ with_company("SD") do
       CcaRides::Pay.call(fam, picks:, today: last_week - 3)
     end
     CcaRides::NotRunning.call(school, date: last_week + 3, reason: "weather", note: "Lightning risk", user: admin)
+    # Next week's sample rides go on a day the bus runs (CcaRides::Pay refuses a school holiday): the first of Tue..Fri, none in a break.
     following = CcaRides.monday(Date.current) + 7
+    years = school.academic_years.includes(:holidays, :special_days, :terms).to_a
+    runs = ->(date) { (c = CcaRides.calendar(years, date, PublicHoliday.where(date:).index_by(&:date))).nil? || c[:run] }
+    ride_day = (following + 1..following + 4).find { runs.(it) && !school.cca_off_days.exists?(date: it) }
     families.first(3).each do |fam, pair|
-      CcaRides::Pay.call(fam, picks: [ { child_name: pair.first.name, class_name: pair.first.grade, school_rider: pair.first, date: following + 1 } ])
-    end
+      CcaRides::Pay.call(fam, picks: [ { child_name: pair.first.name, class_name: pair.first.grade, school_rider: pair.first, date: ride_day } ])
+    end if ride_day
   end
 
   BusRequests::Digest.new(school.company).call

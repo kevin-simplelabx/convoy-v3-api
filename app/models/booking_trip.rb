@@ -10,6 +10,7 @@
 #  acknowledged_at                :datetime
 #  acknowledged_by_name           :string
 #  acknowledged_how               :string
+#  adults                         :integer          default(0), not null
 #  airport_direction              :string
 #  approval_how                   :string
 #  approval_note                  :text
@@ -136,6 +137,8 @@ class BookingTrip < ApplicationRecord
 
   validates :status, inclusion: { in: STATUS_LABELS.keys }
   validates :pax, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
+  # Of the passengers, the teachers / adults (Convoy App); the rest are students / children.
+  validates :adults, numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: :pax }
 
   def locked? = LOCKED.include?(status)
   def status_label = approved? ? "Approved, #{unassigned ? 'Unassigned' : 'Assigned'}" : STATUS_LABELS[status]

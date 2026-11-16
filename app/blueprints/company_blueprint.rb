@@ -26,7 +26,7 @@ class CompanyBlueprint < ApplicationBlueprint
   # company opened for this sign-in).
   view :platform do
     include_view :settings
-    fields :school_run_enabled, :route_list_import_enabled, :external_vehicle_cap, :created_at
+    fields :school_run_enabled, :route_list_import_enabled, :external_vehicle_cap, :accepts_personal_bookings, :created_at
 
     field(:admin) { |c, o| o.dig(:stats, c.id, :admin) }
     field(:schools_count) { |c, o| o.dig(:stats, c.id, :schools).to_i }

@@ -133,7 +133,99 @@ Rails.application.routes.draw do
           end
         end
         resource :device, only: %i[update destroy]
+        get :home, to: "home#show"
+        post "home/banners/:id/dismiss", to: "home#dismiss", as: :home_banner_dismiss
+        get :activity, to: "home#activity"
+        get :alerts, to: "alerts#index"
+        post "alerts/read_all", to: "alerts#read_all", as: :alerts_read_all
+        post "alerts/:id/read", to: "alerts#read", as: :alert_read, constraints: { id: /\d+/ }
+        get :organisations, to: "organisations#index"
+        post "organisations/:kind/:id/accept", to: "organisations#accept", as: :accept_organisation, constraints: { kind: /shuttle|bookings/ }
+        post "organisations/:kind/:id/decline", to: "organisations#decline", as: :decline_organisation, constraints: { kind: /shuttle|bookings/ }
+        # Shuttles (staff rider): :employer_id is the id of an employer in GET /app/shuttles
+        get "shuttles", to: "shuttles#index"
+        get "shuttles/alerts", to: "shuttle_alerts#index", as: :shuttle_alerts
+        put "shuttles/pause", to: "shuttle_alerts#pause", as: :shuttle_pause
+        delete "shuttles/pause", to: "shuttle_alerts#resume"
+        scope "shuttles/:employer_id", constraints: { employer_id: /\d+/ }, as: :shuttle_employer do
+          resource :usual, only: %i[show update destroy], controller: "shuttle_usuals"
+          get "routes/:id", to: "shuttle_routes#show", as: :route
+          get "routes/:id/schedule", to: "shuttle_routes#schedule", as: :route_schedule
+          put "routes/:id/pin", to: "shuttle_routes#pin", as: :route_pin
+          put "routes/:id/stops/:stop_id/bell", to: "shuttle_routes#bell", as: :route_stop_bell
+          get "routes/:id/alerts", to: "shuttle_alerts#show", as: :route_alerts
+          put "routes/:id/alerts", to: "shuttle_alerts#update"
+        end
         resources :company_suggestions, only: :create
+        resource :household, only: %i[show create destroy] do
+          get :postal
+          get :options
+          post :invite_link, to: "household_invites#link"
+          post "invites/check", to: "household_invites#check"
+          post :invites, to: "household_invites#create"
+          get :guardians, to: "household_guardians#index"
+          put "dependants/:dependant_id/guardians/:member_id", to: "household_guardians#update", as: :dependant_guardian
+          resources :dependants, only: %i[create update], controller: "household_dependants"
+          resources :members, only: :update, controller: "household_members" do
+            member do
+              post :approve
+              post :decline
+            end
+          end
+          resources :invitations, only: :index, controller: "household_invitations" do
+            member do
+              post :accept
+              post :decline
+            end
+          end
+          resources :links, only: :show, param: :token, controller: "household_links", constraints: { token: %r{[^/]+} } do
+            post :join, on: :member
+          end
+        end
+        resource :school, only: :show, controller: "school" do
+          get "riders/:dependant_id/bus", action: :bus, as: :rider_bus
+          get :live
+          get :apply, to: "school_applications#new"
+          post "apply/review", to: "school_applications#review", as: :apply_review
+          post :apply, to: "school_applications#create"
+          resources :requests, only: :show, controller: "school_requests" do
+            member do
+              post :withdraw
+              post :agree
+            end
+          end
+          get :changes, to: "school_changes#index"
+          post :renewals, to: "school_changes#renew"
+          post :service_changes, to: "school_changes#change"
+          post :stops, to: "school_changes#stop"
+          get :address_change, to: "school_address_changes#show"
+          post "address_change/review", to: "school_address_changes#review", as: :address_change_review
+          post :address_change, to: "school_address_changes#create"
+        end
+        # Bookings: ?account= is a key from GET /app/bookings/accounts ("personal-<company_id>", "link-<client_user_id>")
+        get "bookings/accounts", to: "bookings#accounts", as: :booking_accounts
+        get "bookings/form", to: "bookings#form", as: :booking_form
+        post "bookings/estimate", to: "bookings#estimate", as: :booking_estimate
+        get "bookings/points", to: "booking_points#index", as: :booking_points
+        post "bookings/points", to: "booking_points#create"
+        resources :bookings, only: %i[index show create], constraints: { id: /\d+/ } do
+          member do
+            post :accept_changes, to: "booking_actions#accept_changes"
+            post :reply, to: "booking_actions#reply"
+            get :cancel, to: "booking_actions#cancel_options"
+            post :cancel, to: "booking_actions#cancel"
+            get :copy, to: "booking_actions#copy"
+            get :track, to: "booking_actions#track"
+          end
+        end
+        get :fees, to: "fees#index"
+        get "fees/invoices/:id", to: "fees#show", as: :fee_invoice
+        post "fees/invoices/:id/pay", to: "fees#pay", as: :fee_invoice_pay
+        get :cca, to: "cca#show"
+        post "cca/quote", to: "cca#quote", as: :cca_quote
+        post "cca/payments", to: "cca#create", as: :cca_payments
+        put "cca/same_days", to: "cca#same_days", as: :cca_same_days
+        patch "cca/bookings/:id/not_riding", to: "cca#not_riding", as: :cca_booking_not_riding
       end
 
       # Convoy Admin
@@ -550,6 +642,7 @@ Rails.application.routes.draw do
       resources :clients do
         put :bookable_vehicle_types, on: :member
         resources :users, controller: :client_users, only: %i[index create update destroy]
+        resources :riders, controller: :client_riders, only: %i[index destroy]
         resources :sites, controller: :client_sites, only: %i[index create update destroy]
         resources :end_customers, controller: :client_end_customers, only: %i[index create update destroy]
         resources :pickup_points, controller: :client_pickup_points, only: %i[index create update destroy]

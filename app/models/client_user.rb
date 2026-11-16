@@ -6,6 +6,9 @@
 # Database name: primary
 #
 #  id                        :bigint           not null, primary key
+#  app_link_responded_at     :datetime
+#  app_link_status           :string
+#  app_matched_email         :string
 #  discarded_at              :datetime
 #  email                     :string           not null
 #  name                      :string           not null
@@ -13,6 +16,7 @@
 #  title                     :string
 #  created_at                :datetime         not null
 #  updated_at                :datetime         not null
+#  app_account_id            :bigint
 #  client_id                 :bigint           not null
 #  client_team_id            :bigint
 #  company_id                :bigint           not null
@@ -23,6 +27,7 @@
 #
 # Indexes
 #
+#  index_client_users_on_app_account_id             (app_account_id)
 #  index_client_users_on_client_id_and_email        (client_id,email) UNIQUE WHERE (discarded_at IS NULL)
 #  index_client_users_on_client_team_id             (client_team_id)
 #  index_client_users_on_company_id_and_client_id   (company_id,client_id)
@@ -31,9 +36,11 @@
 #  index_client_users_on_email                      (email)
 #  index_client_users_on_manager_id                 (manager_id)
 #  index_client_users_on_portal_account_id          (portal_account_id)
+#  index_client_users_one_app_link                  (client_id,app_account_id) UNIQUE WHERE ((app_account_id IS NOT NULL) AND (discarded_at IS NULL))
 #
 # Foreign Keys
 #
+#  fk_rails_...  (app_account_id => app_accounts.id) ON DELETE => nullify
 #  fk_rails_...  (client_id => clients.id)
 #  fk_rails_...  (client_team_id => client_teams.id) ON DELETE => nullify
 #  fk_rails_...  (company_id => companies.id)
@@ -61,6 +68,8 @@ class ClientUser < ApplicationRecord
 
   belongs_to :client
   belongs_to :portal_account
+  # Convoy App: the account this person's work email was offered to (a teacher's booking link; Accept / Not Me).
+  belongs_to :app_account, optional: true
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :created_by_client_user, class_name: "ClientUser", optional: true
   belongs_to :team, class_name: "ClientTeam", foreign_key: :client_team_id, optional: true, inverse_of: :users
@@ -69,6 +78,7 @@ class ClientUser < ApplicationRecord
   has_many :sites, through: :user_sites, source: :client_site
 
   enum :role, ROLES.keys.index_by(&:itself), validate: true
+  enum :app_link_status, { invited: "invited", accepted: "accepted", declined: "declined" }, prefix: :app_link, validate: { allow_nil: true }
 
   normalizes :name, :title, with: ->(v) { v.to_s.squish.presence }
   normalizes :email, with: ->(v) { v.to_s.strip.downcase }

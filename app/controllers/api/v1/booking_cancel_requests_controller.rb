@@ -1,14 +1,16 @@
-# A client's request to cancel a booking or one trip: recorded on their behalf, then accepted or declined.
+# A client's request to cancel a booking, a day or one trip: recorded on their behalf (or sent from the Convoy App), then
+# accepted or declined.
 module Api
   module V1
     class BookingCancelRequestsController < BaseController
       before_action :set_booking
 
-      # POST { booking_trip_id (omit for the whole booking), reason, requested_by_name }
+      # POST { booking_trip_id | booking_day_id (omit both for the whole booking), reason, requested_by_name }
       def create
         authorize BookingCancelRequest
         trip = params[:booking_trip_id].presence && @booking.trips.find(params[:booking_trip_id])
-        Bookings::CancelRequest.record(booking: @booking, trip:, reason: params[:reason], actor: current_user,
+        day = !trip && params[:booking_day_id].presence && @booking.days.find(params[:booking_day_id])
+        Bookings::CancelRequest.record(booking: @booking, trip:, day: day || nil, reason: params[:reason], actor: current_user,
                                        by_name: params[:requested_by_name].presence || @booking.coordinator_name)
         render_booking :created
       end

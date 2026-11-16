@@ -17,6 +17,7 @@ module ConvoyApp
           raise Error, "Used by #{uses.to_sentence}. Add another first, then switch" if uses.present?
 
           @identity.destroy!
+          Links::Release.call(identity: @identity)
         end
       end
     end

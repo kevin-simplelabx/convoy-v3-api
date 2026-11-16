@@ -18,16 +18,20 @@
 #  created_at    :datetime         not null
 #  updated_at    :datetime         not null
 #  company_id    :bigint           not null
+#  household_id  :bigint
 #  school_id     :bigint           not null
 #
 # Indexes
 #
+#  index_families_on_household_id        (household_id)
 #  index_families_on_school_id           (school_id)
 #  index_families_on_school_id_and_code  (school_id,code) UNIQUE
+#  index_families_one_per_household      (school_id,household_id) UNIQUE WHERE (household_id IS NOT NULL)
 #
 # Foreign Keys
 #
 #  fk_rails_...  (company_id => companies.id)
+#  fk_rails_...  (household_id => households.id) ON DELETE => nullify
 #  fk_rails_...  (school_id => schools.id)
 #
 class Family < ApplicationRecord
@@ -35,6 +39,7 @@ class Family < ApplicationRecord
   audited
 
   belongs_to :school
+  belongs_to :household, optional: true
   has_many :guardians, -> { order(:position, :id) }, class_name: "FamilyGuardian", dependent: :delete_all, inverse_of: :family
   has_many :family_riders, dependent: :delete_all
 

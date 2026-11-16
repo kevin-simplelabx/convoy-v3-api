@@ -1,7 +1,7 @@
 # A trip of a booking, as the booking details and the booking form show it.
 class BookingTripBlueprint < ApplicationBlueprint
   fields :position, :kind, :kind_name, :status, :label, :hours, :airport_direction, :flight_number, :terminal, :wait_minutes,
-         :meet_and_greet, :signboard_name, :pax, :luggage_on, :luggage_cabin, :luggage_medium, :luggage_large,
+         :meet_and_greet, :signboard_name, :pax, :adults, :luggage_on, :luggage_cabin, :luggage_medium, :luggage_large,
          :luggage_extra_large, :luggage_oversized, :contact_name, :contact_phone, :note, :distance_km, :return_distance_km,
          :estimate_amount, :estimate_lines
   field(:date) { |t| t.day.date }

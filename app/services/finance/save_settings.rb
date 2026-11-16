@@ -3,7 +3,8 @@
 module Finance
   class SaveSettings < ApplicationService
     FIELDS = %i[gst_on gst_rate gst_mode gst_reg_no approval brand_name brand_uen brand_address brand_phone brand_email brand_note
-                bank_id account_number account_name paynow payment_note] + FinanceSetting::DOC_TYPES.keys.map { |t| :"prefix_#{t}" }
+                bank_id account_number account_name paynow payment_note
+                booking_card_on booking_card_fee_pct booking_paynow_on] + FinanceSetting::DOC_TYPES.keys.map { |t| :"prefix_#{t}" }
 
     def initialize(settings:, params:, user:, lock: false)
       @s = settings

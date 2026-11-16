@@ -144,7 +144,8 @@ CREATE TABLE public.app_accounts (
     delete_requested_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT app_accounts_name_order CHECK (((name_order)::text = ANY ((ARRAY['first'::character varying, 'last'::character varying])::text[])))
+    shuttle_alerts_paused_until date,
+    CONSTRAINT app_accounts_name_order CHECK (((name_order)::text = ANY (ARRAY[('first'::character varying)::text, ('last'::character varying)::text])))
 );
 
 
@@ -179,7 +180,7 @@ CREATE TABLE public.app_devices (
     push_token character varying NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT app_devices_platform CHECK (((platform)::text = ANY ((ARRAY['ios'::character varying, 'android'::character varying])::text[])))
+    CONSTRAINT app_devices_platform CHECK (((platform)::text = ANY (ARRAY[('ios'::character varying)::text, ('android'::character varying)::text])))
 );
 
 
@@ -216,9 +217,9 @@ CREATE TABLE public.app_identities (
     verified_at timestamp(6) without time zone NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT app_identities_kind CHECK (((kind)::text = ANY ((ARRAY['mobile'::character varying, 'email'::character varying])::text[]))),
+    CONSTRAINT app_identities_kind CHECK (((kind)::text = ANY (ARRAY[('mobile'::character varying)::text, ('email'::character varying)::text]))),
     CONSTRAINT app_identities_mobile_personal CHECK ((((kind)::text = 'email'::text) OR ((tag)::text = 'personal'::text))),
-    CONSTRAINT app_identities_tag CHECK (((tag)::text = ANY ((ARRAY['personal'::character varying, 'work'::character varying])::text[])))
+    CONSTRAINT app_identities_tag CHECK (((tag)::text = ANY (ARRAY[('personal'::character varying)::text, ('work'::character varying)::text])))
 );
 
 
@@ -310,6 +311,89 @@ CREATE SEQUENCE public.app_jwts_id_seq
 --
 
 ALTER SEQUENCE public.app_jwts_id_seq OWNED BY public.app_jwts.id;
+
+
+--
+-- Name: app_notifications; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.app_notifications (
+    id bigint NOT NULL,
+    app_account_id bigint NOT NULL,
+    company_id bigint,
+    kind character varying NOT NULL,
+    title character varying NOT NULL,
+    body text NOT NULL,
+    trip_id bigint,
+    occurrence_id bigint,
+    occurrence_date date,
+    dedupe_key character varying NOT NULL,
+    read_at timestamp(6) without time zone,
+    pushed_at timestamp(6) without time zone,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    dependant_id bigint,
+    notice_id bigint,
+    target character varying,
+    target_id bigint,
+    banner_until timestamp(6) without time zone,
+    dismissed_at timestamp(6) without time zone
+);
+
+
+--
+-- Name: app_notifications_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.app_notifications_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: app_notifications_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.app_notifications_id_seq OWNED BY public.app_notifications.id;
+
+
+--
+-- Name: app_saved_points; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.app_saved_points (
+    id bigint NOT NULL,
+    app_account_id bigint NOT NULL,
+    name character varying NOT NULL,
+    address character varying,
+    lat numeric(10,7),
+    lng numeric(10,7),
+    note text,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: app_saved_points_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.app_saved_points_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: app_saved_points_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.app_saved_points_id_seq OWNED BY public.app_saved_points.id;
 
 
 --
@@ -488,7 +572,7 @@ CREATE TABLE public.banks (
     "position" integer DEFAULT 0 NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT banks_branch_rule CHECK (((branch_rule)::text = ANY ((ARRAY['pre3'::character varying, 'pre3drop'::character varying, 'posb'::character varying, 'sc'::character varying, 'uob'::character varying, 'list'::character varying])::text[])))
+    CONSTRAINT banks_branch_rule CHECK (((branch_rule)::text = ANY (ARRAY[('pre3'::character varying)::text, ('pre3drop'::character varying)::text, ('posb'::character varying)::text, ('sc'::character varying)::text, ('uob'::character varying)::text, ('list'::character varying)::text])))
 );
 
 
@@ -525,7 +609,7 @@ CREATE TABLE public.booking_approval_acts (
     carried_from integer,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT booking_approval_acts_act CHECK (((act)::text = ANY ((ARRAY['approve'::character varying, 'decline'::character varying])::text[])))
+    CONSTRAINT booking_approval_acts_act CHECK (((act)::text = ANY (ARRAY[('approve'::character varying)::text, ('decline'::character varying)::text])))
 );
 
 
@@ -557,7 +641,7 @@ CREATE TABLE public.booking_approval_step_people (
     booking_approval_step_id bigint NOT NULL,
     client_user_id bigint NOT NULL,
     reason character varying NOT NULL,
-    CONSTRAINT booking_approval_step_people_reason CHECK (((reason)::text = ANY ((ARRAY['group'::character varying, 'named'::character varying, 'fallback'::character varying])::text[])))
+    CONSTRAINT booking_approval_step_people_reason CHECK (((reason)::text = ANY (ARRAY[('group'::character varying)::text, ('named'::character varying)::text, ('fallback'::character varying)::text])))
 );
 
 
@@ -633,8 +717,8 @@ CREATE TABLE public.booking_approvals (
     decided_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT booking_approvals_same_person CHECK (((same_person)::text = ANY ((ARRAY['once'::character varying, 'other'::character varying])::text[]))),
-    CONSTRAINT booking_approvals_status CHECK (((status)::text = ANY ((ARRAY['wait'::character varying, 'ok'::character varying, 'no'::character varying, 'none'::character varying])::text[])))
+    CONSTRAINT booking_approvals_same_person CHECK (((same_person)::text = ANY (ARRAY[('once'::character varying)::text, ('other'::character varying)::text]))),
+    CONSTRAINT booking_approvals_status CHECK (((status)::text = ANY (ARRAY[('wait'::character varying)::text, ('ok'::character varying)::text, ('no'::character varying)::text, ('none'::character varying)::text])))
 );
 
 
@@ -713,7 +797,14 @@ CREATE TABLE public.booking_cancel_requests (
     updated_at timestamp(6) without time zone NOT NULL,
     requested_by_id bigint,
     requested_by_client_user_id bigint,
-    CONSTRAINT booking_cancel_requests_requested_by_one CHECK ((num_nonnulls(requested_by_id, requested_by_client_user_id) <= 1))
+    scope character varying DEFAULT 'booking'::character varying NOT NULL,
+    booking_day_id bigint,
+    note text,
+    fee_quoted numeric(12,2) DEFAULT 0.0 NOT NULL,
+    requested_by_app_account_id bigint,
+    CONSTRAINT booking_cancel_requests_requested_by_one CHECK ((num_nonnulls(requested_by_id, requested_by_client_user_id, requested_by_app_account_id) <= 1)),
+    CONSTRAINT booking_cancel_requests_scope CHECK (((scope)::text = ANY (ARRAY[('booking'::character varying)::text, ('day'::character varying)::text, ('trip'::character varying)::text]))),
+    CONSTRAINT booking_cancel_requests_scope_target CHECK (((((scope)::text = 'trip'::text) = (booking_trip_id IS NOT NULL)) AND (((scope)::text = 'day'::text) = (booking_day_id IS NOT NULL))))
 );
 
 
@@ -734,6 +825,44 @@ CREATE SEQUENCE public.booking_cancel_requests_id_seq
 --
 
 ALTER SEQUENCE public.booking_cancel_requests_id_seq OWNED BY public.booking_cancel_requests.id;
+
+
+--
+-- Name: booking_change_replies; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.booking_change_replies (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    booking_id bigint NOT NULL,
+    reason character varying NOT NULL,
+    message text,
+    replied_by_name character varying NOT NULL,
+    replied_by_client_user_id bigint,
+    replied_by_app_account_id bigint,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT booking_change_replies_by_one CHECK ((num_nonnulls(replied_by_client_user_id, replied_by_app_account_id) <= 1))
+);
+
+
+--
+-- Name: booking_change_replies_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.booking_change_replies_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: booking_change_replies_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.booking_change_replies_id_seq OWNED BY public.booking_change_replies.id;
 
 
 --
@@ -804,6 +933,48 @@ CREATE SEQUENCE public.booking_events_id_seq
 --
 
 ALTER SEQUENCE public.booking_events_id_seq OWNED BY public.booking_events.id;
+
+
+--
+-- Name: booking_payments; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.booking_payments (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    booking_id bigint NOT NULL,
+    kind character varying NOT NULL,
+    method character varying NOT NULL,
+    method_label character varying NOT NULL,
+    amount numeric(12,2) NOT NULL,
+    card_fee numeric(12,2) DEFAULT 0.0 NOT NULL,
+    reference character varying NOT NULL,
+    paid_at timestamp(6) without time zone NOT NULL,
+    note text,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT booking_payments_kind CHECK (((kind)::text = ANY (ARRAY[('payment'::character varying)::text, ('refund'::character varying)::text]))),
+    CONSTRAINT booking_payments_method CHECK (((method)::text = ANY (ARRAY[('card'::character varying)::text, ('paynow'::character varying)::text])))
+);
+
+
+--
+-- Name: booking_payments_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.booking_payments_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: booking_payments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.booking_payments_id_seq OWNED BY public.booking_payments.id;
 
 
 --
@@ -1005,6 +1176,7 @@ CREATE TABLE public.booking_trips (
     acknowledged_by_id bigint,
     acknowledged_by_client_user_id bigint,
     rejected_by_client_user_id bigint,
+    adults integer DEFAULT 0 NOT NULL,
     CONSTRAINT booking_trips_acknowledged_by_one CHECK ((num_nonnulls(acknowledged_by_id, acknowledged_by_client_user_id) <= 1)),
     CONSTRAINT booking_trips_rejected_by_one CHECK ((num_nonnulls(rejected_by_id, rejected_by_client_user_id) <= 1))
 );
@@ -1056,7 +1228,18 @@ CREATE TABLE public.bookings (
     updated_at timestamp(6) without time zone NOT NULL,
     created_by_name character varying,
     created_by_client_user_id bigint,
-    CONSTRAINT bookings_created_by_one CHECK ((num_nonnulls(created_by_id, created_by_client_user_id) <= 1))
+    title character varying,
+    payer character varying DEFAULT 'client'::character varying NOT NULL,
+    client_bill_fund_id bigint,
+    created_by_app_account_id bigint,
+    booked_via_client_user_id bigint,
+    copied_from_booking_id bigint,
+    terms_accepted_at timestamp(6) without time zone,
+    receipt_name character varying,
+    receipt_uen character varying,
+    receipt_address text,
+    CONSTRAINT bookings_created_by_one CHECK ((num_nonnulls(created_by_id, created_by_client_user_id, created_by_app_account_id) <= 1)),
+    CONSTRAINT bookings_payer CHECK (((payer)::text = ANY (ARRAY[('client'::character varying)::text, ('self'::character varying)::text])))
 );
 
 
@@ -1269,7 +1452,18 @@ CREATE TABLE public.bus_requests (
     ended_at timestamp with time zone,
     ended_by_id bigint,
     rider_patched_on date,
-    level_moved_on date
+    level_moved_on date,
+    household_id bigint,
+    dependant_id bigint,
+    app_account_id bigint,
+    registration_bill_id bigint,
+    dropoff_address character varying,
+    dropoff_postal character varying,
+    dropoff_lat numeric(10,7),
+    dropoff_lng numeric(10,7),
+    cca_from date,
+    new_home jsonb,
+    terms_agreed_at timestamp with time zone
 );
 
 
@@ -1605,6 +1799,41 @@ ALTER SEQUENCE public.cca_ride_settings_id_seq OWNED BY public.cca_ride_settings
 
 
 --
+-- Name: cca_standing_days; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.cca_standing_days (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    school_id bigint NOT NULL,
+    family_id bigint NOT NULL,
+    school_rider_id bigint NOT NULL,
+    days integer[] DEFAULT '{}'::integer[] NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: cca_standing_days_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.cca_standing_days_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: cca_standing_days_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.cca_standing_days_id_seq OWNED BY public.cca_standing_days.id;
+
+
+--
 -- Name: client_approval_flows; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1747,7 +1976,7 @@ CREATE TABLE public.client_approval_rules (
     same_person character varying DEFAULT 'once'::character varying NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT client_approval_rules_same_person CHECK (((same_person)::text = ANY ((ARRAY['once'::character varying, 'other'::character varying])::text[])))
+    CONSTRAINT client_approval_rules_same_person CHECK (((same_person)::text = ANY (ARRAY[('once'::character varying)::text, ('other'::character varying)::text])))
 );
 
 
@@ -1812,7 +2041,7 @@ CREATE TABLE public.client_approval_steps (
     need character varying DEFAULT 'any'::character varying NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT client_approval_steps_need CHECK (((need)::text = ANY ((ARRAY['any'::character varying, 'all'::character varying])::text[])))
+    CONSTRAINT client_approval_steps_need CHECK (((need)::text = ANY (ARRAY[('any'::character varying)::text, ('all'::character varying)::text])))
 );
 
 
@@ -1836,6 +2065,41 @@ ALTER SEQUENCE public.client_approval_steps_id_seq OWNED BY public.client_approv
 
 
 --
+-- Name: client_bill_funds; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.client_bill_funds (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    client_id bigint NOT NULL,
+    name character varying NOT NULL,
+    "position" integer DEFAULT 0 NOT NULL,
+    discarded_at timestamp(6) without time zone,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: client_bill_funds_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.client_bill_funds_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: client_bill_funds_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.client_bill_funds_id_seq OWNED BY public.client_bill_funds.id;
+
+
+--
 -- Name: client_billing_contacts; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1851,7 +2115,7 @@ CREATE TABLE public.client_billing_contacts (
     "position" integer DEFAULT 0 NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT client_billing_contacts_send_as CHECK (((send_as)::text = ANY ((ARRAY['to'::character varying, 'cc'::character varying])::text[])))
+    CONSTRAINT client_billing_contacts_send_as CHECK (((send_as)::text = ANY (ARRAY[('to'::character varying)::text, ('cc'::character varying)::text])))
 );
 
 
@@ -1999,7 +2263,7 @@ CREATE TABLE public.client_invoice_lines (
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
     amount_overridden boolean DEFAULT false NOT NULL,
-    CONSTRAINT client_invoice_lines_source CHECK (((source)::text = ANY ((ARRAY['trip'::character varying, 'late_cancel'::character varying, 'manual'::character varying])::text[])))
+    CONSTRAINT client_invoice_lines_source CHECK (((source)::text = ANY (ARRAY[('trip'::character varying)::text, ('late_cancel'::character varying)::text, ('manual'::character varying)::text])))
 );
 
 
@@ -2132,8 +2396,8 @@ CREATE TABLE public.client_invoices (
     voided_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT client_invoices_kind CHECK (((kind)::text = ANY ((ARRAY['invoice'::character varying, 'credit_note'::character varying])::text[]))),
-    CONSTRAINT client_invoices_status CHECK (((status)::text = ANY ((ARRAY['draft'::character varying, 'issued'::character varying, 'void'::character varying])::text[])))
+    CONSTRAINT client_invoices_kind CHECK (((kind)::text = ANY (ARRAY[('invoice'::character varying)::text, ('credit_note'::character varying)::text]))),
+    CONSTRAINT client_invoices_status CHECK (((status)::text = ANY (ARRAY[('draft'::character varying)::text, ('issued'::character varying)::text, ('void'::character varying)::text])))
 );
 
 
@@ -2172,7 +2436,8 @@ CREATE TABLE public.client_pickup_points (
     note text,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    created_by_id bigint
+    created_by_id bigint,
+    created_by_client_user_id bigint
 );
 
 
@@ -2193,6 +2458,44 @@ CREATE SEQUENCE public.client_pickup_points_id_seq
 --
 
 ALTER SEQUENCE public.client_pickup_points_id_seq OWNED BY public.client_pickup_points.id;
+
+
+--
+-- Name: client_riders; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.client_riders (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    client_id bigint NOT NULL,
+    app_account_id bigint NOT NULL,
+    matched_email character varying NOT NULL,
+    status character varying DEFAULT 'invited'::character varying NOT NULL,
+    responded_at timestamp(6) without time zone,
+    removed_by_id bigint,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT client_riders_status CHECK (((status)::text = ANY (ARRAY[('invited'::character varying)::text, ('accepted'::character varying)::text, ('declined'::character varying)::text, ('removed'::character varying)::text])))
+);
+
+
+--
+-- Name: client_riders_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.client_riders_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: client_riders_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.client_riders_id_seq OWNED BY public.client_riders.id;
 
 
 --
@@ -2323,7 +2626,12 @@ CREATE TABLE public.client_users (
     client_team_id bigint,
     manager_id bigint,
     created_by_client_user_id bigint,
-    CONSTRAINT client_users_role CHECK (((role)::text = ANY ((ARRAY['super'::character varying, 'adm'::character varying, 'fin'::character varying, 'ssa'::character varying, 'sa'::character varying, 'sfin'::character varying, 'member'::character varying])::text[])))
+    app_account_id bigint,
+    app_link_status character varying,
+    app_matched_email character varying,
+    app_link_responded_at timestamp(6) without time zone,
+    CONSTRAINT client_users_app_link_status CHECK (((app_link_status)::text = ANY (ARRAY[('invited'::character varying)::text, ('accepted'::character varying)::text, ('declined'::character varying)::text]))),
+    CONSTRAINT client_users_role CHECK (((role)::text = ANY (ARRAY[('super'::character varying)::text, ('adm'::character varying)::text, ('fin'::character varying)::text, ('ssa'::character varying)::text, ('sa'::character varying)::text, ('sfin'::character varying)::text, ('member'::character varying)::text])))
 );
 
 
@@ -2372,7 +2680,9 @@ CREATE TABLE public.clients (
     billing_name character varying,
     brand_logo character varying,
     brand_logo_ratio numeric(5,2),
-    brand_color character varying
+    brand_color character varying,
+    email_domains character varying[] DEFAULT '{}'::character varying[] NOT NULL,
+    app_account_id bigint
 );
 
 
@@ -2428,7 +2738,8 @@ CREATE TABLE public.companies (
     ops_hours character varying,
     ops_whatsapp character varying,
     ops_email character varying,
-    depot_address text
+    depot_address text,
+    accepts_personal_bookings boolean DEFAULT false NOT NULL
 );
 
 
@@ -2467,7 +2778,7 @@ CREATE TABLE public.company_country_requests (
     decided_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT company_country_requests_status CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'approved'::character varying, 'declined'::character varying, 'withdrawn'::character varying])::text[])))
+    CONSTRAINT company_country_requests_status CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('approved'::character varying)::text, ('declined'::character varying)::text, ('withdrawn'::character varying)::text])))
 );
 
 
@@ -2502,7 +2813,7 @@ CREATE TABLE public.company_lead_domains (
     updated_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT company_lead_domains_status CHECK (((status)::text = ANY ((ARRAY['new'::character varying, 'contacted'::character varying, 'demo'::character varying, 'signed'::character varying, 'lost'::character varying])::text[])))
+    CONSTRAINT company_lead_domains_status CHECK (((status)::text = ANY (ARRAY[('new'::character varying)::text, ('contacted'::character varying)::text, ('demo'::character varying)::text, ('signed'::character varying)::text, ('lost'::character varying)::text])))
 );
 
 
@@ -2666,6 +2977,81 @@ ALTER SEQUENCE public.dashboard_layouts_id_seq OWNED BY public.dashboard_layouts
 
 
 --
+-- Name: dependant_guardians; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.dependant_guardians (
+    id bigint NOT NULL,
+    dependant_id bigint NOT NULL,
+    household_member_id bigint NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: dependant_guardians_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.dependant_guardians_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: dependant_guardians_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.dependant_guardians_id_seq OWNED BY public.dependant_guardians.id;
+
+
+--
+-- Name: dependants; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.dependants (
+    id bigint NOT NULL,
+    household_id bigint NOT NULL,
+    name character varying NOT NULL,
+    birth_date date NOT NULL,
+    school_id bigint,
+    school_name character varying NOT NULL,
+    level character varying NOT NULL,
+    gender character varying,
+    student_id character varying,
+    photo character varying,
+    medical_tags character varying[] DEFAULT '{}'::character varying[] NOT NULL,
+    medical_note text,
+    discarded_at timestamp(6) without time zone,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT dependants_gender CHECK (((gender IS NULL) OR ((gender)::text = ANY (ARRAY[('girl'::character varying)::text, ('boy'::character varying)::text]))))
+);
+
+
+--
+-- Name: dependants_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.dependants_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: dependants_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.dependants_id_seq OWNED BY public.dependants.id;
+
+
+--
 -- Name: disabled_vehicle_types; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -2713,7 +3099,7 @@ CREATE TABLE public.discover_advertisers (
     discarded_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT discover_advertisers_kind CHECK (((kind)::text = ANY ((ARRAY['tc'::character varying, 'attr'::character varying, 'prog'::character varying, 'brand'::character varying])::text[])))
+    CONSTRAINT discover_advertisers_kind CHECK (((kind)::text = ANY (ARRAY[('tc'::character varying)::text, ('attr'::character varying)::text, ('prog'::character varying)::text, ('brand'::character varying)::text])))
 );
 
 
@@ -2779,8 +3165,8 @@ CREATE TABLE public.discover_placements (
     created_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT discover_placements_kind CHECK (((kind)::text = ANY ((ARRAY['trip'::character varying, 'prog'::character varying, 'ad'::character varying, 'news'::character varying])::text[]))),
-    CONSTRAINT discover_placements_status CHECK (((status)::text = ANY ((ARRAY['draft'::character varying, 'live'::character varying, 'paused'::character varying])::text[])))
+    CONSTRAINT discover_placements_kind CHECK (((kind)::text = ANY (ARRAY[('trip'::character varying)::text, ('prog'::character varying)::text, ('ad'::character varying)::text, ('news'::character varying)::text]))),
+    CONSTRAINT discover_placements_status CHECK (((status)::text = ANY (ARRAY[('draft'::character varying)::text, ('live'::character varying)::text, ('paused'::character varying)::text])))
 );
 
 
@@ -2982,7 +3368,7 @@ CREATE TABLE public.driver_invites (
     delivery character varying DEFAULT 'recorded'::character varying NOT NULL,
     sent_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT driver_invites_kind CHECK (((kind)::text = ANY ((ARRAY['invite'::character varying, 'resend'::character varying])::text[])))
+    CONSTRAINT driver_invites_kind CHECK (((kind)::text = ANY (ARRAY[('invite'::character varying)::text, ('resend'::character varying)::text])))
 );
 
 
@@ -3491,7 +3877,7 @@ CREATE TABLE public.driver_point_lots (
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
     CONSTRAINT driver_point_lots_points CHECK (((points > 0) AND ((remaining >= 0) AND (remaining <= points)))),
-    CONSTRAINT driver_point_lots_source CHECK (((source)::text = ANY ((ARRAY['manual'::character varying, 'bonus'::character varying])::text[])))
+    CONSTRAINT driver_point_lots_source CHECK (((source)::text = ANY (ARRAY[('manual'::character varying)::text, ('bonus'::character varying)::text])))
 );
 
 
@@ -3687,7 +4073,7 @@ CREATE TABLE public.external_vehicle_submissions (
     submitted_ip character varying,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT external_vehicle_submissions_status CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'added'::character varying, 'dismissed'::character varying])::text[])))
+    CONSTRAINT external_vehicle_submissions_status CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('added'::character varying)::text, ('dismissed'::character varying)::text])))
 );
 
 
@@ -3727,7 +4113,8 @@ CREATE TABLE public.families (
     registered_at timestamp with time zone,
     sample boolean DEFAULT false NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    household_id bigint
 );
 
 
@@ -3767,7 +4154,8 @@ CREATE TABLE public.family_guardians (
     app_joined_at timestamp with time zone,
     app_joined_how character varying,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    household_member_id bigint
 );
 
 
@@ -3803,7 +4191,8 @@ CREATE TABLE public.family_riders (
     applied_at timestamp with time zone,
     accepted_at timestamp with time zone,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    dependant_id bigint
 );
 
 
@@ -4433,8 +4822,11 @@ CREATE TABLE public.finance_settings (
     updated_at timestamp(6) without time zone NOT NULL,
     school_bill_draft_days integer DEFAULT 7 NOT NULL,
     school_bill_start_rule character varying DEFAULT 'prorate'::character varying NOT NULL,
-    CONSTRAINT finance_settings_approval CHECK (((approval)::text = ANY ((ARRAY['single'::character varying, 'maker'::character varying])::text[]))),
-    CONSTRAINT finance_settings_gst_mode CHECK (((gst_mode)::text = ANY ((ARRAY['excl'::character varying, 'incl'::character varying])::text[])))
+    booking_card_on boolean DEFAULT true NOT NULL,
+    booking_card_fee_pct numeric(5,2) DEFAULT 3.7 NOT NULL,
+    booking_paynow_on boolean DEFAULT true NOT NULL,
+    CONSTRAINT finance_settings_approval CHECK (((approval)::text = ANY (ARRAY[('single'::character varying)::text, ('maker'::character varying)::text]))),
+    CONSTRAINT finance_settings_gst_mode CHECK (((gst_mode)::text = ANY (ARRAY[('excl'::character varying)::text, ('incl'::character varying)::text])))
 );
 
 
@@ -4477,8 +4869,8 @@ CREATE TABLE public.fuel_alerts (
     checked_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT fuel_alerts_kind CHECK (((kind)::text = ANY ((ARRAY['eff'::character varying, 'odo'::character varying, 'dbl'::character varying, 'big'::character varying, 'price'::character varying, 'trend'::character varying])::text[]))),
-    CONSTRAINT fuel_alerts_status CHECK (((status)::text = ANY ((ARRAY['open'::character varying, 'checked'::character varying])::text[])))
+    CONSTRAINT fuel_alerts_kind CHECK (((kind)::text = ANY (ARRAY[('eff'::character varying)::text, ('odo'::character varying)::text, ('dbl'::character varying)::text, ('big'::character varying)::text, ('price'::character varying)::text, ('trend'::character varying)::text]))),
+    CONSTRAINT fuel_alerts_status CHECK (((status)::text = ANY (ARRAY[('open'::character varying)::text, ('checked'::character varying)::text])))
 );
 
 
@@ -4513,7 +4905,7 @@ CREATE TABLE public.fuel_companies (
     "position" integer DEFAULT 0 NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT fuel_companies_kind CHECK (((kind)::text = ANY ((ARRAY['fuel'::character varying, 'elec'::character varying, 'both'::character varying])::text[])))
+    CONSTRAINT fuel_companies_kind CHECK (((kind)::text = ANY (ARRAY[('fuel'::character varying)::text, ('elec'::character varying)::text, ('both'::character varying)::text])))
 );
 
 
@@ -4565,7 +4957,7 @@ CREATE TABLE public.fuel_entries (
     updated_at timestamp(6) without time zone NOT NULL,
     energy_km integer,
     CONSTRAINT fuel_entries_amounts CHECK (((quantity > (0)::numeric) AND (cost >= (0)::numeric))),
-    CONSTRAINT fuel_entries_kind CHECK (((kind)::text = ANY ((ARRAY['diesel'::character varying, 'petrol'::character varying, 'def'::character varying, 'elec'::character varying])::text[])))
+    CONSTRAINT fuel_entries_kind CHECK (((kind)::text = ANY (ARRAY[('diesel'::character varying)::text, ('petrol'::character varying)::text, ('def'::character varying)::text, ('elec'::character varying)::text])))
 );
 
 
@@ -4586,6 +4978,130 @@ CREATE SEQUENCE public.fuel_entries_id_seq
 --
 
 ALTER SEQUENCE public.fuel_entries_id_seq OWNED BY public.fuel_entries.id;
+
+
+--
+-- Name: household_invite_links; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.household_invite_links (
+    id bigint NOT NULL,
+    household_id bigint NOT NULL,
+    token character varying NOT NULL,
+    created_by_id bigint,
+    expires_at timestamp(6) without time zone NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: household_invite_links_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.household_invite_links_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: household_invite_links_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.household_invite_links_id_seq OWNED BY public.household_invite_links.id;
+
+
+--
+-- Name: household_members; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.household_members (
+    id bigint NOT NULL,
+    household_id bigint NOT NULL,
+    app_account_id bigint,
+    invite_phone character varying,
+    invite_name character varying,
+    status character varying DEFAULT 'invited'::character varying NOT NULL,
+    relationship character varying,
+    admin boolean DEFAULT false NOT NULL,
+    billing_contact boolean DEFAULT false NOT NULL,
+    photo character varying,
+    invited_by_id bigint,
+    invited_via character varying NOT NULL,
+    joined_at timestamp(6) without time zone,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT household_members_invited_via CHECK (((invited_via)::text = ANY (ARRAY[('creator'::character varying)::text, ('quick'::character varying)::text, ('manual'::character varying)::text]))),
+    CONSTRAINT household_members_relationship CHECK (((relationship IS NULL) OR ((relationship)::text = ANY (ARRAY[('Mother'::character varying)::text, ('Father'::character varying)::text, ('Grandparent'::character varying)::text, ('Relative'::character varying)::text, ('Domestic Helper'::character varying)::text, ('Family Friend'::character varying)::text])))),
+    CONSTRAINT household_members_status CHECK (((status)::text = ANY (ARRAY[('invited'::character varying)::text, ('requested'::character varying)::text, ('active'::character varying)::text, ('declined'::character varying)::text]))),
+    CONSTRAINT household_members_who CHECK (((app_account_id IS NOT NULL) OR (invite_phone IS NOT NULL)))
+);
+
+
+--
+-- Name: household_members_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.household_members_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: household_members_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.household_members_id_seq OWNED BY public.household_members.id;
+
+
+--
+-- Name: households; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.households (
+    id bigint NOT NULL,
+    name character varying NOT NULL,
+    postal character varying NOT NULL,
+    block character varying NOT NULL,
+    street character varying NOT NULL,
+    floor character varying,
+    unit character varying,
+    line2 character varying,
+    lat numeric(10,7),
+    lng numeric(10,7),
+    billing_same boolean DEFAULT true NOT NULL,
+    billing_address text,
+    created_by_id bigint,
+    discarded_at timestamp(6) without time zone,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT households_billing_address CHECK ((billing_same OR (billing_address IS NOT NULL)))
+);
+
+
+--
+-- Name: households_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.households_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: households_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.households_id_seq OWNED BY public.households.id;
 
 
 --
@@ -4902,6 +5418,7 @@ CREATE TABLE public.notices (
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
     school_id bigint,
+    app_sent_at timestamp(6) without time zone,
     CONSTRAINT notices_period CHECK ((ends_at > starts_at))
 );
 
@@ -5051,7 +5568,7 @@ CREATE TABLE public.occurrence_corrections (
     lock_version integer DEFAULT 0 NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT occurrence_corrections_outcome CHECK (((outcome)::text = ANY ((ARRAY['completed'::character varying, 'incomplete'::character varying])::text[])))
+    CONSTRAINT occurrence_corrections_outcome CHECK (((outcome)::text = ANY (ARRAY[('completed'::character varying)::text, ('incomplete'::character varying)::text])))
 );
 
 
@@ -5773,7 +6290,7 @@ CREATE TABLE public.operator_pay_batches (
     created_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT operator_pay_batches_kind CHECK (((kind)::text = ANY ((ARRAY['batch'::character varying, 'adhoc'::character varying])::text[])))
+    CONSTRAINT operator_pay_batches_kind CHECK (((kind)::text = ANY (ARRAY[('batch'::character varying)::text, ('adhoc'::character varying)::text])))
 );
 
 
@@ -5970,7 +6487,7 @@ CREATE TABLE public.pay_bonus_drivers (
     signed_up_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT pay_bonus_drivers_role CHECK (((role)::text = ANY ((ARRAY['eligible'::character varying, 'signed_up'::character varying])::text[])))
+    CONSTRAINT pay_bonus_drivers_role CHECK (((role)::text = ANY (ARRAY[('eligible'::character varying)::text, ('signed_up'::character varying)::text])))
 );
 
 
@@ -6159,8 +6676,8 @@ CREATE TABLE public.pay_bonuses (
     discarded_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT pay_bonuses_frequency CHECK (((frequency)::text = ANY ((ARRAY['daily'::character varying, 'weekly'::character varying, 'monthly'::character varying, 'quarterly'::character varying, 'half_yearly'::character varying, 'yearly'::character varying])::text[]))),
-    CONSTRAINT pay_bonuses_plan_type CHECK (((plan_type)::text = ANY ((ARRAY['trip_target'::character varying, 'reliability_otp'::character varying, 'reliability_attendance'::character varying])::text[])))
+    CONSTRAINT pay_bonuses_frequency CHECK (((frequency)::text = ANY (ARRAY[('daily'::character varying)::text, ('weekly'::character varying)::text, ('monthly'::character varying)::text, ('quarterly'::character varying)::text, ('half_yearly'::character varying)::text, ('yearly'::character varying)::text]))),
+    CONSTRAINT pay_bonuses_plan_type CHECK (((plan_type)::text = ANY (ARRAY[('trip_target'::character varying)::text, ('reliability_otp'::character varying)::text, ('reliability_attendance'::character varying)::text])))
 );
 
 
@@ -6368,7 +6885,7 @@ CREATE TABLE public.pay_rewards (
     discarded_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT pay_rewards_status CHECK (((status)::text = ANY ((ARRAY['active'::character varying, 'inactive'::character varying])::text[])))
+    CONSTRAINT pay_rewards_status CHECK (((status)::text = ANY (ARRAY[('active'::character varying)::text, ('inactive'::character varying)::text])))
 );
 
 
@@ -6439,7 +6956,7 @@ CREATE TABLE public.pay_scheme_target_tiers (
     "position" integer DEFAULT 0 NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT pay_scheme_target_tiers_period CHECK (((period)::text = ANY ((ARRAY['weekly'::character varying, 'monthly'::character varying])::text[])))
+    CONSTRAINT pay_scheme_target_tiers_period CHECK (((period)::text = ANY (ARRAY[('weekly'::character varying)::text, ('monthly'::character varying)::text])))
 );
 
 
@@ -6554,7 +7071,7 @@ CREATE TABLE public.pay_schemes (
     discarded_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT pay_schemes_type CHECK (((scheme_type)::text = ANY ((ARRAY['basic_plus_trips'::character varying, 'monthly_with_minimum'::character varying, 'shift_based'::character varying])::text[])))
+    CONSTRAINT pay_schemes_type CHECK (((scheme_type)::text = ANY (ARRAY[('basic_plus_trips'::character varying)::text, ('monthly_with_minimum'::character varying)::text, ('shift_based'::character varying)::text])))
 );
 
 
@@ -6820,7 +7337,7 @@ CREATE TABLE public.portal_sign_in_codes (
     ip character varying,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT portal_sign_in_codes_purpose CHECK (((purpose)::text = ANY ((ARRAY['first'::character varying, 'reset'::character varying])::text[])))
+    CONSTRAINT portal_sign_in_codes_purpose CHECK (((purpose)::text = ANY (ARRAY[('first'::character varying)::text, ('reset'::character varying)::text])))
 );
 
 
@@ -7279,8 +7796,8 @@ CREATE TABLE public.replacements (
     updated_at timestamp(6) without time zone NOT NULL,
     school_route_id bigint,
     CONSTRAINT replacements_dates CHECK ((ends_on >= starts_on)),
-    CONSTRAINT replacements_kind CHECK (((kind)::text = ANY ((ARRAY['drv'::character varying, 'veh'::character varying, 'crew'::character varying, 'hand'::character varying])::text[]))),
-    CONSTRAINT replacements_range_kinds CHECK ((((scope)::text = 'run'::text) OR ((kind)::text = ANY ((ARRAY['drv'::character varying, 'veh'::character varying])::text[])))),
+    CONSTRAINT replacements_kind CHECK (((kind)::text = ANY (ARRAY[('drv'::character varying)::text, ('veh'::character varying)::text, ('crew'::character varying)::text, ('hand'::character varying)::text]))),
+    CONSTRAINT replacements_range_kinds CHECK ((((scope)::text = 'run'::text) OR ((kind)::text = ANY (ARRAY[('drv'::character varying)::text, ('veh'::character varying)::text])))),
     CONSTRAINT replacements_run_source CHECK ((((scope)::text = 'range'::text) OR (num_nonnulls(trip_id, school_route_id) = 1)))
 );
 
@@ -7747,7 +8264,8 @@ CREATE TABLE public.school_bill_payments (
     recorded_by_id bigint,
     voided_at timestamp with time zone,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    admin_fee numeric(12,2) DEFAULT 0.0 NOT NULL
 );
 
 
@@ -8598,7 +9116,8 @@ CREATE TABLE public.school_riders (
     source character varying DEFAULT 'csv'::character varying NOT NULL,
     created_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    dependant_id bigint
 );
 
 
@@ -9051,6 +9570,184 @@ ALTER SEQUENCE public.setup_locks_id_seq OWNED BY public.setup_locks.id;
 
 
 --
+-- Name: shuttle_alert_setting_runs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.shuttle_alert_setting_runs (
+    id bigint NOT NULL,
+    shuttle_alert_setting_id bigint NOT NULL,
+    trip_run_id bigint NOT NULL
+);
+
+
+--
+-- Name: shuttle_alert_setting_runs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.shuttle_alert_setting_runs_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: shuttle_alert_setting_runs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.shuttle_alert_setting_runs_id_seq OWNED BY public.shuttle_alert_setting_runs.id;
+
+
+--
+-- Name: shuttle_alert_settings; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.shuttle_alert_settings (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    client_id bigint NOT NULL,
+    app_account_id bigint NOT NULL,
+    trip_id bigint NOT NULL,
+    enabled boolean DEFAULT true NOT NULL,
+    weekdays integer[] DEFAULT '{}'::integer[] NOT NULL,
+    lead_minutes integer DEFAULT 5 NOT NULL,
+    notify_bus_change boolean DEFAULT true NOT NULL,
+    notify_service_days boolean DEFAULT true NOT NULL,
+    notify_late boolean DEFAULT true NOT NULL,
+    notify_notices boolean DEFAULT true NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT shuttle_alert_settings_lead CHECK ((lead_minutes = ANY (ARRAY[5, 10, 15])))
+);
+
+
+--
+-- Name: shuttle_alert_settings_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.shuttle_alert_settings_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: shuttle_alert_settings_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.shuttle_alert_settings_id_seq OWNED BY public.shuttle_alert_settings.id;
+
+
+--
+-- Name: shuttle_pins; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.shuttle_pins (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    app_account_id bigint NOT NULL,
+    trip_id bigint NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: shuttle_pins_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.shuttle_pins_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: shuttle_pins_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.shuttle_pins_id_seq OWNED BY public.shuttle_pins.id;
+
+
+--
+-- Name: shuttle_stop_bells; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.shuttle_stop_bells (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    app_account_id bigint NOT NULL,
+    trip_id bigint NOT NULL,
+    trip_stop_id bigint NOT NULL,
+    direction integer NOT NULL,
+    "on" boolean DEFAULT true NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT shuttle_stop_bells_direction CHECK ((direction = ANY (ARRAY[1, 2])))
+);
+
+
+--
+-- Name: shuttle_stop_bells_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.shuttle_stop_bells_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: shuttle_stop_bells_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.shuttle_stop_bells_id_seq OWNED BY public.shuttle_stop_bells.id;
+
+
+--
+-- Name: shuttle_usuals; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.shuttle_usuals (
+    id bigint NOT NULL,
+    company_id bigint NOT NULL,
+    client_id bigint NOT NULL,
+    app_account_id bigint NOT NULL,
+    trip_id bigint NOT NULL,
+    trip_run_id bigint NOT NULL,
+    trip_stop_id bigint NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL
+);
+
+
+--
+-- Name: shuttle_usuals_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.shuttle_usuals_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: shuttle_usuals_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.shuttle_usuals_id_seq OWNED BY public.shuttle_usuals.id;
+
+
+--
 -- Name: stop_photo_requests; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -9459,7 +10156,7 @@ CREATE TABLE public.trip_occurrences (
     driver_end_reason character varying,
     end_on_board integer,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
-    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
+    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
 )
 PARTITION BY RANGE (date);
 
@@ -9537,7 +10234,7 @@ CREATE TABLE public.trip_occurrences_y2026m09 (
     driver_end_reason character varying,
     end_on_board integer,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
-    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
+    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
 );
 
 
@@ -9600,7 +10297,7 @@ CREATE TABLE public.trip_occurrences_y2026m10 (
     driver_end_reason character varying,
     end_on_board integer,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
-    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
+    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
 );
 
 
@@ -9663,7 +10360,7 @@ CREATE TABLE public.trip_occurrences_y2026m11 (
     driver_end_reason character varying,
     end_on_board integer,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
-    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
+    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
 );
 
 
@@ -9726,7 +10423,7 @@ CREATE TABLE public.trip_occurrences_y2026m12 (
     driver_end_reason character varying,
     end_on_board integer,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
-    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
+    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
 );
 
 
@@ -9789,7 +10486,7 @@ CREATE TABLE public.trip_occurrences_y2027m01 (
     driver_end_reason character varying,
     end_on_board integer,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
-    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
+    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
 );
 
 
@@ -9852,7 +10549,7 @@ CREATE TABLE public.trip_occurrences_y2027m02 (
     driver_end_reason character varying,
     end_on_board integer,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
-    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
+    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
 );
 
 
@@ -9915,7 +10612,7 @@ CREATE TABLE public.trip_occurrences_y2027m03 (
     driver_end_reason character varying,
     end_on_board integer,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
-    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY ((ARRAY['scheduled'::character varying, 'cancelled'::character varying, 'completed'::character varying, 'removed'::character varying, 'skipped'::character varying])::text[])))
+    CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
 );
 
 
@@ -10524,8 +11221,8 @@ CREATE TABLE public.trips (
     route_list_imported_at timestamp(6) without time zone,
     students_purged_at timestamp(6) without time zone,
     booking_trip_id bigint,
-    CONSTRAINT trips_end_mode CHECK (((end_mode)::text = ANY ((ARRAY['none'::character varying, 'never'::character varying, 'date'::character varying, 'count'::character varying])::text[]))),
-    CONSTRAINT trips_kind CHECK (((kind)::text = ANY ((ARRAY['ad_hoc'::character varying, 'corporate_shuttle'::character varying, 'airport_transfer'::character varying, 'disposal'::character varying, 'school_run'::character varying])::text[])))
+    CONSTRAINT trips_end_mode CHECK (((end_mode)::text = ANY (ARRAY[('none'::character varying)::text, ('never'::character varying)::text, ('date'::character varying)::text, ('count'::character varying)::text]))),
+    CONSTRAINT trips_kind CHECK (((kind)::text = ANY (ARRAY[('ad_hoc'::character varying)::text, ('corporate_shuttle'::character varying)::text, ('airport_transfer'::character varying)::text, ('disposal'::character varying)::text, ('school_run'::character varying)::text])))
 );
 
 
@@ -10602,7 +11299,9 @@ CREATE TABLE public.user_notification_preferences (
     email boolean DEFAULT true NOT NULL,
     seen_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
-    updated_at timestamp(6) without time zone NOT NULL
+    updated_at timestamp(6) without time zone NOT NULL,
+    change_reply boolean DEFAULT true NOT NULL,
+    client_cancelled boolean DEFAULT true NOT NULL
 );
 
 
@@ -10794,7 +11493,7 @@ CREATE TABLE public.vehicle_finance_entries (
     created_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT vehicle_finance_entries_kind CHECK (((kind)::text = ANY ((ARRAY['revenue'::character varying, 'cost'::character varying])::text[])))
+    CONSTRAINT vehicle_finance_entries_kind CHECK (((kind)::text = ANY (ARRAY[('revenue'::character varying)::text, ('cost'::character varying)::text])))
 );
 
 
@@ -10844,7 +11543,7 @@ CREATE TABLE public.vehicle_financials (
     updated_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT vehicle_financials_funding CHECK (((funding)::text = ANY ((ARRAY['loan'::character varying, 'cash'::character varying])::text[])))
+    CONSTRAINT vehicle_financials_funding CHECK (((funding)::text = ANY (ARRAY[('loan'::character varying)::text, ('cash'::character varying)::text])))
 );
 
 
@@ -11191,7 +11890,7 @@ CREATE TABLE public.vehicle_type_requests (
     vehicle_type_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT vehicle_type_requests_status CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'added'::character varying, 'declined'::character varying])::text[])))
+    CONSTRAINT vehicle_type_requests_status CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('added'::character varying)::text, ('declined'::character varying)::text])))
 );
 
 
@@ -11489,6 +12188,20 @@ ALTER TABLE ONLY public.app_jwts ALTER COLUMN id SET DEFAULT nextval('public.app
 
 
 --
+-- Name: app_notifications id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.app_notifications ALTER COLUMN id SET DEFAULT nextval('public.app_notifications_id_seq'::regclass);
+
+
+--
+-- Name: app_saved_points id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.app_saved_points ALTER COLUMN id SET DEFAULT nextval('public.app_saved_points_id_seq'::regclass);
+
+
+--
 -- Name: app_sign_in_codes id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -11566,6 +12279,13 @@ ALTER TABLE ONLY public.booking_cancel_requests ALTER COLUMN id SET DEFAULT next
 
 
 --
+-- Name: booking_change_replies id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_change_replies ALTER COLUMN id SET DEFAULT nextval('public.booking_change_replies_id_seq'::regclass);
+
+
+--
 -- Name: booking_days id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -11577,6 +12297,13 @@ ALTER TABLE ONLY public.booking_days ALTER COLUMN id SET DEFAULT nextval('public
 --
 
 ALTER TABLE ONLY public.booking_events ALTER COLUMN id SET DEFAULT nextval('public.booking_events_id_seq'::regclass);
+
+
+--
+-- Name: booking_payments id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_payments ALTER COLUMN id SET DEFAULT nextval('public.booking_payments_id_seq'::regclass);
 
 
 --
@@ -11706,6 +12433,13 @@ ALTER TABLE ONLY public.cca_ride_settings ALTER COLUMN id SET DEFAULT nextval('p
 
 
 --
+-- Name: cca_standing_days id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cca_standing_days ALTER COLUMN id SET DEFAULT nextval('public.cca_standing_days_id_seq'::regclass);
+
+
+--
 -- Name: client_approval_flows id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -11752,6 +12486,13 @@ ALTER TABLE ONLY public.client_approval_step_people ALTER COLUMN id SET DEFAULT 
 --
 
 ALTER TABLE ONLY public.client_approval_steps ALTER COLUMN id SET DEFAULT nextval('public.client_approval_steps_id_seq'::regclass);
+
+
+--
+-- Name: client_bill_funds id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_bill_funds ALTER COLUMN id SET DEFAULT nextval('public.client_bill_funds_id_seq'::regclass);
 
 
 --
@@ -11815,6 +12556,13 @@ ALTER TABLE ONLY public.client_invoices ALTER COLUMN id SET DEFAULT nextval('pub
 --
 
 ALTER TABLE ONLY public.client_pickup_points ALTER COLUMN id SET DEFAULT nextval('public.client_pickup_points_id_seq'::regclass);
+
+
+--
+-- Name: client_riders id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_riders ALTER COLUMN id SET DEFAULT nextval('public.client_riders_id_seq'::regclass);
 
 
 --
@@ -11899,6 +12647,20 @@ ALTER TABLE ONLY public.company_sequences ALTER COLUMN id SET DEFAULT nextval('p
 --
 
 ALTER TABLE ONLY public.dashboard_layouts ALTER COLUMN id SET DEFAULT nextval('public.dashboard_layouts_id_seq'::regclass);
+
+
+--
+-- Name: dependant_guardians id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.dependant_guardians ALTER COLUMN id SET DEFAULT nextval('public.dependant_guardians_id_seq'::regclass);
+
+
+--
+-- Name: dependants id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.dependants ALTER COLUMN id SET DEFAULT nextval('public.dependants_id_seq'::regclass);
 
 
 --
@@ -12235,6 +12997,27 @@ ALTER TABLE ONLY public.fuel_companies ALTER COLUMN id SET DEFAULT nextval('publ
 --
 
 ALTER TABLE ONLY public.fuel_entries ALTER COLUMN id SET DEFAULT nextval('public.fuel_entries_id_seq'::regclass);
+
+
+--
+-- Name: household_invite_links id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.household_invite_links ALTER COLUMN id SET DEFAULT nextval('public.household_invite_links_id_seq'::regclass);
+
+
+--
+-- Name: household_members id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.household_members ALTER COLUMN id SET DEFAULT nextval('public.household_members_id_seq'::regclass);
+
+
+--
+-- Name: households id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.households ALTER COLUMN id SET DEFAULT nextval('public.households_id_seq'::regclass);
 
 
 --
@@ -12994,6 +13777,41 @@ ALTER TABLE ONLY public.setup_locks ALTER COLUMN id SET DEFAULT nextval('public.
 
 
 --
+-- Name: shuttle_alert_setting_runs id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shuttle_alert_setting_runs ALTER COLUMN id SET DEFAULT nextval('public.shuttle_alert_setting_runs_id_seq'::regclass);
+
+
+--
+-- Name: shuttle_alert_settings id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shuttle_alert_settings ALTER COLUMN id SET DEFAULT nextval('public.shuttle_alert_settings_id_seq'::regclass);
+
+
+--
+-- Name: shuttle_pins id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shuttle_pins ALTER COLUMN id SET DEFAULT nextval('public.shuttle_pins_id_seq'::regclass);
+
+
+--
+-- Name: shuttle_stop_bells id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shuttle_stop_bells ALTER COLUMN id SET DEFAULT nextval('public.shuttle_stop_bells_id_seq'::regclass);
+
+
+--
+-- Name: shuttle_usuals id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shuttle_usuals ALTER COLUMN id SET DEFAULT nextval('public.shuttle_usuals_id_seq'::regclass);
+
+
+--
 -- Name: stop_photo_requests id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -13366,6 +14184,22 @@ ALTER TABLE ONLY public.app_jwts
 
 
 --
+-- Name: app_notifications app_notifications_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.app_notifications
+    ADD CONSTRAINT app_notifications_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: app_saved_points app_saved_points_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.app_saved_points
+    ADD CONSTRAINT app_saved_points_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: app_sign_in_codes app_sign_in_codes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -13462,6 +14296,14 @@ ALTER TABLE ONLY public.booking_cancel_requests
 
 
 --
+-- Name: booking_change_replies booking_change_replies_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_change_replies
+    ADD CONSTRAINT booking_change_replies_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: booking_days booking_days_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -13475,6 +14317,14 @@ ALTER TABLE ONLY public.booking_days
 
 ALTER TABLE ONLY public.booking_events
     ADD CONSTRAINT booking_events_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: booking_payments booking_payments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_payments
+    ADD CONSTRAINT booking_payments_pkey PRIMARY KEY (id);
 
 
 --
@@ -13622,6 +14472,14 @@ ALTER TABLE ONLY public.cca_ride_settings
 
 
 --
+-- Name: cca_standing_days cca_standing_days_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cca_standing_days
+    ADD CONSTRAINT cca_standing_days_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: client_approval_flows client_approval_flows_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -13675,6 +14533,14 @@ ALTER TABLE ONLY public.client_approval_step_people
 
 ALTER TABLE ONLY public.client_approval_steps
     ADD CONSTRAINT client_approval_steps_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: client_bill_funds client_bill_funds_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_bill_funds
+    ADD CONSTRAINT client_bill_funds_pkey PRIMARY KEY (id);
 
 
 --
@@ -13747,6 +14613,14 @@ ALTER TABLE ONLY public.client_invoices
 
 ALTER TABLE ONLY public.client_pickup_points
     ADD CONSTRAINT client_pickup_points_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: client_riders client_riders_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_riders
+    ADD CONSTRAINT client_riders_pkey PRIMARY KEY (id);
 
 
 --
@@ -13843,6 +14717,22 @@ ALTER TABLE ONLY public.company_sequences
 
 ALTER TABLE ONLY public.dashboard_layouts
     ADD CONSTRAINT dashboard_layouts_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: dependant_guardians dependant_guardians_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.dependant_guardians
+    ADD CONSTRAINT dependant_guardians_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: dependants dependants_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.dependants
+    ADD CONSTRAINT dependants_pkey PRIMARY KEY (id);
 
 
 --
@@ -14227,6 +15117,30 @@ ALTER TABLE ONLY public.fuel_companies
 
 ALTER TABLE ONLY public.fuel_entries
     ADD CONSTRAINT fuel_entries_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: household_invite_links household_invite_links_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.household_invite_links
+    ADD CONSTRAINT household_invite_links_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: household_members household_members_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.household_members
+    ADD CONSTRAINT household_members_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: households households_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.households
+    ADD CONSTRAINT households_pkey PRIMARY KEY (id);
 
 
 --
@@ -15166,6 +16080,46 @@ ALTER TABLE ONLY public.setup_locks
 
 
 --
+-- Name: shuttle_alert_setting_runs shuttle_alert_setting_runs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shuttle_alert_setting_runs
+    ADD CONSTRAINT shuttle_alert_setting_runs_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: shuttle_alert_settings shuttle_alert_settings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shuttle_alert_settings
+    ADD CONSTRAINT shuttle_alert_settings_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: shuttle_pins shuttle_pins_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shuttle_pins
+    ADD CONSTRAINT shuttle_pins_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: shuttle_stop_bells shuttle_stop_bells_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shuttle_stop_bells
+    ADD CONSTRAINT shuttle_stop_bells_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: shuttle_usuals shuttle_usuals_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shuttle_usuals
+    ADD CONSTRAINT shuttle_usuals_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: stop_photo_requests stop_photo_requests_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -15999,6 +16953,83 @@ CREATE UNIQUE INDEX index_app_jwts_on_jti ON public.app_jwts USING btree (jti);
 
 
 --
+-- Name: index_app_notifications_banners; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_app_notifications_banners ON public.app_notifications USING btree (app_account_id, banner_until) WHERE ((banner_until IS NOT NULL) AND (dismissed_at IS NULL));
+
+
+--
+-- Name: index_app_notifications_on_app_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_app_notifications_on_app_account_id ON public.app_notifications USING btree (app_account_id);
+
+
+--
+-- Name: index_app_notifications_on_app_account_id_and_created_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_app_notifications_on_app_account_id_and_created_at ON public.app_notifications USING btree (app_account_id, created_at);
+
+
+--
+-- Name: index_app_notifications_on_app_account_id_and_dedupe_key; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_app_notifications_on_app_account_id_and_dedupe_key ON public.app_notifications USING btree (app_account_id, dedupe_key);
+
+
+--
+-- Name: index_app_notifications_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_app_notifications_on_company_id ON public.app_notifications USING btree (company_id);
+
+
+--
+-- Name: index_app_notifications_on_dependant_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_app_notifications_on_dependant_id ON public.app_notifications USING btree (dependant_id);
+
+
+--
+-- Name: index_app_notifications_on_notice_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_app_notifications_on_notice_id ON public.app_notifications USING btree (notice_id);
+
+
+--
+-- Name: index_app_notifications_on_trip_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_app_notifications_on_trip_id ON public.app_notifications USING btree (trip_id);
+
+
+--
+-- Name: index_app_notifications_unread; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_app_notifications_unread ON public.app_notifications USING btree (app_account_id) WHERE (read_at IS NULL);
+
+
+--
+-- Name: index_app_saved_points_on_account_and_name; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_app_saved_points_on_account_and_name ON public.app_saved_points USING btree (app_account_id, lower((name)::text));
+
+
+--
+-- Name: index_app_saved_points_on_app_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_app_saved_points_on_app_account_id ON public.app_saved_points USING btree (app_account_id);
+
+
+--
 -- Name: index_app_sign_in_codes_on_target_and_created_at; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -16139,6 +17170,13 @@ CREATE INDEX index_booking_attachments_on_uploaded_by_id ON public.booking_attac
 
 
 --
+-- Name: index_booking_cancel_requests_on_booking_day_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_booking_cancel_requests_on_booking_day_id ON public.booking_cancel_requests USING btree (booking_day_id);
+
+
+--
 -- Name: index_booking_cancel_requests_on_booking_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -16167,6 +17205,13 @@ CREATE INDEX index_booking_cancel_requests_on_company_id_and_status ON public.bo
 
 
 --
+-- Name: index_booking_cancel_requests_on_requested_by_app_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_booking_cancel_requests_on_requested_by_app_account_id ON public.booking_cancel_requests USING btree (requested_by_app_account_id);
+
+
+--
 -- Name: index_booking_cancel_requests_on_requested_by_client_user_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -16185,6 +17230,34 @@ CREATE INDEX index_booking_cancel_requests_on_requested_by_id ON public.booking_
 --
 
 CREATE INDEX index_booking_cancel_requests_on_resolved_by_id ON public.booking_cancel_requests USING btree (resolved_by_id);
+
+
+--
+-- Name: index_booking_change_replies_on_booking_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_booking_change_replies_on_booking_id ON public.booking_change_replies USING btree (booking_id);
+
+
+--
+-- Name: index_booking_change_replies_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_booking_change_replies_on_company_id ON public.booking_change_replies USING btree (company_id);
+
+
+--
+-- Name: index_booking_change_replies_on_replied_by_app_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_booking_change_replies_on_replied_by_app_account_id ON public.booking_change_replies USING btree (replied_by_app_account_id);
+
+
+--
+-- Name: index_booking_change_replies_on_replied_by_client_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_booking_change_replies_on_replied_by_client_user_id ON public.booking_change_replies USING btree (replied_by_client_user_id);
 
 
 --
@@ -16241,6 +17314,27 @@ CREATE INDEX index_booking_events_on_company_id ON public.booking_events USING b
 --
 
 CREATE INDEX index_booking_events_on_company_id_and_occurred_at ON public.booking_events USING btree (company_id, occurred_at);
+
+
+--
+-- Name: index_booking_payments_on_booking_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_booking_payments_on_booking_id ON public.booking_payments USING btree (booking_id);
+
+
+--
+-- Name: index_booking_payments_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_booking_payments_on_company_id ON public.booking_payments USING btree (company_id);
+
+
+--
+-- Name: index_booking_payments_one_payment; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_booking_payments_one_payment ON public.booking_payments USING btree (booking_id, kind) WHERE ((kind)::text = 'payment'::text);
 
 
 --
@@ -16349,6 +17443,20 @@ CREATE INDEX index_booking_trips_on_rejected_by_client_user_id ON public.booking
 
 
 --
+-- Name: index_bookings_on_booked_via_client_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_bookings_on_booked_via_client_user_id ON public.bookings USING btree (booked_via_client_user_id);
+
+
+--
+-- Name: index_bookings_on_client_bill_fund_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_bookings_on_client_bill_fund_id ON public.bookings USING btree (client_bill_fund_id);
+
+
+--
 -- Name: index_bookings_on_client_end_customer_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -16388,6 +17496,20 @@ CREATE INDEX index_bookings_on_company_id_and_created_at ON public.bookings USIN
 --
 
 CREATE UNIQUE INDEX index_bookings_on_company_id_and_number ON public.bookings USING btree (company_id, number);
+
+
+--
+-- Name: index_bookings_on_copied_from_booking_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_bookings_on_copied_from_booking_id ON public.bookings USING btree (copied_from_booking_id);
+
+
+--
+-- Name: index_bookings_on_created_by_app_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_bookings_on_created_by_app_account_id ON public.bookings USING btree (created_by_app_account_id);
 
 
 --
@@ -16440,6 +17562,13 @@ CREATE INDEX index_bus_requests_on_academic_year_id ON public.bus_requests USING
 
 
 --
+-- Name: index_bus_requests_on_app_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_bus_requests_on_app_account_id ON public.bus_requests USING btree (app_account_id);
+
+
+--
 -- Name: index_bus_requests_on_company_id_and_code; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -16447,10 +17576,31 @@ CREATE UNIQUE INDEX index_bus_requests_on_company_id_and_code ON public.bus_requ
 
 
 --
+-- Name: index_bus_requests_on_dependant_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_bus_requests_on_dependant_id ON public.bus_requests USING btree (dependant_id);
+
+
+--
 -- Name: index_bus_requests_on_family_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX index_bus_requests_on_family_id ON public.bus_requests USING btree (family_id);
+
+
+--
+-- Name: index_bus_requests_on_household_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_bus_requests_on_household_id ON public.bus_requests USING btree (household_id);
+
+
+--
+-- Name: index_bus_requests_on_registration_bill_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_bus_requests_on_registration_bill_id ON public.bus_requests USING btree (registration_bill_id);
 
 
 --
@@ -16587,6 +17737,41 @@ CREATE UNIQUE INDEX index_cca_ride_settings_on_school_id ON public.cca_ride_sett
 
 
 --
+-- Name: index_cca_standing_days_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_cca_standing_days_on_company_id ON public.cca_standing_days USING btree (company_id);
+
+
+--
+-- Name: index_cca_standing_days_on_family_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_cca_standing_days_on_family_id ON public.cca_standing_days USING btree (family_id);
+
+
+--
+-- Name: index_cca_standing_days_on_family_id_and_school_rider_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_cca_standing_days_on_family_id_and_school_rider_id ON public.cca_standing_days USING btree (family_id, school_rider_id);
+
+
+--
+-- Name: index_cca_standing_days_on_school_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_cca_standing_days_on_school_id ON public.cca_standing_days USING btree (school_id);
+
+
+--
+-- Name: index_cca_standing_days_on_school_rider_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_cca_standing_days_on_school_rider_id ON public.cca_standing_days USING btree (school_rider_id);
+
+
+--
 -- Name: index_client_approval_flows_on_client_id_and_client_site_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -16654,6 +17839,27 @@ CREATE INDEX index_client_approval_step_people_on_client_user_id ON public.clien
 --
 
 CREATE UNIQUE INDEX index_client_approval_step_people_unique ON public.client_approval_step_people USING btree (client_approval_step_id, client_user_id);
+
+
+--
+-- Name: index_client_bill_funds_on_client_and_name; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_client_bill_funds_on_client_and_name ON public.client_bill_funds USING btree (client_id, lower((name)::text)) WHERE (discarded_at IS NULL);
+
+
+--
+-- Name: index_client_bill_funds_on_client_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_bill_funds_on_client_id ON public.client_bill_funds USING btree (client_id);
+
+
+--
+-- Name: index_client_bill_funds_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_bill_funds_on_company_id ON public.client_bill_funds USING btree (company_id);
 
 
 --
@@ -16853,10 +18059,52 @@ CREATE INDEX index_client_pickup_points_on_company_id ON public.client_pickup_po
 
 
 --
+-- Name: index_client_pickup_points_on_created_by_client_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_pickup_points_on_created_by_client_user_id ON public.client_pickup_points USING btree (created_by_client_user_id);
+
+
+--
 -- Name: index_client_pickup_points_on_created_by_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX index_client_pickup_points_on_created_by_id ON public.client_pickup_points USING btree (created_by_id);
+
+
+--
+-- Name: index_client_riders_on_app_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_riders_on_app_account_id ON public.client_riders USING btree (app_account_id);
+
+
+--
+-- Name: index_client_riders_on_client_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_riders_on_client_id ON public.client_riders USING btree (client_id);
+
+
+--
+-- Name: index_client_riders_on_client_id_and_app_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_client_riders_on_client_id_and_app_account_id ON public.client_riders USING btree (client_id, app_account_id);
+
+
+--
+-- Name: index_client_riders_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_riders_on_company_id ON public.client_riders USING btree (company_id);
+
+
+--
+-- Name: index_client_riders_on_removed_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_riders_on_removed_by_id ON public.client_riders USING btree (removed_by_id);
 
 
 --
@@ -16923,6 +18171,13 @@ CREATE UNIQUE INDEX index_client_user_sites_on_client_user_id_and_client_site_id
 
 
 --
+-- Name: index_client_users_on_app_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_client_users_on_app_account_id ON public.client_users USING btree (app_account_id);
+
+
+--
 -- Name: index_client_users_on_client_id_and_email; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -16979,6 +18234,20 @@ CREATE INDEX index_client_users_on_portal_account_id ON public.client_users USIN
 
 
 --
+-- Name: index_client_users_one_app_link; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_client_users_one_app_link ON public.client_users USING btree (client_id, app_account_id) WHERE ((app_account_id IS NOT NULL) AND (discarded_at IS NULL));
+
+
+--
+-- Name: index_clients_on_app_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_clients_on_app_account_id ON public.clients USING btree (app_account_id);
+
+
+--
 -- Name: index_clients_on_company_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -16993,10 +18262,10 @@ CREATE UNIQUE INDEX index_clients_on_company_id_and_code ON public.clients USING
 
 
 --
--- Name: index_clients_on_company_id_and_name; Type: INDEX; Schema: public; Owner: -
+-- Name: index_clients_on_company_id_and_name_not_individual; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX index_clients_on_company_id_and_name ON public.clients USING btree (company_id, name) WHERE (discarded_at IS NULL);
+CREATE UNIQUE INDEX index_clients_on_company_id_and_name_not_individual ON public.clients USING btree (company_id, name) WHERE ((discarded_at IS NULL) AND ((kind)::text <> 'individual'::text));
 
 
 --
@@ -17007,10 +18276,24 @@ CREATE INDEX index_clients_on_discarded_at ON public.clients USING btree (discar
 
 
 --
+-- Name: index_clients_on_email_domains; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_clients_on_email_domains ON public.clients USING gin (email_domains);
+
+
+--
 -- Name: index_clients_on_rate_card_id; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX index_clients_on_rate_card_id ON public.clients USING btree (rate_card_id);
+
+
+--
+-- Name: index_clients_one_individual_per_account; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_clients_one_individual_per_account ON public.clients USING btree (company_id, app_account_id) WHERE ((app_account_id IS NOT NULL) AND (discarded_at IS NULL));
 
 
 --
@@ -17109,6 +18392,48 @@ CREATE UNIQUE INDEX index_company_sequences_on_company_id_and_name ON public.com
 --
 
 CREATE UNIQUE INDEX index_dashboard_layouts_on_user_id_and_company_id ON public.dashboard_layouts USING btree (user_id, company_id);
+
+
+--
+-- Name: index_dependant_guardians_on_dependant_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_dependant_guardians_on_dependant_id ON public.dependant_guardians USING btree (dependant_id);
+
+
+--
+-- Name: index_dependant_guardians_on_household_member_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_dependant_guardians_on_household_member_id ON public.dependant_guardians USING btree (household_member_id);
+
+
+--
+-- Name: index_dependant_guardians_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_dependant_guardians_unique ON public.dependant_guardians USING btree (dependant_id, household_member_id);
+
+
+--
+-- Name: index_dependants_live_on_household_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_dependants_live_on_household_id ON public.dependants USING btree (household_id) WHERE (discarded_at IS NULL);
+
+
+--
+-- Name: index_dependants_on_household_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_dependants_on_household_id ON public.dependants USING btree (household_id);
+
+
+--
+-- Name: index_dependants_on_school_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_dependants_on_school_id ON public.dependants USING btree (school_id);
 
 
 --
@@ -17542,7 +18867,7 @@ CREATE INDEX index_drivers_on_last_vehicle_id ON public.drivers USING btree (las
 -- Name: index_drivers_on_live_phone; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX index_drivers_on_live_phone ON public.drivers USING btree (company_id, phone) WHERE (((status)::text = ANY ((ARRAY['pending'::character varying, 'active'::character varying])::text[])) AND (discarded_at IS NULL));
+CREATE UNIQUE INDEX index_drivers_on_live_phone ON public.drivers USING btree (company_id, phone) WHERE (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('active'::character varying)::text])) AND (discarded_at IS NULL));
 
 
 --
@@ -17595,6 +18920,13 @@ CREATE INDEX index_external_vehicle_submissions_on_vehicle_id ON public.external
 
 
 --
+-- Name: index_families_on_household_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_families_on_household_id ON public.families USING btree (household_id);
+
+
+--
 -- Name: index_families_on_school_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -17606,6 +18938,13 @@ CREATE INDEX index_families_on_school_id ON public.families USING btree (school_
 --
 
 CREATE UNIQUE INDEX index_families_on_school_id_and_code ON public.families USING btree (school_id, code);
+
+
+--
+-- Name: index_families_one_per_household; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_families_one_per_household ON public.families USING btree (school_id, household_id) WHERE (household_id IS NOT NULL);
 
 
 --
@@ -17623,10 +18962,24 @@ CREATE INDEX index_family_guardians_on_family_id ON public.family_guardians USIN
 
 
 --
+-- Name: index_family_guardians_on_household_member_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_family_guardians_on_household_member_id ON public.family_guardians USING btree (household_member_id);
+
+
+--
 -- Name: index_family_guardians_on_phone; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX index_family_guardians_on_phone ON public.family_guardians USING btree (phone);
+
+
+--
+-- Name: index_family_riders_on_dependant_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_family_riders_on_dependant_id ON public.family_riders USING btree (dependant_id);
 
 
 --
@@ -17858,6 +19211,104 @@ CREATE INDEX index_fuel_entries_on_fuel_company_id ON public.fuel_entries USING 
 --
 
 CREATE INDEX index_fuel_entries_on_vehicle_id_and_date ON public.fuel_entries USING btree (vehicle_id, date);
+
+
+--
+-- Name: index_household_invite_links_on_created_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_household_invite_links_on_created_by_id ON public.household_invite_links USING btree (created_by_id);
+
+
+--
+-- Name: index_household_invite_links_on_household_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_household_invite_links_on_household_id ON public.household_invite_links USING btree (household_id);
+
+
+--
+-- Name: index_household_invite_links_on_token; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_household_invite_links_on_token ON public.household_invite_links USING btree (token);
+
+
+--
+-- Name: index_household_members_invited_phone; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_household_members_invited_phone ON public.household_members USING btree (invite_phone) WHERE ((status)::text = 'invited'::text);
+
+
+--
+-- Name: index_household_members_on_app_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_household_members_on_app_account_id ON public.household_members USING btree (app_account_id);
+
+
+--
+-- Name: index_household_members_on_household_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_household_members_on_household_id ON public.household_members USING btree (household_id);
+
+
+--
+-- Name: index_household_members_on_invited_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_household_members_on_invited_by_id ON public.household_members USING btree (invited_by_id);
+
+
+--
+-- Name: index_household_members_one_admin; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_household_members_one_admin ON public.household_members USING btree (household_id) WHERE admin;
+
+
+--
+-- Name: index_household_members_one_billing_contact; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_household_members_one_billing_contact ON public.household_members USING btree (household_id) WHERE billing_contact;
+
+
+--
+-- Name: index_household_members_one_family_per_account; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_household_members_one_family_per_account ON public.household_members USING btree (app_account_id) WHERE ((status)::text = 'active'::text);
+
+
+--
+-- Name: index_household_members_one_invite_per_phone; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_household_members_one_invite_per_phone ON public.household_members USING btree (household_id, invite_phone) WHERE ((invite_phone IS NOT NULL) AND ((status)::text = 'invited'::text));
+
+
+--
+-- Name: index_household_members_one_per_account; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_household_members_one_per_account ON public.household_members USING btree (household_id, app_account_id) WHERE ((app_account_id IS NOT NULL) AND ((status)::text = ANY (ARRAY[('invited'::character varying)::text, ('requested'::character varying)::text, ('active'::character varying)::text])));
+
+
+--
+-- Name: index_households_on_created_by_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_households_on_created_by_id ON public.households USING btree (created_by_id);
+
+
+--
+-- Name: index_households_on_discarded_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_households_on_discarded_at ON public.households USING btree (discarded_at);
 
 
 --
@@ -18291,7 +19742,7 @@ CREATE INDEX index_operator_drivers_on_last_vehicle_id ON public.operator_driver
 -- Name: index_operator_drivers_on_live_phone; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX index_operator_drivers_on_live_phone ON public.operator_drivers USING btree (company_id, phone) WHERE (((status)::text = ANY ((ARRAY['pending'::character varying, 'active'::character varying])::text[])) AND (discarded_at IS NULL));
+CREATE UNIQUE INDEX index_operator_drivers_on_live_phone ON public.operator_drivers USING btree (company_id, phone) WHERE (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('active'::character varying)::text])) AND (discarded_at IS NULL));
 
 
 --
@@ -19387,6 +20838,13 @@ CREATE UNIQUE INDEX index_school_riders_manual_rid ON public.school_riders USING
 
 
 --
+-- Name: index_school_riders_on_dependant_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_school_riders_on_dependant_id ON public.school_riders USING btree (dependant_id);
+
+
+--
 -- Name: index_school_riders_on_postal; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -19615,6 +21073,167 @@ CREATE UNIQUE INDEX index_schools_on_company_id_and_name ON public.schools USING
 --
 
 CREATE UNIQUE INDEX index_setup_locks_unique ON public.setup_locks USING btree (school_id, COALESCE(academic_year_id, (0)::bigint), section);
+
+
+--
+-- Name: index_shuttle_alert_setting_runs_on_trip_run_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_shuttle_alert_setting_runs_on_trip_run_id ON public.shuttle_alert_setting_runs USING btree (trip_run_id);
+
+
+--
+-- Name: index_shuttle_alert_setting_runs_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_shuttle_alert_setting_runs_unique ON public.shuttle_alert_setting_runs USING btree (shuttle_alert_setting_id, trip_run_id);
+
+
+--
+-- Name: index_shuttle_alert_settings_on_app_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_shuttle_alert_settings_on_app_account_id ON public.shuttle_alert_settings USING btree (app_account_id);
+
+
+--
+-- Name: index_shuttle_alert_settings_on_app_account_id_and_trip_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_shuttle_alert_settings_on_app_account_id_and_trip_id ON public.shuttle_alert_settings USING btree (app_account_id, trip_id);
+
+
+--
+-- Name: index_shuttle_alert_settings_on_client_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_shuttle_alert_settings_on_client_id ON public.shuttle_alert_settings USING btree (client_id);
+
+
+--
+-- Name: index_shuttle_alert_settings_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_shuttle_alert_settings_on_company_id ON public.shuttle_alert_settings USING btree (company_id);
+
+
+--
+-- Name: index_shuttle_alert_settings_on_trip_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_shuttle_alert_settings_on_trip_id ON public.shuttle_alert_settings USING btree (trip_id);
+
+
+--
+-- Name: index_shuttle_pins_on_app_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_shuttle_pins_on_app_account_id ON public.shuttle_pins USING btree (app_account_id);
+
+
+--
+-- Name: index_shuttle_pins_on_app_account_id_and_trip_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_shuttle_pins_on_app_account_id_and_trip_id ON public.shuttle_pins USING btree (app_account_id, trip_id);
+
+
+--
+-- Name: index_shuttle_pins_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_shuttle_pins_on_company_id ON public.shuttle_pins USING btree (company_id);
+
+
+--
+-- Name: index_shuttle_pins_on_trip_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_shuttle_pins_on_trip_id ON public.shuttle_pins USING btree (trip_id);
+
+
+--
+-- Name: index_shuttle_stop_bells_on_app_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_shuttle_stop_bells_on_app_account_id ON public.shuttle_stop_bells USING btree (app_account_id);
+
+
+--
+-- Name: index_shuttle_stop_bells_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_shuttle_stop_bells_on_company_id ON public.shuttle_stop_bells USING btree (company_id);
+
+
+--
+-- Name: index_shuttle_stop_bells_on_trip_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_shuttle_stop_bells_on_trip_id ON public.shuttle_stop_bells USING btree (trip_id);
+
+
+--
+-- Name: index_shuttle_stop_bells_on_trip_stop_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_shuttle_stop_bells_on_trip_stop_id ON public.shuttle_stop_bells USING btree (trip_stop_id);
+
+
+--
+-- Name: index_shuttle_stop_bells_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_shuttle_stop_bells_unique ON public.shuttle_stop_bells USING btree (app_account_id, trip_id, direction, trip_stop_id);
+
+
+--
+-- Name: index_shuttle_usuals_on_app_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_shuttle_usuals_on_app_account_id ON public.shuttle_usuals USING btree (app_account_id);
+
+
+--
+-- Name: index_shuttle_usuals_on_app_account_id_and_client_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_shuttle_usuals_on_app_account_id_and_client_id ON public.shuttle_usuals USING btree (app_account_id, client_id);
+
+
+--
+-- Name: index_shuttle_usuals_on_client_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_shuttle_usuals_on_client_id ON public.shuttle_usuals USING btree (client_id);
+
+
+--
+-- Name: index_shuttle_usuals_on_company_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_shuttle_usuals_on_company_id ON public.shuttle_usuals USING btree (company_id);
+
+
+--
+-- Name: index_shuttle_usuals_on_trip_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_shuttle_usuals_on_trip_id ON public.shuttle_usuals USING btree (trip_id);
+
+
+--
+-- Name: index_shuttle_usuals_on_trip_run_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_shuttle_usuals_on_trip_run_id ON public.shuttle_usuals USING btree (trip_run_id);
+
+
+--
+-- Name: index_shuttle_usuals_on_trip_stop_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_shuttle_usuals_on_trip_stop_id ON public.shuttle_usuals USING btree (trip_stop_id);
 
 
 --
@@ -22222,6 +23841,14 @@ ALTER INDEX public.index_trip_occurrences_on_vehicle_date ATTACH PARTITION publi
 
 
 --
+-- Name: cca_standing_days fk_rails_00377f1356; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cca_standing_days
+    ADD CONSTRAINT fk_rails_00377f1356 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
 -- Name: driver_notice_recipients fk_rails_0152a90d82; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -22438,6 +24065,22 @@ ALTER TABLE ONLY public.occurrence_correction_stops
 
 
 --
+-- Name: bus_requests fk_rails_0d0ecdfb35; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.bus_requests
+    ADD CONSTRAINT fk_rails_0d0ecdfb35 FOREIGN KEY (app_account_id) REFERENCES public.app_accounts(id) ON DELETE SET NULL;
+
+
+--
+-- Name: families fk_rails_0d61a8e498; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.families
+    ADD CONSTRAINT fk_rails_0d61a8e498 FOREIGN KEY (household_id) REFERENCES public.households(id) ON DELETE SET NULL;
+
+
+--
 -- Name: booking_trip_vehicles fk_rails_0e030c70e0; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -22622,6 +24265,14 @@ ALTER TABLE ONLY public.operator_cost_overrides
 
 
 --
+-- Name: shuttle_pins fk_rails_15be2e59cf; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shuttle_pins
+    ADD CONSTRAINT fk_rails_15be2e59cf FOREIGN KEY (trip_id) REFERENCES public.trips(id) ON DELETE CASCADE;
+
+
+--
 -- Name: trip_run_slots fk_rails_15e74e00a2; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -22643,6 +24294,14 @@ ALTER TABLE ONLY public.school_plans
 
 ALTER TABLE ONLY public.school_route_vehicle_changes
     ADD CONSTRAINT fk_rails_163f861842 FOREIGN KEY (vehicle_id) REFERENCES public.vehicles(id);
+
+
+--
+-- Name: cca_standing_days fk_rails_16705deab6; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cca_standing_days
+    ADD CONSTRAINT fk_rails_16705deab6 FOREIGN KEY (family_id) REFERENCES public.families(id) ON DELETE CASCADE;
 
 
 --
@@ -22675,6 +24334,14 @@ ALTER TABLE ONLY public.rate_cards
 
 ALTER TABLE ONLY public.occurrence_corrections
     ADD CONSTRAINT fk_rails_16c08b2459 FOREIGN KEY (driver_id) REFERENCES public.drivers(id);
+
+
+--
+-- Name: booking_payments fk_rails_16c5080706; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_payments
+    ADD CONSTRAINT fk_rails_16c5080706 FOREIGN KEY (booking_id) REFERENCES public.bookings(id);
 
 
 --
@@ -22731,6 +24398,14 @@ ALTER TABLE ONLY public.trip_price_cells
 
 ALTER TABLE ONLY public.drivers
     ADD CONSTRAINT fk_rails_1ae84e42c0 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: clients fk_rails_1af63b5f6f; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.clients
+    ADD CONSTRAINT fk_rails_1af63b5f6f FOREIGN KEY (app_account_id) REFERENCES public.app_accounts(id) ON DELETE SET NULL;
 
 
 --
@@ -22918,11 +24593,27 @@ ALTER TABLE ONLY public.academic_years
 
 
 --
+-- Name: family_guardians fk_rails_22c5b5c6a5; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.family_guardians
+    ADD CONSTRAINT fk_rails_22c5b5c6a5 FOREIGN KEY (household_member_id) REFERENCES public.household_members(id) ON DELETE SET NULL;
+
+
+--
 -- Name: trip_standby_photos fk_rails_233b0eaa96; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.trip_standby_photos
     ADD CONSTRAINT fk_rails_233b0eaa96 FOREIGN KEY (trip_standby_id) REFERENCES public.trip_standbys(id);
+
+
+--
+-- Name: bookings fk_rails_234999336f; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.bookings
+    ADD CONSTRAINT fk_rails_234999336f FOREIGN KEY (client_bill_fund_id) REFERENCES public.client_bill_funds(id);
 
 
 --
@@ -23035,6 +24726,14 @@ ALTER TABLE ONLY public.notice_templates
 
 ALTER TABLE ONLY public.bookings
     ADD CONSTRAINT fk_rails_27f28f8694 FOREIGN KEY (created_by_id) REFERENCES public.users(id);
+
+
+--
+-- Name: household_members fk_rails_28602e9c21; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.household_members
+    ADD CONSTRAINT fk_rails_28602e9c21 FOREIGN KEY (invited_by_id) REFERENCES public.app_accounts(id) ON DELETE SET NULL;
 
 
 --
@@ -23182,6 +24881,14 @@ ALTER TABLE ONLY public.client_invoice_lines
 
 
 --
+-- Name: cca_standing_days fk_rails_30a4ce1c48; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cca_standing_days
+    ADD CONSTRAINT fk_rails_30a4ce1c48 FOREIGN KEY (school_rider_id) REFERENCES public.school_riders(id) ON DELETE CASCADE;
+
+
+--
 -- Name: client_invoices fk_rails_30cc8daca1; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -23278,6 +24985,14 @@ ALTER TABLE ONLY public.booking_events
 
 
 --
+-- Name: bus_requests fk_rails_341e0adbc4; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.bus_requests
+    ADD CONSTRAINT fk_rails_341e0adbc4 FOREIGN KEY (registration_bill_id) REFERENCES public.school_bills(id) ON DELETE SET NULL;
+
+
+--
 -- Name: booking_approval_step_people fk_rails_34862d844d; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -23331,6 +25046,14 @@ ALTER TABLE ONLY public.pay_rewards
 
 ALTER TABLE ONLY public.calendar_days
     ADD CONSTRAINT fk_rails_363537453d FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: app_notifications fk_rails_36665b6e0b; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.app_notifications
+    ADD CONSTRAINT fk_rails_36665b6e0b FOREIGN KEY (dependant_id) REFERENCES public.dependants(id) ON DELETE SET NULL;
 
 
 --
@@ -23574,11 +25297,35 @@ ALTER TABLE ONLY public.maintenance_visits
 
 
 --
+-- Name: school_riders fk_rails_3ffa2b6955; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.school_riders
+    ADD CONSTRAINT fk_rails_3ffa2b6955 FOREIGN KEY (dependant_id) REFERENCES public.dependants(id) ON DELETE SET NULL;
+
+
+--
 -- Name: client_approval_rules fk_rails_4007044c35; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.client_approval_rules
     ADD CONSTRAINT fk_rails_4007044c35 FOREIGN KEY (client_approval_flow_id) REFERENCES public.client_approval_flows(id) ON DELETE CASCADE;
+
+
+--
+-- Name: booking_cancel_requests fk_rails_401d9e08bc; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_cancel_requests
+    ADD CONSTRAINT fk_rails_401d9e08bc FOREIGN KEY (booking_day_id) REFERENCES public.booking_days(id);
+
+
+--
+-- Name: shuttle_usuals fk_rails_40c47682af; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shuttle_usuals
+    ADD CONSTRAINT fk_rails_40c47682af FOREIGN KEY (app_account_id) REFERENCES public.app_accounts(id) ON DELETE CASCADE;
 
 
 --
@@ -23595,6 +25342,14 @@ ALTER TABLE ONLY public.replacement_notifications
 
 ALTER TABLE ONLY public.bank_branches
     ADD CONSTRAINT fk_rails_419b0e49fb FOREIGN KEY (bank_id) REFERENCES public.banks(id);
+
+
+--
+-- Name: household_invite_links fk_rails_41ade0866e; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.household_invite_links
+    ADD CONSTRAINT fk_rails_41ade0866e FOREIGN KEY (created_by_id) REFERENCES public.app_accounts(id) ON DELETE SET NULL;
 
 
 --
@@ -23702,6 +25457,14 @@ ALTER TABLE ONLY public.stop_photo_requests
 
 
 --
+-- Name: shuttle_alert_settings fk_rails_47449fb935; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shuttle_alert_settings
+    ADD CONSTRAINT fk_rails_47449fb935 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
 -- Name: trip_time_changes fk_rails_474b871dfa; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -23763,6 +25526,22 @@ ALTER TABLE ONLY public.stop_photo_requests
 
 ALTER TABLE ONLY public.vehicle_handover_photos
     ADD CONSTRAINT fk_rails_49b8eeaded FOREIGN KEY (vehicle_handover_id) REFERENCES public.vehicle_handovers(id) ON DELETE CASCADE;
+
+
+--
+-- Name: household_invite_links fk_rails_49bee5888c; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.household_invite_links
+    ADD CONSTRAINT fk_rails_49bee5888c FOREIGN KEY (household_id) REFERENCES public.households(id) ON DELETE CASCADE;
+
+
+--
+-- Name: shuttle_stop_bells fk_rails_49cf717075; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shuttle_stop_bells
+    ADD CONSTRAINT fk_rails_49cf717075 FOREIGN KEY (trip_id) REFERENCES public.trips(id) ON DELETE CASCADE;
 
 
 --
@@ -23878,6 +25657,14 @@ ALTER TABLE ONLY public.rider_assignments
 
 
 --
+-- Name: app_notifications fk_rails_4e65c72bc8; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.app_notifications
+    ADD CONSTRAINT fk_rails_4e65c72bc8 FOREIGN KEY (app_account_id) REFERENCES public.app_accounts(id) ON DELETE CASCADE;
+
+
+--
 -- Name: booking_cancel_requests fk_rails_4e891e5887; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -23899,6 +25686,22 @@ ALTER TABLE ONLY public.stop_points
 
 ALTER TABLE ONLY public.notification_emails
     ADD CONSTRAINT fk_rails_4ecceae2e7 FOREIGN KEY (booking_event_id) REFERENCES public.booking_events(id);
+
+
+--
+-- Name: shuttle_usuals fk_rails_4eddaeeccd; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shuttle_usuals
+    ADD CONSTRAINT fk_rails_4eddaeeccd FOREIGN KEY (client_id) REFERENCES public.clients(id);
+
+
+--
+-- Name: bookings fk_rails_4f247edbe8; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.bookings
+    ADD CONSTRAINT fk_rails_4f247edbe8 FOREIGN KEY (booked_via_client_user_id) REFERENCES public.client_users(id);
 
 
 --
@@ -24110,6 +25913,14 @@ ALTER TABLE ONLY public.client_users
 
 
 --
+-- Name: app_saved_points fk_rails_598adf5b07; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.app_saved_points
+    ADD CONSTRAINT fk_rails_598adf5b07 FOREIGN KEY (app_account_id) REFERENCES public.app_accounts(id) ON DELETE CASCADE;
+
+
+--
 -- Name: app_sign_in_codes fk_rails_5a0a59ca1a; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -24147,6 +25958,22 @@ ALTER TABLE ONLY public.operator_pay_batch_lines
 
 ALTER TABLE ONLY public.school_plans
     ADD CONSTRAINT fk_rails_5b090d2597 FOREIGN KEY (routing_run_id) REFERENCES public.routing_runs(id) ON DELETE SET NULL;
+
+
+--
+-- Name: shuttle_pins fk_rails_5b31671ceb; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shuttle_pins
+    ADD CONSTRAINT fk_rails_5b31671ceb FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: shuttle_pins fk_rails_5b41a6995e; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shuttle_pins
+    ADD CONSTRAINT fk_rails_5b41a6995e FOREIGN KEY (app_account_id) REFERENCES public.app_accounts(id) ON DELETE CASCADE;
 
 
 --
@@ -24251,6 +26078,22 @@ ALTER TABLE ONLY public.school_policy_versions
 
 ALTER TABLE ONLY public.trip_stop_photos
     ADD CONSTRAINT fk_rails_600dadf610 FOREIGN KEY (trip_stop_id) REFERENCES public.trip_stops(id);
+
+
+--
+-- Name: shuttle_alert_settings fk_rails_6036844e3b; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shuttle_alert_settings
+    ADD CONSTRAINT fk_rails_6036844e3b FOREIGN KEY (app_account_id) REFERENCES public.app_accounts(id) ON DELETE CASCADE;
+
+
+--
+-- Name: cca_standing_days fk_rails_6055d42fc2; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cca_standing_days
+    ADD CONSTRAINT fk_rails_6055d42fc2 FOREIGN KEY (school_id) REFERENCES public.schools(id);
 
 
 --
@@ -24379,6 +26222,14 @@ ALTER TABLE ONLY public.pay_bonus_excluded_periods
 
 ALTER TABLE ONLY public.bus_requests
     ADD CONSTRAINT fk_rails_66df860e66 FOREIGN KEY (school_rider_id) REFERENCES public.school_riders(id) ON DELETE SET NULL;
+
+
+--
+-- Name: bookings fk_rails_66fb7b6809; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.bookings
+    ADD CONSTRAINT fk_rails_66fb7b6809 FOREIGN KEY (created_by_app_account_id) REFERENCES public.app_accounts(id) ON DELETE SET NULL;
 
 
 --
@@ -24542,6 +26393,14 @@ ALTER TABLE ONLY public.academic_years
 
 
 --
+-- Name: shuttle_usuals fk_rails_6f8ec0dd61; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shuttle_usuals
+    ADD CONSTRAINT fk_rails_6f8ec0dd61 FOREIGN KEY (trip_run_id) REFERENCES public.trip_runs(id) ON DELETE CASCADE;
+
+
+--
 -- Name: cca_ride_settings fk_rails_6feced6f4f; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -24563,6 +26422,14 @@ ALTER TABLE ONLY public.booking_cancel_requests
 
 ALTER TABLE ONLY public.vehicle_financials
     ADD CONSTRAINT fk_rails_704e5a7d24 FOREIGN KEY (vehicle_id) REFERENCES public.vehicles(id);
+
+
+--
+-- Name: app_notifications fk_rails_711ca6710a; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.app_notifications
+    ADD CONSTRAINT fk_rails_711ca6710a FOREIGN KEY (notice_id) REFERENCES public.notices(id) ON DELETE SET NULL;
 
 
 --
@@ -24758,6 +26625,14 @@ ALTER TABLE ONLY public.rate_card_amounts
 
 
 --
+-- Name: household_members fk_rails_79aa12c2b5; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.household_members
+    ADD CONSTRAINT fk_rails_79aa12c2b5 FOREIGN KEY (household_id) REFERENCES public.households(id) ON DELETE CASCADE;
+
+
+--
 -- Name: trip_assignments fk_rails_7a3d568c06; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -24814,6 +26689,14 @@ ALTER TABLE ONLY public.booking_days
 
 
 --
+-- Name: family_riders fk_rails_7d69951a6b; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.family_riders
+    ADD CONSTRAINT fk_rails_7d69951a6b FOREIGN KEY (dependant_id) REFERENCES public.dependants(id) ON DELETE SET NULL;
+
+
+--
 -- Name: rider_assignments fk_rails_7d7912020c; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -24827,6 +26710,22 @@ ALTER TABLE ONLY public.rider_assignments
 
 ALTER TABLE ONLY public.driver_notifications
     ADD CONSTRAINT fk_rails_7d99434d9d FOREIGN KEY (vehicle_id) REFERENCES public.vehicles(id) ON DELETE SET NULL;
+
+
+--
+-- Name: shuttle_stop_bells fk_rails_7dd551d318; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shuttle_stop_bells
+    ADD CONSTRAINT fk_rails_7dd551d318 FOREIGN KEY (trip_stop_id) REFERENCES public.trip_stops(id) ON DELETE CASCADE;
+
+
+--
+-- Name: shuttle_alert_setting_runs fk_rails_7de265ed2d; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shuttle_alert_setting_runs
+    ADD CONSTRAINT fk_rails_7de265ed2d FOREIGN KEY (trip_run_id) REFERENCES public.trip_runs(id) ON DELETE CASCADE;
 
 
 --
@@ -25414,6 +27313,14 @@ ALTER TABLE ONLY public.trip_run_slots
 
 
 --
+-- Name: app_notifications fk_rails_97b74fd608; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.app_notifications
+    ADD CONSTRAINT fk_rails_97b74fd608 FOREIGN KEY (trip_id) REFERENCES public.trips(id) ON DELETE SET NULL;
+
+
+--
 -- Name: client_users fk_rails_980789d192; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -25526,11 +27433,27 @@ ALTER TABLE ONLY public.fuel_entries
 
 
 --
+-- Name: booking_change_replies fk_rails_9b34273ded; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_change_replies
+    ADD CONSTRAINT fk_rails_9b34273ded FOREIGN KEY (booking_id) REFERENCES public.bookings(id);
+
+
+--
 -- Name: trip_assignments fk_rails_9c242e626f; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.trip_assignments
     ADD CONSTRAINT fk_rails_9c242e626f FOREIGN KEY (trip_id) REFERENCES public.trips(id);
+
+
+--
+-- Name: client_users fk_rails_9c93ffaeb6; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_users
+    ADD CONSTRAINT fk_rails_9c93ffaeb6 FOREIGN KEY (app_account_id) REFERENCES public.app_accounts(id) ON DELETE SET NULL;
 
 
 --
@@ -25555,6 +27478,14 @@ ALTER TABLE ONLY public.client_invoices
 
 ALTER TABLE ONLY public.bus_requests
     ADD CONSTRAINT fk_rails_9d7b245dcf FOREIGN KEY (family_id) REFERENCES public.families(id) ON DELETE SET NULL;
+
+
+--
+-- Name: shuttle_alert_setting_runs fk_rails_9e1e10e76c; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shuttle_alert_setting_runs
+    ADD CONSTRAINT fk_rails_9e1e10e76c FOREIGN KEY (shuttle_alert_setting_id) REFERENCES public.shuttle_alert_settings(id) ON DELETE CASCADE;
 
 
 --
@@ -25627,6 +27558,14 @@ ALTER TABLE ONLY public.driver_app_sessions
 
 ALTER TABLE ONLY public.routing_runs
     ADD CONSTRAINT fk_rails_a097bc0081 FOREIGN KEY (school_id) REFERENCES public.schools(id);
+
+
+--
+-- Name: dependants fk_rails_a108180961; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.dependants
+    ADD CONSTRAINT fk_rails_a108180961 FOREIGN KEY (school_id) REFERENCES public.schools(id) ON DELETE SET NULL;
 
 
 --
@@ -25742,6 +27681,14 @@ ALTER TABLE ONLY public.school_bill_payments
 
 
 --
+-- Name: client_riders fk_rails_a8453d29df; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_riders
+    ADD CONSTRAINT fk_rails_a8453d29df FOREIGN KEY (removed_by_id) REFERENCES public.users(id) ON DELETE SET NULL;
+
+
+--
 -- Name: school_route_replacements fk_rails_a863561bcb; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -25830,6 +27777,14 @@ ALTER TABLE ONLY public.notice_deliveries
 
 
 --
+-- Name: client_riders fk_rails_abcdede415; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_riders
+    ADD CONSTRAINT fk_rails_abcdede415 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
 -- Name: attendants fk_rails_abeb108c69; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -25902,6 +27857,14 @@ ALTER TABLE ONLY public.trip_attachments
 
 
 --
+-- Name: bus_requests fk_rails_af6105cd47; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.bus_requests
+    ADD CONSTRAINT fk_rails_af6105cd47 FOREIGN KEY (dependant_id) REFERENCES public.dependants(id) ON DELETE SET NULL;
+
+
+--
 -- Name: client_invoice_payments fk_rails_af75035153; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -25934,6 +27897,14 @@ ALTER TABLE ONLY public.operator_cost_overrides
 
 
 --
+-- Name: household_members fk_rails_b13cdf8757; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.household_members
+    ADD CONSTRAINT fk_rails_b13cdf8757 FOREIGN KEY (app_account_id) REFERENCES public.app_accounts(id) ON DELETE CASCADE;
+
+
+--
 -- Name: client_approval_rule_bookers fk_rails_b165ccaf1e; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -25963,6 +27934,14 @@ ALTER TABLE ONLY public.calendar_days
 
 ALTER TABLE ONLY public.replacements
     ADD CONSTRAINT fk_rails_b1c12c54fa FOREIGN KEY (driver_id) REFERENCES public.drivers(id);
+
+
+--
+-- Name: dependant_guardians fk_rails_b3456d7399; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.dependant_guardians
+    ADD CONSTRAINT fk_rails_b3456d7399 FOREIGN KEY (household_member_id) REFERENCES public.household_members(id) ON DELETE CASCADE;
 
 
 --
@@ -26102,6 +28081,14 @@ ALTER TABLE ONLY public.driver_notifications
 
 
 --
+-- Name: booking_change_replies fk_rails_b914b9e7ff; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_change_replies
+    ADD CONSTRAINT fk_rails_b914b9e7ff FOREIGN KEY (replied_by_app_account_id) REFERENCES public.app_accounts(id) ON DELETE SET NULL;
+
+
+--
 -- Name: school_bill_runs fk_rails_b946bf2fbc; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -26222,6 +28209,14 @@ ALTER TABLE ONLY public.client_users
 
 
 --
+-- Name: dependant_guardians fk_rails_bd75c405a0; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.dependant_guardians
+    ADD CONSTRAINT fk_rails_bd75c405a0 FOREIGN KEY (dependant_id) REFERENCES public.dependants(id) ON DELETE CASCADE;
+
+
+--
 -- Name: trip_price_cells fk_rails_bd8ad5021b; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -26302,11 +28297,27 @@ ALTER TABLE ONLY public.pay_rates
 
 
 --
+-- Name: shuttle_alert_settings fk_rails_c3aae2971b; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shuttle_alert_settings
+    ADD CONSTRAINT fk_rails_c3aae2971b FOREIGN KEY (trip_id) REFERENCES public.trips(id) ON DELETE CASCADE;
+
+
+--
 -- Name: pay_schemes fk_rails_c3beb01bb4; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.pay_schemes
     ADD CONSTRAINT fk_rails_c3beb01bb4 FOREIGN KEY (pay_rate_plan_id) REFERENCES public.pay_rate_plans(id);
+
+
+--
+-- Name: client_bill_funds fk_rails_c42aa231fb; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_bill_funds
+    ADD CONSTRAINT fk_rails_c42aa231fb FOREIGN KEY (company_id) REFERENCES public.companies(id);
 
 
 --
@@ -26366,6 +28377,14 @@ ALTER TABLE ONLY public.plan_comments
 
 
 --
+-- Name: shuttle_stop_bells fk_rails_c7648409f3; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shuttle_stop_bells
+    ADD CONSTRAINT fk_rails_c7648409f3 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
 -- Name: trip_assignments fk_rails_c76d392bae; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -26406,6 +28425,14 @@ ALTER TABLE ONLY public.family_riders
 
 
 --
+-- Name: client_riders fk_rails_ca0da1b687; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_riders
+    ADD CONSTRAINT fk_rails_ca0da1b687 FOREIGN KEY (app_account_id) REFERENCES public.app_accounts(id) ON DELETE CASCADE;
+
+
+--
 -- Name: rate_card_amounts fk_rails_ca10ae8d37; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -26419,6 +28446,14 @@ ALTER TABLE ONLY public.rate_card_amounts
 
 ALTER TABLE ONLY public.driver_pay_schemes
     ADD CONSTRAINT fk_rails_ca60389145 FOREIGN KEY (driver_id) REFERENCES public.drivers(id);
+
+
+--
+-- Name: booking_change_replies fk_rails_ca7ea325ba; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_change_replies
+    ADD CONSTRAINT fk_rails_ca7ea325ba FOREIGN KEY (company_id) REFERENCES public.companies(id);
 
 
 --
@@ -26510,6 +28545,14 @@ ALTER TABLE ONLY public.plan_comments
 
 
 --
+-- Name: dependants fk_rails_ccf6ab3c87; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.dependants
+    ADD CONSTRAINT fk_rails_ccf6ab3c87 FOREIGN KEY (household_id) REFERENCES public.households(id) ON DELETE CASCADE;
+
+
+--
 -- Name: finance_approvers fk_rails_cd2018e937; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -26526,6 +28569,14 @@ ALTER TABLE ONLY public.school_documents
 
 
 --
+-- Name: booking_payments fk_rails_cd6357b283; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_payments
+    ADD CONSTRAINT fk_rails_cd6357b283 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
 -- Name: stop_photo_submissions fk_rails_cda854c3c1; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -26539,6 +28590,14 @@ ALTER TABLE ONLY public.stop_photo_submissions
 
 ALTER TABLE ONLY public.route_charges
     ADD CONSTRAINT fk_rails_ce160510cf FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: households fk_rails_ce55c43aee; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.households
+    ADD CONSTRAINT fk_rails_ce55c43aee FOREIGN KEY (created_by_id) REFERENCES public.app_accounts(id) ON DELETE SET NULL;
 
 
 --
@@ -26686,11 +28745,27 @@ ALTER TABLE ONLY public.school_route_vehicle_changes
 
 
 --
+-- Name: shuttle_usuals fk_rails_d53953c484; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shuttle_usuals
+    ADD CONSTRAINT fk_rails_d53953c484 FOREIGN KEY (trip_id) REFERENCES public.trips(id) ON DELETE CASCADE;
+
+
+--
 -- Name: fare_tier_sizes fk_rails_d5558ca58a; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.fare_tier_sizes
     ADD CONSTRAINT fk_rails_d5558ca58a FOREIGN KEY (fare_tier_id) REFERENCES public.fare_tiers(id) ON DELETE CASCADE;
+
+
+--
+-- Name: booking_cancel_requests fk_rails_d56f463791; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_cancel_requests
+    ADD CONSTRAINT fk_rails_d56f463791 FOREIGN KEY (requested_by_app_account_id) REFERENCES public.app_accounts(id) ON DELETE SET NULL;
 
 
 --
@@ -26723,6 +28798,14 @@ ALTER TABLE ONLY public.school_operator_pays
 
 ALTER TABLE ONLY public.pay_bonuses
     ADD CONSTRAINT fk_rails_d5f53ac59a FOREIGN KEY (locked_by_id) REFERENCES public.users(id);
+
+
+--
+-- Name: client_bill_funds fk_rails_d62cd607f7; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_bill_funds
+    ADD CONSTRAINT fk_rails_d62cd607f7 FOREIGN KEY (client_id) REFERENCES public.clients(id);
 
 
 --
@@ -26790,11 +28873,35 @@ ALTER TABLE ONLY public.companies
 
 
 --
+-- Name: shuttle_usuals fk_rails_d9978d3d83; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shuttle_usuals
+    ADD CONSTRAINT fk_rails_d9978d3d83 FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: bookings fk_rails_da48f1240f; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.bookings
+    ADD CONSTRAINT fk_rails_da48f1240f FOREIGN KEY (copied_from_booking_id) REFERENCES public.bookings(id) ON DELETE SET NULL;
+
+
+--
 -- Name: client_teams fk_rails_da8c75357e; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.client_teams
     ADD CONSTRAINT fk_rails_da8c75357e FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: shuttle_stop_bells fk_rails_db08878626; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shuttle_stop_bells
+    ADD CONSTRAINT fk_rails_db08878626 FOREIGN KEY (app_account_id) REFERENCES public.app_accounts(id) ON DELETE CASCADE;
 
 
 --
@@ -27014,6 +29121,14 @@ ALTER TABLE ONLY public.booking_trips
 
 
 --
+-- Name: client_pickup_points fk_rails_e6bb935601; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_pickup_points
+    ADD CONSTRAINT fk_rails_e6bb935601 FOREIGN KEY (created_by_client_user_id) REFERENCES public.client_users(id) ON DELETE SET NULL;
+
+
+--
 -- Name: booking_cancel_requests fk_rails_e7a07b46b8; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -27035,6 +29150,14 @@ ALTER TABLE ONLY public.pay_bonuses
 
 ALTER TABLE ONLY public.route_list_versions
     ADD CONSTRAINT fk_rails_e82636ad7e FOREIGN KEY (company_id) REFERENCES public.companies(id);
+
+
+--
+-- Name: booking_change_replies fk_rails_e864a61290; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.booking_change_replies
+    ADD CONSTRAINT fk_rails_e864a61290 FOREIGN KEY (replied_by_client_user_id) REFERENCES public.client_users(id);
 
 
 --
@@ -27094,6 +29217,14 @@ ALTER TABLE ONLY public.vehicle_cost_spike_acks
 
 
 --
+-- Name: bus_requests fk_rails_e9c2aefaf3; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.bus_requests
+    ADD CONSTRAINT fk_rails_e9c2aefaf3 FOREIGN KEY (household_id) REFERENCES public.households(id) ON DELETE SET NULL;
+
+
+--
 -- Name: vehicle_handovers fk_rails_ea00c0df0f; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -27123,6 +29254,14 @@ ALTER TABLE ONLY public.routing_settings
 
 ALTER TABLE ONLY public.school_payout_adjustments
     ADD CONSTRAINT fk_rails_eab2d7e897 FOREIGN KEY (paired_operator_id) REFERENCES public.operators(id);
+
+
+--
+-- Name: shuttle_alert_settings fk_rails_eb27cf4901; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shuttle_alert_settings
+    ADD CONSTRAINT fk_rails_eb27cf4901 FOREIGN KEY (client_id) REFERENCES public.clients(id);
 
 
 --
@@ -27275,6 +29414,14 @@ ALTER TABLE ONLY public.plan_comments
 
 ALTER TABLE ONLY public.external_vehicle_submissions
     ADD CONSTRAINT fk_rails_f0c09ab3d0 FOREIGN KEY (vehicle_id) REFERENCES public.vehicles(id);
+
+
+--
+-- Name: app_notifications fk_rails_f0f4d90804; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.app_notifications
+    ADD CONSTRAINT fk_rails_f0f4d90804 FOREIGN KEY (company_id) REFERENCES public.companies(id);
 
 
 --
@@ -27454,11 +29601,27 @@ ALTER TABLE ONLY public.driver_point_lots
 
 
 --
+-- Name: shuttle_usuals fk_rails_f7314528f5; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shuttle_usuals
+    ADD CONSTRAINT fk_rails_f7314528f5 FOREIGN KEY (trip_stop_id) REFERENCES public.trip_stops(id) ON DELETE CASCADE;
+
+
+--
 -- Name: school_route_replacements fk_rails_f7c1a6fbbd; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.school_route_replacements
     ADD CONSTRAINT fk_rails_f7c1a6fbbd FOREIGN KEY (created_by_id) REFERENCES public.users(id);
+
+
+--
+-- Name: client_riders fk_rails_f83f5b0cfa; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.client_riders
+    ADD CONSTRAINT fk_rails_f83f5b0cfa FOREIGN KEY (client_id) REFERENCES public.clients(id);
 
 
 --
@@ -27748,6 +29911,21 @@ ALTER TABLE public.trip_occurrences
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261117110100'),
+('20261117110000'),
+('20261117100200'),
+('20261117100100'),
+('20261117100000'),
+('20261116170000'),
+('20261116160100'),
+('20261116160000'),
+('20261116150100'),
+('20261116150000'),
+('20261116110300'),
+('20261116110200'),
+('20261116110100'),
+('20261116110000'),
+('20261116100000'),
 ('20261110140000'),
 ('20261110130100'),
 ('20261110130000'),

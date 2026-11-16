@@ -4,24 +4,27 @@
 # Table name: family_riders
 # Database name: primary
 #
-#  id          :bigint           not null, primary key
-#  accepted_at :timestamptz
-#  applied_at  :timestamptz
-#  rid         :string           not null
-#  created_at  :datetime         not null
-#  updated_at  :datetime         not null
-#  company_id  :bigint           not null
-#  family_id   :bigint           not null
-#  school_id   :bigint           not null
+#  id           :bigint           not null, primary key
+#  accepted_at  :timestamptz
+#  applied_at   :timestamptz
+#  rid          :string           not null
+#  created_at   :datetime         not null
+#  updated_at   :datetime         not null
+#  company_id   :bigint           not null
+#  dependant_id :bigint
+#  family_id    :bigint           not null
+#  school_id    :bigint           not null
 #
 # Indexes
 #
+#  index_family_riders_on_dependant_id       (dependant_id)
 #  index_family_riders_on_family_id          (family_id)
 #  index_family_riders_on_school_id_and_rid  (school_id,rid) UNIQUE
 #
 # Foreign Keys
 #
 #  fk_rails_...  (company_id => companies.id)
+#  fk_rails_...  (dependant_id => dependants.id) ON DELETE => nullify
 #  fk_rails_...  (family_id => families.id) ON DELETE => cascade
 #  fk_rails_...  (school_id => schools.id)
 #
@@ -31,6 +34,7 @@ class FamilyRider < ApplicationRecord
 
   belongs_to :family
   belongs_to :school
+  belongs_to :dependant, optional: true
 
   validates :rid, presence: true, uniqueness: { scope: :school_id, message: "is already in a family at this school" }
 end

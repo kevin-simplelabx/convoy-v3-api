@@ -32,7 +32,7 @@
 class BookingEvent < ApplicationRecord
   include TenantScoped
 
-  KINDS = %w[new_booking client_approved client_declined acknowledged cancel_request].freeze
+  KINDS = %w[new_booking client_approved client_declined acknowledged cancel_request change_reply client_cancelled].freeze
   WINDOW = 14.days
 
   belongs_to :booking, inverse_of: :events

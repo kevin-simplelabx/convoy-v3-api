@@ -142,6 +142,8 @@ module BusRequests
     can_accept = req.kind == "new" && Accept::ELIGIBLE.include?(req.live_status) && req.live_status != "Lapsed"
     row(req, set, clock, check).merge(
       academic_year: req.academic_year&.key, address: req.address, km: req.km,
+      dropoff: req.dropoff_postal && { address: req.dropoff_address, postal: req.dropoff_postal, lat: req.dropoff_lat, lng: req.dropoff_lng },
+      cca_from: req.cca_from, app_family: req.household_id.present?, registration_bill: (b = req.registration_bill) && { id: b.id, number: b.number, paid: req.fee_paid },
       estimate: req.estimate, fix_why: req.fix_why, fix_note: req.fix_note, class_name: req.class_name, student_no: req.student_no,
       birth_date: req.birth_date, medical: req.medical, cca_days: req.cca_days, fee_paid: req.fee_paid, policy_version: req.policy_version,
       ack: req.acked_at && { at: req.acked_at, by: req.acked_by&.name, answer_by: req.answer_by, note: req.ack_note, plan_weeks: req.ack_plan_weeks,
