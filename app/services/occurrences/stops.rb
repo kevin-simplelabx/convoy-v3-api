@@ -30,7 +30,8 @@ module Occurrences
     def entries(occ)
       if occ.school_route
         return occ.school_route.stops.each_with_index.map do |s, i|
-          [ { position: i, name: s.name, use: nil, planned_time: s.scheduled_time_hm, planned_minute: s.scheduled_time, lat: s.lat, lng: s.lng }, s ]
+          [ { position: i, name: s.name, use: nil, planned_time: s.scheduled_time_hm, planned_minute: s.scheduled_time, lat: s.lat, lng: s.lng,
+              note: nil }, s ]
         end
       end
       trip = occ.trip

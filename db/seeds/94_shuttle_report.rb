@@ -1,12 +1,13 @@
 # Reports > Shuttle Report sample: stop events (arrivals, departures, boardings; no GPS) for the MBC Campus Shuttle runs
 # of the last three months that have none, so the report has real rows. Mostly on time, some early, a few late, a
-# rare early departure; riders vary by run and day (seeded by the run, so seeds give the same numbers).
+# rare early departure; riders vary by run and day (seeded by the run, so seeds give the same numbers). Yesterday is left
+# to the Driver app sample (95_driver_app: what Siti Nurhaliza recorded in the app).
 with_company("SD") do
   Time.use_zone(ActsAsTenant.current_tenant.timezone) do
     trip = Trip.kept.find_by(label: "seed-mbc-shuttle")
     next unless trip
 
-    runs = TripOccurrence.completed.where(trip:, date: (Date.current << 3)..Date.yesterday).where.not(vehicle_id: nil)
+    runs = TripOccurrence.completed.where(trip:, date: (Date.current << 3)...Date.yesterday).where.not(vehicle_id: nil)
                          .includes(:vehicle, :stop_events, :school_route, trip_run: :times, trip: :stops)
     runs.each do |occ|
       next if occ.stop_events.any?

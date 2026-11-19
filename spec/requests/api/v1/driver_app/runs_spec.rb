@@ -167,6 +167,7 @@ RSpec.describe "Driver app runs" do
       expect(d.dig(:points, 2, :address)).to eq("20 Siglap View, Singapore 455789")
       expect(d.dig(:points, 0)).to include(street_view_url: "https://maps.google.com/?cbll=1.3305,103.9373", photos: [ hash_including(:url, :thumb_url) ])
       expect(d.dig(:points, 1)).to include(street_view_url: nil, photos: [])
+      expect(d[:points]).to all(include(note: nil))
       expect(d[:passengers].map { [ it[:id], it[:state], it[:pickup_position], it[:dropoff_position] ] })
         .to eq([ [ "S-1", "expected", 0, 2 ], [ "S-2", "bus_not_required", 0, 2 ], [ "S-3", "expected", 1, 2 ] ])
       expect(d[:passengers].first).to include(name: "Child 1", level: "P1", parent_name: "Parent 1", parent_phone: "+6590000000")

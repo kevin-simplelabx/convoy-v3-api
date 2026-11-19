@@ -2,6 +2,24 @@
 
 Things the app does by itself (no server field or call) and changes the app has to act on. Newest first.
 
+## 19/11/2026 — Answers to API-ISSUES (**breaking**: #10, #11)
+
+One row per item of API-ISSUES.md; remove the answered items there. "act on it" = not breaking, but the app should use it.
+
+| # | Breaking | Change / answer | Doc |
+| --- | --- | --- | --- |
+| 13 | no (new field; act on it) | Bell lines now carry `run.open` (`run: { id, date, open }`): `true` → Trip Details opens (the run is still the driver's, Replaced or Cancelled); `false` → it went to another driver or is no longer planned: open nothing, toast "This trip is no longer assigned to you". Every tap still marks the line read. You can drop the newest-line rule; keep the `404` as a safety net. Worked out on each fetch: if the run comes back, its old lines open again. Optional: dim `open: false` lines. | [notifications § 1](notifications.md#1-the-bell-get-drivernotifications) |
+| 12 | no | Not reproduced. A fresh server on the current code answers `?ticket=bogus` and a missing ticket with `{"type":"disconnect","reason":"unauthorized","reconnect":false}`, then closes (1000). Staging may still run an older build: please recheck after the next deploy. Your fallback is right either way, and it is now in the doc: a close before `welcome` without that frame = get a new ticket (`401` on the ticket call → Sign In). | [websocket § 1](../websocket.md#1-connect) |
+| 11 | **yes** (behaviour) | Fixed. A run whose end time passed without a Start now answers `422` code `ended` to every action (Start, points, attendance, Skip / Force End, `disposal_*`; `disposal_start` used to say `not_started`) and never shows in `on_going`. A run the driver **started** keeps `on_the_way` / `started`, stays in `on_going` and stays drivable past its end time until Complete / Force End (it used to flip to `ended` while still on the road). | [driving § 1](driving.md#1-how-every-action-works), [§ 12](driving.md#12-errors-and-reasons), [runs § 3](runs.md#3-the-on-going-trip-get-driverrunson_going) |
+| 10 | **yes** (behaviour) | Fixed. `count` before Start now answers `422` code `not_started` (it used to store the count on a point the bus had not reached). Arriving at the point first is still not needed. | [driving § 7](driving.md#7-count-passengers-post-driverrunsidcount), [§ 12](driving.md#12-errors-and-reasons) |
+| 8 | no | Doc only. `account.name` is `null` until the driver fills in Personal Details: fall back to `current.name_on_record` (or the first membership's), then `phone_display`. | [auth § 3](auth.md#3-the-session-get-driversession) |
+| 6 | no | `points[].note` fixed: School Bus points now always send `note` (`null`: School Bus stops have no driver note; the key used to be missing). `passengers[].parent_phone2` is now in the doc: a second parent phone (School Run, from the route list) or `null` (always on School Bus). Already there before (e815362, your list is stale): `driver_end`, `driver_feedback`, contact roles `attendant` / `school_office`, `contacts[].note`. | [runs § 4](runs.md#4-trip-details-get-driverrunsid) |
+| 5 | no | Seed fixed (no API change). Every sample account now has runs from today, from recurring trips and routes, so they keep coming on later days (up to 120 days ahead): Eric Pang a disposal every day 08:00–11:30 (try `disposal_*` end to end) and the bus swap tomorrow 12:00 (both drivers go back to their own bus the day after); Ah Beng St. Stephen's AM 2 / PM 2 (bus PE1290S); Kumar his next run Replaced; Lee Kok Wah School Run + the Cross-site Shuttle 12:00 return; Siti Nurhaliza keeps AM 1 with Ethan Tan's photo. The swap, Kumar's replacement and Siti's ended runs are made for the day the seed runs. Lee's runs "stopping" after 20/11 are the MOE Year-End Holidays (21/11–31/12): school runs are `skipped` / absent on holidays, so try School Bus / School Run on a school day (from 04/01/2027). **Staging must be re-seeded after the next deploy**: we will tell you when. | [README § Sample accounts](README.md#sample-accounts-staging-and-local-seed) |
+| 4 | no | Answer: no new status. `status: "ended"` with `started_at: null` = the run was not driven in the app (end time passed without a Start, or the office ended it). Show it as Ended with no times. | [runs § 6](runs.md#6-values-reference) |
+| 3 | no (text only; act on it) | accept / decline / disconnect on a row in the wrong status now answer the app's own message (still `422` code `invalid`), named as on the card (`employer_name`): accept / decline on an `active` row "You already work with SimpleDrive"; on a `past` row "This invitation from SimpleDrive is no longer open"; disconnect on a `pending` row "You have not joined Hup Seng yet"; on a `past` row "You no longer work with SimpleDrive". A declined invitation answers `404` (it is no longer listed). Show `error.message` as is. | [auth § 5](auth.md#5-companies-invitations-employment-history) |
+| 2 | no | Seed fixed (no API change). Seeded drivers were invited when the seed ran but joined months earlier; now `invited_at` = `joined_at` (never after it) for every seeded row, after the next re-seed. The API was right: an invite always resets `joined_at`. | [auth § 3](auth.md#3-the-session-get-driversession) |
+| 1 | no | Doc only. `account.photo` (`GET` / `POST /driver/session`) = `{ url, thumb_url, name, size, content_type }` signed links, or `null`. | [auth § 3](auth.md#3-the-session-get-driversession) |
+
 ## 19/11/2026 — Live updates over a WebSocket (**breaking**: stop polling)
 
 The app no longer polls. Guide: [../websocket.md](../websocket.md).
@@ -25,8 +43,8 @@ The child photo view (tap a child in Attendance / All Passengers, with Call Pare
 | --- | --- | --- | --- |
 | 1 | Child photo view + list avatar (the design draws initials) | `passengers[].photo` `{ url, thumb_url, ... }` or `null` → keep the initials | [runs § 4](runs.md#4-trip-details-get-driverrunsid) |
 
-Sample: sign in as Siti Nurhaliza `+65 9003 4455`, today's St. Stephen's AM 1: Ethan Tan has a photo (from Rachel Tan's
-Convoy App Household); the other children have none.
+Sample: sign in as Siti Nurhaliza `+65 9003 4455`, St. Stephen's AM 1 on a school day: Ethan Tan has a photo (from Rachel
+Tan's Convoy App Household); the other children have none.
 
 ## 19/11/2026 — New fields for the design's records (no breaking change)
 
@@ -45,7 +63,8 @@ Fields the design draws that the API now sends. Nothing existing changed meaning
 | 9 | Airport block: "From Sydney" / "Flight to London" | `airport.flight_city` | [runs § 4](runs.md#4-trip-details-get-driverrunsid) |
 
 Sample: sign in as Siti Nurhaliza `+65 9003 4455` and open yesterday in Plan (items 1–5); Eric Pang's handover in My
-Vehicle Today has a highlight photo; Ah Beng's School Bus runs have the attendant and school office (item 6).
+Vehicle Today has a highlight photo; Siti's AM 1 has the attendant with the office's note and the school office (item 6;
+Ah Beng's AM 2 / PM 2 have an attendant without a note).
 
 ## 19/11/2026 — Parts of `Convoy Driver.dc.html` the app works out itself (no API change)
 

@@ -38,6 +38,8 @@ come in full in the message (they change every few seconds).
 - The ticket is not your token: never put the Bearer token in the URL.
 - A bad, used or expired ticket: the server sends `{"type":"disconnect","reason":"unauthorized","reconnect":false}` and
   closes. Get a new ticket; if the ticket call itself answers `401`, the sign-in has ended → sign-in screen.
+- Handle a socket that closes **before** `welcome` without that frame the same way (new ticket; `401` on the ticket
+  call → sign-in screen). Do not retry the same ticket.
 - One socket per app is enough: subscribe to several channels on it.
 
 ## 2. The protocol (frames)

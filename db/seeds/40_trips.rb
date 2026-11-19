@@ -58,7 +58,7 @@ with_company("SD") do
     kind: "disposal", client_id: client.("DBS Bank").id, title: "DBS Client Visit", starts_on: monday + 1, start_time: "09:00",
     hours: 6, end_time: nil, hourly_rate: true, price: 75, pax: 8,
     stops_attributes: stops.(:dbs), vehicle_requirements_attributes: [ { vehicle_type_id: type.("van").id, count: 1 } ],
-    vehicle_slots_attributes: [ { slot_no: 1, vehicle_id: bus.("PD997M").id } ]
+    vehicle_slots_attributes: [ { slot_no: 1, vehicle_id: bus.("PD1125G").id } ] # PD997M has Eric Pang's daily disposal (95_driver_app)
   })
 
   trip.("seed-charter-unassigned", {

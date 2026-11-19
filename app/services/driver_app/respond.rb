@@ -15,6 +15,7 @@ module DriverApp
     def call
       raise Error, "Unknown action" unless ACTIONS.key?(@action)
 
+      check_status!
       ActsAsTenant.with_tenant(@member.company) do
         Drivers::Act.call(driver: @member, action: ACTIONS[@action], user: nil, company: @member.company)
       end
@@ -23,6 +24,21 @@ module DriverApp
       elsif @action == "disconnect" && @jwt.membership_key == DriverMembership.key(@member) then PickMembership.call(jwt: @jwt, member: nil)
       end
       @member
+    end
+
+    private
+
+    # The app's own wording (Drivers::Act names the driver, as the OS row does), named as on the card: employer_name.
+    def check_status!
+      name = DriverMembership.employer_name(@member)
+      if @action == "disconnect"
+        return if @member.active?
+
+        raise Error, @member.pending? ? "You have not joined #{name} yet" : "You no longer work with #{name}"
+      end
+      return if @member.pending?
+
+      raise Error, @member.active? ? "You already work with #{name}" : "This invitation from #{name} is no longer open"
     end
   end
 end

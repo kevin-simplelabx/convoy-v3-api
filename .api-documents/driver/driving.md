@@ -38,7 +38,9 @@ Every action is `POST /driver/runs/:id/<action>` (Edit Route: `PATCH /driver/run
   `meta: { replayed }`. Refresh the screen from it (points `record`, passengers `state`, `status`).
 - `position` names a point: the `position` of `points` in Trip Details (not the number shown).
 - Only the run's driver can act: a replaced trip answers `422` code `replaced`; cancelled `cancelled`; after the end
-  `ended` (attendance can still be corrected).
+  `ended` (attendance can still be corrected). A run whose end time passed without a Start (`status: "ended"`,
+  `started_at: null`, [runs § 6](runs.md#6-values-reference)) answers `ended` to every action, attendance and disposal
+  actions included. A started run stays drivable after its end time until Complete / Force End.
 
 The usual order for each point: arrive → (attendance or count) → leave. At the last point: arrive → complete.
 
@@ -98,6 +100,8 @@ each QR scan, a correction in All Passengers).
 
 `{ client_id, at, position, boarded, alighted }` (0 or more each). Runs without names; then leave (§ 4).
 
+- `422` code `not_started` before Start. Arriving at the point first is not needed (count while boarding).
+
 ## 8. Edit Route: `PATCH /driver/runs/:id/route`
 
 `{ client_id, at, skip: [positions], not_boarding: [passenger ids] }` — the **whole set** each time (what the sheet shows
@@ -141,13 +145,13 @@ operations was called).
 | `too_early` | Start more than 60 min before | countdown |
 | `busy` | another trip is on the road (`details.run_id`) | Busy |
 | `started` | Start twice; Skip Trip after leaving a point | — / Force End instead |
-| `not_started` | arrive, leave, skip a point, complete, force end before Start | Swipe first |
+| `not_started` | arrive, leave, skip a point, count, complete, force end before Start | Swipe first |
 | `not_arrived` | leave before arriving | arrive first |
 | `attendance_needed` | leave with names not ticked (`details.missing`, `names`) | Leave without attendance warning → `force: true` |
 | `count_needed` | leave a counted run without a count | Count sheet, or `force: true` |
 | `not_on_trip` | attendance for a child not on the list | Not on this trip |
 | `call_operations` | force end without `called_operations` | tick the box |
-| `replaced`, `cancelled`, `ended` | the trip is no longer the driver's to drive | refresh |
+| `replaced`, `cancelled`, `ended` | the trip is no longer the driver's to drive (`ended`: after Complete / Force End, or the end time passed without a Start — then before `not_started` too) | refresh |
 | `disposal_not_started`, `disposal_end_needed`, `not_disposal`, `tell_operations` | disposal actions ([disposal.md](disposal.md)) | — |
 | `invalid` | a missing or wrong field (`details.<field>`): no `client_id` (UUID), unknown `position`, reason not on the list | — |
 

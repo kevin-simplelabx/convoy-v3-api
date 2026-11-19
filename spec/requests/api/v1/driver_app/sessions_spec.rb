@@ -107,6 +107,25 @@ RSpec.describe "Driver app sign-in" do
     expect(response).to have_http_status(:not_found)
   end
 
+  it "answers a membership in the wrong status in the app's own words, named as on the card" do
+    token = sign_in
+    respond = lambda do |action, key|
+      post send(:"#{action}_api_v1_driver_app_company_path", key), headers: bearer(token)
+      expect(response).to have_http_status(:unprocessable_content)
+      json[:error].slice(:code, :message)
+    end
+
+    expect(respond.(:accept, "driver-#{own.id}")).to eq(code: "invalid", message: "You already work with SimpleDrive")
+    expect(respond.(:disconnect, "operator_driver-#{managed.id}")).to eq(code: "invalid", message: "You have not joined Hup Seng yet")
+    post decline_api_v1_driver_app_company_path("driver-#{invite.id}"), headers: bearer(token)
+    post accept_api_v1_driver_app_company_path("driver-#{invite.id}"), headers: bearer(token)
+    expect(response).to have_http_status(:not_found)
+    post disconnect_api_v1_driver_app_company_path("driver-#{own.id}"), headers: bearer(token)
+    expect(respond.(:disconnect, "driver-#{own.id}")).to eq(code: "invalid", message: "You no longer work with SimpleDrive")
+    expect(respond.(:decline, "driver-#{own.id}"))
+      .to eq(code: "invalid", message: "This invitation from SimpleDrive is no longer open")
+  end
+
   it "links a driver invited after the account exists, and signs in with email and password" do
     sign_in
     account = DriverAccount.last

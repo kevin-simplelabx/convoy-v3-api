@@ -120,4 +120,16 @@ RSpec.describe "Driver app disposal" do
     act(token, other, :disposal_extend, minutes: 30)
     expect(json.dig(:error, :code)).to eq("not_disposal")
   end
+
+  it "answers ended to every disposal action on a block the job completed before the driver started it" do
+    occ = f[:runs].first
+    token = driver_token("91234567")
+    travel_to Time.zone.local(2026, 11, 3, 16, 30)
+    OccurrenceCompleteJob.perform_now
+
+    %i[disposal_start disposal_run_start disposal_extend disposal_end].each do |action|
+      act(token, occ, action, start_odometer: 1200, minutes: 30, operations_told: true, signed_by: "Alex", end_odometer: 1300)
+      expect([ action, response.status, json.dig(:error, :code) ]).to eq([ action, 422, "ended" ])
+    end
+  end
 end

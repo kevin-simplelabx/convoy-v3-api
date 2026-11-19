@@ -14,7 +14,8 @@ module Api
           list = scope.where(created_at: KEEP.ago..).includes(:vehicle, :notice).order(created_at: :desc, id: :desc).limit(LIMIT).to_a
           recipients = DriverNoticeRecipient.where(driver_notice_id: list.filter_map(&:driver_notice_id), **DriverNotification.member_key(current_membership))
                                             .index_by(&:driver_notice_id)
-          render json: { data: DriverNotificationBlueprint.render_as_hash(list, recipients:), meta: { unread: scope.unread.where(created_at: KEEP.ago..).count } }
+          openable = ::DriverApp::Runs.openable_ids(current_membership, list.filter_map { [ it.occurrence_id, it.occurrence_date ] if it.occurrence_id }.uniq)
+          render json: { data: DriverNotificationBlueprint.render_as_hash(list, recipients:, openable:), meta: { unread: scope.unread.where(created_at: KEEP.ago..).count } }
         end
 
         # POST /driver/notifications/:id/read

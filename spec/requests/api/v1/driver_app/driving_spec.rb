@@ -50,6 +50,9 @@ RSpec.describe "Driver app driving" do
     expect([ error, json.dig(:error, :message) ]).to eq([ "too_early", "You can start this trip from 07:00" ])
     act(token, occ, :arrive, position: 0)
     expect(error).to eq("not_started")
+    act(token, occ, :count, position: 0, boarded: 7, alighted: 0)
+    expect(error).to eq("not_started")
+    expect(within_tenant(company) { occ.stop_events.reload }).to be_empty
 
     travel_to Time.zone.local(2026, 11, 3, 7, 30)
     id = SecureRandom.uuid
@@ -94,6 +97,37 @@ RSpec.describe "Driver app driving" do
     sign_in_as(create(:user, :admin, company:))
     get api_v1_trip_history_run_path(occ.id)
     expect(json[:data]).to include(on_time: "on_time")
+  end
+
+  it "ends a run the job completed before the driver started it, and keeps one on the road drivable until the driver ends it" do
+    idle = create_trip
+    driven = within_tenant(company) { TripOccurrence.find_by!(trip_id: create_trip(start_time: "10:00", end_time: "11:00").trip_id) }
+    token = driver_token("91234567")
+
+    travel_to Time.zone.local(2026, 11, 3, 9, 45)
+    act(token, driven, :start)
+    travel_to Time.zone.local(2026, 11, 3, 11, 30)
+    OccurrenceCompleteJob.perform_now
+    expect([ idle.reload.status, driven.reload.status ]).to eq(%w[completed completed])
+
+    get api_v1_driver_app_runs_path, params: { date: day.iso8601 }, headers: as(token)
+    expect(json[:data].map { [ it[:id], it[:status], it[:started_at].present? ] }).to eq([ [ idle.id, "ended", false ], [ driven.id, "on_the_way", true ] ])
+    get on_going_api_v1_driver_app_runs_path, headers: as(token)
+    expect(json.dig(:data, :id)).to eq(driven.id)
+
+    %i[start arrive attendance skip force_end].each do |action|
+      act(token, idle, action, position: 0, marks: [ { id: "x", state: "boarded" } ], reason: "Other", called_operations: true)
+      expect([ action, response.status, error ]).to eq([ action, 422, "ended" ])
+    end
+    expect(within_tenant(company) { DriverAppAction.where(occurrence_id: idle.id).count }).to eq(0)
+
+    act(token, driven, :arrive, position: 0)
+    act(token, driven, :leave, position: 0, boarded: 3)
+    expect(json[:data]).to include(status: "started")
+    act(token, driven, :complete)
+    expect(json[:data]).to include(status: "ended", ended_at: be_present)
+    get on_going_api_v1_driver_app_runs_path, headers: as(token)
+    expect(json[:data]).to be_nil
   end
 
   it "keeps one trip on the road, force ends with a reason, and skips a trip as Trip History shows" do

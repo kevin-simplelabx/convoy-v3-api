@@ -67,6 +67,7 @@ cards, [vehicle.md § 2](vehicle.md#2-the-switch-vehicle-card-on-drive)). A card
 ## 3. The on-going trip: `GET /driver/runs/on_going`
 
 → the card (§ 1) of the run the driver has started and not ended (the floating bar on every tab), or `data: null`.
+A started run stays here past its end time until the driver ends it; a run never started never shows (§ 6).
 Ask on app start and after each driving action.
 
 ## 4. Trip Details: `GET /driver/runs/:id`
@@ -101,7 +102,8 @@ The card fields plus:
   ],
   "passengers": [
     { "id": "S-1", "name": "Aaron Lee", "gender": "M", "level": "P3", "address": "Blk 123 Tampines St 11 #08-21",
-      "parent_name": "Jason Lee", "parent_phone": "+6598224417", "note": "Allergic to peanuts",
+      "parent_name": "Jason Lee", "parent_phone": "+6598224417", "parent_phone2": null,
+      "note": "Allergic to peanuts",
       "photo": { "url": "/api/v1/downloads/eyJfcmFpbHMi...", "thumb_url": "/api/v1/downloads/eyJfcmFpbHMi...", "name": "aaron.jpg",
                  "size": 48213, "content_type": "image/jpeg" },
       "pickup_position": 0, "dropoff_position": 5, "state": "expected", "reason": null, "qr_code": "CVR1-S-1-3f9a0c1b2d4e",
@@ -148,7 +150,8 @@ The card fields plus:
 
 **Passengers** (School Bus and School Run only; `[]` for other runs): every name with their pick-up and drop-off point
 (`position`), `state` (§ 6) and, on School Bus, `qr_code` = the child's boarding pass (match a scanned code with it;
-"Not on this trip" otherwise). `reason`: why Bus Not Required. `parent_phone` for Call Parent. `photo` (School Bus):
+"Not on this trip" otherwise). `reason`: why Bus Not Required. `parent_phone` for Call Parent; `parent_phone2` = a
+second parent phone (School Run, when the route list has one), or `null` (always on School Bus). `photo` (School Bus):
 the child's photo from the parent's Convoy App (`{ url, thumb_url, name, size, content_type }`, signed links) for the
 child photo view and the list avatar; `null` when the child is not linked to a Convoy App child or has no photo, and
 always `null` on School Run — show the initials then. `boarded_at`, `board_method`,
@@ -172,5 +175,13 @@ Send when Trip Details opens → the card with `seen: true`.
 | `passenger.state` | `expected`, `bus_not_required` (from the parent), `not_boarding` (marked before the trip), `boarded`, `not_boarded` (ticked as not there), `alighted` |
 | `contact.role` | `requestor` Requester, `guest` Guest, `main_contractor` Main Contractor, `attendant` School Attendant, `school_office` School Office |
 | `airport.direction` | `arrival`, `departure` |
+
+`ended` with `started_at: null` = **the run was not driven in the app**: its end time passed without a Start (the office
+counts it as done for pay and invoices), or the office ended it. It cannot be started or driven any more (every action
+answers `422` code `ended`, [driving § 12](driving.md#12-errors-and-reasons)) and never shows in `on_going` (§ 3). Show
+it as Ended with no times; the app has no separate "not driven" status.
+
+A run the driver started stays `on_the_way` / `started` after its end time passes, until the driver completes or force
+ends it (`ended_at`); it stays the on-going trip (§ 3) and every action still works.
 
 Sample drivers to try each kind of trip: [README.md § Sample accounts](README.md#sample-accounts-staging-and-local-seed).

@@ -29,7 +29,10 @@ The last 30 days, newest first (100 at most), and the unread count for the red d
       "notice": { "id": 3, "kind": "ack", "acknowledged_at": null } },
     { "id": 40, "kind": "run_assigned", "title": "New trip assigned",
       "body": "St. Stephen's AM on tomorrow, 06:45. Open it to see the stops.", "at": "...", "read": true,
-      "run": { "id": 812, "date": "2026-11-04" }, "vehicle": null, "notice": null },
+      "run": { "id": 812, "date": "2026-11-04", "open": true }, "vehicle": null, "notice": null },
+    { "id": 38, "kind": "run_assigned", "title": "New trip assigned",
+      "body": "Google Shuttle on tomorrow, 08:00. Open it to see the stops.", "at": "...", "read": true,
+      "run": { "id": 790, "date": "2026-11-04", "open": false }, "vehicle": null, "notice": null },
     { "id": 39, "kind": "vehicle_switch", "title": "Vehicle switch today",
       "body": "Switch to PC1234X from 06:30 today. Do the handover inspection before you take it.", "at": "...", "read": false,
       "run": null, "vehicle": { "id": 9, "plate": "PC1234X" }, "notice": null }
@@ -37,15 +40,21 @@ The last 30 days, newest first (100 at most), and the unread count for the red d
   "meta": { "unread": 2 } }
 ```
 
-Tap a line:
+Tap a line — every tap marks it read (§ 2) first:
 
-| `kind` | Opens |
+| Line | Opens |
 | --- | --- |
-| `run_assigned`, `run_changed`, `run_cancelled` | Trip Details of `run.id` ([runs.md § 4](runs.md#4-trip-details-get-driverrunsid)) |
-| `run_unassigned`, `run_removed` | nothing (the trip is no longer the driver's) — mark it read |
-| `vehicle_switch` | Switch Vehicle ([vehicle.md](vehicle.md)) |
-| `notice` | the notice (§ 3) |
+| `run.open: true` | Trip Details of `run.id` ([runs.md § 4](runs.md#4-trip-details-get-driverrunsid)) |
+| `run.open: false` (any run kind; always for `run_unassigned` / `run_removed`) | nothing; toast "This trip is no longer assigned to you" |
+| `vehicle_switch` (`run: null`) | Switch Vehicle ([vehicle.md](vehicle.md)) |
+| `notice` (`run: null`) | the notice (§ 3) |
 
+- `run.open`: `true` when Trip Details opens for this driver now — the run is still theirs, or a replacement took it
+  (it shows as Replaced), cancelled runs included; `false` when it was given to another driver or is no longer planned.
+  Worked out on each fetch, so every line of the same run says the same, and the old lines open again if the run
+  comes back to the driver (the bell refetches on `notifications_changed`). Use it instead of looking at the run's
+  newest line. Keep the `404` on Trip Details as a safety net (the run was taken between the fetch and the tap).
+- Optional: show `open: false` lines dimmed.
 - Lines come for trips **today and tomorrow** that have not started: a trip given to the driver, moved (new time or bus),
   cancelled or back on by the office, given to another driver (a replacement), or no longer planned. Changes further
   ahead show as New on the trip card.

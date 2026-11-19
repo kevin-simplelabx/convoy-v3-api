@@ -1,5 +1,5 @@
 # School Bus routes shown on the Scheduler: St. Stephen's School with an AM and a PM plan (3 routes each, stops with
-# riders), regular buses over time, a replacement next week and a regular bus change next month.
+# riders), regular buses over time, a replacement next week (AM 1) and a regular bus change next month (PM 3).
 with_company("SD") do
   admin = User.find_by!(email: "ops@simpledrive.sg")
   bus = ->(plate) { Vehicle.kept.find_by!(plate:) }
@@ -15,12 +15,17 @@ with_company("SD") do
   end
   # Plans seeded in use have their PUDO points (Stop Assignment is seeded on its own), so the daily job leaves them.
   school.plans.where(session: "am", in_use: true, riders_assigned_at: nil).where(effective_from: ..Date.current).update_all(riders_assigned_at: Time.current)
+  # Driver app samples: AM 1 is Siti Nurhaliza's (PC8841T; Ethan Tan rides it), AM 2 / PM 2 Ah Beng's (PE1290S). A database
+  # seeded before AM 1 started on PC8841T gets it from today.
+  if (am1 = school.plans.find_by(session: "am", in_use: true)&.routes&.find_by(number: 1)) && am1.regular_vehicle_id(Date.current) != bus.("PC8841T").id
+    am1.vehicle_changes.create!(vehicle: bus.("PC8841T"), effective_from: Date.current, created_by: admin)
+  end
   next if school.plans.exists?
 
   term = Date.current.beginning_of_month - 1.month
   attendants = Attendant.kept.order(:id).to_a
   plans = {
-    "am" => [ [ "06:30", "07:20", "PD6604E", [ [ "Blk 101 Bedok North", "06:30", 9 ], [ "Blk 216 Bedok North", "06:42", 8 ], [ "Blk 32 Siglap", "07:02", 6 ] ] ],
+    "am" => [ [ "06:30", "07:20", "PC8841T", [ [ "Blk 101 Bedok North", "06:30", 9 ], [ "Blk 216 Bedok North", "06:42", 8 ], [ "Blk 32 Siglap", "07:02", 6 ] ] ],
               [ "06:35", "07:20", "PE1290S", [ [ "Kembangan MRT", "06:35", 11 ], [ "Opp Blk 7 Joo Chiat", "06:55", 10 ] ] ],
               [ "06:40", "07:15", "PD2030P", [ [ "Blk 640 Tampines", "06:40", 12 ], [ "Blk 860 Tampines", "06:52", 9 ] ] ] ],
     "pm" => [ [ "13:40", "14:30", "PD6604E", [ [ "Blk 32 Siglap", "13:58", 6 ], [ "Blk 216 Bedok North", "14:15", 8 ], [ "Blk 101 Bedok North", "14:30", 9 ] ] ],
@@ -41,6 +46,7 @@ with_company("SD") do
   am1 = school.plans.find_by!(session: "am").routes.find_by!(number: 1)
   monday = Date.current.next_occurring(:monday)
   am1.replacements.create!(vehicle: bus.("PD1125G"), starts_on: monday + 1, ends_on: monday + 2, arranged_by: "operator",
-                           reason: "PD6604E in the workshop", created_by: admin)
-  am1.vehicle_changes.create!(vehicle: bus.("PC8841T"), effective_from: Date.current.next_month.beginning_of_month, created_by: admin)
+                           reason: "PC8841T in the workshop", created_by: admin)
+  pm3 = school.plans.find_by!(session: "pm").routes.find_by!(number: 3)
+  pm3.vehicle_changes.create!(vehicle: bus.("PD6604E"), effective_from: Date.current.next_month.beginning_of_month, created_by: admin)
 end

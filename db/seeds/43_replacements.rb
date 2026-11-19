@@ -14,6 +14,6 @@ with_company("SD") do
           vehicle_id: bus.("PD5126A").id, eta: "5 min late" })
   arrival = TripOccurrence.joins(:trip).find_by(trips: { label: "seed-airport-arrival" })
   if arrival&.vehicle_id
-    save.({ kind: "crew", vehicle_id: bus.("PD997M").id }, arrival)
+    save.({ kind: "crew", vehicle_id: bus.("PC7939R").id }, arrival) # Frankie Ho: free in the morning
   end
 end

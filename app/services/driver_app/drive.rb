@@ -219,7 +219,7 @@ module DriverApp
     def check_run!
       raise Error.new("This trip was given to another driver", code: "replaced") unless Runs.mine?(@occ, @member)
       raise Error.new("This trip was cancelled", code: "cancelled") if @occ.cancelled?
-      raise Error.new("This trip has ended", code: "ended") if @occ.ended_at && @action != "attendance"
+      raise Error.new("This trip has ended", code: "ended") if (@occ.ended_at && @action != "attendance") || Runs.not_driven?(@occ)
     end
 
     def started!
@@ -231,7 +231,7 @@ module DriverApp
     def points = @points ||= Occurrences::Stops.detailed(@occ)
 
     def point!
-      started! unless @action == "count"
+      started!
       position = @params[:position]
       found = position.present? && points.find { it[:position] == position.to_i }
       found || raise(Error.new("Unknown point #{position}", details: { position: [ "is not a point of this trip" ] }))

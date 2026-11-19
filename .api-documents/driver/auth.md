@@ -62,7 +62,9 @@ Also the answer of every sign-in (with the token):
 { "data": {
   "token": "eyJhbGciOi...", "token_type": "Bearer", "expires_at": "2026-12-03T10:15:00+08:00",
   "account": { "id": 1, "phone": "+6592104100", "phone_display": "+65 9210 4100", "name": "Eric Pang",
-               "email": null, "password_set": false },
+               "email": null, "password_set": false,
+               "photo": { "url": "/api/v1/downloads/eyJfcmFpbHMi...", "thumb_url": "/api/v1/downloads/eyJfcmFpbHMi...",
+                          "name": "eric.jpg", "size": 48213, "content_type": "image/jpeg" } },
   "memberships": [
     { "key": "driver-4", "kind": "own", "status": "active",
       "company": { "id": 1, "name": "SimpleDrive", "display_name": "SimpleDrive", "theme_color": "#004F59", "logo": null },
@@ -78,6 +80,10 @@ Also the answer of every sign-in (with the token):
 ```
 
 - `token`, `token_type`, `expires_at` only in sign-in answers.
+- `account.name`: `null` until the driver fills it in (Personal Details). Show `current.name_on_record` (or the first
+  membership's), then `phone_display`.
+- `account.photo`: the driver's photo, `{ url, thumb_url, name, size, content_type }` signed links (no header needed), or
+  `null` (show the initials).
 - `memberships`: active first, then pending (invitations), then past; by company name inside each. Declined invitations
   are not listed.
 - `current: null` = no company picked (several active companies, or none): show the company picker, or the invitations.
@@ -124,8 +130,16 @@ that company). Employment History = the `active` and `past` rows: company, `join
 driver stops being the default driver of the company's buses from today. The driver's account and profile stay; the
 company keeps its record (Past Drivers).
 
-For 5.2–5.4: `422` "<name> is <status>, so this can't be done" when the row is not in the right status (e.g. accept twice);
-`404` for a key that is not the driver's.
+For 5.2–5.4, a row in the wrong status (e.g. accept twice) → `422` code `invalid`, `<name>` = the card's `employer_name`:
+
+| Call | Row is | `message` |
+| --- | --- | --- |
+| accept / decline | `active` | "You already work with <name>" |
+| accept / decline | `past` | "This invitation from <name> is no longer open" |
+| disconnect | `pending` | "You have not joined <name> yet" |
+| disconnect | `past` | "You no longer work with <name>" |
+
+`404` for a key that is not the driver's, or a declined invitation (it is no longer listed).
 
 ## 6. Values reference
 

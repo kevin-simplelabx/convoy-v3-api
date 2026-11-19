@@ -25,6 +25,14 @@ module DriverApp
       TripOccurrence.where.not(status: HIDDEN).where(own => member.id).or(TripOccurrence.where.not(status: HIDDEN).where(was => member.id))
     end
 
+    # The ids among [[id, date]] whose Trip Details (GET /driver/runs/:id) open for this membership now: the bell's
+    # run.open. One query; the dates let PG prune the month partitions.
+    def openable_ids(member, runs)
+      return Set.new if runs.empty?
+
+      scope(member).where(id: runs.map(&:first), date: runs.map(&:last).uniq).pluck(:id).to_set
+    end
+
     # The run's record at a point (built when there is none yet).
     def event_for(occ, point)
       occ.stop_events.find { it.position == point[:position] } ||
@@ -39,12 +47,16 @@ module DriverApp
 
     def mine?(occ, member) = (member.is_a?(OperatorDriver) ? occ.operator_driver_id : occ.driver_id) == member.id
 
+    # OccurrenceCompleteJob completes every run past its end (OS pay, invoices, reports): one never started in the app
+    # is over (ended, started_at null); one on the road stays drivable until the driver ends it (ended_at).
+    def not_driven?(occ) = occ.completed? && occ.started_at.nil? && occ.ended_at.nil?
+
     def kind(occ) = KINDS.fetch(occ.kind, "adhoc")
 
     def status(occ, member)
       if occ.cancelled? then occ.driver_end == "skipped" ? "skipped" : "cancelled"
       elsif !mine?(occ, member) then "replaced"
-      elsif occ.ended_at || occ.completed? then "ended"
+      elsif occ.ended_at || not_driven?(occ) then "ended"
       elsif occ.started_at then occ.stop_events.any?(&:departed_at) ? "started" : "on_the_way"
       else "scheduled"
       end

@@ -20,21 +20,38 @@ with_company("SD") do
   end
 end
 
-# Switch Vehicle: Eric Pang and Frankie Ho swap buses tomorrow from 12:00 (both see the switch card), and Eric's
-# handover inspection of his bus yesterday morning (six photos, the back one marked up, one photo to highlight).
+# Switch Vehicle: Eric Pang and Frankie Ho swap buses tomorrow from 12:00 (both see the switch card) and go back to
+# their own bus the day after (00:00), so Eric's runs stay on PD997M on later days. Eric's handover inspection of his
+# bus yesterday morning (six photos, the back one marked up, one photo to highlight).
 with_company("SD") do
   eric = Driver.find_by(phone: "+6592104100")
   frankie = Driver.find_by(phone: "+6592474471")
-  eric_bus = eric&.vehicle_on(Date.current)
-  frankie_bus = frankie&.vehicle_on(Date.current)
-  if eric_bus && frankie_bus
-    tomorrow = Date.current + 1
-    eric_bus.driver_schedules.find_or_create_by!(starts_on: tomorrow, start_time: 720) { it.driver = frankie }
-    frankie_bus.driver_schedules.find_or_create_by!(starts_on: tomorrow, start_time: 720) { it.driver = eric }
-    # the bell line, for a database seeded before the switch rang it
+  eric_bus = Vehicle.kept.find_by(plate: "PD997M")
+  frankie_bus = Vehicle.kept.find_by(plate: "PC7939R")
+  if eric && frankie && eric_bus && frankie_bus
+    today = Date.current
+    tomorrow = today + 1
+    put = lambda do |bus, on, minute, driver|
+      entry = bus.driver_schedules.find_or_initialize_by(starts_on: on, start_time: minute)
+      entry.update!(driver:) unless entry.driver_id == driver.id
+    end
+    # Each on their own bus when today starts (a database seeded before this rule kept the last switch for good).
+    { eric_bus => eric, frankie_bus => frankie }.each do |bus, driver|
+      held = bus.driver_schedules.select { it.started_by?(today, 0) }.max_by(&:sort_key)
+      put.(bus, today, 0, driver) unless held&.driver_id == driver.id
+    end
+    put.(eric_bus, tomorrow, 720, frankie)
+    put.(frankie_bus, tomorrow, 720, eric)
+    put.(eric_bus, tomorrow + 1, 0, eric)
+    put.(frankie_bus, tomorrow + 1, 0, frankie)
+    # Runs take the new drivers now (the schedule's own job runs in the background).
+    [ eric_bus, frankie_bus ].each { Occurrences::RefreshDrivers.call(vehicle_id: it.id, from: today) }
+    # the bell line, for a switch entry changed rather than created (only a new entry rings it)
     [ [ frankie_bus, eric ], [ eric_bus, frankie ] ].each do |bus, driver|
       entry = bus.driver_schedules.find_by(starts_on: tomorrow, start_time: 720)
-      DriverApp::RunNotifications.vehicle_switch(entry) unless DriverNotification.exists?(driver:, kind: "vehicle_switch", vehicle: bus)
+      next if DriverNotification.exists?(driver:, kind: "vehicle_switch", vehicle: bus, created_at: today.beginning_of_day..)
+
+      DriverApp::RunNotifications.vehicle_switch(entry)
     end
 
     account = DriverAccount.find_by(phone: eric.phone)
@@ -51,6 +68,52 @@ with_company("SD") do
     if h && h.photos.none?(&:highlight?)
       h.photos.create!(side: VehicleHandover::HIGHLIGHT, photo: SeedFiles.open("fleet", "bus-4.png"),
                        marks: [ { kind: "circle", x: 260, y: 140, rx: 40, ry: 28, color: "#E53935" } ])
+    end
+  end
+end
+
+# Driver app sample accounts have runs every day from rules the daily occurrence job extends (not dated rows): Eric
+# Pang's disposal every morning on PD997M (08:00–11:30) and an afternoon transfer on Frankie Ho's PC7939R, which Eric
+# drives tomorrow after the switch above. School runs (Ah Beng, Lee Kok Wah, Siti Nurhaliza) follow the MOE calendar.
+with_company("SD") do
+  admin = User.find_by!(email: "ops@simpledrive.sg")
+  type = VehicleType.find_by!(key: "van")
+  {
+    "seed-driver-disposal" => {
+      kind: "disposal", client_id: Client.kept.find_by!(name: "DBS Bank").id, title: "DBS Roadshow Disposal", start_time: "08:00", hours: 3.5,
+      end_time: nil, hourly_rate: true, price: 75, pax: 6, plate: "PD997M",
+      stops_attributes: [ { position: 0, name: "DBS Asia Central", address: "12 Marina Boulevard, Singapore 018982", lat: 1.2795, lng: 103.8540, use: "pu" } ]
+    },
+    "seed-driver-transfer" => {
+      kind: "ad_hoc", client_id: Client.kept.find_by!(name: "Google Asia Pacific").id, title: "MBC to Changi T3 Staff Transfer", start_time: "14:00",
+      end_time: "14:50", price: 120, pax: 8, plate: "PC7939R",
+      stops_attributes: [
+        { position: 0, name: "Mapletree Business City", address: "70 Pasir Panjang Road, Singapore 117371", lat: 1.2747, lng: 103.7993, use: "pu" },
+        { position: 1, name: "Changi Airport T3", address: "65 Airport Boulevard, Singapore 819663", lat: 1.3554, lng: 103.9862, use: "do" }
+      ]
+    }
+  }.each do |label, attrs|
+    next if Trip.kept.exists?(label:)
+
+    bus = Vehicle.kept.find_by!(plate: attrs.delete(:plate))
+    Trips::Save.call(trip: Trip.new(label:), user: admin, attributes: attrs.merge(
+      starts_on: Date.current, days: Trip::WEEKDAYS.to_a, end_mode: "never", vehicle_requirements_attributes: [ { vehicle_type_id: type.id, count: 1 } ],
+      vehicle_slots_attributes: [ { slot_no: 1, vehicle_id: bus.id } ]
+    ))
+  end
+end
+
+# Kumar s/o Rajan's next run is driven by Shao Dong (Driver Away): Kumar sees it as Replaced. A replacement is dated,
+# so each seed gives his next run one unless it already has it.
+with_company("SD") do
+  kumar = Driver.find_by(phone: "+6590012233")
+  cover = Driver.kept.active.find_by(name: "Shao Dong")
+  if kumar && cover
+    upcoming = TripOccurrence.where(date: Date.current..(Date.current + 7)).where(starts_at: Time.current..).where.not(status: %w[removed cancelled])
+    run = upcoming.where(driver_id: kumar.id).or(upcoming.where(original_driver_id: kumar.id)).order(:starts_at).first
+    if run && run.driver_id == kumar.id
+      Replacements::Save.call(replacement: Replacement.new, occurrence: run, user: User.find_by!(email: "ops@simpledrive.sg"),
+                              attributes: { kind: "drv", scope: "run", driver_id: cover.id, reason: "Seed sample: Kumar on leave" })
     end
   end
 end
@@ -92,6 +155,9 @@ with_company("SD") do
   runs = runs.select { mine.include?(it.id) || (it.started_at.nil? && it.stop_events.empty? && !it.cancelled?) }
   drive = lambda do |occ, step, action, at, **params|
     occ.reload
+    # The driver did this yesterday, before the job completed the run (92_trip_history runs it): a run completed without
+    # a start refuses every action, so a run driven for the first time is reopened.
+    occ.update_columns(status: "scheduled") if mine.exclude?(occ.id) && DriverApp::Runs.not_driven?(occ) # rubocop:disable Rails/SkipsModelValidations
     DriverApp::Drive.call(account:, member: siti, occ:, action:,
                           params: { client_id: Digest::UUID.uuid_v5(Digest::UUID::OID_NAMESPACE, "seed-driver-end-#{occ.id}-#{step}"), at: at.iso8601, **params })
   end
