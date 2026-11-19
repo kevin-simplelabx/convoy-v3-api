@@ -21,7 +21,7 @@ with_company("SD") do
 end
 
 # Switch Vehicle: Eric Pang and Frankie Ho swap buses tomorrow from 12:00 (both see the switch card), and Eric's
-# handover inspection of his bus yesterday morning (six photos, the back one marked up).
+# handover inspection of his bus yesterday morning (six photos, the back one marked up, one photo to highlight).
 with_company("SD") do
   eric = Driver.find_by(phone: "+6592104100")
   frankie = Driver.find_by(phone: "+6592474471")
@@ -47,6 +47,11 @@ with_company("SD") do
                          marks: side == "back" ? [ { kind: "circle", x: 120, y: 200, r: 30 } ] : [])
       end
     end
+    h = VehicleHandover.find_by(driver: eric, at:)
+    if h && h.photos.none?(&:highlight?)
+      h.photos.create!(side: VehicleHandover::HIGHLIGHT, photo: SeedFiles.open("fleet", "bus-4.png"),
+                       marks: [ { kind: "circle", x: 260, y: 140, rx: 40, ry: 28, color: "#E53935" } ])
+    end
   end
 end
 
@@ -71,5 +76,58 @@ with_company("SD") do
 
     notice.update!(**attrs, from_name: "SimpleDrive Operations", image: SeedFiles.open("fleet", "bus-1.png"))
     DriverNotices::Publish.call(notice:)
+  end
+end
+
+# How Siti Nurhaliza ended yesterday's runs in the Driver app (Trip Details shows the record): the School Bus run left
+# its first point with a child not boarded, skipped the next point and was completed with feedback; a shuttle force
+# ended after its first point (Accident); the next shuttle was skipped before the start. Sent through DriverApp::Drive
+# with fixed client_ids, so a second seed is replayed, not done again.
+with_company("SD") do
+  siti = Driver.find_by(phone: "+6590034455")
+  account = siti && DriverAccount.for_phone!(siti.phone).tap(&:link_memberships!)
+  runs = siti ? TripOccurrence.where(driver: siti, date: Date.current - 1).where.not(status: %w[removed skipped]).includes(:stop_events).order(:start_time, :id).to_a : []
+  # Runs this seed drove before (replayed by client_id), or runs nothing else has recorded on (other seeds' GPS / stops).
+  mine = DriverAppAction.where(driver_account: account, occurrence_id: runs.map(&:id)).distinct.pluck(:occurrence_id)
+  runs = runs.select { mine.include?(it.id) || (it.started_at.nil? && it.stop_events.empty? && !it.cancelled?) }
+  drive = lambda do |occ, step, action, at, **params|
+    occ.reload
+    DriverApp::Drive.call(account:, member: siti, occ:, action:,
+                          params: { client_id: Digest::UUID.uuid_v5(Digest::UUID::OID_NAMESPACE, "seed-driver-end-#{occ.id}-#{step}"), at: at.iso8601, **params })
+  end
+
+  if (bus = runs.find(&:school_route))
+    t = bus.starts_at
+    points = Occurrences::Stops.detailed(bus).reject { it[:waypoint] }
+    kids = Occurrences::Passengers.call(bus, points:).select { it[:state] == "expected" }
+    drive.(bus, "start", :start, t - 5.minutes)
+    points[0..-2].each_with_index do |p, i|
+      at = t + (i * 8).minutes
+      if i == 1
+        drive.(bus, "skip-#{i}", :skip_stop, at, position: p[:position], reason: "Passengers are late")
+        next
+      end
+      drive.(bus, "arrive-#{i}", :arrive, at, position: p[:position])
+      here = kids.select { it[:pickup_position] == p[:position] }
+      here = here.drop(1) if i.zero? # one child not at the point: the driver leaves anyway
+      drive.(bus, "board-#{i}", :attendance, at + 1.minute, marks: here.map { { id: it[:id], state: "boarded", method: "tick" } }) if here.any?
+      drive.(bus, "leave-#{i}", :leave, at + 3.minutes, position: p[:position], force: true)
+    end
+    drive.(bus, "arrive-last", :arrive, bus.ends_at - 2.minutes, position: points.last[:position])
+    drive.(bus, "complete", :complete, bus.ends_at, feedback: "Waited at the first point, one child did not come down")
+  end
+
+  shuttles = runs.select { it.kind == "corporate_shuttle" }
+  if (forced = shuttles.first)
+    t = forced.starts_at
+    first = Occurrences::Stops.detailed(forced).reject { it[:waypoint] }.first
+    drive.(forced, "start", :start, t - 5.minutes)
+    drive.(forced, "arrive-0", :arrive, t, position: first[:position])
+    drive.(forced, "leave-0", :leave, t + 2.minutes, position: first[:position], boarded: 9, alighted: 0)
+    drive.(forced, "force-end", :force_end, t + 12.minutes, reason: "Accident", called_operations: true,
+                                                              feedback: "Minor collision at the junction, nobody hurt. Passengers walked to the office")
+  end
+  if (skipped = shuttles.second)
+    drive.(skipped, "skip", :skip, skipped.starts_at - 20.minutes, reason: "Traffic Congestion")
   end
 end

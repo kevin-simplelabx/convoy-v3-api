@@ -19,6 +19,7 @@
 #  position            :integer          not null
 #  skip_reason         :string
 #  skipped             :boolean          default(FALSE), not null
+#  skipped_at          :datetime
 #  skipped_by          :string
 #  source              :string           default("telematics"), not null
 #  stop_name           :string

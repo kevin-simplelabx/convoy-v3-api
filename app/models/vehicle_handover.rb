@@ -42,6 +42,9 @@ class VehicleHandover < ApplicationRecord
   SIDES = %w[front left right back odometer inside].freeze
   SIDE_LABELS = { "front" => "Front", "left" => "Left side", "right" => "Right side", "back" => "Back", "odometer" => "Odometer",
                   "inside" => "Inside" }.freeze
+  # "Anything to Highlight?": optional extra photos (a scratch, a warning light), as many as needed up to MAX_HIGHLIGHTS.
+  HIGHLIGHT = "highlight"
+  MAX_HIGHLIGHTS = 10
 
   belongs_to :vehicle
   belongs_to :driver_account

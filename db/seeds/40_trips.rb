@@ -35,7 +35,7 @@ with_company("SD") do
 
   trip.("seed-airport-arrival", {
     kind: "airport_transfer", client_id: client.("Dr Rachel Lim").id, starts_on: monday, start_time: "07:40", end_time: "08:40",
-    airport_direction: "arrival", flight_number: "SQ 321", flight_time: "07:10", terminal: "T3", wait_minutes: 30,
+    airport_direction: "arrival", flight_number: "SQ 321", flight_time: "07:10", flight_city: "Sydney", terminal: "T3", wait_minutes: 30,
     meet_and_greet: true, signboard_name: "Dr Rachel Lim", meet_and_greet_fee: 25, pax: 1, luggage_on: true, luggage_large: 2,
     price: 85, stops_attributes: stops.(:changi_t3, :bedok, notes: { changi_t3: "Meet at Arrival Hall, Door 3" }),
     vehicle_requirements_attributes: [ { vehicle_type_id: type.("mpv").id, count: 1 } ]

@@ -68,13 +68,16 @@ RSpec.describe "Driver app driving" do
     act(token, occ, :count, position: 0, boarded: 7, alighted: 0)
     act(token, occ, :leave, position: 0)
     expect(json[:data]).to include(status: "started")
-    expect(json.dig(:data, :points, 0, :record)).to include(boarded: 7, alighted: 0, departed_at: be_present)
+    expect(json.dig(:data, :points, 0, :record)).to include(boarded: 7, alighted: 0, on_board: 7, left_early: nil, skip_reason: nil, departed_at: be_present)
+    expect(json[:data]).to include(driver_end: nil, driver_feedback: nil)
 
     travel_to Time.zone.local(2026, 11, 3, 8, 40)
     act(token, occ, :arrive, position: 2)
     act(token, occ, :complete, feedback: "Clementi pick-up B is blocked by roadworks")
     expect(json[:data]).to include(status: "ended", ended_at: be_present)
-    expect(json.dig(:data, :points, 2, :record)).to include(alighted: 7)
+    expect(json.dig(:data, :points, 2, :record)).to include(alighted: 7, on_board: 0)
+    expect(json.dig(:data, :driver_end)).to include(kind: "completed", reason: nil, on_board: 0, at: json.dig(:data, :ended_at))
+    expect(json.dig(:data, :driver_feedback)).to include(note: "Clementi pick-up B is blocked by roadworks", at: be_present)
     act(token, occ, :arrive, position: 0)
     expect(error).to eq("ended")
 
@@ -114,10 +117,15 @@ RSpec.describe "Driver app driving" do
     expect(json.dig(:error, :details, :reason)).to eq([ "is not on the list" ])
     act(token, early, :force_end, reason: "Vehicle breakdown", called_operations: true)
     expect(json[:data]).to include(status: "ended")
-    expect(json.dig(:data, :points, 2, :record)).to include(skipped: true)
+    expect(json.dig(:data, :points, 2, :record)).to include(skipped: true, skip_reason: "Trip force ended", skipped_at: be_present)
+    expect(json.dig(:data, :driver_end)).to include(kind: "forced", reason: "Vehicle breakdown", on_board: 0, at: be_present)
+    expect(json.dig(:data, :driver_feedback, :note)).to eq("Force ended: Vehicle breakdown")
 
     act(token, late, :skip, reason: "Traffic Congestion")
-    expect(json[:data]).to include(status: "skipped", status_label: "Skipped")
+    expect(json[:data]).to include(status: "skipped", status_label: "Skipped", ended_at: nil)
+    expect(json.dig(:data, :driver_end)).to include(kind: "skipped", reason: "Traffic Congestion", at: be_present)
+    get api_v1_driver_app_runs_path, params: { date: day.iso8601 }, headers: as(token)
+    expect(json[:data].find { it[:id] == late.id }.dig(:driver_end, :kind)).to eq("skipped")
 
     travel_to Time.zone.local(2026, 11, 4, 9, 0)
     sign_in_as(create(:user, :admin, company:))
@@ -149,6 +157,7 @@ RSpec.describe "Driver app driving" do
     end
     patch restore_api_v1_occurrence_path(late.id), params: { lock_version: seen[late] + 1 }, as: :json
     expect(response).to have_http_status(:ok)
+    expect(late.reload).to have_attributes(driver_end: nil, driver_end_reason: nil) # restored: no longer skipped by the driver
   end
 
   describe "a School Bus run" do
@@ -177,7 +186,7 @@ RSpec.describe "Driver app driving" do
       travel_to Time.zone.local(2026, 11, 3, 6, 0)
       act(token, occ, :route, skip: [ 2 ], not_boarding: [ "S-4" ])
       expect(json.dig(:data, :passengers).to_h { [ it[:id], it[:state] ] }).to eq("S-1" => "expected", "S-2" => "bus_not_required", "S-3" => "expected", "S-4" => "not_boarding")
-      expect(json.dig(:data, :points, 2, :record)).to include(skipped: true)
+      expect(json.dig(:data, :points, 2, :record)).to include(skipped: true, skipped_at: nil) # not passed yet
       expect(json.dig(:data, :before_you_go, :not_riding).pluck(:id)).to eq(%w[S-2 S-4])
       expect(json.dig(:data, :before_you_go, :skipped_points)).to eq([ { position: 2, name: "Blk 9 Kembangan" } ])
 
@@ -195,13 +204,16 @@ RSpec.describe "Driver app driving" do
 
       act(token, occ, :arrive, position: 1)
       act(token, occ, :leave, position: 1, force: true)
+      expect(json.dig(:data, :points, 1, :record)).to include(left_early: { missing: 1, until: "06:47" }, on_board: 1) # Blk 32 Siglap 06:45 + 2 min grace
+      act(token, occ, :skip_stop, position: 2, auto: true)
+      expect(json.dig(:data, :points, 2, :record)).to include(skipped: true, skipped_at: be_present, skip_reason: "Skipped by the driver before the trip")
       act(token, occ, :arrive, position: 3)
       act(token, occ, :complete)
       expect(json.dig(:data, :passengers).to_h { [ it[:id], it[:state] ] }).to include("S-1" => "alighted", "S-3" => "expected")
 
       within_tenant(company) do
         events = occ.stop_events.reload.order(:position).pluck(:position, :boarded, :alighted, :on_board, :left_early_missing, :skipped_by)
-        expect(events).to eq([ [ 0, 1, 0, 1, nil, nil ], [ 1, 0, 0, 1, 1, nil ], [ 2, nil, nil, nil, nil, "plan" ], [ 3, nil, 1, 0, nil, nil ] ])
+        expect(events).to eq([ [ 0, 1, 0, 1, nil, nil ], [ 1, 0, 0, 1, 1, nil ], [ 2, nil, nil, 1, nil, "plan" ], [ 3, nil, 1, 0, nil, nil ] ])
         expect(OccurrencePassenger.find_by(passenger_key: "S-1")).to have_attributes(board_method: "qr", board_lat: 1.33, marked_by: "Kumar")
       end
 
@@ -240,7 +252,7 @@ RSpec.describe "Driver app driving" do
 
     id = SecureRandom.uuid
     act(token, occ, :skip_stop, position: 0, reason: "Passenger not at the point", client_id: id)
-    expect(json.dig(:data, :points, 0, :record)).to include(skipped: true)
+    expect(json.dig(:data, :points, 0, :record)).to include(skipped: true, skipped_at: Time.current.iso8601(3))
     expect(json[:meta]).to eq(replayed: false)
     act(token, occ, :skip_stop, position: 0, reason: "Passenger not at the point", client_id: id)
     expect(json[:meta]).to eq(replayed: true)

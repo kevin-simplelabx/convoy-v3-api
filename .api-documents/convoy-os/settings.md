@@ -139,6 +139,7 @@ Open: `GET /companies/:id`. Save: `PATCH /companies/:id`. Use the company id fro
 | `business_units_enabled` | Business Units and Projects switch |
 | `country`, `country_locked`, `country_set_at`, `country_set_by { id, name }` | Country card: "Set on <date> by <name>" |
 | `country_request` | The pending Request a Country Change (§ 3.3) or `null` |
+| `pickup_grace_minutes` | Minutes (0–30, default 2) the Convoy Driver app waits after a pick-up point's planned time for the children expected there before the driver may leave. No card in the prototype; put it beside the Operations contacts |
 | `ops_phone`, `ops_hours`, `ops_whatsapp`, `ops_email`, `depot_address` | Operations contacts drivers see in the Convoy Driver app (Contact Operations): phones in E.164, hours as text ("Mon–Sat 05:30–20:00"). No card in the prototype yet; send them like the other fields when one is added |
 
 Save sends only what changed (Save Changes / Discard are front end):
@@ -148,7 +149,8 @@ PATCH /companies/:id   (multipart when a logo is sent)
 company[short_name], company[theme_color], company[timezone], company[date_format], company[time_format],
 company[business_units_enabled], company[logo] (PNG, JPG, SVG, WebP), company[remove_logo]=true,
 company[country] (only while country_locked is false),
-company[ops_phone], company[ops_hours], company[ops_whatsapp], company[ops_email], company[depot_address]
+company[ops_phone], company[ops_hours], company[ops_whatsapp], company[ops_email], company[depot_address],
+company[pickup_grace_minutes]
 ```
 
 Needs the `users` permission (`403` otherwise). `name` is ignored for company users. `422` details per field

@@ -474,8 +474,9 @@ and read the real `trip_id` from the create answer. Same permission as creating 
 | `contractor_contact_name`, `contractor_contact_phone`, `require_contractor_app` | | Main contractor contact |
 | `lock_version` | int | Send back on update |
 
-**Airport Transfer**: `airport_direction` (`arrival` / `departure`), `flight_number`, `flight_time` (HH:MM), `terminal`,
-`wait_minutes` (arrival, > 0), `meet_and_greet`, `signboard_name`, `meet_and_greet_fee`.
+**Airport Transfer**: `airport_direction` (`arrival` / `departure`), `flight_number`, `flight_time` (HH:MM),
+`flight_city` (optional, 80 characters: where an arrival flies in from / a departure flies to; the Driver app shows "From
+Sydney" / "Flight to London"), `terminal`, `wait_minutes` (arrival, > 0), `meet_and_greet`, `signboard_name`, `meet_and_greet_fee`.
 
 **Disposal**: `hours` (end time = start + hours), `hourly_rate`.
 

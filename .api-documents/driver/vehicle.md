@@ -23,7 +23,7 @@ Conventions: [README.md](README.md). Paths start with `/api/v1`. Needs a picked 
                "since": "2026-10-01", "since_time": null },
   "switches": [ { "vehicle": { "id": 9, "plate": "PC1234X", "name": "Toyota Coaster", "seats": 29, "photo": null, "since": null, "since_time": null },
                   "starts_at": "2026-11-03T06:30:00+08:00", "handover_done": false } ],
-  "handovers": [ { "id": 3, "at": "...", "vehicle": { "id": 9, "plate": "PC1234X" }, "photos": ["..."] } ]
+  "handovers": [ { "id": 3, "at": "...", "vehicle": { "id": 9, "plate": "PC1234X" }, "photos": ["..."], "highlights": [] } ]
 } }
 ```
 
@@ -56,13 +56,16 @@ Multipart:
 | `photos[front]`, `photos[left]`, `photos[right]`, `photos[back]`, `photos[odometer]`, `photos[inside]` | the six photos (all required) |
 | `marked[<side>]` | the marked-up copy of a photo (optional) |
 | `marks[<side>]` | the shapes drawn on it, JSON (optional): e.g. `[{"kind":"circle","x":120,"y":200,"r":30}]` in 400 × 300 photo units |
+| `highlights[0][photo]`, `highlights[0][marked]`, `highlights[0][marks]`, `highlights[1][…]` … | "Anything to Highlight?" (optional): up to 10 extra photos (a scratch, a warning light), each with its marked-up copy and shapes like `marked` / `marks`. Number them 0, 1, 2… in the order shown; a photo removed in the app is simply not sent |
 | `declaration` | `true`: "I have checked the vehicle…" (required) |
 | `at` | when it was done (ISO 8601; default now) |
-| `note` | optional ("Scratch on the rear bumper") |
+| `note` | "Note for the office" under the highlights, optional ("Scratch on the rear bumper") |
 
-→ `201` the handover: `{ id, at, declared_at, note, vehicle { id, plate }, photos: [{ side, label, photo, marked_photo, marks }] }`.
+→ `201` the handover: `{ id, at, declared_at, note, vehicle { id, plate }, photos: [{ side, label, photo, marked_photo, marks }],
+highlights: [{ id, photo, marked_photo, marks }] }` (`photos` = the six sides).
 
-- `422` code `photos_needed` with `details.missing: ["inside"]`; `declaration_needed`; `not_your_bus`.
+- `422` code `photos_needed` with `details.missing: ["inside"]`; `declaration_needed`; `not_your_bus`; "Each highlight needs
+  a photo" / "Add 10 highlight photos at most" (`details.highlights`).
 - Photos and marks are kept for the office (incidents, damage claims).
 
 ## 4. Vehicle History: `GET /driver/vehicle/history`

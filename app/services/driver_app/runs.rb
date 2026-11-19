@@ -15,7 +15,8 @@ module DriverApp
                  { trip: [ :client, { stops: :photos }, :route_vias ] }, { school_route: [ { stops: [ :riders, :stop_point, { stop: :points } ] }, { plan: :school } ] } ].freeze
 
     DETAIL_INCLUDES = [ *INCLUDES, :passenger_marks, :driver_report, { disposal: %i[runs extensions] },
-                        { trip: [ :client, :route_vias, :attachments, { stops: :photos }, { standby: :photos }, { booking_trip: { booking: :days } } ] } ].freeze
+                        { trip: [ :client, :route_vias, :attachments, { stops: :photos }, { standby: :photos }, { booking_trip: { booking: :days } } ] },
+                        { school_route: [ :attendant, { plan: { school: :client } } ] } ].freeze
 
     module_function
 

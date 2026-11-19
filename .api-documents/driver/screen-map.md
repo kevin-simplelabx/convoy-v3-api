@@ -38,7 +38,7 @@ carry `{ client_id, at }` ([driving.md § 1](driving.md#1-how-every-action-works
 | Open a trip (clears New) | `GET /driver/runs/:id`, `POST /driver/runs/:id/seen` | [runs § 4–5](runs.md#4-trip-details-get-driverrunsid) |
 | Client, route, tiles, Trip Value, airport, disposal, Day n of N, notes, attachments, standby | `GET /driver/runs/:id` | [runs § 4](runs.md#4-trip-details-get-driverrunsid) |
 | Map pins, road route, waypoints, stop stepper, recorded times / counts | `points` | [runs § 4](runs.md#4-trip-details-get-driverrunsid) |
-| Point of Contact (requester, guest, main contractor; operations) | `contacts`; `GET /driver/company` → `operations` | [runs § 4](runs.md#4-trip-details-get-driverrunsid), [profile § 5](profile.md#5-transport-company-get-drivercompany) |
+| Point of Contact (requester, guest, main contractor; School Bus: attendant, school office; operations) | `contacts`; `GET /driver/company` → `operations` | [runs § 4](runs.md#4-trip-details-get-driverrunsid), [profile § 5](profile.md#5-transport-company-get-drivercompany) |
 | Before You Go (children not riding, skipped points) | `before_you_go` | [runs § 4](runs.md#4-trip-details-get-driverrunsid) |
 | Swipe to start (On the Way) | `POST /driver/runs/:id/start` | [driving § 2](driving.md#2-start-the-trip-post-driverrunsidstart) |
 | Edit Route (not riding today, skip a point) | `PATCH /driver/runs/:id/route` | [driving § 8](driving.md#8-edit-route-patch-driverrunsidroute) |
@@ -75,7 +75,7 @@ carry `{ client_id, at }` ([driving.md § 1](driving.md#1-how-every-action-works
 | Screen / button | Call | Doc |
 | --- | --- | --- |
 | Switch Vehicle screen (the bus, when) | `GET /driver/vehicle` → `switches` | [vehicle § 1](vehicle.md#1-my-vehicle-today-get-drivervehicle) |
-| Six photos, mark up a photo, declaration → Confirm | `POST /driver/vehicle/handovers` | [vehicle § 3](vehicle.md#3-handover-inspection-post-drivervehiclehandovers) |
+| Six photos, mark up a photo, Anything to Highlight? (extra photos + note), declaration → Confirm | `POST /driver/vehicle/handovers` | [vehicle § 3](vehicle.md#3-handover-inspection-post-drivervehiclehandovers) |
 
 ## Notifications
 

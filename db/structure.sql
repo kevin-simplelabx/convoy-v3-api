@@ -2774,7 +2774,8 @@ CREATE TABLE public.companies (
     ops_whatsapp character varying,
     ops_email character varying,
     depot_address text,
-    accepts_personal_bookings boolean DEFAULT false NOT NULL
+    accepts_personal_bookings boolean DEFAULT false NOT NULL,
+    pickup_grace_minutes integer DEFAULT 2 NOT NULL
 );
 
 
@@ -6079,7 +6080,8 @@ CREATE TABLE public.occurrence_stop_events (
     left_early_missing integer,
     source character varying DEFAULT 'telematics'::character varying NOT NULL,
     geofence_entered_at timestamp(6) without time zone,
-    geofence_exited_at timestamp(6) without time zone
+    geofence_exited_at timestamp(6) without time zone,
+    skipped_at timestamp(6) without time zone
 );
 
 
@@ -11256,6 +11258,7 @@ CREATE TABLE public.trips (
     route_list_imported_at timestamp(6) without time zone,
     students_purged_at timestamp(6) without time zone,
     booking_trip_id bigint,
+    flight_city character varying,
     CONSTRAINT trips_end_mode CHECK (((end_mode)::text = ANY (ARRAY[('none'::character varying)::text, ('never'::character varying)::text, ('date'::character varying)::text, ('count'::character varying)::text]))),
     CONSTRAINT trips_kind CHECK (((kind)::text = ANY (ARRAY[('ad_hoc'::character varying)::text, ('corporate_shuttle'::character varying)::text, ('airport_transfer'::character varying)::text, ('disposal'::character varying)::text, ('school_run'::character varying)::text])))
 );
@@ -22190,10 +22193,10 @@ CREATE INDEX index_vehicle_handover_photos_on_vehicle_handover_id ON public.vehi
 
 
 --
--- Name: index_vehicle_handover_photos_on_vehicle_handover_id_and_side; Type: INDEX; Schema: public; Owner: -
+-- Name: index_vehicle_handover_photos_one_per_side; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX index_vehicle_handover_photos_on_vehicle_handover_id_and_side ON public.vehicle_handover_photos USING btree (vehicle_handover_id, side);
+CREATE UNIQUE INDEX index_vehicle_handover_photos_one_per_side ON public.vehicle_handover_photos USING btree (vehicle_handover_id, side) WHERE ((side)::text <> 'highlight'::text);
 
 
 --
@@ -30013,6 +30016,10 @@ ALTER TABLE public.trip_occurrences
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261119100300'),
+('20261119100200'),
+('20261119100100'),
+('20261119100000'),
 ('20261117120200'),
 ('20261117120100'),
 ('20261117120000'),

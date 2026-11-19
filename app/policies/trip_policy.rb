@@ -3,7 +3,7 @@ class TripPolicy < ApplicationPolicy
   FIELDS = %i[kind client_id client_site_id title label starts_on start_time end_time hours end_mode ends_on occurrence_count
               skip_public_holidays calendar_id pax luggage_on luggage_cabin luggage_medium luggage_large luggage_extra_large
               luggage_oversized vehicles_count requestor_name requestor_email requestor_phone guest_is_requestor guest_name
-              guest_phone notes business_unit project booking_ref airport_direction flight_number flight_time terminal
+              guest_phone notes business_unit project booking_ref airport_direction flight_number flight_time flight_city terminal
               wait_minutes meet_and_greet signboard_name meet_and_greet_fee price price_per price_set price_basis hourly_rate
               trip_value trip_value_mode trip_value_rounding operator_cost operator_cancel_rule subcontracted
               client_end_customer_id service_for contractor_contact_name contractor_contact_phone require_contractor_app

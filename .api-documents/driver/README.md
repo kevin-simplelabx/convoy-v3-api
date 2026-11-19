@@ -19,6 +19,7 @@ Start with [screen-map.md](screen-map.md): every screen and button → the call 
 | Disposal: start and end odometer, runs, Extend Time, the block clock | [disposal.md](disposal.md) |
 | My Vehicle Today, Switch Vehicle (handover inspection), Vehicle History | [vehicle.md](vehicle.md) |
 | The bell: trip changes, vehicle switch, notices from the office (Open, Acknowledge) | [notifications.md](notifications.md) |
+| What the app works out itself, and changes the app must make | [fe-updates.md](fe-updates.md) |
 
 Apidog: import [`../convoy-v3-api.openapi.json`](../convoy-v3-api.openapi.json); the Driver app's calls are in the
 folder **Driver App** (security scheme `driverAuth`).
@@ -62,5 +63,6 @@ Sign in with the mobile and code `123456`:
 | `+65 9002 3344` | Lee Kok Wah (SimpleDrive) | School Run (name list) and shuttles |
 | `+65 9001 2233` | Kumar s/o Rajan (SimpleDrive) | a trip taken by a replacement (Replaced) |
 | `+65 9247 4471` | Frankie Ho (SimpleDrive) | the other side of Eric's bus swap |
+| `+65 9003 4455` | Siti Nurhaliza (SimpleDrive) | yesterday's ended runs (Plan): a School Bus run left early with a child not boarded, a skipped point and feedback; a shuttle force ended (Accident); a shuttle skipped before the start |
 
 Any other mobile can sign up (Create an Account); it has no company until a company invites that number.

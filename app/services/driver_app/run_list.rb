@@ -20,7 +20,7 @@ module DriverApp
         trip_label: occ.trip_label, title: occ.school_route&.title || occ.trip&.title, label: occ.school_route&.label || occ.trip&.label,
         kind: Runs.kind(occ), kind_label: Runs::KIND_LABELS[Runs.kind(occ)], direction: Runs.direction(occ), client: Runs.client(occ),
         status:, status_label: Runs::STATUS_LABELS[status], seen: occ.driver_seen_at.present? || !mine,
-        started_at: occ.started_at, ended_at: occ.ended_at,
+        started_at: occ.started_at, ended_at: occ.ended_at, driver_end: driver_end(occ),
         points_count: points.size, first_point: points.first&.dig(:name), last_point: points.last&.dig(:name),
         expected_pax: expected(occ), requires: Runs.requires(occ), vehicle: vehicle && { id: vehicle.id, plate: vehicle.plate },
         replaced_by: (status == "replaced" ? replaced_by(occ) : nil)
@@ -52,6 +52,14 @@ module DriverApp
         routes.empty? ? {} : SchoolRiderAbsence.where(school_id: routes.map { it.school_route.plan.school_id }.uniq, date: routes.map(&:date).uniq)
                                                .group_by { [ it.school_id, it.date ] }
       end
+    end
+
+    # How the driver ended the run: completed, forced (Force End Trip) or skipped (Skip Trip, maybe before the start).
+    def driver_end(occ)
+      return unless occ.driver_end
+
+      { kind: occ.driver_end, at: occ.driver_end == "skipped" ? occ.cancelled_at : occ.ended_at, reason: occ.driver_end_reason,
+        on_board: occ.end_on_board }
     end
 
     def replaced_by(occ)

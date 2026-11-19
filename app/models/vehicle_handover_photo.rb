@@ -15,8 +15,8 @@
 #
 # Indexes
 #
-#  index_vehicle_handover_photos_on_vehicle_handover_id           (vehicle_handover_id)
-#  index_vehicle_handover_photos_on_vehicle_handover_id_and_side  (vehicle_handover_id,side) UNIQUE
+#  index_vehicle_handover_photos_on_vehicle_handover_id  (vehicle_handover_id)
+#  index_vehicle_handover_photos_one_per_side            (vehicle_handover_id,side) UNIQUE WHERE ((side)::text <> 'highlight'::text)
 #
 # Foreign Keys
 #
@@ -30,6 +30,9 @@ class VehicleHandoverPhoto < ApplicationRecord
   mount_uploader :photo, ImageUploader
   mount_uploader :marked_photo, ImageUploader
 
-  validates :side, inclusion: { in: VehicleHandover::SIDES }, uniqueness: { scope: :vehicle_handover_id }
+  validates :side, inclusion: { in: [ *VehicleHandover::SIDES, VehicleHandover::HIGHLIGHT ] }
+  validates :side, uniqueness: { scope: :vehicle_handover_id }, unless: :highlight?
   validates :photo, presence: true
+
+  def highlight? = side == VehicleHandover::HIGHLIGHT
 end

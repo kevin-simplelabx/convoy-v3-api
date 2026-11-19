@@ -74,7 +74,10 @@ with_company("SD") do
   end
   Vehicle.kept.find_by!(plate: "PD5126A").driver_schedules.find_or_create_by!(starts_on: Date.current + 7) { |s| s.driver = spare.last }
 
-  [ [ "Mdm Rosnah", "+65 9111 2233" ], [ "Mrs Lee Mei Ling", "+65 9111 3344" ], [ "Mr Chandran", "+65 9111 4455" ] ].each do |name, ph|
-    Attendant.kept.find_or_create_by!(name:) { |a| a.phone = ph }
+  # notes: what the driver reads under the attendant in Point of Contact (Driver app)
+  [ [ "Mdm Rosnah", "+65 9111 2233", "Travels on the bus. Call first if a child is not at the stop" ],
+    [ "Mrs Lee Mei Ling", "+65 9111 3344", nil ], [ "Mr Chandran", "+65 9111 4455", nil ] ].each do |name, ph, notes|
+    a = Attendant.kept.find_or_create_by!(name:) { it.phone = ph }
+    a.update!(notes:) if notes && a.notes.blank?
   end
 end

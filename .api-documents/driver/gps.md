@@ -22,7 +22,7 @@ Read on sign-in and after Switch Company:
 { "data": {
   "gps": { "accuracy": "best", "interval_seconds": 5, "distance_filter_m": 10, "heartbeat_seconds": 300, "geofence_radius_m": 30,
            "arrive_countdown_seconds": 10, "leave_countdown_seconds": 10, "after_trip_minutes": 15, "max_points": 500 },
-  "start_early_minutes": 60, "late_warning_minutes": 30,
+  "start_early_minutes": 60, "late_warning_minutes": 30, "pickup_grace_minutes": 2,
   "reasons": { "skip_stop": ["No Passengers", "..."], "skip_trip": ["Traffic Congestion", "..."], "force_end": ["Vehicle breakdown", "..."] },
   "date_format": "dmy", "time_format": "24"
 } }
@@ -33,7 +33,10 @@ Read on sign-in and after Switch Company:
   stopped at a light), a forced point every `heartbeat_seconds` when not moving, a native geofence of
   `geofence_radius_m` around each point, and positions for `after_trip_minutes` after the trip ends.
 - `start_early_minutes` / `late_warning_minutes`: Swipe to start opens 60 minutes before; more than 30 minutes late shows
-  the warning. `reasons`: the lists for Skip, Skip Trip and Force End ([driving.md § 12](driving.md#12-errors-and-reasons)).
+  the warning. `pickup_grace_minutes` (the company's setting, 0–30, default 2): at a pick-up point with names, wait for
+  every child expected there until the point's `planned_time` + this many minutes ("Wait for 2 children · you may leave
+  at 07:12 · 2 min after the scheduled time"); after that Leave is allowed (the server still answers `attendance_needed`
+  until the children are ticked or Leave is sent with `force: true`). `reasons`: the lists for Skip, Skip Trip and Force End ([driving.md § 12](driving.md#12-errors-and-reasons)).
 - `date_format` (`dmy`, `mdy`, `ymd`, `dmon`) and `time_format` (`24`, `12`): the company's defaults for the Configurations
   screen (the driver may change them on the phone).
 

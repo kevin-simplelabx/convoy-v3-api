@@ -112,7 +112,7 @@ RSpec.describe "Driver app GPS" do
     token = driver_token("91234567")
     get api_v1_driver_app_config_path, headers: as(token)
     expect(json.dig(:data, :gps)).to include(interval_seconds: 5, distance_filter_m: 10, heartbeat_seconds: 300, geofence_radius_m: 30)
-    expect(json[:data]).to include(start_early_minutes: 60, late_warning_minutes: 30, time_format: "24")
+    expect(json[:data]).to include(start_early_minutes: 60, late_warning_minutes: 30, pickup_grace_minutes: 2, time_format: "24")
     expect(json.dig(:data, :reasons, :force_end)).to include("Vehicle breakdown")
   end
 end

@@ -33,6 +33,12 @@ RSpec.describe "Company settings" do
 
     patch api_v1_company_path(company), params: { company: { remove_logo: true } }, as: :json
     expect(json.dig(:data, :logo)).to be_nil
+
+    expect(json[:data]).to include(pickup_grace_minutes: 2)
+    patch api_v1_company_path(company), params: { company: { pickup_grace_minutes: 5 } }, as: :json
+    expect(json[:data]).to include(pickup_grace_minutes: 5)
+    patch api_v1_company_path(company), params: { company: { pickup_grace_minutes: 31 } }, as: :json
+    expect(response).to have_http_status(:unprocessable_content)
   end
 
   it "picks the country once, then locks it" do

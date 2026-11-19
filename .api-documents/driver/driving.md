@@ -78,7 +78,8 @@ Swipe to start (On the Way). `{ client_id, at }`.
 `{ client_id, at, position, reason, auto }`.
 
 - `reason`: one of § 12 (or any short text). `auto: true` = the app skips a point where nobody rides today (everyone Bus
-  Not Required or not boarding, or skipped in Edit Route) — no reason needed ("No one boarding today").
+  Not Required or not boarding, or skipped in Edit Route) — no reason needed ("No one boarding today"; a point skipped in
+  Edit Route keeps "Skipped by the driver before the trip").
 - `422` "… was already reached" after leaving it.
 
 ## 6. Take attendance: `POST /driver/runs/:id/attendance`

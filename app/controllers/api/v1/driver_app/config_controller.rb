@@ -7,11 +7,13 @@ module Api
         # GET /driver/config
         def show
           drive = ::DriverApp::Drive
+          company = current_membership&.company
           render json: { data: {
             gps: ::DriverApp::Gps::PROFILE,
             start_early_minutes: (drive::START_EARLY / 60).to_i, late_warning_minutes: 30,
+            pickup_grace_minutes: company&.pickup_grace_minutes || Company.column_defaults["pickup_grace_minutes"],
             reasons: { skip_stop: drive::SKIP_STOP_REASONS, skip_trip: drive::SKIP_TRIP_REASONS, force_end: drive::FORCE_END_REASONS },
-            date_format: current_membership&.company&.date_format, time_format: current_membership&.company&.time_format
+            date_format: company&.date_format, time_format: company&.time_format
           } }
         end
       end

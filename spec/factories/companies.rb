@@ -20,6 +20,7 @@
 #  ops_hours                 :string
 #  ops_phone                 :string
 #  ops_whatsapp              :string
+#  pickup_grace_minutes      :integer          default(2), not null
 #  route_list_import_enabled :boolean          default(TRUE), not null
 #  school_run_enabled        :boolean          default(TRUE), not null
 #  short_name                :string(12)

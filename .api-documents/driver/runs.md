@@ -39,7 +39,7 @@ cards, [vehicle.md § 2](vehicle.md#2-the-switch-vehicle-card-on-drive)). A card
   "trip_label": "TID260921", "title": "SSS AM 1", "label": "AM 1",
   "kind": "school", "kind_label": "School Bus", "direction": "To School",
   "client": { "name": "St. Stephen's School", "via": null },
-  "status": "scheduled", "status_label": "Scheduled", "seen": false, "started_at": null, "ended_at": null,
+  "status": "scheduled", "status_label": "Scheduled", "seen": false, "started_at": null, "ended_at": null, "driver_end": null,
   "points_count": 4, "first_point": "Blk 123 Tampines St 11", "last_point": "St. Stephen's School",
   "expected_pax": 13, "requires": "attendance", "vehicle": { "id": 7, "plate": "PD997M" }, "replaced_by": null }
 ```
@@ -49,6 +49,11 @@ cards, [vehicle.md § 2](vehicle.md#2-the-switch-vehicle-card-on-drive)). A card
 - `expected_pax`: School Bus = children on the route less Bus Not Required; others = the planned passengers.
 - `requires`: `attendance` (School Bus, School Run: tick names), `count` (shuttles with head count), or null.
 - `status: "replaced"` → `replaced_by: { driver_name, vehicle_plate }` ("Replaced by Siti · PD4472H"); the run is read-only.
+- `driver_end`: how the driver ended the run, null until then (and for a run the office ended):
+  `{ "kind": "forced", "at": "2026-11-03T14:05:00+08:00", "reason": "Accident", "on_board": 4 }`.
+  `kind` `completed` (Complete Trip / End Disposal; `reason` null), `forced` (Force End Trip: "Force ended at 14:05 · Accident ·
+  4 still on board"; "after Point N" = the last point with `record.departed_at`), `skipped` (Skip Trip: "Skipped at HH:MM"
+  + `reason`; `at` is set even when the trip was skipped before the start, while `ended_at` stays null). `on_board` is null on a skip.
 - `422` "Ask for 31 days at most", "to must be on or after from", "Dates are YYYY-MM-DD, months YYYY-MM".
 
 ## 2. Plan: days with runs: `GET /driver/runs/schedule`
@@ -73,7 +78,7 @@ The card fields plus:
   "...": "the card fields",
   "trip_value": "1.5",
   "notes": "Wait at the lobby",
-  "airport": { "direction": "arrival", "flight_number": "SQ 231", "flight_time": "20:40", "terminal": "T3", "wait_minutes": 60,
+  "airport": { "direction": "arrival", "flight_number": "SQ 231", "flight_time": "20:40", "flight_city": "Sydney", "terminal": "T3", "wait_minutes": 60,
                "meet_and_greet": true, "signboard_name": "GOOGLE · MS CHEN",
                "luggage": { "cabin": 2, "medium": 0, "large": 4, "extra_large": 0, "oversized": 0 } },
   "disposal": { "hours": 4.0, "suggested_start_odometer": 45252, "record": null },
@@ -81,15 +86,18 @@ The card fields plus:
   "standby": { "location": "Expo loading bay", "address": "10 Bayfront Ave", "lat": 1.284, "lng": 103.8607, "minutes": 15,
                "report_time": "11:45", "note": "Report to the coordinator", "street_view_url": null, "photos": [] },
   "attachments": [ { "url": "/api/v1/downloads/...", "name": "Route 3 rider list.pdf", "size": 48211, "content_type": "application/pdf" } ],
-  "contacts": [ { "role": "requestor", "name": "Priya", "phone": "+6591110000" }, { "role": "guest", "name": "Mr Chen", "phone": "+6592220000" } ],
+  "contacts": [ { "role": "requestor", "name": "Priya", "phone": "+6591110000", "note": null },
+                { "role": "guest", "name": "Mr Chen", "phone": "+6592220000", "note": null } ],
   "contractor": { "name": "ABC Transport", "requires_app": true },
   "replacement": null,
+  "driver_feedback": { "note": "Clementi pick-up B is blocked by roadworks", "at": "2026-11-03T08:40:00+08:00" },
   "points": [
     { "position": 0, "number": 1, "name": "Jurong East MRT", "address": "10 Jurong East St 12", "lat": 1.333, "lng": 103.742,
       "planned_time": "08:00", "note": "Point B", "pickup": true, "dropoff": false, "waypoint": false, "school": false,
       "photos": [ { "url": "...", "thumb_url": "..." } ], "street_view_url": null, "vias": [ { "lat": 1.32, "lng": 103.75 } ],
       "pickups": 0, "dropoffs": 0,
-      "record": { "arrived_at": "2026-11-03T07:58:00+08:00", "departed_at": "2026-11-03T08:02:00+08:00", "skipped": false, "boarded": 7, "alighted": 0 } }
+      "record": { "arrived_at": "2026-11-03T07:58:00+08:00", "departed_at": "2026-11-03T08:02:00+08:00", "skipped": false,
+                  "skipped_at": null, "skip_reason": null, "boarded": 7, "alighted": 0, "on_board": 7, "left_early": null } }
   ],
   "passengers": [
     { "id": "S-1", "name": "Aaron Lee", "gender": "M", "level": "P3", "address": "Blk 123 Tampines St 11 #08-21",
@@ -103,12 +111,19 @@ The card fields plus:
 ```
 
 - `trip_value`: the driver pay multiplier, shown for **own drivers only**; null for managed drivers, disposals and replaced runs.
+- `airport.flight_city`: the other city of the flight (may be null): arrival → "From Sydney"; departure → "Flight to
+  London · be at the terminal 2.5 hours before".
 - `airport`, `disposal`, `series` (Day `day` of `of` for a booking over several days), `standby`, `contractor`, `replacement`:
   null when they do not apply. `disposal.record` and the actions: [disposal.md](disposal.md).
 - `contractor.requires_app: true` = the main contractor wants this run done in its own driver app ("Continue on
   `name`'s app"); the trip form has no app name yet. The handover flow in the app is not built on the server yet.
-- `contacts` = Point of Contact; the company's Operations line is on [`GET /driver/company`](profile.md#5-transport-company-get-drivercompany).
+- `contacts` = Point of Contact, `{ role, name, phone, note }`: on trips the requestor, the guest (when not the requestor)
+  and the main contractor's contact; on **School Bus** the route's attendant (`note` = the office's note, e.g. "Travels on
+  the bus. Call first if a child is not at the stop") and the school office (the school's contact in Convoy OS). Only the
+  attendant has a `note`. The company's Operations line is on [`GET /driver/company`](profile.md#5-transport-company-get-drivercompany).
 - `replacement` (when this run's driver or bus was replaced): `{ kind, reason, driver_name, vehicle_plate, original_vehicle_plate }`.
+- `driver_feedback`: the Driver's Feedback on an ended trip (Complete Trip, Force End Trip — "Force ended: <reason>" when
+  the driver wrote nothing —, End Disposal), or null.
 
 **Points** (map pins and the stop stepper), in driving order:
 
@@ -120,7 +135,14 @@ The card fields plus:
   (School Bus). Empty when there is none.
 - `planned_time` may be null for middle points of a trip without stop times.
 - `pickups` / `dropoffs`: how many names board / alight here (before the trip: "pick-up 2 children").
-- `record`: what was recorded (null before the bus gets there): arrival, departure, skipped, boarded and alighted counts.
+- `record`: what was recorded (null before the bus gets there): arrival, departure, skipped, boarded and alighted counts, and
+  - `on_board`: passengers on the bus after the point ("Passenger Count");
+  - `skipped_at`: when the point was skipped on the road ("Skipped: 07:41"); null for a point skipped in Edit Route until
+    the bus passes it (§ 5 `auto: true`) or the trip is force ended;
+  - `skip_reason` when skipped: the reason picked, `No one boarding today` (skipped on the way, nobody to board),
+    `Skipped by the driver before the trip` (Edit Route) or `Trip force ended`;
+  - `left_early`: `{ "missing": 2, "until": "07:12" }` when the driver left with children not boarded ("left before 07:12,
+    2 not boarded"); `until` = the point's planned time + the company's `pickup_grace_minutes` (null when the point has no time).
 
 **Passengers** (School Bus and School Run only; `[]` for other runs): every name with their pick-up and drop-off point
 (`position`), `state` (§ 6) and, on School Bus, `qr_code` = the child's boarding pass (match a scanned code with it;
@@ -143,7 +165,7 @@ Send when Trip Details opens → the card with `seen: true`.
 | `direction` | `To School`, `To Home` (School Bus, School Run), `Outbound`, `Return` (shuttle, ad hoc return), `One Way`, `Arrival`, `Departure`, `As Directed` |
 | `requires` | `attendance`, `count`, null |
 | `passenger.state` | `expected`, `bus_not_required` (from the parent), `not_boarding` (marked before the trip), `boarded`, `not_boarded` (ticked as not there), `alighted` |
-| `contact.role` | `requestor`, `guest`, `main_contractor` |
+| `contact.role` | `requestor` Requester, `guest` Guest, `main_contractor` Main Contractor, `attendant` School Attendant, `school_office` School Office |
 | `airport.direction` | `arrival`, `departure` |
 
 Sample drivers to try each kind of trip: [README.md § Sample accounts](README.md#sample-accounts-staging-and-local-seed).

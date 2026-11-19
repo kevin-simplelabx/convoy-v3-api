@@ -11,7 +11,7 @@ class TripBlueprint < ApplicationBlueprint
     fields :client_site_id, :calendar_id, :hours, :occurrence_count, :skip_public_holidays, :trip_no_from, :trip_no_count,
            :luggage_on, :luggage_cabin, :luggage_medium, :luggage_large, :luggage_extra_large, :luggage_oversized,
            :requestor_name, :requestor_email, :requestor_phone, :guest_is_requestor, :guest_name, :guest_phone, :notes,
-           :business_unit, :project, :booking_ref, :airport_direction, :flight_number, :terminal, :wait_minutes,
+           :business_unit, :project, :booking_ref, :airport_direction, :flight_number, :flight_city, :terminal, :wait_minutes,
            :meet_and_greet, :signboard_name, :meet_and_greet_fee, :price_per, :price_set, :price_basis, :hourly_rate,
            :trip_value, :trip_value_mode, :trip_value_rounding, :operator_cost, :operator_cancel_rule, :subcontracted,
            :client_end_customer_id, :service_for, :contractor_contact_name, :contractor_contact_phone,

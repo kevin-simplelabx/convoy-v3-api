@@ -4,6 +4,17 @@ Changes to existing Convoy OS endpoints made while building other apps (Convoy D
 on (renamed, removed or changed fields and endpoints). New optional fields are not listed here; they are in the menu
 documents. Newest first. Each item: what changed, before → after, and what the front-end has to do.
 
+## 19/11/2026 — Convoy Driver parity: two new inputs (new optional fields, no breaking change)
+
+Listed because the Driver app needs the office to fill them; nothing else in OS changes.
+
+| # | Endpoint / field | Before → after | Front-end |
+| --- | --- | --- | --- |
+| 1 | `GET` / `PATCH /companies/:id` → `pickup_grace_minutes` | new, integer 0–30, default 2 | Company Settings: one number input "Pick-up wait (minutes after the planned time)" beside the Operations contacts. The Driver app waits this long at a School Bus pick-up for the children expected there. `422` above 30 |
+| 2 | `POST` / `PATCH /trips` → `trip.flight_city`; `GET /trips/:id` → `flight_city` | new, text up to 80, optional | Trip form › Airport block: one text input "From" (arrival) / "To" (departure) beside the flight number. Shown in the Driver app as "From Sydney" / "Flight to London" |
+
+Details: [settings.md § 3.1](settings.md#31-open-and-save), [scheduler.md](scheduler.md) (Airport Transfer fields).
+
 ## 17/11/2026 — Documentation only: row buttons, Discover actions and HR assignments written up (no API change)
 
 These endpoints already existed; their calls, results and errors are now in the menu documents. Nothing to change in the front-end unless it was built from guesses.

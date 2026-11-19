@@ -20,6 +20,7 @@
 #  ops_hours                 :string
 #  ops_phone                 :string
 #  ops_whatsapp              :string
+#  pickup_grace_minutes      :integer          default(2), not null
 #  route_list_import_enabled :boolean          default(TRUE), not null
 #  school_run_enabled        :boolean          default(TRUE), not null
 #  short_name                :string(12)
@@ -76,6 +77,7 @@ class Company < ApplicationRecord
   validates :country, inclusion: { in: ->(_) { Country.live_codes }, message: "is not open yet" }, if: :will_save_change_to_country?
   validates :date_format, inclusion: { in: DATE_FORMATS }
   validates :time_format, inclusion: { in: TIME_FORMATS }
+  validates :pickup_grace_minutes, numericality: { only_integer: true, in: 0..30 }
   validates :timezone, inclusion: { in: ActiveSupport::TimeZone::MAPPING.values.uniq | TZInfo::Timezone.all_identifiers }
   validates :theme_color, format: { with: /\A#\h{6}\z/ }, allow_blank: true
   validates :external_vehicle_cap, numericality: { only_integer: true, greater_than_or_equal_to: 0 }

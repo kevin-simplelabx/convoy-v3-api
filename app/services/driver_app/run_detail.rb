@@ -14,7 +14,7 @@ module DriverApp
       passengers = Occurrences::Passengers.call(@occ, points:)
       RunList.new(member: @member, runs: [ @occ ]).card(@occ).merge(
         trip_value: Runs.trip_value(@occ, @member), notes: @trip&.notes, airport:, disposal:, series:, standby:, attachments:,
-        contacts:, contractor:, replacement:, points: with_record(points, passengers), passengers:,
+        contacts:, contractor:, replacement:, driver_feedback:, points: with_record(points, passengers), passengers:,
         before_you_go: { not_riding: not_riding(passengers, points), skipped_points: skipped_points(points) },
         expected_pax: passengers.any? ? passengers.count { !it[:state].in?(%w[bus_not_required not_boarding]) } : @occ.pax
       )
@@ -30,9 +30,24 @@ module DriverApp
                 :street_view_url, :vias).merge(
           number: i + 1, lat: p[:lat]&.to_f, lng: p[:lng]&.to_f,
           pickups: passengers.count { it[:pickup_position] == p[:position] }, dropoffs: passengers.count { it[:dropoff_position] == p[:position] },
-          record: e && { arrived_at: e.arrived_at, departed_at: e.departed_at, skipped: e.skipped, boarded: e.boarded, alighted: e.alighted }
+          record: e && record(e, p)
         )
       end
+    end
+
+    # What was recorded at a point; on_board = passengers on the bus after it, left_early = left with children not boarded
+    # before the wait was over (until = planned time + the company's pick-up grace).
+    def record(e, point)
+      left_early = e.left_early_missing &&
+                   { missing: e.left_early_missing, until: point[:planned_minute] && Clock.hm(point[:planned_minute] + @occ.company.pickup_grace_minutes) }
+      { arrived_at: e.arrived_at, departed_at: e.departed_at, skipped: e.skipped, skipped_at: e.skipped_at, skip_reason: e.skip_reason,
+        boarded: e.boarded, alighted: e.alighted, on_board: e.on_board, left_early: }
+    end
+
+    # The note the driver left when ending the trip (Complete, Force End, End Disposal).
+    def driver_feedback
+      r = @occ.driver_report or return nil
+      { note: r.note, at: r.submitted_at }
     end
 
     # Points skipped today in Edit Route.
@@ -54,8 +69,8 @@ module DriverApp
     def airport
       return unless @trip&.airport_transfer?
 
-      { direction: @trip.airport_direction, flight_number: @trip.flight_number, flight_time: @trip.flight_time_hm, terminal: @trip.terminal,
-        wait_minutes: @trip.wait_minutes, meet_and_greet: @trip.meet_and_greet, signboard_name: @trip.signboard_name,
+      { direction: @trip.airport_direction, flight_number: @trip.flight_number, flight_time: @trip.flight_time_hm, flight_city: @trip.flight_city,
+        terminal: @trip.terminal, wait_minutes: @trip.wait_minutes, meet_and_greet: @trip.meet_and_greet, signboard_name: @trip.signboard_name,
         luggage: @trip.luggage_on ? %i[cabin medium large extra_large oversized].to_h { [ it, @trip.public_send(:"luggage_#{it}") ] } : nil }
     end
 
@@ -93,14 +108,24 @@ module DriverApp
 
     def attachments = (@trip&.attachments || []).map { it.decorate.file_info(:file) }
 
-    # Point of Contact: requestor, guest, the main contractor's contact; Operations is on GET /driver/company.
+    # Point of Contact: requestor, guest, the main contractor's contact; on School Bus the route's attendant and the
+    # school's office (the school's client contact). Operations is on GET /driver/company.
     def contacts
+      return school_contacts(@occ.school_route) if @occ.school_route
       return [] unless @trip
 
       [ ([ "requestor", @trip.requestor_name, @trip.requestor_phone ] if @trip.requestor_name.present?),
         ([ "guest", @trip.guest_name, @trip.guest_phone ] if @trip.guest_name.present? && !@trip.guest_is_requestor),
         ([ "main_contractor", @trip.contractor_contact_name, @trip.contractor_contact_phone ] if @trip.contractor_contact_name.present?) ]
-        .compact.map { |role, name, phone| { role:, name:, phone: } }
+        .compact.map { |role, name, phone| { role:, name:, phone:, note: nil } }
+    end
+
+    def school_contacts(route)
+      attendant = route.attendant unless route.attendant&.discarded?
+      school = route.plan.school
+      office = school.client if school.client&.phone.present?
+      [ (attendant && { role: "attendant", name: attendant.name, phone: attendant.phone, note: attendant.notes.presence }),
+        (office && { role: "school_office", name: office.contact_name.presence || school.name, phone: office.phone, note: nil }) ].compact
     end
 
     # A sub-contracted trip the main contractor wants run in its own driver app (trip form: Requires contractor app).

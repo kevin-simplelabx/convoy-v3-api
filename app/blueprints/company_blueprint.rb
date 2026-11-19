@@ -12,6 +12,8 @@ class CompanyBlueprint < ApplicationBlueprint
     fields :country_set_at
     # Operations contacts drivers see in the Convoy Driver app (Contact Operations).
     fields :ops_phone, :ops_hours, :ops_whatsapp, :ops_email, :depot_address
+    # Minutes after a pick-up point's planned time the Driver app waits for the children expected there.
+    field :pickup_grace_minutes
 
     field(:country_locked) { |company| company.country_locked? }
     field(:country_set_by) { |company| company.country_set_by && { id: company.country_set_by.id, name: company.country_set_by.shown_name } }

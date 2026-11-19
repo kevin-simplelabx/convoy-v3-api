@@ -72,7 +72,7 @@ module DriverApp
       raise Error, "#{point[:name]} is a waypoint: drive through it" if point[:waypoint]
 
       event = event_for(point)
-      event.update!(arrived_at: event.arrived_at || @at, skipped: false, skip_reason: nil, skipped_by: nil, source: "driver_app")
+      event.update!(arrived_at: event.arrived_at || @at, skipped: false, skip_reason: nil, skipped_by: nil, skipped_at: nil, source: "driver_app")
     end
 
     def leave
@@ -103,8 +103,10 @@ module DriverApp
       event = event_for(point)
       raise Error, "#{point[:name]} was already reached" if event.departed_at
 
-      event.update!(skipped: true, skip_reason: reason, skipped_by: @params[:auto] ? "auto" : "driver", on_board: on_board_after(point, 0, 0),
-                    source: "driver_app")
+      by = @params[:auto] ? "auto" : "driver"
+      # The app skips a point it passes with nobody to board (auto): one skipped in Edit Route keeps that reason.
+      reason, by = event.skip_reason, event.skipped_by if @params[:auto] && event.planned_skip
+      event.update!(skipped: true, skip_reason: reason, skipped_by: by, skipped_at: @at, on_board: on_board_after(point, 0, 0), source: "driver_app")
     end
 
     def attendance
@@ -134,7 +136,7 @@ module DriverApp
       raise Error, "Unknown point #{bad.first}" if bad.any?
 
       @occ.stop_events.select(&:planned_skip).each do |e|
-        e.update!(planned_skip: false, skipped: false, skip_reason: nil, skipped_by: nil) unless skip.include?(e.position) || e.departed_at
+        e.update!(planned_skip: false, skipped: false, skip_reason: nil, skipped_by: nil, skipped_at: nil) unless skip.include?(e.position) || e.departed_at
       end
       points.select { skip.include?(it[:position]) }.each do |p|
         e = event_for(p)
@@ -159,7 +161,7 @@ module DriverApp
       if on_names.any?
         Occurrences::MarkPassengers.call(occ: @occ, marks: on_names.map { { key: it.passenger_key, state: "alighted", at: @at } }, by: driver_name, source: "driver_app")
       end
-      event.update!(arrived_at: event.arrived_at || @at, departed_at: event.departed_at || @at, skipped: false,
+      event.update!(arrived_at: event.arrived_at || @at, departed_at: event.departed_at || @at, skipped: false, skipped_at: nil,
                     alighted: event.alighted || on_board, on_board: 0, source: "driver_app")
       feedback(@params[:feedback])
       Occurrences::DriverProgress.call(@occ, :end, at: @at)
@@ -178,7 +180,7 @@ module DriverApp
         next if e.departed_at || e.skipped
 
         if e.arrived_at then e.update!(departed_at: @at, on_board:, source: "driver_app")
-        else e.update!(skipped: true, skip_reason: "Trip force ended", skipped_by: "driver", on_board:, source: "driver_app")
+        else e.update!(skipped: true, skip_reason: "Trip force ended", skipped_by: "driver", skipped_at: @at, on_board:, source: "driver_app")
         end
       end
       feedback(@params[:feedback] || "Force ended: #{reason}")

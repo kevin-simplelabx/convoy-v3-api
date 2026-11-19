@@ -6,7 +6,7 @@ class CompanyPolicy < ApplicationPolicy
   PLATFORM_FIELDS = %i[code country status school_run_enabled route_list_import_enabled external_vehicle_cap accepts_personal_bookings].freeze
   SETTINGS_FIELDS = %i[name short_name theme_color logo remove_logo timezone date_format time_format
                        observed_holidays business_units_enabled
-                       ops_phone ops_hours ops_whatsapp ops_email depot_address].freeze
+                       ops_phone ops_hours ops_whatsapp ops_email depot_address pickup_grace_minutes].freeze
   # The full name is set when Convoy opens the account.
   COMPANY_FIELDS = (SETTINGS_FIELDS - %i[name]).freeze
 

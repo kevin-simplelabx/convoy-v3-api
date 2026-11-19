@@ -65,7 +65,7 @@ RSpec.describe "Driver app runs" do
     d = json[:data]
     expect(d).to include(trip_value: "1.5", notes: "Wait at the lobby", airport: nil, disposal: nil, series: nil, contractor: nil, replacement: nil,
                          passengers: [], before_you_go: { not_riding: [], skipped_points: [] })
-    expect(d[:contacts]).to eq([ { role: "requestor", name: "Priya", phone: "+6591110000" }, { role: "guest", name: "Mr Chen", phone: "+6592220000" } ])
+    expect(d[:contacts]).to eq([ { role: "requestor", name: "Priya", phone: "+6591110000", note: nil }, { role: "guest", name: "Mr Chen", phone: "+6592220000", note: nil } ])
     expect(d[:points].map { [ it[:number], it[:name], it[:planned_time], it[:pickup], it[:dropoff], it[:waypoint] ] }).to eq([
       [ 1, "Jurong East MRT", "08:00", true, false, false ], [ 2, "Clementi Ave 6", nil, false, false, true ],
       [ 3, "Mapletree Business City", nil, false, true, false ]
@@ -77,6 +77,14 @@ RSpec.describe "Driver app runs" do
 
     get api_v1_driver_app_run_path(0), headers: as(kumar)
     expect(response).to have_http_status(:not_found)
+  end
+
+  it "shows the airport block with the flight's city typed in the trip form" do
+    trip = create_trip(kind: "airport_transfer", airport_direction: "arrival", flight_number: "QF 1", flight_time: "07:30", flight_city: "Sydney",
+                       terminal: "T1", wait_minutes: 45, meet_and_greet: true, signboard_name: "MS CHEN")
+    expect(json.dig(:data, :flight_city)).to eq("Sydney")
+    get api_v1_driver_app_run_path(run_on(trip, Date.new(2026, 11, 3)).id), headers: as(driver_token("91234567"))
+    expect(json.dig(:data, :airport)).to include(direction: "arrival", flight_number: "QF 1", flight_time: "07:30", flight_city: "Sydney", terminal: "T1")
   end
 
   it "keeps a run New until opened, and New again when its time changes" do
@@ -114,7 +122,9 @@ RSpec.describe "Driver app runs" do
   describe "a School Bus run" do
     let!(:school_bus) do
       within_tenant(company) do
-        school = School.create!(name: "St. Stephen's School", short_name: "SSS", lat: 1.3138, lng: 103.9283, address: "20 Siglap View", postal: "455789")
+        office = create(:client, name: "St. Stephen's School", contact_name: "Mrs Lee (Admin Office)", phone: "+6562411243")
+        school = School.create!(name: "St. Stephen's School", short_name: "SSS", lat: 1.3138, lng: 103.9283, address: "20 Siglap View", postal: "455789",
+                                client: office)
         year = AcademicYears::Create.call(school:, start_year: 2026, start_month: 1)
         year.terms.second.update!(starts_on: "2026-06-29", ends_on: "2026-11-19")
         %w[S-1 S-2 S-3].each_with_index do |rid, i|
@@ -122,7 +132,8 @@ RSpec.describe "Driver app runs" do
                                 parent_name: "Parent #{i + 1}", parent_contact: "+659000000#{i}")
         end
         am = school.plans.create!(name: "Term 4 AM", session: "am", effective_from: Date.new(2026, 10, 1), in_use: true)
-        route = am.routes.create!(number: 1, label: "AM 1", start_time: "06:30", end_time: "07:20", bus_type: "LARGE_40", seats: 40)
+        attendant = Attendant.create!(name: "Mdm Rosnah", phone: "+6591112233", notes: "Travels on the bus")
+        route = am.routes.create!(number: 1, label: "AM 1", start_time: "06:30", end_time: "07:20", bus_type: "LARGE_40", seats: 40, attendant:)
         library = Stop.new(code: "BDSZ03-0001", subzone_code: "BDSZ03", name: "Blk 101 Bedok North")
         library.all_points.build(suffix: "A", usage: "both", sizes: %w[S M L], primary: true, lat: 1.3305, lng: 103.9373,
                                  street_view_url: "https://maps.google.com/?cbll=1.3305,103.9373", photo: Rack::Test::UploadedFile.new(Rails.root.join("spec/fixtures/files/photo.png"), "image/png"))
@@ -160,6 +171,8 @@ RSpec.describe "Driver app runs" do
       expect(DriverApp::RiderPass.rid(company.id + 1, d.dig(:passengers, 0, :qr_code))).to be_nil
       expect(d[:before_you_go][:not_riding]).to eq([ { id: "S-2", name: "Child 2", point: "Blk 101 Bedok North", state: "bus_not_required", reason: "Unwell. Fever" } ])
       expect(d[:expected_pax]).to eq(2)
+      expect(d[:contacts]).to eq([ { role: "attendant", name: "Mdm Rosnah", phone: "+6591112233", note: "Travels on the bus" },
+                                   { role: "school_office", name: "Mrs Lee (Admin Office)", phone: "+6562411243", note: nil } ])
     end
   end
 end

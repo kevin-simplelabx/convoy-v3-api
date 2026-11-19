@@ -6,7 +6,8 @@ module Api
         before_action :require_membership!
 
         # POST /driver/vehicle/handovers (multipart) { client_id, vehicle_id, at, declaration, note,
-        #   photos[front|left|right|back|odometer|inside], marked[side], marks[side] }
+        #   photos[front|left|right|back|odometer|inside], marked[side], marks[side],
+        #   highlights[i][photo], highlights[i][marked], highlights[i][marks] }
         def create
           handover, replayed = ::DriverApp::Handover.call(account: current_account, member: current_membership,
                                                          params: params.except(:controller, :action, :format).permit!)

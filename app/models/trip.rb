@@ -17,6 +17,7 @@
 #  end_mode                 :string           default("none"), not null
 #  end_time                 :integer          not null
 #  ends_on                  :date
+#  flight_city              :string
 #  flight_number            :string
 #  flight_time              :integer
 #  guest_is_requestor       :boolean          default(TRUE), not null
@@ -214,6 +215,7 @@ class Trip < ApplicationRecord
   validates :vehicles_count, numericality: { only_integer: true, in: 1..MAX_VEHICLES }
   validates :pax, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :price, :meet_and_greet_fee, numericality: { greater_than_or_equal_to: 0 }
+  validates :flight_city, length: { maximum: 80 }
   validates :trip_value, numericality: { greater_than_or_equal_to: 0 }
   validates :wait_minutes, numericality: { greater_than: 0, message: "must be entered for an arrival" }, if: -> { airport_transfer? && arrival? }
   validates :airport_direction, presence: true, if: :airport_transfer?

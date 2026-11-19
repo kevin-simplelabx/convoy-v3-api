@@ -51,14 +51,27 @@ RSpec.describe "Driver app vehicle switch" do
     post api_v1_driver_app_vehicle_handovers_path, params: { client_id: id, vehicle_id: f[:other].id, photos:, declaration: true }, headers: as(token)
     expect(json.dig(:error, :code)).to eq("not_your_bus")
 
+    post api_v1_driver_app_vehicle_handovers_path, params: { client_id: id, vehicle_id: f[:new_bus].id, photos:, declaration: true,
+                                                             highlights: { "0" => { marks: "[]" } } }, headers: as(token)
+    expect(json.dig(:error, :details)).to eq(highlights: [ "photo is missing" ])
+    eleven = 11.times.to_h { [ it.to_s, { photo: fixture_file_upload("photo.png", "image/png") } ] }
+    post api_v1_driver_app_vehicle_handovers_path, params: { client_id: id, vehicle_id: f[:new_bus].id, photos:, declaration: true, highlights: eleven },
+                                                   headers: as(token)
+    expect(json.dig(:error, :message)).to eq("Add 10 highlight photos at most")
+
     params = { client_id: id, vehicle_id: f[:new_bus].id, photos:, declaration: true, note: "Scratch on the rear bumper",
-               marked: { back: fixture_file_upload("photo.png", "image/png") }, marks: { back: [ { kind: "circle", x: 120, y: 200, r: 30 } ].to_json } }
+               marked: { back: fixture_file_upload("photo.png", "image/png") }, marks: { back: [ { kind: "circle", x: 120, y: 200, r: 30 } ].to_json },
+               highlights: { "0" => { photo: fixture_file_upload("photo.png", "image/png"), marked: fixture_file_upload("photo.png", "image/png"),
+                                      marks: [ { kind: "path", d: "M10 10 L50 50", color: "#E53935" } ].to_json },
+                             "1" => { photo: fixture_file_upload("photo.png", "image/png") } } }
     post api_v1_driver_app_vehicle_handovers_path, params:, headers: as(token)
     expect(response).to have_http_status(:created), json.inspect
     expect(json[:data]).to include(vehicle: { id: f[:new_bus].id, plate: "PC1234X" }, note: "Scratch on the rear bumper")
     expect(json.dig(:data, :photos).pluck(:side, :label)).to eq(VehicleHandover::SIDES.zip(VehicleHandover::SIDE_LABELS.values))
     back = json.dig(:data, :photos).find { it[:side] == "back" }
     expect(back).to include(marked_photo: hash_including(:url), marks: [ { kind: "circle", x: 120, y: 200, r: 30 } ])
+    expect(json.dig(:data, :highlights).map { [ it[:photo].present?, it[:marked_photo].present?, it[:marks] ] })
+      .to eq([ [ true, true, [ { kind: "path", d: "M10 10 L50 50", color: "#E53935" } ] ], [ true, false, [] ] ])
     post api_v1_driver_app_vehicle_handovers_path, params:, headers: as(token)
     expect(json[:meta]).to eq(replayed: true)
     expect(within_tenant(company) { VehicleHandover.count }).to eq(1)

@@ -22,7 +22,8 @@ module Occurrences
       raise ApplicationService::Error, "This run is not cancelled" unless @occ.cancelled?
 
       status = @occ.ends_at <= Time.current ? "completed" : "scheduled"
-      save!(status:, cancelled_at: nil, cancelled_by: nil, cancelled_by_client: false, overridden_fields: drop(:status))
+      skipped = @occ.driver_end == "skipped" ? { driver_end: nil, driver_end_reason: nil } : {}
+      save!(status:, cancelled_at: nil, cancelled_by: nil, cancelled_by_client: false, overridden_fields: drop(:status), **skipped)
         .tap { DriverApp::RunNotifications.cancelled(it, restored: true) }
     end
 
