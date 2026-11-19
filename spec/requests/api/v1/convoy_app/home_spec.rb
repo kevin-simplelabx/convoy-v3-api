@@ -124,6 +124,28 @@ RSpec.describe "Convoy App home, alerts and live tracking" do
     end
   end
 
+  describe "WebSocket screens (ConvoyApp::Watch)" do
+    def watch(screen, account: rachel[0], **params) = ConvoyApp::Watch.call(account:, screen:, params:)
+
+    it "watches the morning run of Live Tracking, with its position only in the 10-minute window, and Home's cards" do
+      travel_to Time.zone.local(2026, 11, 3, 6, 40)
+      expect(watch("school_live")).to eq(runs: [ occ.id ], positions: [])
+      api(live_api_v1_convoy_app_school_path)
+      expect(json.dig(:data, :bus, :occurrence_id)).to eq(occ.id)
+
+      drive!
+      travel_to Time.zone.local(2026, 11, 3, 7, 11)
+      expect(watch("school_live", bus: "#{f[:route].id}-2026-11-03")).to eq(runs: [ occ.id ], positions: [ occ.id ])
+      expect(watch("home")).to eq(runs: [ occ.id ], positions: [])
+    end
+
+    it "gives nothing to watch to a person outside the Family, and refuses an unknown screen" do
+      other = app_user(mobile: "9166 7720", name: %w[Priya Nair])
+      expect(watch("school_live", account: other[0])).to be_nil
+      expect(watch("live_map")).to be_nil
+    end
+  end
+
   describe "alert writers" do
     it "tells every adult of the Family when the child boards and alights, never about another child" do
       within_tenant(company) do

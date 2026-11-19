@@ -28,6 +28,9 @@ class AppJwt < ApplicationRecord
   belongs_to :app_account
   has_many :devices, class_name: "AppDevice", dependent: :delete_all
 
+  # Signed out (or the account deleted): its WebSocket closes.
+  after_destroy_commit { Realtime.disconnect(self) }
+
   scope :expired, -> { where(exp: ...Time.current) }
 
   def touch_used!

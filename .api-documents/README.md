@@ -10,6 +10,8 @@ folder with one document per menu, listing the screen actions and the API call b
 | Client Portal (people at Managed Clients, web) | [`client-portal/`](client-portal/) — start with [client-portal/README.md](client-portal/README.md); answers and changes for the front-end: [client-portal/fe-updates.md](client-portal/fe-updates.md) |
 | Convoy App (parents, shuttle staff, people who book buses; phone) | [`convoy-app/`](convoy-app/) — start with [convoy-app/README.md](convoy-app/README.md) (Phase 1: account, sign-in, Mobile and Emails) |
 
+Live updates for the Driver app and the Convoy App come over a WebSocket (no polling): [websocket.md](websocket.md).
+
 ## Convoy OS
 
 | Menu | Document |

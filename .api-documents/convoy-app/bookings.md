@@ -319,7 +319,9 @@ new dates are `null`).
 ```
 
 - Header "`number` · `company.name`", badge `badge`; caption / times from `depart`, `arrive`, `return_text`. Map: `route`,
-  numbered markers from `buses[].position` (only while on the road), Fit buses / Fit route are FE. Poll every ~15 s.
+  numbered markers from `buses[].position` (only while on the road), Fit buses / Fit route are FE. Live: `TrackChannel`
+  `screen: "booking_track"`, `booking_id` ([../websocket.md § 4](../websocket.md#4-convoy-app-screens-trackchannel)): `position`
+  moves the marker of `buses[].occurrence_id`, `run_changed` → fetch again, `gone` → the last bus is done. No polling.
 - Bus row: number, avatar, name, plate, `desc`, `state_text` (`here` green, `on_the_way` orange), **Call driver** with
   `driver.phone` (on the day only). `way: "back"` = a bus of the return. Foot: "Driver numbers show on the day of the trip only.
   For changes, call the provider." + call `company.ops_phone`.

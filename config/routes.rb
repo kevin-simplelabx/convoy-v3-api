@@ -63,6 +63,7 @@ Rails.application.routes.draw do
 
       # Convoy Driver app (drivers' phones)
       namespace :driver_app, path: "driver" do
+        resource :cable_ticket, only: :create
         resource :session, only: %i[show create update destroy] do
           post :code
           post :email
@@ -122,6 +123,7 @@ Rails.application.routes.draw do
 
       # Convoy App (parents, shuttle staff, people who book buses)
       namespace :convoy_app, path: "app" do
+        resource :cable_ticket, only: :create
         resource :session, only: %i[show create destroy] do
           post :code
         end

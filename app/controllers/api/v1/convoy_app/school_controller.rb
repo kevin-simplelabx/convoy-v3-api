@@ -13,7 +13,7 @@ module Api
           render json: { data: ::ConvoyApp::Parents::BusInfo.call(member: current_member, dependant_id: params[:dependant_id], session: params[:session]) }
         end
 
-        # GET /app/school/live?bus=<key> → { state: none | far | near | ended, poll_seconds, buses: [chip], bus }
+        # GET /app/school/live?bus=<key> → { state: none | far | near | ended, buses: [chip], bus } (live: TrackChannel school_live)
         #   The morning bus of the Family's children; position and path only in state near (10 min before the child's stop).
         def live
           render json: { data: ::ConvoyApp::Parents::Live.call(member: current_member, bus: params[:bus]) }

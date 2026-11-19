@@ -5,8 +5,9 @@
 #   bus_not_required  the parent said so (Convoy App); School Bus only
 #   not_boarding      marked before the trip (Edit Route)
 #   boarded, not_boarded (ticked as not there), alighted
-# School Bus: the route's riders and their Bus Not Required; each has a QR boarding pass code. School Run: the route list
-# the company uploaded. Other runs carry no names (counts only): [].
+# School Bus: the route's riders and their Bus Not Required; each has a QR boarding pass code and, when the rider is linked
+# to a Convoy App child (dependant), that child's photo. School Run: the route list the company uploaded (no photo). Other
+# runs carry no names (counts only): [].
 module Occurrences
   class Passengers < ApplicationService
     def initialize(occ, points:)
@@ -51,7 +52,7 @@ module Occurrences
       am = plan.session == "am"
       school_point = @points.find { it[:school] }[:position]
       rids = route.stops.flat_map { |s| s.riders.map(&:rid) }
-      info = SchoolRider.of_school_on(plan.school, @occ.date).where(rid: rids).index_by(&:rid)
+      info = SchoolRider.of_school_on(plan.school, @occ.date).where(rid: rids).includes(:dependant).index_by(&:rid)
       absences = plan.school.rider_absences.where(date: @occ.date, rid: rids).index_by(&:rid)
       route.stops.each_with_index.flat_map do |stop, i|
         stop.riders.sort_by(&:rid).map do |r|
@@ -61,7 +62,7 @@ module Occurrences
           # what was marked on the run wins (a child who came after all), then the parent's Bus Not Required
           { id: r.rid, name: rider&.name || r.rid, gender: rider&.gender, level: rider&.grade, address: rider&.address,
             parent_name: rider&.parent_name, parent_phone: rider&.parent_contact, parent_phone2: nil, note: rider&.remarks,
-            pickup_position: am ? i : school_point, dropoff_position: am ? school_point : i,
+            photo: rider&.dependant&.decorate&.photo_info, pickup_position: am ? i : school_point, dropoff_position: am ? school_point : i,
             state: mark&.state || (absence ? "bus_not_required" : "expected"), reason: absence&.reason_text,
             qr_code: DriverApp::RiderPass.code(@occ.company_id, r.rid), **recorded(mark) }
         end
@@ -77,7 +78,7 @@ module Occurrences
         point = by_name[stop[:name]] || school
         stop[:students].map do |st|
           { id: st[:key], name: st[:name], gender: nil, level: st[:class_name], address: nil, parent_name: st[:parent_name],
-            parent_phone: st[:phone], parent_phone2: st[:phone2], note: st[:note],
+            parent_phone: st[:phone], parent_phone2: st[:phone2], note: st[:note], photo: nil,
             pickup_position: (pm ? school : point)[:position], dropoff_position: (pm ? point : school)[:position],
             state: st[:status], reason: nil, qr_code: nil, **recorded(@marks[st[:key]]) }
         end

@@ -17,7 +17,8 @@ default: &default
   encoding: unicode
   # For details on connection pooling, see Rails configuration guide
   # https://guides.rubyonrails.org/configuring.html#database-pooling
-  max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  # Puma threads + Action Cable worker threads (config.action_cable.worker_pool_size)
+  max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 }.to_i + ENV.fetch("CABLE_WORKER_POOL_SIZE") { 4 }.to_i %>
 
 
 development:
@@ -78,8 +79,3 @@ production:
     <<: *primary_production
     database: convoy_v3_production_queue
     migrations_paths: db/queue_migrate
-  cable:
-    <<: *primary_production
-    database: convoy_v3_production_cable
-    migrations_paths: db/cable_migrate
-    schema_format: ruby

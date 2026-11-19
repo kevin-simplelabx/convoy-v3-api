@@ -32,7 +32,7 @@ production:
     class: SchoolBillsDailyJob
     schedule: every day at 1:00am
   clear_expired_sign_ins:
-    command: "AllowlistedJwt.expired.delete_all; PortalJwt.expired.delete_all; PortalSignInCode.where(created_at: ...1.day.ago).delete_all; AppJwt.expired.delete_all; AppSignInCode.where(created_at: ...1.day.ago).delete_all"
+    command: "AllowlistedJwt.expired.delete_all; PortalJwt.expired.delete_all; PortalSignInCode.where(created_at: ...1.day.ago).delete_all; AppJwt.expired.delete_all; AppSignInCode.where(created_at: ...1.day.ago).delete_all; CableTicket.expired.delete_all"
     schedule: every day at 3:00am
   shuttle_alerts:
     class: ShuttleAlertsJob

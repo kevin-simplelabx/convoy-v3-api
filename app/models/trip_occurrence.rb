@@ -104,6 +104,11 @@ class TripOccurrence < ApplicationRecord
 
   # Fields a person changed on this one run; Sync leaves them alone.
   OVERRIDABLE = %w[vehicle_id operator_cost shift_minutes status].freeze
+  # Writes the WebSocket does not announce (the Driver app opening the run).
+  QUIET = %w[driver_seen_at updated_at lock_version].freeze
+
+  # Watchers of the run and its drivers, before and after, hear about a change (Realtime; Sync's bulk writes report their own).
+  after_commit :announce_change
 
   belongs_to :trip, optional: true
   belongs_to :school_route, optional: true
@@ -181,5 +186,16 @@ class TripOccurrence < ApplicationRecord
     return "unassigned" if vehicle_id.nil?
 
     starts_at <= now ? "live" : "assigned"
+  end
+
+  private
+
+  def announce_change
+    changed = saved_changes.keys - QUIET
+    return if changed.empty? && !destroyed?
+
+    before = { id:, date:, driver_id: saved_changes.dig("driver_id", 0) || driver_id,
+               operator_driver_id: saved_changes.dig("operator_driver_id", 0) || operator_driver_id }
+    Realtime.runs_changed([ self, before ])
   end
 end

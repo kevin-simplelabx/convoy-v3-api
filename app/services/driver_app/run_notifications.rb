@@ -44,7 +44,10 @@ module DriverApp
       runs = TripOccurrence.where(id: @changes.reject { it[:gone] }.map { it[:id] }).includes(:trip, :vehicle, school_route: { plan: :school }).index_by(&:id)
       titles = removed_titles
       rows = @changes.flat_map { |c| lines(c.merge(title: c[:gone] ? titles[c[:source].values_at("trip_id", "school_route_id")] || c[:source]["trip_label"] : nil), runs[c[:id]]) }
-      DriverNotification.insert_all!(rows) if rows.any?
+      return if rows.empty?
+
+      DriverNotification.insert_all!(rows)
+      Realtime.notifications_changed(rows)
     end
 
     # The office cancelled a run, or brought it back.

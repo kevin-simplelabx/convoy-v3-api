@@ -26,6 +26,8 @@ explains it (or "FE only" / "Not built").
 | Shuttles (staff): employer route list, tags, pins, My Usual Shuttle, route page (14-day strip, timings, buses, changes, stops, bell), View Schedule, Alert Settings, Pause Alerts, the change alerts | [shuttles.md](shuttles.md) |
 | Bookings: accounts (Personal, school / company), list, booking detail, New Booking (estimate, approval preview, Pay Myself), Pick a Point, Accept Changes / Can't Accept, Cancel (charge first), Book Again, Track Buses | [bookings.md](bookings.md) |
 | Home (greeting, invitations, notice banners + dismiss, Up Next, tiles + badges, Get Started), Activity, the Alerts inbox (filter, read, Mark All Read, every alert kind and when it is written), Live Tracking (10-minute rule, privacy) | [home.md](home.md) |
+| Changes the app must make (newest first) | [fe-updates.md](fe-updates.md) |
+| Live updates: the WebSocket (ticket, AppChannel for alerts, TrackChannel for Home / Live Tracking / shuttle route / Track Buses, reconnecting); no polling | [../websocket.md](../websocket.md) |
 
 Apidog: import [`../convoy-v3-api.openapi.json`](../convoy-v3-api.openapi.json); the Convoy App's calls are in the folder
 **Convoy App** (security scheme `appAuth`).

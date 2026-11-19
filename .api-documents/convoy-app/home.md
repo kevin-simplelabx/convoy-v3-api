@@ -25,7 +25,8 @@ H:1370–1577). Paths start with `/api/v1/app`. Every call needs the app token (
   "up_next": [ { "kind": "school_bus", "icon": "school", "label": "School Bus · SimpleDrive · SSS AM 1", "badge": "Scheduled", "tone": "neutral",
                  "changed": false, "late_minutes": 0,
                  "depart": { "time": "07:20", "text": "Pick-up · Blk 412 Bedok North" }, "arrive": { "time": "07:40", "text": "Arrive · St. Stephen's School" },
-                 "who": [ { "name": "Ethan Tan" } ], "foot": "Ethan · SBA3546K", "open": { "kind": "live", "bus": "7-2026-11-03" } } ],
+                 "who": [ { "name": "Ethan Tan" } ], "foot": "Ethan · SBA3546K", "open": { "kind": "live", "bus": "7-2026-11-03" },
+                 "occurrence_ids": [ 912 ] } ],
   "tiles": [ { "key": "school_bus", "label": "School Bus", "caption": "1 child", "on": true, "badge": 1 },
              { "key": "shuttles", "label": "Shuttles", "caption": "By employer", "on": false, "badge": null },
              { "key": "bookings", "label": "Bookings", "caption": "2 upcoming", "on": true, "badge": null },
@@ -41,6 +42,8 @@ H:1370–1577). Paths start with `/api/v1/app`. Every call needs the app token (
   ([household § 5.5](household.md#55-accept--not-me)); organisations → `POST /app/organisations/:kind/:id/accept|decline`
   ([organisations § 4](organisations.md#4-accept--not-me)). Home looks for new organisation matches each time (as Organisations does).
 - **banners**: [§ 2](#2-notice-banners-and-dismiss).
+- Live: while Home is open, subscribe to `TrackChannel` `screen: "home"` and `AppChannel`
+  ([../websocket.md](../websocket.md)): `run_changed` (a run of a card: `occurrence_ids`) or `alerts_changed` → fetch Home again.
 - **up_next**, in the HTML order: the next booking of a school / company account (or "No upcoming bookings" with New Booking
   when the person has such an account and nothing booked) → the Family's **morning buses** (one card per bus, children on it in
   `who`) → if no child rides: the Family's next step (a child waiting for a bus, or "Add your children") → each employer's
@@ -164,15 +167,16 @@ Not written (not in the HTML or a later phase): Bus Not Required recorded, "asks
 ## 6. Live Tracking `GET /app/school/live`
 
 The **morning** bus of the Family's children on their next bus day (afternoon tracking is not designed). Needs a Family
-(`404 no_household` otherwise). `?bus=<key>` picks a chip; without it the first bus with a child riding. **Poll** every
-`poll_seconds` (15) while the screen is open.
+(`404 no_household` otherwise). `?bus=<key>` picks a chip; without it the first bus with a child riding. Live: subscribe to
+`TrackChannel` `screen: "school_live"` with the same `bus` ([../websocket.md § 4](../websocket.md#4-convoy-app-screens-trackchannel)):
+`run_changed` → fetch again; `position` → move the bus (`run_id` = `bus.occurrence_id`; sent only in state `near`). No polling.
 
 ```json
 { "data": {
-  "state": "near", "poll_seconds": 15,
+  "state": "near",
   "buses": [ { "key": "7-2026-11-03", "date": "2026-11-03", "names": ["Ethan Tan"], "first_names": ["Ethan"], "plate": "SBA3546K", "warn": false } ],
   "bus": {
-    "key": "7-2026-11-03", "date": "2026-11-03", "today": true, "title": "SSS AM 1", "sub": "SBA3546K · SSS AM 1 · Pick-up",
+    "key": "7-2026-11-03", "occurrence_id": 912, "date": "2026-11-03", "today": true, "title": "SSS AM 1", "sub": "SBA3546K · SSS AM 1 · Pick-up",
     "company": { "id": 1, "name": "SimpleDrive", "mark": "SD" }, "status": { "label": "Started", "tone": "warning" }, "late_minutes": 0,
     "vehicle": { "plate": "SBA3546K", "seats": 40, "model": "Yutong ZK6107", "size": "LARGE_40" },
     "riders": [ { "dependant_id": 5, "name": "Ethan Tan", "first_name": "Ethan" } ], "not_required": [],

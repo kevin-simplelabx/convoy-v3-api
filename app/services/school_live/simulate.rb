@@ -63,7 +63,10 @@ module SchoolLive
                     alight_lat: off && stop[:lat], alight_lng: off && stop[:lng])
         end
       end
-      OccurrencePassenger.insert_all!(rows) if rows.any?
+      return if rows.empty?
+
+      OccurrencePassenger.insert_all!(rows)
+      Realtime.runs_changed(rows.map { { id: it[:occurrence_id], date: it[:occurrence_date] } }.uniq)
     end
 
     # Where the pass was read: a few metres from the stop, now and then far enough to check.

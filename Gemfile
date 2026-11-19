@@ -60,10 +60,12 @@ gem "rack-attack"
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 
-# Use the database-backed adapters for Rails.cache, Active Job, and Action Cable
+# Use the database-backed adapters for Rails.cache and Active Job
 gem "solid_cache"
 gem "solid_queue"
-gem "solid_cable"
+
+# Action Cable pub/sub in production (Driver app / Convoy App WebSocket; many connections across Puma workers and hosts)
+gem "redis", "~> 5.4"
 
 # Reduces boot times through caching; required in config/boot.rb
 gem "bootsnap", require: false

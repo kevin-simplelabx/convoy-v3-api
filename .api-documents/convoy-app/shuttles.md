@@ -125,12 +125,12 @@ the client's day off by its name, `"Weekend"`, `"Not a service day"`, `"Not runn
 **Timing pills** (`timings`, one per run of the direction, in time order): `time` (already moved by `shift_minutes`),
 `state` `scheduled | on_the_way | started | ended | cancelled`, `live` (on the road → teal-100), `past` (ended → grey),
 `usual` (outlined), `change` `cancelled | bus | driver | null` (red / orange change dot), `buses` (how many vehicles run the
-timing: 1 or more; **every vehicle is shown**). Past days are not offered (the strip starts today).
+timing: 1 or more; **every vehicle is shown**), `occurrence_ids` (its runs, for the WebSocket). Past days are not offered (the strip starts today).
 
 **`timing`** (the selected pill):
 
 ```json
-{ "run_id": 1, "time": "07:45", "state": "scheduled", "state_label": "Scheduled", "late_minutes": null,
+{ "run_id": 1, "occurrence_id": 600, "time": "07:45", "state": "scheduled", "state_label": "Scheduled", "late_minutes": null,
   "status": { "key": "scheduled", "departs_at": "2026-11-17T07:45:00+08:00",
               "next_stop": { "name": "Alexandra Road", "planned_at": "…", "eta_at": "…" },
               "arrived": { "stop": "Mapletree Business City", "at": "…" },
@@ -152,7 +152,10 @@ timing: 1 or more; **every vehicle is shown**). Past days are not offered (the s
   completed · Arrived at `arrived`"; `cancelled` "Cancelled today" + `next_bus` ("Next bus 08:15 from Labrador Park MRT") or, when
   `next_bus` is `null`, "No more buses this morning / evening". `late_minutes` > 0 while on the road: "<route> Bus <plate> is
   running N min late on this timing" (the FE may show it from a few minutes). `position` and `line` feed the map (the bus only
-  while the run is on the road); Centre on bus / Fit route are FE.
+  while the run is on the road); Centre on bus / Fit route are FE. `occurrence_id` = the lead bus (the one `position` is of).
+- **Live**: `TrackChannel` `screen: "shuttle_route"` with `employer_id`, `route_id` and the picked `date`, `direction`,
+  `run_id` ([../websocket.md § 4](../websocket.md#4-convoy-app-screens-trackchannel)): `position` moves the bus (`run_id` =
+  `occurrence_id`), `run_changed` (any run of the day's timings, `timings[].occurrence_ids`) → fetch again. No polling.
 - **Crew row** per `buses[]` (several rows for a timing with two vehicles): `driver.name` / `photo`, "<description> · <company>",
   the `plate` chip, "Relief Driver" badge when `driver.relief`. No phone number, no attendant. `plate: null` = no bus assigned
   yet (show nothing for the bus). `no_fixed_bus: true` → autorenew icon: "Bus changes daily on this route. Check the plate before

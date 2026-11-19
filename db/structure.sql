@@ -1601,6 +1601,41 @@ ALTER SEQUENCE public.bus_sessions_id_seq OWNED BY public.bus_sessions.id;
 
 
 --
+-- Name: cable_tickets; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.cable_tickets (
+    id bigint NOT NULL,
+    token_digest character varying NOT NULL,
+    driver_jwt_id bigint,
+    app_jwt_id bigint,
+    expires_at timestamp(6) without time zone NOT NULL,
+    used_at timestamp(6) without time zone,
+    created_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT cable_tickets_one_sign_in CHECK ((num_nonnulls(driver_jwt_id, app_jwt_id) = 1))
+);
+
+
+--
+-- Name: cable_tickets_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.cable_tickets_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: cable_tickets_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.cable_tickets_id_seq OWNED BY public.cable_tickets.id;
+
+
+--
 -- Name: calendar_days; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -12436,6 +12471,13 @@ ALTER TABLE ONLY public.bus_sessions ALTER COLUMN id SET DEFAULT nextval('public
 
 
 --
+-- Name: cable_tickets id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cable_tickets ALTER COLUMN id SET DEFAULT nextval('public.cable_tickets_id_seq'::regclass);
+
+
+--
 -- Name: calendar_days id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -14474,6 +14516,14 @@ ALTER TABLE ONLY public.bus_session_variants
 
 ALTER TABLE ONLY public.bus_sessions
     ADD CONSTRAINT bus_sessions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: cable_tickets cable_tickets_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cable_tickets
+    ADD CONSTRAINT cable_tickets_pkey PRIMARY KEY (id);
 
 
 --
@@ -17717,6 +17767,34 @@ CREATE INDEX index_bus_session_variants_on_bus_session_id_and_position ON public
 --
 
 CREATE INDEX index_bus_sessions_on_academic_year_id_and_position ON public.bus_sessions USING btree (academic_year_id, "position");
+
+
+--
+-- Name: index_cable_tickets_on_app_jwt_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_cable_tickets_on_app_jwt_id ON public.cable_tickets USING btree (app_jwt_id);
+
+
+--
+-- Name: index_cable_tickets_on_driver_jwt_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_cable_tickets_on_driver_jwt_id ON public.cable_tickets USING btree (driver_jwt_id);
+
+
+--
+-- Name: index_cable_tickets_on_expires_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_cable_tickets_on_expires_at ON public.cable_tickets USING btree (expires_at);
+
+
+--
+-- Name: index_cable_tickets_on_token_digest; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_cable_tickets_on_token_digest ON public.cable_tickets USING btree (token_digest);
 
 
 --
@@ -28010,6 +28088,14 @@ ALTER TABLE ONLY public.household_members
 
 
 --
+-- Name: cable_tickets fk_rails_b155be6ccf; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cable_tickets
+    ADD CONSTRAINT fk_rails_b155be6ccf FOREIGN KEY (driver_jwt_id) REFERENCES public.driver_jwts(id) ON DELETE CASCADE;
+
+
+--
 -- Name: client_approval_rule_bookers fk_rails_b165ccaf1e; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -29458,6 +29544,14 @@ ALTER TABLE ONLY public.school_bus_size_rates
 
 
 --
+-- Name: cable_tickets fk_rails_ee414ae666; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.cable_tickets
+    ADD CONSTRAINT fk_rails_ee414ae666 FOREIGN KEY (app_jwt_id) REFERENCES public.app_jwts(id) ON DELETE CASCADE;
+
+
+--
 -- Name: trip_assignment_slots fk_rails_eeb9f36215; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -30016,6 +30110,7 @@ ALTER TABLE public.trip_occurrences
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261119110000'),
 ('20261119100300'),
 ('20261119100200'),
 ('20261119100100'),

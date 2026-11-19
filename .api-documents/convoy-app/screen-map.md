@@ -182,7 +182,7 @@ page id is in brackets after each heading (`v.<page>` in the prototype).
 
 | Screen / button | Call | Doc |
 | --- | --- | --- |
-| Far card / map, child chips, changed bus banner, stops, crew, Your stop; poll | `GET /app/school/live?bus=` | [home § 6](home.md#6-live-tracking-get-appschoollive) |
+| Far card / map, child chips, changed bus banner, stops, crew, Your stop; live by WebSocket (`TrackChannel` `school_live`) | `GET /app/school/live?bus=` | [home § 6](home.md#6-live-tracking-get-appschoollive) |
 | Sheet Small / Standard / Full, recentre, Street View, Call (confirm sheet `drv`) | FE only | [home § 6](home.md#6-live-tracking-get-appschoollive) |
 | Help request banner "a photo of your stop", Add Photo (sheet `phBrief`) | **Not built** (Phase 4b, Stop Photos) | — |
 

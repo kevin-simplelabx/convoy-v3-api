@@ -4,7 +4,8 @@ The bell on Drive (red dot when unread) and the Notifications tab: what changed 
 tomorrow, a bus to take over, and notices from the office — **Open** notices (a detail page) and **Acknowledge** notices
 (the office needs them read; the time is recorded).
 Conventions: [README.md](README.md). Paths start with `/api/v1`. Needs a picked company. Push notifications are not sent
-yet: poll the list (on app start, when the app comes to the front, and every few minutes).
+yet: fetch the list on app start, when the app comes to the front, and when the WebSocket says `notifications_changed`
+([../websocket.md](../websocket.md)); no polling.
 
 ## Contents
 

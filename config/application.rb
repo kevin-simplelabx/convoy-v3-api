@@ -49,6 +49,12 @@ module ConvoyV3
       g.orm :active_record, primary_key_type: :bigint
     end
 
+    # WebSocket at /cable (Driver app, Convoy App). Sign-in is a one-time ticket in the URL (CableTickets), never a cookie, so
+    # the browser Origin check guards nothing here and would refuse the mobile apps (no Origin). Channel work (subscribe,
+    # re-checks) runs on this many threads per process; database.yml adds them to the connection pool.
+    config.action_cable.disable_request_forgery_protection = true
+    config.action_cable.worker_pool_size = ENV.fetch("CABLE_WORKER_POOL_SIZE", 4).to_i
+
     # In-process cache for OSRM proxy responses (survives between requests, resets on restart)
     config.cache_store = :memory_store, { size: 64.megabytes }
   end

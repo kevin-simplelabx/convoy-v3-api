@@ -102,6 +102,8 @@ The card fields plus:
   "passengers": [
     { "id": "S-1", "name": "Aaron Lee", "gender": "M", "level": "P3", "address": "Blk 123 Tampines St 11 #08-21",
       "parent_name": "Jason Lee", "parent_phone": "+6598224417", "note": "Allergic to peanuts",
+      "photo": { "url": "/api/v1/downloads/eyJfcmFpbHMi...", "thumb_url": "/api/v1/downloads/eyJfcmFpbHMi...", "name": "aaron.jpg",
+                 "size": 48213, "content_type": "image/jpeg" },
       "pickup_position": 0, "dropoff_position": 5, "state": "expected", "reason": null, "qr_code": "CVR1-S-1-3f9a0c1b2d4e",
       "boarded_at": null, "board_method": null, "alighted_at": null, "alight_method": null, "marked_by": null }
   ],
@@ -146,7 +148,10 @@ The card fields plus:
 
 **Passengers** (School Bus and School Run only; `[]` for other runs): every name with their pick-up and drop-off point
 (`position`), `state` (§ 6) and, on School Bus, `qr_code` = the child's boarding pass (match a scanned code with it;
-"Not on this trip" otherwise). `reason`: why Bus Not Required. `parent_phone` for Call Parent. `boarded_at`, `board_method`,
+"Not on this trip" otherwise). `reason`: why Bus Not Required. `parent_phone` for Call Parent. `photo` (School Bus):
+the child's photo from the parent's Convoy App (`{ url, thumb_url, name, size, content_type }`, signed links) for the
+child photo view and the list avatar; `null` when the child is not linked to a Convoy App child or has no photo, and
+always `null` on School Run — show the initials then. `boarded_at`, `board_method`,
 `alighted_at`, `alight_method`, `marked_by`: what was recorded (All Passengers).
 
 **Before You Go**: `not_riding` = children not riding today (Bus Not Required from the parent, or marked not boarding) at

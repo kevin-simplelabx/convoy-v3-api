@@ -19,6 +19,7 @@ Start with [screen-map.md](screen-map.md): every screen and button → the call 
 | Disposal: start and end odometer, runs, Extend Time, the block clock | [disposal.md](disposal.md) |
 | My Vehicle Today, Switch Vehicle (handover inspection), Vehicle History | [vehicle.md](vehicle.md) |
 | The bell: trip changes, vehicle switch, notices from the office (Open, Acknowledge) | [notifications.md](notifications.md) |
+| Live updates: the WebSocket (ticket, DriverChannel, reconnecting) | [../websocket.md](../websocket.md) |
 | What the app works out itself, and changes the app must make | [fe-updates.md](fe-updates.md) |
 
 Apidog: import [`../convoy-v3-api.openapi.json`](../convoy-v3-api.openapi.json); the Driver app's calls are in the
@@ -48,8 +49,10 @@ The shared rules (JSON in snake_case, `{ data }` answers, the error format, rate
 - **Offline**: every driving action carries a `client_id` (UUID) and `at` (when it happened): queue them and send them in
   order when back online; sending one twice does nothing the second time (`meta.replayed: true`). GPS points are
   queued and sent in batches. Reading calls need the network.
-- **Push** is not sent yet: poll `GET /driver/notifications` and `GET /driver/runs` (app start, back to the front, every
-  few minutes, after each action).
+- **Live updates**: a WebSocket, no polling ([../websocket.md](../websocket.md)): `DriverChannel` says when the driver's runs
+  (`runs_changed`) or bell (`notifications_changed`) changed → fetch `GET /driver/runs` / `GET /driver/notifications` again.
+  Fetch once on app start, on each (re)connect and when the app comes back to the front (the socket is closed in the
+  background; push notifications are not sent yet).
 
 ## Sample accounts (staging and local seed)
 

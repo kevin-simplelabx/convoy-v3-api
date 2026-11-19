@@ -3,13 +3,13 @@
 # place), the child's own stop by name, then the school; only the Family's own children are named; the bus position and the
 # line ahead (bus → child's stop → school, never other stops) are sent only from 10 minutes before the bus reaches the
 # child's stop until the run ends (state near). Before that a waiting card (state far) with the ETA and crew; ended after.
-# ETA = SchoolLive (planned time + lateness from the stops reached and the GPS ETA to the next stop). The app polls.
+# ETA = SchoolLive (planned time + lateness from the stops reached and the GPS ETA to the next stop). Live over the
+# WebSocket: TrackChannel screen school_live (ConvoyApp::Watch), the position only in state near.
 #   Live.call(member:, bus: "<key>" | nil, now:)
 module ConvoyApp
   module Parents
     class Live < ApplicationService
       NEAR = 10.minutes
-      POLL_SECONDS = 15
       INCLUDES = [ :driver, :operator_driver, :stop_events, :passenger_marks, { vehicle: :live_position },
                    { school_route: [ :attendant, { plan: :school }, { stops: %i[riders stop_point] }, { vehicle_changes: :vehicle },
                                      { replacements: :vehicle } ] } ].freeze
@@ -22,11 +22,11 @@ module ConvoyApp
 
       def call
         buses = MorningBuses.call(@household).select { it.route && (it.kids.any? || it.off.any?) }
-        return { state: "none", poll_seconds: POLL_SECONDS, buses: [], bus: nil } if buses.empty?
+        return { state: "none", buses: [], bus: nil } if buses.empty?
 
         bus = buses.find { it.key == @key } || buses.find { it.kids.any? } || buses.first
         detail = Parents.within(bus.company) { Detail.new(bus, @now).call }
-        detail.merge(poll_seconds: POLL_SECONDS, buses: buses.map { chip(it) })
+        detail.merge(buses: buses.map { chip(it) })
       end
 
       private
@@ -76,7 +76,7 @@ module ConvoyApp
           stop = @stops[@index]
           v = self.class.vehicle(@bus, occ: @occ, route: @route)
           state = self.state
-          { state:, bus: { key: @bus.key, date: @bus.date, today: @bus.today?, title: @route.title, sub: [ v&.plate, @route.title, "Pick-up" ].compact.join(" · "),
+          { state:, bus: { key: @bus.key, occurrence_id: @occ&.id, date: @bus.date, today: @bus.today?, title: @route.title, sub: [ v&.plate, @route.title, "Pick-up" ].compact.join(" · "),
                            company: Parents.company_json(@bus.company), status:, late_minutes: @run&.running? ? @run.late_minutes : 0,
                            vehicle: v && { plate: v.plate, seats: v.seats, model: [ v.make, v.model ].compact_blank.join(" ").presence, size: @route.bus_size(v) },
                            riders: @bus.kids.map { kid(it[:dependant]) }, not_required: @bus.off.map { kid(it[:dependant]) },

@@ -36,6 +36,7 @@ The API docs in this folder are the source of truth. Do not invent endpoints, pa
 | `ops-control.md` | Ops Control: board, rules, Acknowledge, Alert Log | When `screen-map.md` links to it |
 | `live-map.md` | Live Map: board, one bus, Trace, Replay | When `screen-map.md` links to it |
 | `finance.md` | Finance: client invoices, documents, operator payments, vehicle financials, finance settings | When `screen-map.md` links to it |
+| `websocket.md` | Live updates over a WebSocket for the Driver app and the Convoy App (Convoy OS still polls, as each menu doc says) | Not needed for Convoy OS yet |
 | `convoy-v3-api.openapi.json` | OpenAPI 3.0 of every endpoint with request / response examples recorded from real calls (2.4 MB) | For the exact shape of a request / response (section 1.1) |
 
 UI reference: the prototype `Convoy OS.dc.html` (and its `logic/*.js`). Use it for **layout, labels, flows and behaviour

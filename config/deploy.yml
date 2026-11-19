@@ -57,6 +57,8 @@ env:
     SAMPLE_DATA: 1
     # School Bus routing engine (accessory "routing" below)
     ROUTING_URL: http://convoy_v3-routing:4000
+    # Action Cable pub/sub (WebSocket /cable of the Driver app and the Convoy App; accessory "redis" below)
+    REDIS_URL: redis://convoy_v3-redis:6379/1
 
 aliases:
   console: app exec --interactive --reuse "bin/rails console"
@@ -83,6 +85,12 @@ accessories:
         - POSTGRES_PASSWORD
     directories:
       - data:/var/lib/postgresql/data
+  # Action Cable pub/sub only (no data to keep): internal, no port on the host. Boot once before the first deploy that
+  # needs it: bin/kamal accessory boot redis
+  redis:
+    image: redis:7.4
+    host: 13.229.92.162
+    cmd: redis-server --save "" --appendonly no --maxmemory 128mb --maxmemory-policy noeviction
   # School Bus routing engine (routing-service/, Node). Image built and pushed by bin/routing-image; internal only.
   routing:
     image: ghcr.io/kevin-simplelabx/convoy-routing:latest

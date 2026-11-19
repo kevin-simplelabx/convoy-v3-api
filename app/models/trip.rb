@@ -147,6 +147,13 @@ class Trip < ApplicationRecord
                       runs: [ :times, { slots: :vehicle }, { trip: :stops } ], price_cells: :trip_run } ].freeze
   WEEKDAYS = (0..6).freeze
 
+  # An edit shows on runs that have not started today and tomorrow (the Driver app's Drive tabs, the Convoy App's live
+  # screens): their watchers and drivers hear about it (Realtime). Later runs are read when opened; Sync reports the runs it rewrites.
+  after_update_commit do
+    today = Time.zone.today
+    Realtime.runs_changed(TripOccurrence.where(trip_id: id, date: today..today + 1).where(started_at: nil).visible)
+  end
+
   belongs_to :client
   belongs_to :client_site, optional: true
   belongs_to :calendar, optional: true

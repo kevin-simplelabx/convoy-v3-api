@@ -39,6 +39,9 @@ class DriverJwt < ApplicationRecord
   belongs_to :operator_driver, optional: true
   belongs_to :driver_app_session, optional: true
 
+  # Signed out (or kicked by a sign-in on another phone): its WebSocket closes.
+  after_destroy_commit { Realtime.disconnect(self) }
+
   scope :expired, -> { where(exp: ...Time.current) }
 
   # The picked membership (in any company), or nil.

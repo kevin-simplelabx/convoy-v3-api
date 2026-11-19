@@ -28,5 +28,8 @@ school = ActsAsTenant.without_tenant { School.find_by(name: "St. Stephen's Schoo
   child = household.dependants.find_or_initialize_by(name:)
   child.update!(birth_date: dob, level:, gender:, student_id: sid, school_id: school&.id, school_name: "St. Stephen's School") if child.new_record?
 end
+# Ethan's photo: the child photo the driver sees on his School Bus runs (Driver app › Attendance).
+ethan = household.dependants.find_by!(name: "Ethan Tan")
+ethan.update!(photo: SeedFiles.open("app", "child-ethan.png")) if ethan.photo.blank?
 household.invite_links.live.exists? || household.invite_links.create!(created_by: rachel)
 puts "Convoy App Household: #{household.name} (#{household.members.active.count} adults, #{household.dependants.count} children)"

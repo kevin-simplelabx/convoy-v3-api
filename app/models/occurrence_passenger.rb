@@ -45,6 +45,9 @@ class OccurrencePassenger < ApplicationRecord
   belongs_to :occurrence, class_name: "TripOccurrence", foreign_key: %i[occurrence_id occurrence_date], primary_key: %i[id date],
                           inverse_of: :passenger_marks
 
+  # The run's watchers and driver hear about it (Realtime).
+  after_commit { Realtime.runs_changed([ { id: occurrence_id, date: occurrence_date } ]) }
+
   validates :passenger_key, presence: true
   validates :state, inclusion: { in: STATES }
   validates :board_method, :alight_method, inclusion: { in: METHODS.keys }, allow_nil: true

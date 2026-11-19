@@ -47,6 +47,9 @@ class OccurrenceStopEvent < ApplicationRecord
   belongs_to :occurrence, class_name: "TripOccurrence", foreign_key: %i[occurrence_id occurrence_date], primary_key: %i[id date],
                           inverse_of: :stop_events
 
+  # The run's watchers and driver hear about it (Realtime).
+  after_commit { Realtime.runs_changed([ { id: occurrence_id, date: occurrence_date } ]) }
+
   validates :position, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :boarded, :alighted, :on_board, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
   validates :skipped_by, inclusion: { in: SKIPPED_BY }, allow_nil: true

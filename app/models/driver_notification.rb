@@ -47,6 +47,9 @@ class DriverNotification < ApplicationRecord
   belongs_to :notice, class_name: "DriverNotice", foreign_key: :driver_notice_id, optional: true
 
   validates :kind, inclusion: { in: KINDS }
+
+  # The driver's bell refreshes (Realtime); RunNotifications#flush reports its bulk insert itself.
+  after_create_commit { Realtime.notifications_changed([ { driver_id:, operator_driver_id: } ]) }
   validates :title, presence: true
 
   scope :for_member, ->(m) { where(m.is_a?(OperatorDriver) ? { operator_driver_id: m.id } : { driver_id: m.id }) }

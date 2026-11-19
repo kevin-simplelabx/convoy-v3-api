@@ -103,7 +103,7 @@ module ConvoyApp
           depart: { time: trip.start_time_hm, text: "#{today ? 'Depart today' : "Depart #{trip.date.strftime('%a %-d %b')}"} · #{trip.out_points.first&.name}" },
           arrive: { time: nil, text: "Arrive · #{trip.out_points.last&.name}" },
           foot: [ card[:title], "#{n} #{n == 1 ? 'bus' : 'buses'}", "#{trip.pax.to_i + trip.adults.to_i} pax", (trip.return_time_hm && "return #{trip.return_time_hm}") ].compact.join(" · "),
-          open: { kind: st == "live" ? "track" : "booking", booking_id: booking.id } }
+          open: { kind: st == "live" ? "track" : "booking", booking_id: booking.id }, occurrence_ids: runs.for(trip).map(&:id) }
       end
     end
 
@@ -156,7 +156,7 @@ module ConvoyApp
           depart: { time: first[:stop]&.scheduled_time_hm, text: "Pick-up · #{first[:stop]&.name}" },
           arrive: { time: bus.route.end_time_hm, text: "Arrive · #{bus.school.name}" }, who: bus.kids.map { { name: it[:dependant].name } },
           foot: [ bus.names.join(" and "), live.dig(:vehicle, :plate), (off.any? ? "#{off.join(', ')} not required" : nil) ].compact.join(" · "),
-          open: { kind: "live", bus: bus.key } }
+          open: { kind: "live", bus: bus.key }, occurrence_ids: [ live[:occurrence_id] ].compact }
       end
     end
 
@@ -188,7 +188,7 @@ module ConvoyApp
           depart: { time: run.start_time_hm, text: "Board · #{board&.name_in(run.direction)}" },
           arrive: { time: nil, text: "Alight · #{stops.last&.name_in(run.direction)}" },
           foot: [ Shuttles::DIRECTIONS[run.direction], plate ].compact.join(" · "),
-          open: { kind: "shuttle_route", employer_id: employer.id, route_id: trip.id } }
+          open: { kind: "shuttle_route", employer_id: employer.id, route_id: trip.id }, occurrence_ids: occs.map(&:id) }
       end
     end
 

@@ -26,7 +26,9 @@ module ConvoyApp
       rows = rows.reject { it[:app_account_id].nil? }.uniq { [ it[:app_account_id], it[:dedupe_key] ] }
       return 0 if rows.empty?
 
-      AppNotification.insert_all(rows.map { COLUMNS.merge(it) }, unique_by: %i[app_account_id dedupe_key]).length
+      written = AppNotification.insert_all(rows.map { COLUMNS.merge(it) }, unique_by: %i[app_account_id dedupe_key], returning: %i[app_account_id])
+      Realtime.alerts_changed(written.rows.flatten)
+      written.length
     end
 
     # Runs a writer hooked into another action: an alert must never fail or roll back that action. In a savepoint (a failed

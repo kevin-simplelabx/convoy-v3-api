@@ -3,6 +3,7 @@
 # for the runs and one insert for the points, however many points come at once (the Driver app sends batches).
 #   points: [{ at, lat, lng, speed_kmh, heading, battery_pct, gps_signal, gsm_bars }]
 # run: the run to add the points to when the caller knows it (the Driver app's trip on the road), else the bus's run then.
+# Each run's newest point goes out on the WebSocket to the screens that show that bus (Realtime.positions).
 # Returns { recorded:, runs: [runs the points went to] }.
 module Telematics
   class Ingest < ApplicationService
@@ -23,6 +24,7 @@ module Telematics
       placed = @points.map { [ it, @run || LiveMap.run_now(runs, it[:at]) ] }
       add_to_runs(placed.select(&:last))
       save_last(vehicle, *placed.last)
+      Realtime.positions(placed.select(&:last).group_by(&:last).transform_values { it.last.first })
       { recorded: @points.size, runs: placed.filter_map(&:last).uniq }
     end
 

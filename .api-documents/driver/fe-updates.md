@@ -2,6 +2,32 @@
 
 Things the app does by itself (no server field or call) and changes the app has to act on. Newest first.
 
+## 19/11/2026 — Live updates over a WebSocket (**breaking**: stop polling)
+
+The app no longer polls. Guide: [../websocket.md](../websocket.md).
+
+| # | What to change | Doc |
+| --- | --- | --- |
+| 1 | New: `POST /driver/cable_ticket` → open `wss://<host>/cable?ticket=…` (subprotocol `actioncable-v1-json`), subscribe `{"channel":"DriverChannel"}` | [websocket § 1–3](../websocket.md#1-connect) |
+| 2 | `runs_changed { run_ids, dates }` → fetch `GET /driver/runs` (a shown date) and the open Trip Details (its id) again | [websocket § 3](../websocket.md#3-channels-and-messages) |
+| 3 | `notifications_changed` → fetch `GET /driver/notifications` again (red dot) | [websocket § 3](../websocket.md#3-channels-and-messages) |
+| 4 | Remove the timers that polled runs and the bell; fetch once on start, on each (re)connect and when the app comes to the front | [websocket § 5](../websocket.md#5-reconnecting-and-the-app-in-the-background) |
+| 5 | `disconnect` with `reconnect: false` = signed out / signed in on another phone: new ticket, and on `401` the sign-in screen | [websocket § 5](../websocket.md#5-reconnecting-and-the-app-in-the-background) |
+
+Try it: sign in as Siti Nurhaliza `+65 9003 4455`; an office user (`ops@simpledrive.sg`) cancels and restores one of her
+runs today in the Scheduler → `runs_changed` + `notifications_changed` arrive.
+
+## 19/11/2026 — Child photo (no breaking change)
+
+The child photo view (tap a child in Attendance / All Passengers, with Call Parent) can show the real photo.
+
+| # | Screen / item in the design | Field | Doc |
+| --- | --- | --- | --- |
+| 1 | Child photo view + list avatar (the design draws initials) | `passengers[].photo` `{ url, thumb_url, ... }` or `null` → keep the initials | [runs § 4](runs.md#4-trip-details-get-driverrunsid) |
+
+Sample: sign in as Siti Nurhaliza `+65 9003 4455`, today's St. Stephen's AM 1: Ethan Tan has a photo (from Rachel Tan's
+Convoy App Household); the other children have none.
+
 ## 19/11/2026 — New fields for the design's records (no breaking change)
 
 Fields the design draws that the API now sends. Nothing existing changed meaning; show each line when its field is set.

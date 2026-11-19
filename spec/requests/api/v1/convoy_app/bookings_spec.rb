@@ -487,5 +487,13 @@ RSpec.describe "Convoy App bookings" do
     expect(trip).to include(badge: "0 of 1 here", depart: { time: "10:00", name: "St. Stephen's School" })
     expect(trip[:buses].sole).to include(n: 1, plate: "PC7475L", state: "on_the_way", driver: hash_including(name: "Eric Pang", phone: "+6592104100"))
     expect(json.dig(:data, :company, :ops_phone)).to eq("+65 6123 4567")
+
+    # WebSocket (TrackChannel): the trip's bus; its position once it reports one
+    occ_id = trip[:buses].sole[:occurrence_id]
+    watch = -> { ConvoyApp::Watch.call(account: rachel[:account], screen: "booking_track", params: { booking_id: data[:id] }) }
+    expect(watch.call).to eq(runs: [ occ_id ], positions: [])
+    within_tenant(company) { VehicleLivePosition.create!(vehicle: Vehicle.find_by!(plate: "PC7475L"), lat: 1.3, lng: 103.8, recorded_at: Time.current) }
+    expect(watch.call).to eq(runs: [ occ_id ], positions: [ occ_id ])
+    expect(ConvoyApp::Watch.call(account: person(mobile: "9177 3301")[:account], screen: "booking_track", params: { booking_id: data[:id] })).to be_nil
   end
 end

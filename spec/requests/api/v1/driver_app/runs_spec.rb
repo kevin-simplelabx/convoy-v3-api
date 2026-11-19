@@ -127,9 +127,12 @@ RSpec.describe "Driver app runs" do
                                 client: office)
         year = AcademicYears::Create.call(school:, start_year: 2026, start_month: 1)
         year.terms.second.update!(starts_on: "2026-06-29", ends_on: "2026-11-19")
+        home = Household.create!(name: "Child Family", postal: "460120", block: "120", street: "Bedok North Ave 1")
+        child = home.dependants.create!(name: "Child 1", birth_date: "2019-01-01", level: "P1", school_name: "St. Stephen's School",
+                                        photo: Rack::Test::UploadedFile.new(Rails.root.join("spec/fixtures/files/photo.png"), "image/png"))
         %w[S-1 S-2 S-3].each_with_index do |rid, i|
           school.riders.create!(rid:, name: "Child #{i + 1}", grade: "P#{i + 1}", postal: "46012#{i}", am: true, pm: true, source: "manual",
-                                parent_name: "Parent #{i + 1}", parent_contact: "+659000000#{i}")
+                                parent_name: "Parent #{i + 1}", parent_contact: "+659000000#{i}", dependant: i.zero? ? child : nil)
         end
         am = school.plans.create!(name: "Term 4 AM", session: "am", effective_from: Date.new(2026, 10, 1), in_use: true)
         attendant = Attendant.create!(name: "Mdm Rosnah", phone: "+6591112233", notes: "Travels on the bus")
@@ -167,6 +170,9 @@ RSpec.describe "Driver app runs" do
       expect(d[:passengers].map { [ it[:id], it[:state], it[:pickup_position], it[:dropoff_position] ] })
         .to eq([ [ "S-1", "expected", 0, 2 ], [ "S-2", "bus_not_required", 0, 2 ], [ "S-3", "expected", 1, 2 ] ])
       expect(d[:passengers].first).to include(name: "Child 1", level: "P1", parent_name: "Parent 1", parent_phone: "+6590000000")
+      # the child photo (Convoy App child linked to the rider); none when the rider has no linked child
+      expect(d.dig(:passengers, 0, :photo)).to include(:url, :thumb_url)
+      expect(d[:passengers].drop(1).pluck(:photo)).to eq([ nil, nil ])
       expect(DriverApp::RiderPass.rid(company.id, d.dig(:passengers, 0, :qr_code))).to eq("S-1")
       expect(DriverApp::RiderPass.rid(company.id + 1, d.dig(:passengers, 0, :qr_code))).to be_nil
       expect(d[:before_you_go][:not_riding]).to eq([ { id: "S-2", name: "Child 2", point: "Blk 101 Bedok North", state: "bus_not_required", reason: "Unwell. Fever" } ])

@@ -190,7 +190,8 @@ RSpec.describe "Convoy App shuttles" do
         PublicHoliday.create!(company:, date: today + 3, name: "Deepavali")
         Occurrences::Sync.call(trips: [ f[:trip] ])
       end
-      page = route(rider)[:data]
+      r = rider
+      page = route(r)[:data]
       expect(page).to include(date: "2026-11-16", direction: 1, direction_name: "Morning", selected_run_id: f[:am1].id)
       expect(page[:strip].size).to eq(14)
       by = page[:strip].index_by { it[:date] }
@@ -206,6 +207,14 @@ RSpec.describe "Convoy App shuttles" do
       expect(timing[:stops].pluck(:name, :planned_time, :boarding, :alighting)).to eq([ [ "Labrador Park MRT", "07:30", true, false ], [ "Alexandra Road", "07:40", true, true ], [ "Mapletree Business City", "07:55", false, true ] ])
       expect(timing[:stops].first).to include(address: "Exit A", done: false, next: false)
       expect(timing[:line].size).to eq(3)
+
+      # WebSocket (TrackChannel): every run of the day's timings; no position before the bus is on the road
+      occs = page[:timings].flat_map { it[:occurrence_ids] }
+      expect(occs.size).to eq(4)
+      expect(timing[:occurrence_id]).to eq(timing[:buses].first[:occurrence_id])
+      watched = ConvoyApp::Watch.call(account: r[:account], screen: "shuttle_route", params: { employer_id: r[:link].id, route_id: f[:trip].id })
+      expect(watched).to eq(runs: occs, positions: [])
+      expect(ConvoyApp::Watch.call(account: r[:account], screen: "shuttle_route", params: { employer_id: 0, route_id: f[:trip].id })).to be_nil
     end
 
     it "swaps pick-up and drop-off on the evening direction, and hides times on a day with no service" do

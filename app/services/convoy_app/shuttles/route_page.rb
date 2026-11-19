@@ -102,7 +102,7 @@ module ConvoyApp
         first = t.occurrences.first
         { run_id: t.run.id, time: first.start_time_hm, shift_minutes: first.start_time - t.run.start_time, state: t.state,
           state_label: Portal::RunState::LABELS[t.state] || "Cancelled", live: Portal::RunState.on_road?(t.state), past: t.state == "ended",
-          usual: @usual.run?(t.run), change: t.change, buses: t.occurrences.size }
+          usual: @usual.run?(t.run), change: t.change, buses: t.occurrences.size, occurrence_ids: t.occurrences.map(&:id) }
       end
 
       def closed_stops
@@ -120,7 +120,7 @@ module ConvoyApp
         position = live ? lead.vehicle&.live_position : nil
         late = late_minutes(lead, position, nxt)
         {
-          run_id: timing.run.id, time: lead.start_time_hm, state: timing.state, state_label: Portal::RunState::LABELS[timing.state] || "Cancelled",
+          run_id: timing.run.id, occurrence_id: lead.id, time: lead.start_time_hm, state: timing.state, state_label: Portal::RunState::LABELS[timing.state] || "Cancelled",
           late_minutes: late, status: status(timing, lead, planned, events, nxt, position, timings),
           buses: buses(timing), stops: stops_json(timing, lead, planned, stops_list, events, nxt),
           line: planned.filter_map { [ it[:lat].to_f, it[:lng].to_f ] if it[:lat] && it[:lng] },

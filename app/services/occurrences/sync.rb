@@ -4,7 +4,8 @@
 # - a future row is updated when its inputs changed, keeping the fields a person changed (overridden_fields);
 # - a future row the trip no longer makes is deleted, or marked removed when something hangs on it (issue, edits);
 # - a date the calendar skips is a row with status skipped (and why), for Trip History.
-# Runs under an advisory lock per trip. Returns the ids of the rows inserted, changed or removed.
+# Runs under an advisory lock per trip. Returns the ids of the rows inserted, changed or removed; their watchers and drivers
+# (before and after) hear about them on the WebSocket (Realtime).
 module Occurrences
   class Sync < ApplicationService
     HORIZON_DAYS = 120
@@ -42,9 +43,11 @@ module Occurrences
       @generator = Generator.new(context: ctx, fleet: @fleet, replacements: index)
       @route_generator = RouteGenerator.new(context: ctx, fleet: @fleet, replacements: index)
       @bell = DriverApp::RunNotifications.new(now: @now)
+      @touched = []
       TripOccurrence.transaction do
         ids = trips.flat_map { |trip| sync_trip(trip, from, to) } + routes.flat_map { |route| sync_route(route, from, to) }
         @bell.flush
+        Realtime.runs_changed(@touched)
         ids
       end
     end
@@ -98,6 +101,7 @@ module Occurrences
       end
       ids = TripOccurrence.insert_all!(records, returning: [ :id ]).rows.flatten
       @bell.inserted(company_id, ids.zip(rows))
+      ids.zip(records) { |id, r| @touched << { id:, date: r[:date], driver_id: r[:driver_id], operator_driver_id: r[:operator_driver_id] } }
       ids
     end
 
@@ -109,6 +113,7 @@ module Occurrences
       attrs[:status] = row.skip_reason ? "skipped" : "scheduled" if occ.removed? || ((occ.skipped? || occ.scheduled?) && !occ.overridden?(:status))
       attrs[:driver_seen_at] = nil if DRIVER_SEES.any? { |k| occ.public_send(k) != attrs[k] }
       @bell.updated(occ, attrs)
+      @touched << occ << { id: occ.id, date: occ.date, driver_id: attrs[:driver_id], operator_driver_id: attrs[:operator_driver_id] }
       bump(occ, attrs.merge(source_digest: row.digest))
       occ.id
     end
@@ -124,6 +129,7 @@ module Occurrences
     # again); others go. Something = an issue, a hand change, a cancel, or records pointing at the run (records).
     def remove(occ, has_records)
       @bell.removed(occ)
+      @touched << occ
       if has_records || occ.issue? || occ.overridden_fields.any? || occ.cancelled?
         bump(occ, status: "removed")
       else
