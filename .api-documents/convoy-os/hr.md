@@ -138,6 +138,18 @@ Row: `{ id, name, phone, photo, age, vehicle { id, plate }, vehicle_type { id, n
 Sub line: "<plate | No vehicle> | <scheme_today.name | No pay scheme>"; "Age <age>" (from the driver's KYC, `null` when not shared).
 Each change saves at once and returns the driver.
 
+Assignment calls (`:kind` is `schemes` or `vehicle_types`; any other value is `404`). They need the `finance` permission (`403` otherwise;
+a Convoy Admin can only read). Body `{ "assignment": { "<pay_scheme_id | vehicle_type_id>", "starts_on", "ends_on" } }`
+(`pay_scheme_id` for `schemes`, `vehicle_type_id` for `vehicle_types`; `ends_on` may be empty = open; a missing `assignment` is `400`).
+
+| Call | Result |
+| --- | --- |
+| `POST /pay/drivers/:id/:kind` | **201** `{ data: <driver> }` (the detail row below, with the new row in `pay_schemes` / `vehicle_types`). Earlier rows that are open or overlap now end the day before this one starts |
+| `PATCH /pay/drivers/:id/:kind/:assignment_id` | **200** `{ data: <driver> }`; any of the three fields; rows are re-cut as on create. `404` when the row belongs to another driver |
+| `DELETE /pay/drivers/:id/:kind/:assignment_id` | **200** `{ data: <driver> }` (not 204). The row is deleted; the other rows are **not** re-cut, so the day(s) it covered stay without a scheme / type (the earlier row keeps its `ends_on`) |
+
+`404` for a driver who is deleted or not found. Each change is recorded in the Audit Log (section 8 of this file / `GET /pay/audit_log`).
+
 Driver (`GET /pay/drivers/:id` and every change) adds:
 - `pay_schemes [{ id, pay_scheme { id, name }, starts_on, ends_on, tag }]`, `tag` = `upcoming` / `current` / `ended`.
 - `vehicle_types [{ id, vehicle_type { id, name }, starts_on, ends_on, tag, warning }]`.
@@ -340,6 +352,7 @@ covers the month and the scheme (Earnings: also the driver's eligibility and sig
 | Action | Call |
 | --- | --- |
 | List | `GET /pay/rewards` |
+| Open one | `GET /pay/rewards/:id` → the reward below (`404` once deleted) |
 | Add Reward / Save | `POST /pay/rewards`, `PATCH /pay/rewards/:id` (multipart when a photo is sent) |
 | Delete Reward (confirm "Delete <title>?") | `DELETE /pay/rewards/:id` |
 

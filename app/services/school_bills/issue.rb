@@ -14,7 +14,7 @@ module SchoolBills
     end
 
     def call
-      drafts = SchoolBill.drafts.where(school: @school, academic_year: @year, kind: "period", period_index: @index).includes(:lines, :family)
+      drafts = SchoolBill.drafts.where(school: @school, academic_year: @year, kind: "period", period_index: @index).includes(:lines, :family).order(:id)
       drafts = drafts.where(id: @bill_ids) if @bill_ids
       drafts = drafts.to_a
       raise Error, "No drafted bills to issue" if drafts.empty?

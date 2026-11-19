@@ -249,7 +249,7 @@ From then on, the route pay, the routes and the replacement lines are kept.
 | --- | --- |
 | `GET /schools/:school_id/payouts?month=YYYY-MM` | The month (default: this month) |
 | `POST /schools/:school_id/payouts/:operator_id/lines` | Add a line (multipart for files): `{ month, kind, adj_on, route, amount, reason, paired_operator_id, files: [] }` |
-| `DELETE /schools/:school_id/payouts/:operator_id/lines/:line_id?month=` | Remove a line. Lines added automatically, and lines on a pay run sent to Finance, cannot be removed |
+| `DELETE /schools/:school_id/payouts/:operator_id/lines/:line_id?month=` | Remove a line. Lines added automatically, and lines on a pay run sent to Finance, cannot be removed. A "Covered another route" line and the matching "Route covered by …" line on the other operator go together (remove either one); 422 if the other operator's pay run is with Finance or approved (recall or reopen it first) |
 | `PATCH /schools/:school_id/payouts/:operator_id` | `{ month, invoice_number }`: the operator's invoice number |
 | `POST /schools/:school_id/payouts/:operator_id/send` | Send to Finance. The prototype labels this button "Approve and Send to Finance" (month ended) or "Approve Early and Send to Finance" (month not ended): it is this call, shown when `can.send`; it does not approve |
 | `POST /schools/:school_id/payouts/:operator_id/recall` | Recall, back to draft |

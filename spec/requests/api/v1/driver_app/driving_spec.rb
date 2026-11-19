@@ -224,4 +224,49 @@ RSpec.describe "Driver app driving" do
       expect(json[:data]).to include(on_time: "on_time")
     end
   end
+
+  it "skips a point with a reason, once, and not after the driver has left it or on a trip that has not started" do
+    occ = create_trip
+    token = driver_token("91234567")
+    act(token, occ, :skip_stop, position: 0)
+    expect(error).to eq("not_started")
+
+    travel_to Time.zone.local(2026, 11, 3, 7, 30)
+    act(token, occ, :start)
+    act(token, occ, :skip_stop, position: 0)
+    expect(json.dig(:error, :details, :reason)).to eq([ "can't be blank" ])
+    act(token, occ, :skip_stop, position: 9, reason: "Passenger not at the point")
+    expect(json.dig(:error, :details, :position)).to eq([ "is not a point of this trip" ])
+
+    id = SecureRandom.uuid
+    act(token, occ, :skip_stop, position: 0, reason: "Passenger not at the point", client_id: id)
+    expect(json.dig(:data, :points, 0, :record)).to include(skipped: true)
+    expect(json[:meta]).to eq(replayed: false)
+    act(token, occ, :skip_stop, position: 0, reason: "Passenger not at the point", client_id: id)
+    expect(json[:meta]).to eq(replayed: true)
+    within_tenant(company) do
+      expect(occ.stop_events.find_by!(position: 0)).to have_attributes(skipped: true, skip_reason: "Passenger not at the point", skipped_by: "driver")
+      expect(DriverAppAction.where(occurrence_id: occ.id, kind: "skip_stop").count).to eq(1)
+    end
+
+    act(token, occ, :arrive, position: 2)
+    act(token, occ, :leave, position: 2)
+    act(token, occ, :skip_stop, position: 2, reason: "Passenger not at the point")
+    expect(json.dig(:error, :message)).to eq("Mapletree Business City was already reached")
+  end
+
+  it "keeps a run out of reach of another driver's skip, and of a token that is not a driver's" do
+    occ = create_trip
+    within_tenant(company) { create(:driver, name: "Other", phone: "+6598887777") }
+    travel_to Time.zone.local(2026, 11, 3, 7, 30)
+    act(driver_token("91234567"), occ, :start)
+
+    act(driver_token("98887777"), occ, :skip_stop, position: 0, reason: "Passenger not at the point")
+    expect(response).to have_http_status(:not_found)
+    post skip_stop_api_v1_driver_app_run_path(occ.id), params: { position: 0, reason: "Passenger not at the point" }, headers: as(app_token(mobile: "9188 2045")), as: :json
+    expect(response).to have_http_status(:unauthorized)
+    integration_session.bearer_token = nil
+    post skip_stop_api_v1_driver_app_run_path(occ.id), params: { position: 0, reason: "x" }, as: :json
+    expect(response).to have_http_status(:unauthorized)
+  end
 end

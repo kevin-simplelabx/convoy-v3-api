@@ -273,6 +273,8 @@ In the Fleet menu, group Transport Operators.
 | Operator Vehicles: the list | `GET /vehicles?ownership[]=managed` | [fleet § 1](fleet.md#1-vehicles-and-operator-vehicles) |
 | Operator Vehicles: Change Driver | `GET /operator_drivers/assign_preview`, then `PATCH /operator_drivers/:id/assign_vehicle` | [fleet § 1.5](fleet.md#15-operator-vehicles-change-driver--operator-drivers-assign-bus) |
 | Operator Drivers: tabs, Invite Operator Driver, row buttons, View Details | Same as Drivers on `/operator_drivers` | [fleet § 2](fleet.md#2-drivers-and-operator-drivers) |
+| Operator Drivers: Resend, Mark Accepted / Declined, Invite Again, Remove driver | `PATCH /operator_drivers/:id/resend` · `/accept` · `/decline` · `/reinvite` · `/remove` | [fleet § 2.3](fleet.md#23-row-buttons) |
+| Operator Drivers: View Details, Shown to Your Customers | `GET /operator_drivers/:id/details`, `PATCH /operator_drivers/:id/display` | [fleet § 2.4](fleet.md#24-view-details-get-driversiddetails-get-operator_driversiddetails) |
 | Operator Drivers: Assign Bus / Swap Bus | Same as Change Driver | [fleet § 1.5](fleet.md#15-operator-vehicles-change-driver--operator-drivers-assign-bus) |
 | Connected Operators | Coming Soon, no API | [fleet § 10](fleet.md#10-not-built-yet) |
 
@@ -309,6 +311,7 @@ Convoy staff only (rail items Discover, Company Leads, Transport Companies; Mess
 | Transport Companies: Open | `PATCH /session { company_id }` | [convoy-admin § 1](convoy-admin.md#1-transport-companies) |
 | Message Terms | `/message_terms` | [convoy-admin § 2](convoy-admin.md#2-message-terms) |
 | Discover: advertisers, placements, KPIs, pause / resume / end / duplicate | `/discover/advertisers`, `/discover/placements` | [convoy-admin § 3](convoy-admin.md#3-discover) |
+| Discover: Pause, Resume, End now, Duplicate | `POST /discover/placements/:id/pause` · `/resume` · `/end` · `/duplicate` | [convoy-admin § 3](convoy-admin.md#pause-resume-end-now-duplicate) |
 | Company Leads | `/leads` | [convoy-admin § 4](convoy-admin.md#4-company-leads) |
 | Vehicle type requests (Add Type / Decline), country change requests | `/vehicle_type_requests`, `/country_requests` | [fleet § 5.2](fleet.md#52-request-a-new-type), [settings § 3.3](settings.md#33-request-a-country-change) |
 
@@ -372,7 +375,7 @@ Rail icon `badge`. Needs the `finance` or `finview` permission.
 | Screen / element | API | Doc |
 | --- | --- | --- |
 | Drivers: list, search, Pay Scheme Today | `GET /pay/drivers` | [hr § 3](hr.md#3-drivers) |
-| Drivers: Assign Scheme / Vehicle Type, dates, remove | `/pay/drivers/:id/schemes`, `/pay/drivers/:id/vehicle_types` | [hr § 3](hr.md#3-drivers) |
+| Drivers: Assign Scheme / Vehicle Type, dates, remove | `POST /pay/drivers/:id/:kind`, `PATCH` / `DELETE /pay/drivers/:id/:kind/:assignment_id` (`:kind` = `schemes` or `vehicle_types`) | [hr § 3](hr.md#3-drivers) |
 | Earnings: month, list, totals | `GET /pay/earnings?month=` | [hr § 5](hr.md#5-earnings) |
 | Earnings: a driver (runs, breakdown, chart, bonuses) | `GET /pay/earnings/:driver_id?month=` | [hr § 5](hr.md#5-earnings) |
 | Earnings: Raise an Issue / Clear Issue | `POST` / `DELETE /occurrences/:id/issue` | [hr § 5](hr.md#5-earnings) |

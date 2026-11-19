@@ -27,7 +27,7 @@ module Drivers
     end
 
     def resend
-      raise AASM::InvalidTransition.new(@driver, :resend, :status) unless @driver.pending?
+      raise AASM::InvalidTransition.new(@driver, :resend, :default) unless @driver.pending?
 
       @driver.update!(invited_at: Time.current)
       send_invite(:resend)
@@ -42,7 +42,7 @@ module Drivers
     end
 
     def remove
-      raise AASM::InvalidTransition.new(@driver, :remove, :status) unless @driver.active?
+      raise AASM::InvalidTransition.new(@driver, :remove, :default) unless @driver.active?
 
       @driver.is_a?(Driver) ? release_own_buses : @driver.last_vehicle = @driver.vehicle
       @driver.remove!

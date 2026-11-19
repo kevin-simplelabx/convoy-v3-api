@@ -67,4 +67,33 @@ RSpec.describe "School Bus route plans" do
     get api_v1_plan_path(second)
     expect(json.dig(:data, :out_of_date)).to be(true)
   end
+
+  it "removes a plan comment, counts it down, and keeps another plan's comment out of reach" do
+    first = run_routing
+    second = run_routing
+    post comments_api_v1_plan_path(first), params: { body: "Check Stop 4 timing" }
+    post comments_api_v1_plan_path(first), params: { body: "Second look" }
+    mine, kept = json.dig(:data, :comments).pluck(:id)
+    post comments_api_v1_plan_path(second), params: { body: "On the other plan" }
+    theirs = json.dig(:data, :comments, 0, :id)
+
+    delete comment_api_v1_plan_path(first, theirs)
+    expect(response).to have_http_status(:not_found)
+    delete comment_api_v1_plan_path(first, mine)
+    expect(response).to have_http_status(:no_content)
+    get api_v1_plan_path(first)
+    expect(json[:data]).to include(comments_count: 1)
+    expect(json.dig(:data, :comments).pluck(:id)).to eq([ kept ])
+    get api_v1_plan_path(second)
+    expect(json[:data]).to include(comments_count: 1)
+
+    delete comment_api_v1_plan_path(first, mine)
+    expect(response).to have_http_status(:not_found)
+    sign_in_as(create(:user, company:, permissions: %w[planview]))
+    delete comment_api_v1_plan_path(first, kept)
+    expect(response).to have_http_status(:forbidden)
+    sign_in_as(create(:user, company: create(:company), permissions: %w[plans]))
+    delete comment_api_v1_plan_path(first, kept)
+    expect(response).to have_http_status(:not_found)
+  end
 end

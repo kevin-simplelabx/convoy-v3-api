@@ -169,4 +169,34 @@ RSpec.describe "Booking approval flow and notifications" do
     get api_v1_booking_notifications_path
     expect(json[:data]).to eq([])
   end
+
+  describe "notification preferences" do
+    it "lists every kind with its default, shows a change, and ignores a kind that does not exist" do
+      get preferences_api_v1_booking_notifications_path
+      expect(json[:data]).to include(email: true, user: user.name)
+      expect(json.dig(:data, :kinds).pluck(:kind)).to eq(BookingEvent::KINDS)
+      expect(json.dig(:data, :kinds)).to all(include(label: be_present, description: be_present, on: true))
+
+      patch preferences_api_v1_booking_notifications_path, params: { new_booking: false }, as: :json
+      get preferences_api_v1_booking_notifications_path
+      expect(json.dig(:data, :kinds).find { it[:kind] == "new_booking" }).to include(on: false)
+      expect(json.dig(:data, :kinds).count { it[:on] }).to eq(BookingEvent::KINDS.size - 1)
+
+      patch preferences_api_v1_booking_notifications_path, params: { not_a_kind: false }, as: :json
+      expect(response).to have_http_status(:ok) # an unknown key is ignored, nothing else changes
+      expect(json.dig(:data, :kinds).count { it[:on] }).to eq(BookingEvent::KINDS.size - 1)
+    end
+
+    it "keeps each user's picks to themselves, and needs a sign-in" do
+      patch preferences_api_v1_booking_notifications_path, params: { client_declined: false, email: false }, as: :json
+      sign_in_as(create(:user, :admin, company:))
+      get preferences_api_v1_booking_notifications_path
+      expect(json[:data]).to include(email: true)
+      expect(json.dig(:data, :kinds).find { it[:kind] == "client_declined" }).to include(on: true)
+
+      integration_session.bearer_token = nil
+      get preferences_api_v1_booking_notifications_path
+      expect(response).to have_http_status(:unauthorized)
+    end
+  end
 end

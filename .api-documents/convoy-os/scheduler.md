@@ -380,6 +380,7 @@ Clicking a vehicle name opens the panel.
 ### 7.1 Open
 
 - New trip: start empty (front end), optionally prefilled from the empty slot or from Fill from Message (7.8).
+- List: `GET /trips?kind=&client_id=&vehicle_id=&from=&to=&q=&page=&limit=` → `{ data: [trip rows], meta: { page, limit, count, pages } }`, newest start date first. `kind` as in `GET /occurrences/list`; `vehicle_id` = trips with that bus in a slot; `from` + `to` (both) = trips that may run in the range; `q` searches title, client, label and the Trip ID. A row is `{ id, kind, kind_name, title, label, trip_no, trip_id, starts_on, ends_on, end_mode, days, repeat_text, start_time, end_time, ends_next_day, vehicles_count, pax, price, client_id, client_name, route_text, is_return, pair_id, lock_version }`; the whole trip is below.
 - Edit: `GET /trips/:id` → the whole trip:
 
 ```json
@@ -591,7 +592,7 @@ Quote response (`km` = road distance from your route, for distance bands; `extra
 - `flags` per row: "No time", "Earlier than the row above", "No parent phone", "No postal code", "Also on <other School Run>".
   Checking postal codes against OneMap is done in the front end.
 - Save Pick-up Point on a review stop: `POST /pickup_points` `{ "pickup_point": { name, postal_codes: [...] or "461443, 462443", lat, lng, note } }`;
-  list `GET /pickup_points`; delete `DELETE /pickup_points/:id`. Review again to apply it.
+  list `GET /pickup_points`; edit `PATCH /pickup_points/:id` (same body, **200** `{ data: { id, name, postal_codes, lat, lng, note } }`; `422` "Name can't be blank", `postal_codes` "must be 6 digits"); delete `DELETE /pickup_points/:id`. Review again to apply it.
 3. Add to Trip:
    - New trip: put `trip_attributes` into the form (plus client, vehicles, price) and `POST /trips`.
    - Saved trip with students: `POST /trips/:trip_id/route_list` `{ document_read_id, joins, apply_from: "2026-11-09" }` →
@@ -713,6 +714,7 @@ A new replacement on a run replaces the run's earlier one. Messages: "Pick the r
 
 - `GET /replacements?from=&vehicle_id=&scope=run|range` — from 30 days ago by default; `status_label` Active / Coming Up / Ended;
   `meta.active` = count still running or coming. Clicking one opens its date (`starts_on`) and run.
+- `GET /replacements/:id` — one replacement, the same row as the list (`404` when it is gone).
 - `DELETE /replacements/:id` — its runs go back to the regular bus and driver.
 
 In the grid, runs under a replacement have `replacement_id`; Vehicle Down / Crew Swap / Handover set `original_vehicle_id` (ghost).

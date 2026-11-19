@@ -126,4 +126,52 @@ RSpec.describe "School Bus families" do
       expect(wong.family_riders.pluck(:rid)).to eq(%w[S3])
     end
   end
+
+  describe "a guardian's details and removal" do
+    let!(:fam) do
+      post api_v1_school_families_path(school), params: { guardian: { first_name: "Ah Kow", last_name: "Tan", relationship: "Father", phone: "9123 4567" } }
+      post guardians_api_v1_family_path(json.dig(:data, :id)), params: { guardian: { first_name: "Mei", last_name: "Tan", relationship: "Mother" } }
+      json[:data]
+    end
+    let(:mei) { fam[:guardians].last[:id] }
+
+    it "changes a guardian with the checks of adding one" do
+      patch guardian_api_v1_family_path(fam[:id], mei), params: { guardian: { first_name: "Mei", phone: "12" } }
+      expect(json.dig(:error, :message)).to eq("Phone doesn't look like a phone number")
+      patch guardian_api_v1_family_path(fam[:id], mei), params: { guardian: { first_name: "", last_name: "" } }
+      expect(json.dig(:error, :message)).to eq("Enter a first name or last name")
+
+      patch guardian_api_v1_family_path(fam[:id], mei), params: { guardian: { first_name: "Mei Ling", phone: "8123 0000", email: "mei@example.com" } }
+      expect(response).to have_http_status(:ok)
+      expect(json.dig(:data, :guardians).find { it[:id] == mei }).to include(first_name: "Mei Ling", email: "mei@example.com")
+      within_tenant(company) { expect(FamilyGuardian.find(mei)).to have_attributes(first_name: "Mei Ling", last_name: "Tan") }
+    end
+
+    it "removes a guardian and leaves the others" do
+      delete guardian_api_v1_family_path(fam[:id], mei)
+      expect(response).to have_http_status(:ok)
+      expect(json.dig(:data, :guardians).size).to eq(1)
+      within_tenant(company) { expect(FamilyGuardian.where(id: mei)).to be_empty }
+      delete guardian_api_v1_family_path(fam[:id], mei)
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it "refuses a user with none of plans / schools / finance, Convoy Admin without a company, and for another family's guardian or another company" do
+      other_id = within_tenant(company) { school.families.create!(code: "FAM-0099", name: "Other").id }
+      patch guardian_api_v1_family_path(other_id, mei), params: { guardian: { first_name: "X" } }
+      expect(response).to have_http_status(:not_found)
+
+      sign_in_as(create(:user, company:, permissions: %w[vehicles]))
+      delete guardian_api_v1_family_path(fam[:id], mei)
+      expect(response).to have_http_status(:forbidden)
+      sign_in_as(create(:user, :convoy_admin))
+      patch guardian_api_v1_family_path(fam[:id], mei), params: { guardian: { first_name: "X" } }
+      expect(json.dig(:error, :message)).to eq("Pick a company first") # Convoy Admin writes in no company
+
+      sign_in_as(create(:user, company: create(:company), permissions: %w[schools]))
+      delete guardian_api_v1_family_path(fam[:id], mei)
+      expect(response).to have_http_status(:not_found)
+      within_tenant(company) { expect(FamilyGuardian.where(id: mei)).to exist }
+    end
+  end
 end

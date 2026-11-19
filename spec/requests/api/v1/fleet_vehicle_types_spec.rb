@@ -71,4 +71,47 @@ RSpec.describe "Vehicle types page and attendants" do
     get api_v1_attendants_path
     expect(json[:data]).to be_empty
   end
+
+  describe "turning a type on or off" do
+    it "writes a DisabledVehicleType row for the company and takes it away again" do
+      sign_in_as(admin)
+      patch toggle_api_v1_vehicle_type_path(minibus), params: { enabled: false }, as: :json
+      expect(response).to have_http_status(:ok)
+      expect(json[:data]).to include(key: "minibus_13", enabled: false)
+      within_tenant(company) { expect(DisabledVehicleType.pluck(:vehicle_type_id)).to eq([ minibus.id ]) }
+      patch toggle_api_v1_vehicle_type_path(minibus), params: { enabled: false }, as: :json # again: still one row
+      within_tenant(company) { expect(DisabledVehicleType.count).to eq(1) }
+      get api_v1_vehicle_types_path
+      expect(json[:data].first).to include(key: "minibus_13", enabled: false)
+
+      patch toggle_api_v1_vehicle_type_path(minibus), params: { enabled: true }, as: :json
+      expect(json[:data]).to include(enabled: true)
+      within_tenant(company) { expect(DisabledVehicleType.count).to eq(0) }
+    end
+
+    it "keeps the choice to the company: another company still sees the type on" do
+      sign_in_as(admin)
+      patch toggle_api_v1_vehicle_type_path(minibus), params: { enabled: false }, as: :json
+      sign_in_as(create(:user, :admin, company: create(:company)))
+      get api_v1_vehicle_types_path
+      expect(json[:data].find { it[:key] == "minibus_13" }).to include(enabled: true)
+    end
+
+    it "needs an Admin or owner of a company, and the enabled flag" do
+      sign_in_as(create(:user, company:, permissions: %w[vehicles]))
+      patch toggle_api_v1_vehicle_type_path(minibus), params: { enabled: false }, as: :json
+      expect(response).to have_http_status(:forbidden)
+
+      sign_in_as(create(:user, :convoy_admin))
+      patch toggle_api_v1_vehicle_type_path(minibus), params: { enabled: false }, as: :json
+      expect(response).to have_http_status(:forbidden)
+
+      sign_in_as(admin)
+      patch toggle_api_v1_vehicle_type_path(minibus), as: :json
+      expect(response).to have_http_status(:bad_request).or have_http_status(:unprocessable_content)
+      patch toggle_api_v1_vehicle_type_path(0), params: { enabled: false }, as: :json
+      expect(response).to have_http_status(:not_found)
+      within_tenant(company) { expect(DisabledVehicleType.count).to eq(0) }
+    end
+  end
 end

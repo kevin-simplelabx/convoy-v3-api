@@ -326,6 +326,72 @@ RSpec.describe "Convoy App school bus requests" do
       expect(home.reload).to have_attributes(postal: "460216", block: "216", floor: "05", unit: "22", address: "Blk 216 Bedok North St 1, #05-22")
     end
 
+    describe "Agree to New Fare" do
+      let(:body) do
+        { postal: "460216", block: "216", street: "Bedok North St 1", floor: "05", unit: "22", move_on: "2027-01-18", update_home: true,
+          children: [ { dependant_id: ethan.id } ] }
+      end
+      let(:req_id) do
+        later(Time.zone.local(2027, 1, 4, 9, 0))
+        fake_one_map.add("460216", 1.335, 103.935, "216 BEDOK NORTH STREET 1")
+        api(:post, address_change_api_v1_convoy_app_school_path, address_change: body)
+        json[:data].sole[:id]
+      end
+
+      def confirm(id) = tenant { BusRequests::ConfirmChange.call(BusRequest.find(id), amount: 900, note: "Longer route", user: staff, stop: "Blk 216 Bedok North St 1") }
+
+      it "records No: Not Agreed for the company, the home stays, and the answer cannot be given again" do
+        confirm(req_id)
+        api(:post, agree_api_v1_convoy_app_school_request_path(req_id), token: david_token, yes: false)
+        expect(response).to have_http_status(:ok), json.inspect
+        expect(json[:data]).to include(status: "Not Agreed")
+        expect(tenant { BusRequest.find(req_id) }).to have_attributes(agree: "no", status: "Not Agreed")
+        expect(home.reload.postal).to eq("460412")
+
+        api(:post, agree_api_v1_convoy_app_school_request_path(req_id), yes: true)
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(json.dig(:error, :message)).to eq("This request is not waiting for the parent")
+        expect(tenant { BusRequest.find(req_id).status }).to eq("Not Agreed")
+        expect(home.reload.postal).to eq("460412")
+      end
+
+      it "cannot be said twice after Yes, nor before the company has confirmed" do
+        api(:post, agree_api_v1_convoy_app_school_request_path(req_id), yes: true)
+        expect(json.dig(:error, :message)).to eq("This request is not waiting for the parent")
+        expect(tenant { BusRequest.find(req_id).status }).to eq("Requested")
+
+        confirm(req_id)
+        api(:post, agree_api_v1_convoy_app_school_request_path(req_id), yes: true)
+        expect(json[:data]).to include(status: "Active")
+        api(:post, agree_api_v1_convoy_app_school_request_path(req_id), yes: false)
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(tenant { BusRequest.find(req_id) }).to have_attributes(agree: "yes", status: "Active")
+        api(:post, agree_api_v1_convoy_app_school_request_path(req_id))
+        expect(response).to have_http_status(:bad_request).or have_http_status(:unprocessable_content)
+      end
+
+      it "stays with the Family: another Family gets 404, and tokens of the other apps get 401" do
+        confirm(req_id)
+        stranger = app_user(mobile: "9100 0002", name: %w[Sam Lim])
+        other = Household.create!(name: "Lim Family", postal: "460101", block: "101", street: "Bedok Ave 1", floor: "02", unit: "03", created_by: stranger[0])
+        other.members.create!(app_account: stranger[0], status: :active, admin: true, billing_contact: true, relationship: "Father", invited_via: :creator, joined_at: 1.day.ago)
+        api(:post, agree_api_v1_convoy_app_school_request_path(req_id), token: stranger[1], yes: true)
+        expect(response).to have_http_status(:not_found)
+        api(:post, agree_api_v1_convoy_app_school_request_path(0), yes: true)
+        expect(response).to have_http_status(:not_found)
+
+        within_tenant(company) { create(:driver, name: "Ahmad", phone: "+6591234567") }
+        [ driver_token("9123 4567"), (sign_in_as(create(:user, :admin, company:)) && integration_session.bearer_token) ].each do |token|
+          post agree_api_v1_convoy_app_school_request_path(req_id), params: { yes: true }, headers: app_as(token), as: :json
+          expect(response).to have_http_status(:unauthorized)
+        end
+        integration_session.bearer_token = nil
+        post agree_api_v1_convoy_app_school_request_path(req_id), params: { yes: true }, as: :json
+        expect(response).to have_http_status(:unauthorized)
+        expect(tenant { BusRequest.find(req_id).status }).to eq("Accepted")
+      end
+    end
+
     it "renews for the next year while the school takes renewals" do
       tenant do
         year = AcademicYears::Create.call(school: f[:school], start_year: 2028, start_month: 1)

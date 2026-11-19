@@ -68,7 +68,7 @@ with a **Finance Settings** button. Each row:
 
 ### 1.3 Add User / Edit
 
-Add: `POST /users`. Edit: `PATCH /users/:id`.
+Add: `POST /users`. Edit: `PATCH /users/:id`. Open one: `GET /users/:id` → `{ data: <the row above> }` (`404` for a user of another company or one that is deleted).
 
 ```json
 { "user": { "name": "Paula Planner", "email": "paula@example.com", "password": "secret123",
@@ -220,6 +220,7 @@ Rows `{ id, date, name, observed, saturday }` (badges Observed and Saturday). `m
 Add a Holiday: `POST /public_holidays { public_holiday: { date, name } }`. A holiday on a Sunday also adds the Monday after
 as the observed holiday ("<name> Holiday"), returned in `meta.observed` (`null` when not added):
 "Added National Day, plus Mon 10 Aug as the observed holiday". `422`: `Date is already a public holiday`.
+Edit: `PATCH /public_holidays/:id { public_holiday: { date, name, observed } }` → `{ data: <row> }`; the same `422` for a date already on the list (an edit does not add or move an observed Monday).
 Remove: `DELETE /public_holidays/:id`.
 
 ### 4.3 A calendar's days: `GET /calendars/:id?year=2026`

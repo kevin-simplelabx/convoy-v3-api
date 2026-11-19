@@ -84,6 +84,10 @@ Each row also carries every field of a Scheduler run (see [scheduler.md § Load 
 The list of every notice with tabs, search and the templates card. The New Notice / Edit form is the same Notice form as the
 Scheduler drawer ([scheduler.md § Notice form](scheduler.md#12-notice-form)); from this page it starts without a trip picked.
 
+### `GET /notices/:id`
+
+One notice, the same row as the list below (`404` for an unknown id).
+
 ### `GET /notices`
 
 | Param | Required | Description |

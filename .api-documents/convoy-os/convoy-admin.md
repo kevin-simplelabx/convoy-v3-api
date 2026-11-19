@@ -124,6 +124,23 @@ The response also has `advertiser { id, name, premier }` (or `null` for `news`),
 Discover tab or both", "Pick who sees it"; when publishing also "Enter the price", "Pick the transport company that runs the bus",
 "Add a link or a promo code". Delete: "Only drafts can be deleted. End it instead". Duplicate → a draft "<title> (copy)".
 
+### Pause, Resume, End now, Duplicate
+
+`POST /discover/placements/:id/pause | resume | end | duplicate`, no body. Convoy Admin only (`403` for anyone else), `404` for an unknown id.
+All answer `{ data: <placement> }` (the placement above, state after the call).
+
+| Call | What it does | Status |
+| --- | --- | --- |
+| `/pause` | `status` → `paused` | 200 |
+| `/resume` | `status` → `live` | 200 |
+| `/end` (End now) | `ended_at` = now → `state: "ended"` for good (moves to the Ended tab) | 200 |
+| `/duplicate` | A new **draft** copy: `title` "<title> (copy)", `views`, `taps`, `sold` = 0, `ended_at` null, `created_by` = you. Everything else is copied (advertiser, texts, prices, dates, audiences, area, listing fee, commission); the **picture is not copied** (`image: null`) | **201** |
+
+- `state` follows from the dates too: a paused placement is `paused` only between `starts_on` and `ends_on`; before the start it still shows `scheduled`, and it is `ended` once `ends_on` has passed or after End now.
+- Pause / Resume / End now do not check the current state. The placement is saved with the same checks as an edit, so a `422` can come
+  with the publish messages above (for example "Enter the price"). Resume on an ended placement leaves it `ended`: End now cannot be undone.
+- Duplicate keeps the dates of the original; edit them before publishing (a draft is not checked for the publish messages).
+
 ## 4. Company Leads
 
 | Action | Call |

@@ -48,7 +48,14 @@ module SchoolPay
       prepare!
       line = payout.adjustments.find(id)
       editable!(payout)
-      line.destroy!
+      match = line.pair || SchoolPayoutAdjustment.find_by(pair_id: line.id) # the other operator's side of a covered route
+      raise Error, "#{match.school_payout.operator.name} is already with Finance or approved. Recall or reopen it first to remove the matching line" if match&.school_payout&.locked?
+
+      ApplicationRecord.transaction do
+        line.update!(pair: nil) if match
+        match&.destroy!
+        line.destroy!
+      end
     end
 
     def invoice_number(value)

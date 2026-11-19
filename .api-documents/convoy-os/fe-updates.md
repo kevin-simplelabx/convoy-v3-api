@@ -4,6 +4,16 @@ Changes to existing Convoy OS endpoints made while building other apps (Convoy D
 on (renamed, removed or changed fields and endpoints). New optional fields are not listed here; they are in the menu
 documents. Newest first. Each item: what changed, before → after, and what the front-end has to do.
 
+## 17/11/2026 — Documentation only: row buttons, Discover actions and HR assignments written up (no API change)
+
+These endpoints already existed; their calls, results and errors are now in the menu documents. Nothing to change in the front-end unless it was built from guesses.
+
+| # | Endpoint | Where |
+| --- | --- | --- |
+| 1 | `POST /discover/placements/:id/resume` · `/end` · `/duplicate` | [convoy-admin.md § 3](convoy-admin.md#pause-resume-end-now-duplicate) |
+| 2 | `POST /pay/drivers/:id/:kind`, `PATCH` / `DELETE /pay/drivers/:id/:kind/:assignment_id`: `201` / `200` / `200` with the driver (delete is not `204`) | [hr.md § 3](hr.md#3-drivers) |
+| 3 | `PATCH /drivers/:id/accept` · `/decline` · `/reinvite` · `/remove`, the same on `/operator_drivers`, plus `/operator_drivers/:id/resend`, `/details`, `/display` | [fleet.md § 2.3 – 2.5](fleet.md#23-row-buttons) |
+
 ## 17/11/2026 — Convoy App review fixes (bookings, School Bus requests; new field and 422 messages, no breaking change)
 
 | # | Endpoint / field | Before → after | Front-end |

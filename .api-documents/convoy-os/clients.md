@@ -112,7 +112,7 @@ Edit Site body:
 
 ### 2.2 Their Customers (Main Contractor)
 
-`POST /clients/:client_id/end_customers { client_end_customer: { name } }`, `DELETE /clients/:client_id/end_customers/:id`.
+`GET /clients/:client_id/end_customers` → `{ data: [{ client_id, name, created_at }] }` by name, `POST /clients/:client_id/end_customers { client_end_customer: { name } }` (**201**), `PATCH /clients/:client_id/end_customers/:id { client_end_customer: { name } }` (**200**, renames; the same name check), `DELETE /clients/:client_id/end_customers/:id`.
 `422` "Name is already on the list" (any case); a customer used by trips or bookings can't be removed.
 
 ### 2.3 Bookable Vehicles: `PUT /clients/:id/bookable_vehicle_types`
@@ -124,7 +124,7 @@ Text: none picked → "The client sees every vehicle type you offer…", some �
 ### 2.4 Saved Pick-up Points
 
 `POST /clients/:client_id/pickup_points { client_pickup_point: { name, address, postal_code, lat, lng, note } }`,
-`DELETE /clients/:client_id/pickup_points/:id`. Each point has `created_by { id, name }` and `created_at`:
+`PATCH /clients/:client_id/pickup_points/:id` (same body, **200** with the point; `422` when the name is used by another point of the client, or `lat` / `lng` are out of range), `DELETE /clients/:client_id/pickup_points/:id`. Each point has `created_by { id, name }` and `created_at`:
 "Added by Rachel Tan on 2 Nov 2026"; `note` → "Note for the driver: …".
 `created_by` is `null` for a point a booking admin saved in the Convoy App (the client user is not shown yet): show
 "Added on <date>".

@@ -61,6 +61,8 @@ Show a chip per team (with its colour dot), then **No Team** when `none > 0`. Wi
 
 ### 1.2 Manage Teams: `PUT /vehicle_teams/bulk`
 
+One team at a time: `POST /vehicle_teams { vehicle_team: { name, color } }` → **201** `{ data: { id, name, color } }`; `PATCH /vehicle_teams/:id` (same body) → **200**, the team and its vehicles keep each other. `422`: name blank or already used by another team (`details.name`), `color` must be `#RRGGBB`. Delete: `DELETE /vehicle_teams/:id`. The window below saves everything in one call.
+
 The whole window is saved at once:
 
 ```json
@@ -175,6 +177,8 @@ disconnect themselves in the Convoy Driver app ([driver/auth.md](../driver/auth.
 
 ### 2.2 Invite and edit
 
+Open one: `GET /drivers/:id` (or `/operator_drivers/:id`) → `{ data: <the row of 2.1> }`, `404` for an unknown or deleted driver.
+
 | Action | Call |
 | --- | --- |
 | Invite Driver | `POST /drivers` `{ "driver": { name, phone, photo (file) } }` |
@@ -192,7 +196,21 @@ disconnect themselves in the Convoy Driver app ([driver/auth.md](../driver/auth.
 
 ### 2.3 Row buttons
 
-All are `PATCH /drivers/:id/<action>` (or `/operator_drivers/:id/<action>`) and return the driver.
+All are `PATCH /drivers/:id/<action>` (or `/operator_drivers/:id/<action>`) with no body. They need the `vehicles` permission
+(`403` otherwise; a Convoy Admin can only read), `404` for an unknown or deleted driver, and answer `200 { data: <driver row> }`
+(the row of 2.1, same fields as `GET /drivers/:id`; the operator driver row for `/operator_drivers`). The row is the state after the change.
+
+| Call | Allowed from | Result | Side effects |
+| --- | --- | --- | --- |
+| `PATCH /drivers/:id/resend`, `/operator_drivers/:id/resend` | `pending` | stays `pending`, `invited_at` = now | an invite (kind resend) is recorded with the SMS text (not sent yet) |
+| `PATCH …/accept` | `pending` | `active` | none besides the status (`joined_at` is set) |
+| `PATCH …/decline` | `pending` | `declined` | none besides the status |
+| `PATCH …/reinvite` | `declined`, `past` | `pending`, `responded_at: null` | an invite is recorded again |
+| `PATCH …/remove` | `active` | `past` | own driver: stops being default driver of the bus they drive today (an entry "no driver" from today) and of every bus they were due to take over; the bus is kept as `last_vehicle`. Operator driver: leaves their bus (`vehicle_id: null`), `last_vehicle` keeps it |
+
+Any other state: `422` `"<name> is <status>, so this can't be done"` (for example `"Tan is past, so this can't be done"`).
+The two `resend` calls and the other four are the same on both pages; only the row differs (operator drivers add `operator_id`,
+`operator_name`, `notes`, `vehicle_id`, `vehicle_plate`).
 
 | Tab | Button | Action |
 | --- | --- | --- |
@@ -213,7 +231,9 @@ All are `PATCH /drivers/:id/<action>` (or `/operator_drivers/:id/<action>`) and 
   invited again. Active drivers: 422 `"Remove Tan first. Active drivers move to Past Drivers"`.
 - A button not allowed in the current state: 422 `"Tan is past, so this can't be done"`.
 
-### 2.4 View Details: `GET /drivers/:id/details`
+### 2.4 View Details: `GET /drivers/:id/details`, `GET /operator_drivers/:id/details`
+
+Same response and rules on both pages (anyone who can see the page; no `vehicles` permission needed; `driver` is the row of that page).
 
 ```json
 { "data": {
@@ -236,7 +256,9 @@ All are `PATCH /drivers/:id/<action>` (or `/operator_drivers/:id/<action>`) and 
 - `vocational_status`: `expired` (red "Expired"), `due_soon` (orange "in N days", 90 days), `valid`.
 - Only the driver can change these details (Driver app); there is no endpoint to edit them.
 
-### 2.5 Shown to Your Customers: `PATCH /drivers/:id/display`
+### 2.5 Shown to Your Customers: `PATCH /drivers/:id/display`, `PATCH /operator_drivers/:id/display`
+
+Same on both pages; needs the `vehicles` permission (`403` otherwise).
 
 Multipart: `display_name`, `display_photo` (file, square crop done on the front end), `remove_display_photo=true`.
 Sending an empty name with no photo clears it (`display: null`, "Not set. Customers see the name and photo the driver shared").
@@ -260,6 +282,8 @@ pays_by { method, to, warn }, routes_count, vehicles_count`.
 - `q[name_cont]=hup` searches the name.
 
 ### 3.2 Add / Edit
+
+Open one: `GET /operators/:id` → `{ data: <the row of 3.1 without routes_count and vehicles_count> }` (`404` when it is deleted).
 
 `POST /operators` / `PATCH /operators/:id`:
 
@@ -520,6 +544,7 @@ the same energy: km between the two readings divided by everything added since (
 | Action | Call |
 | --- | --- |
 | Blank form | `GET /fuel_entries/new?vehicle_id=` → `{ vehicle_id, date, time, kind (of the bus's last entry), full, last_odometer }` |
+| Open an entry | `GET /fuel_entries/:id` → `{ data: <the row of 8.1> }`, `404` for another company's entry |
 | Add Entry | `POST /fuel_entries` |
 | Save Entry | `PATCH /fuel_entries/:id` |
 | Delete | `DELETE /fuel_entries/:id`. Confirm "Delete this diesel entry of 9 Nov?" |
