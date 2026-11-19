@@ -5,7 +5,7 @@ with_company("SD") do
   sss = Client.kept.find_by!(name: "St. Stephen's School")
   priya = sss.users.kept.find_by(email: "priya.raman@google.com")
   if priya && !sss.bookings.exists?(po_number: "SSS-EXC-01")
-    types = VehicleType.enabled_for(ActsAsTenant.current_tenant).order(:seats).to_a
+    types = SeedFiles.vehicle_types(ActsAsTenant.current_tenant).order(:seats).to_a
     bus = types.find { |t| t.seats >= 40 } || types.last
     date = Date.current + 9
     Portal::SubmitBooking.call(client_user: priya, params: {
@@ -30,7 +30,7 @@ with_company("SD") do
   user = ->(email) { google.users.kept.find_by!(email:) }
   mbc = google.sites.find_by!(name: "Mapletree Business City")
   pp = google.sites.find_by!(name: "Google Asia Pacific (Pasir Panjang)")
-  types = VehicleType.enabled_for(ActsAsTenant.current_tenant).order(:seats).to_a
+  types = SeedFiles.vehicle_types(ActsAsTenant.current_tenant).order(:seats).to_a
   bookable = google.bookable_vehicle_types.pluck(:vehicle_type_id)
   v13 = types.find { |t| bookable.include?(t.id) } || types.first
   submit = lambda do |po_number, by, site, date, trip|

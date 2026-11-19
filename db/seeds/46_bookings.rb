@@ -5,7 +5,7 @@
 # Dates follow today; keyed by PO number.
 with_company("SD") do
   ops = User.find_by!(email: "ops@simpledrive.sg")
-  types = VehicleType.enabled_for(ActsAsTenant.current_tenant).order(:seats).to_a
+  types = SeedFiles.vehicle_types(ActsAsTenant.current_tenant).order(:seats).to_a
   v13 = types.find { |t| t.seats == 13 } || types.first
   v23 = types.find { |t| t.seats == 23 } || types.second || types.first
   today = Date.current

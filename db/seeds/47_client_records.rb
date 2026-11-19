@@ -21,7 +21,7 @@ with_company("SD") do
     end
   google.sites.where(created_by_id: nil).update_all(created_by_id: owner.id) # rubocop:disable Rails/SkipsModelValidations
   google.pickup_points.where(created_by_id: nil).update_all(created_by_id: owner.id) # rubocop:disable Rails/SkipsModelValidations
-  VehicleType.enabled_for(google.company).where("seats >= 13").order(:seats).limit(3).each do |type|
+  SeedFiles.vehicle_types(google.company).where("seats >= 13").order(:seats).limit(3).each do |type|
     google.bookable_vehicle_types.find_or_create_by!(vehicle_type: type)
   end
 end

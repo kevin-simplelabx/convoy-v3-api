@@ -46,7 +46,7 @@ personal = ConvoyApp::Bookings.account!(rachel, "personal-#{company.id}")
 
 ConvoyApp::Bookings.within(school) do
   ops = User.find_by!(email: "ops@simpledrive.sg")
-  types = VehicleType.enabled_for(company).order(:seats).to_a
+  types = SeedFiles.vehicle_types(company).order(:seats).to_a
   coach = types.find { |t| t.seats.to_i >= 40 } || types.last
   funds = school.client.bill_funds.index_by(&:name)
   gate = { name: "St. Stephen's School", address: "20 Siglap View, Singapore 455789", lat: 1.3156, lng: 103.9262, use: "pu", note: "Bus bay beside the guardhouse" }
@@ -94,7 +94,7 @@ end
 
 ConvoyApp::Bookings.within(personal) do
   ops = User.find_by!(email: "ops@simpledrive.sg")
-  types = VehicleType.enabled_for(company).order(:seats).to_a
+  types = SeedFiles.vehicle_types(company).order(:seats).to_a
   van = types.find { |t| t.seats.to_i >= 13 } || types.first
   car = types.first
   home = { name: "Home", address: "Blk 123 Tampines Street 11, Singapore 521123", lat: 1.3496, lng: 103.9568, use: "pu" }

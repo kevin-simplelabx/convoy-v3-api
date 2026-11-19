@@ -3,7 +3,7 @@
 # ≤29 18 / 14, bigger 22 / 16) plus S$2 Peak, S$3 Night, S$4 Weekend and PH.
 with_company("SD") do
   owner = User.find_by!(email: "ops@simpledrive.sg")
-  types = VehicleType.enabled_for(Company.find_by!(code: "SD")).order(:seats).to_a
+  types = SeedFiles.vehicle_types(Company.find_by!(code: "SD")).order(:seats).to_a
   base = ->(seats) { seats <= 6 ? [ 12, 8 ] : seats <= 13 ? [ 14, 10 ] : seats <= 23 ? [ 16, 12 ] : seats <= 29 ? [ 18, 14 ] : [ 22, 16 ] }
   weekdays = %w[mon tue wed thu fri]
   periods = [
@@ -66,7 +66,7 @@ with_company("SD") do
     d.pay_schemes.new(company_id: d.company_id, pay_scheme: monthly, starts_on: Date.current.beginning_of_month).save!(validate: false)
     DriverPayScheme.recut!(d.id)
   end
-  coach = VehicleType.enabled_for(Company.find_by!(code: "SD")).where("seats >= 40").first
+  coach = SeedFiles.vehicle_types(Company.find_by!(code: "SD")).where("seats >= 40").first
   if (d = drivers[2]) && coach && !d.pay_vehicle_types.exists?
     d.pay_vehicle_types.new(company_id: d.company_id, vehicle_type: coach, starts_on: Date.current.beginning_of_month - 1.month).save!(validate: false)
   end
