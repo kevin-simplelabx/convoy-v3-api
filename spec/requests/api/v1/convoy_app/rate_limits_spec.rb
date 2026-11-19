@@ -78,4 +78,13 @@ RSpec.describe "Convoy App rate limits" do
     expect(response).to have_http_status(:unprocessable_content)
     expect(json.dig(:error, :message)).to eq("Too many codes asked for. Try again in an hour")
   end
+
+  it "has no code limits when OTP_LIMITS_OFF=1 (staging)" do
+    allow(ENV).to receive(:[]).and_call_original
+    allow(ENV).to receive(:[]).with("OTP_LIMITS_OFF").and_return("1")
+    31.times { ask_code("9188 2045") }
+    expect(response).to have_http_status(:ok)
+    11.times { try_code("9188 2045") }
+    expect(response).to have_http_status(:unprocessable_content)
+  end
 end

@@ -1,4 +1,4 @@
-# Emails a one-time code (first sign-in or forgotten password). At most 5 codes an hour per person.
+# Emails a one-time code (first sign-in or forgotten password). At most 5 codes an hour per person (OtpLimits).
 # Returns the plain code (shown on dev / staging only, see Portal::SessionsController#dev_code).
 module Portal
   class SendCode < ApplicationService
@@ -11,7 +11,7 @@ module Portal
     end
 
     def call
-      if @account.sign_in_codes.where(created_at: 1.hour.ago..).count >= PER_HOUR
+      if OtpLimits.on? && @account.sign_in_codes.where(created_at: 1.hour.ago..).count >= PER_HOUR
         raise Error, "Too many codes asked for. Try again in an hour"
       end
 

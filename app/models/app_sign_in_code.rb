@@ -38,9 +38,9 @@ class AppSignInCode < ApplicationRecord
 
   scope :usable, -> { where(used_at: nil).where("expires_at > ?", Time.current).where("attempts < ?", MAX_ATTEMPTS) }
 
-  # A new code for the target (older unused ones stop working); 422 after 5 codes an hour. Returns the record.
+  # A new code for the target (older unused ones stop working); 422 after 5 codes an hour (OtpLimits). Returns the record.
   def self.issue!(target, purpose:, account: nil, ip: nil)
-    if where(target:, created_at: 1.hour.ago..).count >= PER_HOUR
+    if OtpLimits.on? && where(target:, created_at: 1.hour.ago..).count >= PER_HOUR
       raise ApplicationService::Error, "Too many codes asked for. Try again in an hour"
     end
 

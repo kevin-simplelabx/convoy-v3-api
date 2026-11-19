@@ -1,5 +1,6 @@
 # Request limits per IP (and per email on sign-in). A refused request gets 429 with Retry-After and the usual error body:
 # { error: { code: "too_many_requests", message: "Too many tries. Try again in 42 seconds", details: { retry_after: 42 } } }.
+# The one-time code steps (Driver app, Client Portal, Convoy App) are not limited when OtpLimits is off (staging).
 class Rack::Attack
   PORTAL_SESSION = "/api/v1/portal/session".freeze
   DRIVER_SESSION = "/api/v1/driver/session".freeze
@@ -29,44 +30,44 @@ class Rack::Attack
 
   # Driver app code step: 30 per minute per IP. Codes are also limited to 5 an hour per mobile.
   throttle("driver_code/ip", limit: 30, period: 60) do |req|
-    req.ip if req.post? && req.path == "#{DRIVER_SESSION}/code"
+    req.ip if OtpLimits.on? && req.post? && req.path == "#{DRIVER_SESSION}/code"
   end
 
   # Driver app sign-in (mobile + code, email + password): 10 per minute per IP, 5 per minute per mobile or email
   throttle("driver_credentials/ip", limit: 10, period: 60) do |req|
-    req.ip if req.post? && [ DRIVER_SESSION, "#{DRIVER_SESSION}/email" ].include?(req.path)
+    req.ip if OtpLimits.on? && req.post? && [ DRIVER_SESSION, "#{DRIVER_SESSION}/email" ].include?(req.path)
   end
   throttle("driver_credentials/person", limit: 5, period: 60) do |req|
-    if req.post? && [ DRIVER_SESSION, "#{DRIVER_SESSION}/email" ].include?(req.path)
+    if OtpLimits.on? && req.post? && [ DRIVER_SESSION, "#{DRIVER_SESSION}/email" ].include?(req.path)
       sign_in_field(req, "phone") || sign_in_field(req, "email")
     end
   end
 
   # Client Portal email step (lookup, send a code): 30 per minute per IP. Codes are also limited to 5 an hour per account.
   throttle("portal_lookup/ip", limit: 30, period: 60) do |req|
-    req.ip if req.post? && [ "#{PORTAL_SESSION}/lookup", "#{PORTAL_SESSION}/code" ].include?(req.path)
+    req.ip if OtpLimits.on? && req.post? && [ "#{PORTAL_SESSION}/lookup", "#{PORTAL_SESSION}/code" ].include?(req.path)
   end
 
   # Client Portal password, code check and set password: 10 per minute per IP, 5 per minute per email
   throttle("portal_credentials/ip", limit: 10, period: 60) do |req|
-    req.ip if req.post? && [ PORTAL_SESSION, "#{PORTAL_SESSION}/verify", "/api/v1/portal/password" ].include?(req.path)
+    req.ip if OtpLimits.on? && req.post? && [ PORTAL_SESSION, "#{PORTAL_SESSION}/verify", "/api/v1/portal/password" ].include?(req.path)
   end
   throttle("portal_credentials/email", limit: 5, period: 60) do |req|
-    sign_in_email(req) if req.post? && [ PORTAL_SESSION, "#{PORTAL_SESSION}/verify" ].include?(req.path)
+    sign_in_email(req) if OtpLimits.on? && req.post? && [ PORTAL_SESSION, "#{PORTAL_SESSION}/verify" ].include?(req.path)
   end
 
   # Convoy App code steps (sign in, add a mobile / email): 30 per minute per IP. Codes are also limited to 5 an hour per
   # mobile or email.
   throttle("app_code/ip", limit: 30, period: 60) do |req|
-    req.ip if req.post? && [ "#{APP_SESSION}/code", "/api/v1/app/identities/code" ].include?(req.path)
+    req.ip if OtpLimits.on? && req.post? && [ "#{APP_SESSION}/code", "/api/v1/app/identities/code" ].include?(req.path)
   end
 
   # Convoy App code checks: 10 per minute per IP, 5 per minute per mobile or email
   throttle("app_credentials/ip", limit: 10, period: 60) do |req|
-    req.ip if req.post? && [ APP_SESSION, "/api/v1/app/identities/verify" ].include?(req.path)
+    req.ip if OtpLimits.on? && req.post? && [ APP_SESSION, "/api/v1/app/identities/verify" ].include?(req.path)
   end
   throttle("app_credentials/person", limit: 5, period: 60) do |req|
-    if req.post? && req.path == APP_SESSION
+    if OtpLimits.on? && req.post? && req.path == APP_SESSION
       sign_in_field(req, "mobile") || sign_in_field(req, "email")
     end
   end

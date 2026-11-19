@@ -128,4 +128,11 @@ RSpec.describe "Driver app sign-in" do
     post code_api_v1_driver_app_session_path, params: { phone: "91234567" }, as: :json
     expect(json.dig(:error, :message)).to eq("Too many codes asked for. Try again in an hour")
   end
+
+  it "has no hourly code limit when OTP_LIMITS_OFF=1 (staging)" do
+    allow(ENV).to receive(:[]).and_call_original
+    allow(ENV).to receive(:[]).with("OTP_LIMITS_OFF").and_return("1")
+    6.times { post code_api_v1_driver_app_session_path, params: { phone: "91234567" }, as: :json }
+    expect(response).to have_http_status(:ok)
+  end
 end
