@@ -21,7 +21,8 @@ RSpec.describe "Driver app vehicle switch" do
         trip = create(:trip, start_time: Clock.hm(start), end_time: Clock.hm(start + 40), starts_on: day)
         trip.vehicle_slots.create!(slot_no: 1, vehicle: bus)
         Occurrences::Sync.call(trips: [ trip ])
-        TripOccurrence.find_by!(trip:).update_columns(status: "completed") if i.zero?
+        # The 06:00 run was driven in the app; the 08:00 one is still to come (not in Vehicle History).
+        TripOccurrence.find_by!(trip:).update_columns(status: "completed", started_at: day.in_time_zone.change(hour: 6), ended_at: day.in_time_zone.change(hour: 6, min: 40)) if i.zero?
       end
       { ahmad:, old_bus:, new_bus:, other: }
     end
@@ -85,8 +86,7 @@ RSpec.describe "Driver app vehicle switch" do
     expect(json.dig(:data, :current)).to include(plate: "PC1234X", since: "2026-11-03", since_time: "06:30")
 
     get history_api_v1_driver_app_vehicle_path, params: { month: "2026-11" }, headers: as(token)
-    expect(json.dig(:data, :days)).to eq([ { date: "2026-11-03", vehicles: [ { id: f[:old_bus].id, plate: "PC8812K", runs: 1 },
-                                                                            { id: f[:new_bus].id, plate: "PC1234X", runs: 1 } ] } ])
+    expect(json.dig(:data, :days)).to eq([ { date: "2026-11-03", vehicles: [ { id: f[:old_bus].id, plate: "PC8812K", runs: 1 } ] } ])
     expect(json.dig(:data, :handovers).size).to eq(1)
   end
 end

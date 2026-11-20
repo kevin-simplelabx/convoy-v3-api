@@ -61,16 +61,17 @@ Sign in with the mobile and code `123456`:
 | Mobile | Driver | Good for |
 | --- | --- | --- |
 | `+65 9210 4100` | Eric Pang (SimpleDrive, own, bus PD997M) | complete profile verified with Singpass (email `eric.pang@gmail.com` / `Driver123!`), an invitation (Island Coaches), Employment History (Comfort Charter Services), a **disposal every day 08:00–11:30** (DBS Roadshow Disposal: Disposal start / run / Extend Time / end), a **bus swap tomorrow at 12:00** (Switch Vehicle card + handover inspection; he then drives Frankie's 14:00 transfer, and both are back on their own bus the day after) |
-| `+65 9580 7810` | Tony Tan (Hup Seng, managed) | shuttles, a half-done profile, a licence expiring soon |
+| `+65 9580 7810` | Tony Tan (Hup Seng, managed) | shuttles, a half-done profile, a licence expiring soon; Vehicle History: the five days before yesterday driven (PC7475L) |
 | `+65 9284 4842` | Ah Beng (SimpleDrive, bus PE1290S) | School Bus: St. Stephen's AM 2 and PM 2 every school day (children, Bus Not Required, QR passes) |
 | `+65 9002 3344` | Lee Kok Wah (SimpleDrive, bus PD4472H) | School Run (name list) every school day, and the Cross-site Shuttle's 12:00 return every weekday |
 | `+65 9001 2233` | Kumar s/o Rajan (SimpleDrive, bus PD3318K) | his next run (weekdays 07:45) taken by a replacement: shows as Replaced |
 | `+65 9247 4471` | Frankie Ho (SimpleDrive, bus PC7939R) | the other side of Eric's bus swap; a transfer every day at 14:00 |
-| `+65 9003 4455` | Siti Nurhaliza (SimpleDrive, bus PC8841T) | St. Stephen's AM 1 every school day (Ethan Tan has a photo; the attendant has a note) and the MBC Campus Shuttle; yesterday's ended runs (Plan): a School Bus run left early with a child not boarded, a skipped point and feedback; a shuttle force ended (Accident); a shuttle skipped before the start |
+| `+65 9003 4455` | Siti Nurhaliza (SimpleDrive, bus PC8841T) | St. Stephen's AM 1 every school day (Ethan Tan has a photo; the attendant has a note) and the MBC Campus Shuttle; yesterday's ended runs (Plan): a School Bus run left early with a child not boarded, a skipped point and feedback; a shuttle force ended (Accident); a shuttle skipped before the start; Vehicle History: the five days before yesterday driven |
 
 How long it lasts: the runs above come from recurring trips and routes, so they exist every day up to 120 days ahead
 (the daily job adds the next day). Three things are made by the seed for the day it runs: the bus swap (tomorrow),
-Kumar's Replaced run (his next run) and Siti's ended runs (yesterday). They are made again each time staging is re-seeded.
+Kumar's Replaced run (his next run), Siti's ended runs (yesterday) and Siti's / Tony's driven days (the five days before
+yesterday). They are made again each time staging is re-seeded.
 
 **School holidays:** School Bus and School Run follow the MOE school calendar. There are no school runs in the holidays
 (Year-End Holidays 21/11–31/12/2026; school is back on 04/01/2027): Ah Beng has no runs then, and Lee Kok Wah only has his

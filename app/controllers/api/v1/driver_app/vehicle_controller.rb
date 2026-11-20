@@ -21,7 +21,8 @@ module Api
         # GET /driver/vehicle/history?month=YYYY-MM → the buses driven each day (from the runs) and the handovers
         def history
           month = params[:month].present? ? Date.strptime(params[:month], "%Y-%m") : Date.current.beginning_of_month
-          runs = ::DriverApp::Runs.scope(current_membership).where(date: month..month.end_of_month).where.not(status: "cancelled")
+          # Driven = started in the app; a run the job completed without a start is not driven (fe-updates #4).
+          runs = ::DriverApp::Runs.scope(current_membership).where(date: month..month.end_of_month).where.not(started_at: nil)
                                   .includes(:vehicle).to_a.select { ::DriverApp::Runs.mine?(it, current_membership) && it.vehicle }
           days = runs.group_by(&:date).sort.map do |date, list|
             { date:, vehicles: list.group_by(&:vehicle).map { |v, l| { id: v.id, plate: v.plate, runs: l.size } } }

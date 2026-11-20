@@ -70,7 +70,10 @@ highlights: [{ id, photo, marked_photo, marks }] }` (`photos` = the six sides).
 
 ## 4. Vehicle History: `GET /driver/vehicle/history`
 
-`?month=YYYY-MM` (default this month) → the buses driven each day (from the trips driven) and the month's handovers:
+`?month=YYYY-MM` (default this month) → the buses driven each day and the month's handovers. A run counts once the driver
+has started it in the app (`started_at` set; ended and force-ended runs included). Runs still to come, and runs the
+office / the end-of-run job closed without a Start (`status: "ended"`, `started_at: null`), are not counted, so days
+after today never show:
 
 ```json
 { "data": { "month": "2026-11",

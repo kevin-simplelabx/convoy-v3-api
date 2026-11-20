@@ -2,6 +2,16 @@
 
 Things the app does by itself (no server field or call) and changes the app has to act on. Newest first.
 
+## 20/11/2026 — Answers to API-ISSUES #14, #15
+
+API-ISSUES.md re-checked 20/11 at 57b794b: both open items answered here. **Staging: deploy + re-seed pending**
+(this section will say when it is live).
+
+| # | Breaking | Change / answer | Doc |
+| --- | --- | --- | --- |
+| 15 | no | Seed fixed (no API change). Staging had been seeded with an older seed before the 19/11 one, so yesterday's AM 1 was on another bus and yesterday's shuttles already had sample stop events: the step that makes Siti's ended runs found nothing. It now takes yesterday's AM 1 for Siti and clears those sample stop events first. After the re-seed, Siti's records are on the day before the re-seed: SSS AM 1 left early (child not boarded, skipped point, feedback), a shuttle force ended (Accident), the next shuttle skipped. | [README § Sample accounts](README.md#sample-accounts-staging-and-local-seed) |
+| 14 | no (fix) | Fixed. Vehicle History counts only runs the driver started in the app (`started_at` set), so days after today and today's runs not driven yet are gone, and so are runs closed without a Start (same rule as #4). Your "hide days after today" is no longer needed. Sample: Tony Tan and Siti Nurhaliza have the five days before yesterday driven. | [vehicle § 4](vehicle.md#4-vehicle-history-get-drivervehiclehistory) |
+
 ## 19/11/2026 — Answers to API-ISSUES (**breaking**: #10, #11)
 
 Every item of API-ISSUES.md (last re-checked 19/11 at 4b79fc4) has its answer here: one row per open item (#1–#6, #8,

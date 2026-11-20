@@ -149,18 +149,33 @@ end
 with_company("SD") do
   siti = Driver.find_by(phone: "+6590034455")
   account = siti && DriverAccount.for_phone!(siti.phone).tap(&:link_memberships!)
-  runs = siti ? TripOccurrence.where(driver: siti, date: Date.current - 1).where.not(status: %w[removed skipped]).includes(:stop_events).order(:start_time, :id).to_a : []
-  # Runs this seed drove before (replayed by client_id), or runs nothing else has recorded on (other seeds' GPS / stops).
+  yesterday = Date.current - 1
+  # A database seeded before AM 1 was Siti's (45_school_bus moves it to her bus from the seed day): yesterday's AM 1,
+  # never driven in the app, becomes hers.
+  am1 = School.find_by(name: "St. Stephen's School")&.plans&.find_by(session: "am", in_use: true)&.routes&.find_by(number: 1)
+  am1_run = am1 && TripOccurrence.where.not(status: %w[removed skipped cancelled]).find_by(school_route: am1, date: yesterday)
+  if siti && am1_run && am1_run.driver_id != siti.id && am1_run.started_at.nil? && !DriverAppAction.exists?(occurrence_id: am1_run.id)
+    am1_run.update_columns(driver_id: siti.id, vehicle_id: Vehicle.kept.find_by!(plate: "PC8841T").id) # rubocop:disable Rails/SkipsModelValidations
+  end
+  runs = siti ? TripOccurrence.where(driver: siti, date: yesterday).where.not(status: %w[removed skipped]).includes(:stop_events).order(:start_time, :id).to_a : []
+  # Runs this seed drove before (replayed by client_id), or runs never driven in the app (other seeds' telematics stop
+  # events are cleared below before the run is driven).
   mine = DriverAppAction.where(driver_account: account, occurrence_id: runs.map(&:id)).distinct.pluck(:occurrence_id)
-  runs = runs.select { mine.include?(it.id) || (it.started_at.nil? && it.stop_events.empty? && !it.cancelled?) }
+  runs = runs.select { mine.include?(it.id) || (it.started_at.nil? && it.stop_events.none? { |e| e.source == "driver_app" } && !it.cancelled?) }
   drive = lambda do |occ, step, action, at, **params|
     occ.reload
     # The driver did this yesterday, before the job completed the run (92_trip_history runs it): a run completed without
-    # a start refuses every action, so a run driven for the first time is reopened.
-    occ.update_columns(status: "scheduled") if mine.exclude?(occ.id) && DriverApp::Runs.not_driven?(occ) # rubocop:disable Rails/SkipsModelValidations
+    # a start refuses every action, so a run driven for the first time is reopened, without the stop events another
+    # seed made up for it (94_shuttle_report on a database seeded before it left yesterday out).
+    if mine.exclude?(occ.id) && DriverApp::Runs.not_driven?(occ)
+      OccurrenceStopEvent.where(occurrence_id: occ.id, occurrence_date: occ.date).delete_all
+      occ.update_columns(status: "scheduled", max_delay_minutes: nil) # rubocop:disable Rails/SkipsModelValidations
+    end
     DriverApp::Drive.call(account:, member: siti, occ:, action:,
                           params: { client_id: Digest::UUID.uuid_v5(Digest::UUID::OID_NAMESPACE, "seed-driver-end-#{occ.id}-#{step}"), at: at.iso8601, **params })
   end
+  puts "  Siti's ended runs: no School Bus run yesterday (#{yesterday})" unless runs.any?(&:school_route)
+  puts "  Siti's ended runs: fewer than 2 shuttles yesterday (#{yesterday})" if runs.count { it.kind == "corporate_shuttle" } < 2
 
   if (bus = runs.find(&:school_route))
     t = bus.starts_at
@@ -195,5 +210,19 @@ with_company("SD") do
   end
   if (skipped = shuttles.second)
     drive.(skipped, "skip", :skip, skipped.starts_at - 20.minutes, reason: "Traffic Congestion")
+  end
+end
+
+# Vehicle History (the buses driven each day) counts runs started in the app. Siti's and Tony Tan's runs of the five
+# days before yesterday, completed by the job without a start, are marked as driven: started 5 minutes early, ended at
+# the last arrival (94_shuttle_report's stop events) or the planned end.
+with_company("SD") do
+  [ Driver.find_by(phone: "+6590034455"), OperatorDriver.find_by(phone: "+6595807810") ].compact.each do |member|
+    col = member.is_a?(OperatorDriver) ? :operator_driver_id : :driver_id
+    TripOccurrence.where(col => member.id, date: (Date.current - 6)...(Date.current - 1), status: "completed", started_at: nil, ended_at: nil)
+                  .includes(:stop_events).each do |occ|
+      ended = [ occ.ends_at, *occ.stop_events.filter_map(&:arrived_at) ].max
+      occ.update_columns(started_at: occ.starts_at - 5.minutes, ended_at: ended, driver_end: occ.driver_end || "completed", end_on_board: 0) # rubocop:disable Rails/SkipsModelValidations
+    end
   end
 end
