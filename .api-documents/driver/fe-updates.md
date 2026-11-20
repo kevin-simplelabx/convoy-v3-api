@@ -4,8 +4,9 @@ Things the app does by itself (no server field or call) and changes the app has 
 
 ## 20/11/2026 — Answers to API-ISSUES #14, #15
 
-API-ISSUES.md re-checked 20/11 at 57b794b: both open items answered here. **Staging: deploy + re-seed pending**
-(this section will say when it is live).
+API-ISSUES.md re-checked 20/11 at 57b794b: both open items answered here. **Live on staging** (deployed and re-seeded
+20/11). Checked there: Siti's 19/11 records (SSS AM 1 completed with feedback, shuttle force ended, next shuttle skipped);
+Tony's Vehicle History lists 16–18/11 only.
 
 | # | Breaking | Change / answer | Doc |
 | --- | --- | --- | --- |
