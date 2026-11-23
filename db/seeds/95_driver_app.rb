@@ -185,6 +185,14 @@ with_company("SD") do
     occ.update_columns(status: "scheduled", started_at: nil, ended_at: nil, driver_end: nil, driver_end_reason: nil, end_on_board: nil, # rubocop:disable Rails/SkipsModelValidations
                        cancelled_at: nil, cancelled_by_id: nil, max_delay_minutes: nil, overridden_fields: occ.overridden_fields - [ "status" ])
   end
+  # A run of hers still on the road on those days (started in the app and never ended, e.g. a test on staging) blocks
+  # Start: it is put back to not driven (completed without a start, as the 5-minute job leaves a past run).
+  [ bus.date, day ].uniq.each do |d|
+    while (left = DriverApp::Runs.on_the_road(siti, on: d))
+      reset.(left)
+      left.update_columns(status: "completed") # rubocop:disable Rails/SkipsModelValidations
+    end
+  end
   drive = lambda do |occ, step, action, at, **params|
     DriverApp::Drive.call(account:, member: siti, occ: occ.reload, action:,
                           params: { client_id: Digest::UUID.uuid_v5(Digest::UUID::OID_NAMESPACE, "seed-driver-end-#{occ.id}-#{step}"), at: at.iso8601, **params })
