@@ -4,6 +4,18 @@ Changes to existing Convoy OS endpoints made while building other apps (Convoy D
 on (renamed, removed or changed fields and endpoints). New optional fields are not listed here; they are in the menu
 documents. Newest first. Each item: what changed, before → after, and what the front-end has to do.
 
+## 23/11/2026 — Main contractor's app in the Convoy Driver app (new value and field, no breaking change)
+
+Listed because existing columns get a new value. The driver of a sub-contracted trip with Require Main Contractor App
+now picks, after Start, to stay on Convoy Driver App or continue on the main contractor's app (Driver API-ISSUES #16).
+
+| # | Endpoint / field | Before → after | Front-end |
+| --- | --- | --- | --- |
+| 1 | `GET /ops_control` → `rows[].gps.status` | new value `on_contractor_app` | GPS column: "On {`client.name`}'s app". The run raises no alert while it is on that app |
+| 2 | `GET /trip_history/:id` → `contractor_app` | new, null or `{ name, choice, chosen_at }` | Trip History record: "Completed on {name}'s app" when `choice` is `contractor` (the stop list has no times), "Stayed on Convoy Driver App" when `stay` |
+
+Details: [ops-control.md § 1](ops-control.md#1-the-board), [trips.md](trips.md) (Trip History record).
+
 ## 19/11/2026 — Convoy Driver parity: two new inputs (new optional fields, no breaking change)
 
 Listed because the Driver app needs the office to fill them; nothing else in OS changes.

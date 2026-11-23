@@ -33,12 +33,21 @@ module TripHistory
         passengers:, driver_report:, issue:,
         replacement: @occ.replacement && ReplacementBlueprint.render_as_hash(@occ.replacement.decorate),
         driver_end: @occ.driver_end && { kind: @occ.driver_end, reason: @occ.driver_end_reason, on_board: @occ.end_on_board },
+        contractor_app:,
         disposal: @occ.disposal && DriverDisposalBlueprint.render_as_hash(@occ.disposal.decorate),
         changes:, corrections:, notes: notes, log:
       }
     end
 
     private
+
+    # A run the main contractor wanted in its own driver app: what the driver picked after Start (stay on Convoy Driver App,
+    # or contractor = driven and completed in the contractor's app, so no stop was recorded here).
+    def contractor_app
+      return unless @trip&.subcontracted? && @trip.require_contractor_app
+
+      { name: @occ.client&.name, choice: @occ.contractor_app_choice, chosen_at: @occ.contractor_app_chosen_at }
+    end
 
     # The Passenger List: School Run (the route list) or School Bus (the route's children), with what was marked on the run.
     def passengers

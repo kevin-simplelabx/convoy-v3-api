@@ -130,6 +130,7 @@ Acknowledge. Add "+`more` more in the table below" when `more` > 0. `escalated: 
   | `on_route` | Stop `stops_reached` of `stops` |
   | `no_signal` | No signal, "Last ping N min ago" |
   | `at_drop_off` | At drop-off |
+  | `on_contractor_app` | On {`client.name`}'s app: the driver chose Continue on the main contractor's app in the Convoy Driver app (a sub-contracted trip with Require Main Contractor App), so no GPS or stop reaches us; the run raises no alert until it ends |
 
   `gps.speed_kmh` (last report) and `gps.moving` (over 3 km/h; `null` with no speed reported) → "Moving" / "Not moving" on the
   `to_first_pickup` sub-line.
@@ -169,7 +170,7 @@ These are the same as the prototype. They are fixed values returned in `meta.rul
   action, which is a new alert.
 - Action alerts not acknowledged within 3 minutes are **escalated** (`escalated: true`) to the Ops Manager. Only the time
   is recorded; no message is sent yet.
-- Runs that have ended raise nothing.
+- Runs that have ended raise nothing, nor do runs the driver continues on the main contractor's app (`gps.status: "on_contractor_app"`).
 
 ## 3. Acknowledge
 

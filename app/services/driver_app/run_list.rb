@@ -1,5 +1,5 @@
 # Run cards for Drive (Today / Tomorrow), Plan (a day) and the floating on-going trip: time, route, direction, client,
-# points, expected passengers, status, New. School Bus cards count the route's children less Bus Not Required.
+# points, expected passengers, status, New, the main contractor's app. School Bus cards count the route's children less Bus Not Required.
 module DriverApp
   class RunList < ApplicationService
     def initialize(member:, runs:)
@@ -22,7 +22,7 @@ module DriverApp
         status:, status_label: Runs::STATUS_LABELS[status], seen: occ.driver_seen_at.present? || !mine,
         started_at: occ.started_at, ended_at: occ.ended_at, driver_end: driver_end(occ),
         points_count: points.size, first_point: points.first&.dig(:name), last_point: points.last&.dig(:name),
-        expected_pax: expected(occ), requires: Runs.requires(occ), vehicle: vehicle && { id: vehicle.id, plate: vehicle.plate },
+        expected_pax: expected(occ), requires: Runs.requires(occ), contractor: Runs.contractor(occ), vehicle: vehicle && { id: vehicle.id, plate: vehicle.plate },
         replaced_by: (status == "replaced" ? replaced_by(occ) : nil)
       }
     end

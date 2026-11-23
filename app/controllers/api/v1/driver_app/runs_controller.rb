@@ -34,7 +34,7 @@ module Api
           render json: { data: ::DriverApp::RunDetail.call(member: current_membership, occ: run(::DriverApp::Runs::DETAIL_INCLUDES)) }
         end
 
-        # POST /driver/runs/:id/start | arrive | leave | skip_stop | attendance | count | complete | force_end | skip,
+        # POST /driver/runs/:id/start | arrive | leave | skip_stop | attendance | count | complete | force_end | skip | app_choice,
         # PATCH /driver/runs/:id/route — { client_id, at, … } → Trip Details after the action (meta.replayed: sent before).
         ::DriverApp::Drive::ACTIONS.each do |action|
           define_method(action) do

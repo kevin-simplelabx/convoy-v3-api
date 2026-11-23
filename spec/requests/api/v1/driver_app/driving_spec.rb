@@ -2,7 +2,8 @@ require "rails_helper"
 
 # Convoy Driver app › On Route: start (not too early, one trip at a time), arrive and leave with the count or the names
 # first, skip a point, complete with feedback, a School Bus run (attendance, QR, leave early, Edit Route, alight all at
-# the school), Force End Trip and Skip Trip as Trip History shows them, and an action sent twice done once.
+# the school), Force End Trip and Skip Trip as Trip History shows them, an action sent twice done once, and a run the
+# main contractor wants in its own app (stay, or continue there and confirm completion).
 RSpec.describe "Driver app driving" do
   let(:company) { create(:company, name: "SimpleDrive") }
   let!(:f) do
@@ -17,10 +18,10 @@ RSpec.describe "Driver app driving" do
 
   before { travel_to Time.zone.local(2026, 11, 2, 6, 0) }
 
-  def create_trip(start_time: "08:00", end_time: "09:00")
+  def create_trip(start_time: "08:00", end_time: "09:00", client: f[:client], **extra)
     sign_in_as(create(:user, :admin, company:))
     post api_v1_trips_path, params: { trip: {
-      kind: "ad_hoc", client_id: f[:client].id, starts_on: day.iso8601, start_time:, end_time:, price: 100, trip_value: 1, pax: 12,
+      **extra, kind: "ad_hoc", client_id: client.id, starts_on: day.iso8601, start_time:, end_time:, price: 100, trip_value: 1, pax: 12,
       stops_attributes: [ { position: 0, name: "Jurong East MRT", use: "pu" }, { position: 1, name: "Clementi Ave 6", use: "via" },
                           { position: 2, name: "Mapletree Business City", use: "do" } ],
       vehicle_requirements_attributes: [ { vehicle_type_id: f[:type].id, count: 1 } ],
@@ -314,5 +315,61 @@ RSpec.describe "Driver app driving" do
     integration_session.bearer_token = nil
     post skip_stop_api_v1_driver_app_run_path(occ.id), params: { position: 0, reason: "x" }, as: :json
     expect(response).to have_http_status(:unauthorized)
+  end
+
+  it "records the main contractor's app choice after Start and completes a run driven in that app, as Ops Control and Trip History show" do
+    eastern = within_tenant(company) { create(:client, name: "Eastern Coaches", kind: :transport_company) }
+    sub = create_trip(client: eastern, require_contractor_app: true, contractor_contact_name: "Mr Goh")
+    plain = create_trip(start_time: "10:00", end_time: "11:00")
+    token = driver_token("91234567")
+
+    travel_to Time.zone.local(2026, 11, 3, 7, 30)
+    act(token, plain, :app_choice, choice: "stay")
+    expect([ response.status, error ]).to eq([ 422, "not_required" ])
+    act(token, sub, :app_choice, choice: "stay")
+    expect(error).to eq("not_started")
+
+    act(token, sub, :start)
+    expect(json.dig(:data, :contractor)).to eq(name: "Eastern Coaches", requires_app: true, choice: nil, chosen_at: nil)
+    act(token, sub, :complete, on_contractor_app: true)
+    expect([ error, json.dig(:error, :message) ]).to eq([ "choose_contractor_first", "Choose Continue on Eastern Coaches first" ])
+    act(token, sub, :app_choice, choice: "both")
+    expect(json.dig(:error, :details, :choice)).to eq([ "is not on the list" ])
+    act(token, sub, :app_choice, choice: "stay")
+    expect(json.dig(:data, :contractor)).to include(choice: "stay", chosen_at: be_present)
+
+    travel_to Time.zone.local(2026, 11, 3, 7, 35)
+    id = SecureRandom.uuid
+    expect { act(token, sub, :app_choice, client_id: id, choice: "contractor") }
+      .to have_broadcasted_to("run:#{sub.id}").with(type: "run_changed", run_id: sub.id)
+    expect([ json.dig(:data, :contractor, :choice), json[:meta] ]).to eq([ "contractor", { replayed: false } ])
+    act(token, sub, :app_choice, client_id: id, choice: "contractor")
+    expect(json[:meta]).to eq(replayed: true)
+    get api_v1_driver_app_runs_path, params: { date: day.iso8601 }, headers: as(token)
+    expect(json[:data].to_h { [ it[:id], it.dig(:contractor, :choice) ] }).to eq(sub.id => "contractor", plain.id => nil)
+
+    # Past the first pick-up with no stop and no GPS: nothing to alert on, the run is tracked in the contractor's app.
+    travel_to Time.zone.local(2026, 11, 3, 8, 20)
+    sign_in_as(create(:user, :admin, company:))
+    get api_v1_ops_control_path, params: { tab: "all" }
+    row = json.dig(:data, :rows).find { it[:id] == sub.id }
+    expect([ row[:gps][:status], row[:alerts], row[:state] ]).to eq([ "on_contractor_app", [], "on_the_way" ])
+
+    travel_to Time.zone.local(2026, 11, 3, 9, 5)
+    act(token, sub, :complete, on_contractor_app: true)
+    expect(json[:data]).to include(status: "ended", ended_at: be_present)
+    expect(json.dig(:data, :driver_end)).to include(kind: "completed", on_board: nil)
+    expect(json.dig(:data, :driver_feedback, :note)).to eq("Completed on Eastern Coaches. Stops and counts recorded there.")
+    expect(json.dig(:data, :points).map { it[:record] }).to all(be_nil)
+
+    travel_to Time.zone.local(2026, 11, 4, 9, 0)
+    OccurrenceCompleteJob.perform_now
+    get api_v1_trip_history_path, params: { from: day.iso8601, to: day.iso8601 }
+    expect(json[:data].find { it[:id] == sub.id }[:outcome]).to eq("completed")
+    get api_v1_trip_history_run_path(sub.id)
+    expect(json[:data]).to include(driver_end: { kind: "completed", reason: nil, on_board: nil },
+                                   contractor_app: { name: "Eastern Coaches", choice: "contractor", chosen_at: be_present })
+    get api_v1_trip_history_run_path(plain.id)
+    expect(json.dig(:data, :contractor_app)).to be_nil
   end
 end

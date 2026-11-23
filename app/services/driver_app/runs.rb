@@ -77,6 +77,17 @@ module DriverApp
     end
 
     # The client as the driver sees it: the customer served, "via" the main contractor on a sub-contracted trip.
+    # A sub-contracted trip: the main contractor (its name is also the name of its own driver app). requires_app: the trip
+    # form's Require Main Contractor App; choice: what the driver picked after Start (stay / contractor, API-ISSUES #16).
+    def contractor(occ)
+      return unless occ.trip&.subcontracted?
+
+      { name: occ.client&.name, requires_app: occ.trip.require_contractor_app, choice: occ.contractor_app_choice,
+        chosen_at: occ.contractor_app_chosen_at }
+    end
+
+    def contractor_app?(occ) = !!contractor(occ)&.dig(:requires_app)
+
     def client(occ)
       return { name: occ.school_route.plan.school.name, via: nil } if occ.school_route
 

@@ -41,7 +41,7 @@ The shared rules (JSON in snake_case, `{ data }` answers, the error format, rate
 - **Times**: `HH:MM` strings for planned times (24-hour; the company's `time_format` is in `GET /driver/config` for
   display), ISO 8601 with the offset for moments (`2026-11-03T07:58:12+08:00`), in the company's timezone (Singapore).
 - **Errors**: `{ "error": { "code", "message", "details" } }`. `message` is written for the driver and can be shown as
-  is; `code` tells the app what to do (lists in [driving.md § 12](driving.md#12-errors-and-reasons)); `details.<field>`
+  is; `code` tells the app what to do (lists in [driving.md § 13](driving.md#13-errors-and-reasons)); `details.<field>`
   for a field. `401` signed out, `404` not the driver's, `422` a rule, `429` too many tries (`Retry-After`).
 - **Files** (photos, card pictures, signatures): `multipart/form-data`, image files (JPEG / PNG). Files come back as
   `{ url, thumb_url, name, size, content_type }`: signed links valid for an hour that need no header (an image source);
@@ -60,12 +60,12 @@ Sign in with the mobile and code `123456`:
 
 | Mobile | Driver | Good for |
 | --- | --- | --- |
-| `+65 9210 4100` | Eric Pang (SimpleDrive, own, bus PD997M) | complete profile verified with Singpass (email `eric.pang@gmail.com` / `Driver123!`), an invitation (Island Coaches), Employment History (Comfort Charter Services), a **disposal every day 08:00–11:30** (DBS Roadshow Disposal: Disposal start / run / Extend Time / end), a **bus swap tomorrow at 12:00** (Switch Vehicle card + handover inspection; he then drives Frankie's 14:00 transfer, and both are back on their own bus the day after) |
+| `+65 9210 4100` | Eric Pang (SimpleDrive, own, bus PD997M) | complete profile verified with Singpass (email `eric.pang@gmail.com` / `Driver123!`), an invitation (Island Coaches), Employment History (Comfort Charter Services), a **disposal every day 08:00–11:30** (DBS Roadshow Disposal: Disposal start / run / Extend Time / end), a **bus swap tomorrow at 12:00** (Switch Vehicle card + handover inspection; he then drives Frankie's 14:00 transfer, and both are back on their own bus the day after), a **run for a main contractor every weekday 16:00–16:45** (NYP Industry Visit, Nanyang Polytechnic via Eastern Coaches, `contractor.requires_app: true`: Continue on Eastern Coaches / Stay on Convoy Driver App; on the swap day Frankie has it) |
 | `+65 9580 7810` | Tony Tan (Hup Seng, managed) | shuttles, a half-done profile, a licence expiring soon; Vehicle History: the five days before yesterday driven (PC7475L) |
 | `+65 9284 4842` | Ah Beng (SimpleDrive, bus PE1290S) | School Bus: St. Stephen's AM 2 and PM 2 every school day (children, Bus Not Required, QR passes) |
 | `+65 9002 3344` | Lee Kok Wah (SimpleDrive, bus PD4472H) | School Run (name list) every school day, and the Cross-site Shuttle's 12:00 return every weekday |
 | `+65 9001 2233` | Kumar s/o Rajan (SimpleDrive, bus PD3318K) | his next run (weekdays 07:45) taken by a replacement: shows as Replaced |
-| `+65 9247 4471` | Frankie Ho (SimpleDrive, bus PC7939R) | the other side of Eric's bus swap; a transfer every day at 14:00 |
+| `+65 9247 4471` | Frankie Ho (SimpleDrive, bus PC7939R) | the other side of Eric's bus swap (he gets Eric's 16:00 Eastern Coaches run that day); a transfer every day at 14:00 |
 | `+65 9003 4455` | Siti Nurhaliza (SimpleDrive, bus PC8841T) | St. Stephen's AM 1 every school day (Ethan Tan has a photo; the attendant has a note) and the MBC Campus Shuttle; her last ended runs (Plan; dates below): on the **last school day before the seed**, St. Stephen's AM 1 left its first point early with a child not boarded (`left_early`), skipped the next point and was completed with feedback; on the **last day before the seed with her shuttles**, a shuttle force ended (Accident) and the next one skipped before the start; Vehicle History: the five days before yesterday driven |
 
 How long it lasts: the runs above come from recurring trips and routes, so they exist every day up to 120 days ahead

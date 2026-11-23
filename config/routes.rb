@@ -100,6 +100,7 @@ Rails.application.routes.draw do
             post :complete
             post :force_end
             post :skip
+            post :app_choice
             patch :route
             post :geofence
             post :disposal_start

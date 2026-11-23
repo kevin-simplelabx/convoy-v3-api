@@ -73,8 +73,9 @@ with_company("SD") do
 end
 
 # Driver app sample accounts have runs every day from rules the daily occurrence job extends (not dated rows): Eric
-# Pang's disposal every morning on PD997M (08:00–11:30) and an afternoon transfer on Frankie Ho's PC7939R, which Eric
-# drives tomorrow after the switch above. School runs (Ah Beng, Lee Kok Wah, Siti Nurhaliza) follow the MOE calendar.
+# Pang's disposal every morning on PD997M (08:00–11:30), an afternoon transfer on Frankie Ho's PC7939R, which Eric
+# drives tomorrow after the switch above, and a run sub-contracted by Eastern Coaches on PD997M (16:00–16:45) whose main
+# contractor requires its own driver app (Continue on Eastern Coaches / Stay on Convoy Driver App; Frankie has it tomorrow). School runs (Ah Beng, Lee Kok Wah, Siti Nurhaliza) follow the MOE calendar.
 with_company("SD") do
   admin = User.find_by!(email: "ops@simpledrive.sg")
   type = VehicleType.find_by!(key: "van")
@@ -90,6 +91,16 @@ with_company("SD") do
       stops_attributes: [
         { position: 0, name: "Mapletree Business City", address: "70 Pasir Panjang Road, Singapore 117371", lat: 1.2747, lng: 103.7993, use: "pu" },
         { position: 1, name: "Changi Airport T3", address: "65 Airport Boulevard, Singapore 819663", lat: 1.3554, lng: 103.9862, use: "do" }
+      ]
+    },
+    "seed-driver-contractor" => {
+      kind: "ad_hoc", client_id: Client.kept.find_by!(name: "Eastern Coaches").id, title: "NYP Industry Visit",
+      client_end_customer_id: Client.kept.find_by!(name: "Eastern Coaches").end_customers.find_by!(name: "Nanyang Polytechnic").id,
+      start_time: "16:00", end_time: "16:45", price: 140, pax: 10, plate: "PD997M", require_contractor_app: true,
+      contractor_contact_name: "Mr Goh", contractor_contact_phone: "+65 6345 6789",
+      stops_attributes: [
+        { position: 0, name: "Nanyang Polytechnic", address: "180 Ang Mo Kio Avenue 8, Singapore 569830", lat: 1.3801, lng: 103.8489, use: "pu" },
+        { position: 1, name: "Gardens by the Bay", address: "18 Marina Gardens Drive, Singapore 018953", lat: 1.2816, lng: 103.8636, use: "do" }
       ]
     }
   }.each do |label, attrs|

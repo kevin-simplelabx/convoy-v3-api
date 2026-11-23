@@ -42,7 +42,7 @@ carry `{ client_id, at }` ([driving.md § 1](driving.md#1-how-every-action-works
 | Before You Go (children not riding, skipped points) | `before_you_go` | [runs § 4](runs.md#4-trip-details-get-driverrunsid) |
 | Swipe to start (On the Way) | `POST /driver/runs/:id/start` | [driving § 2](driving.md#2-start-the-trip-post-driverrunsidstart) |
 | Edit Route (not riding today, skip a point) | `PATCH /driver/runs/:id/route` | [driving § 8](driving.md#8-edit-route-patch-driverrunsidroute) |
-| Main contractor app ("Continue on … app") | `contractor.requires_app` (the handover flow is not built on the server) | [runs § 4](runs.md#4-trip-details-get-driverrunsid) |
+| Main contractor app: Continue on {name} / Stay on Convoy Driver App (after Start), "I have completed my trip on {name}" | `contractor` (`requires_app`, `choice`); `POST /driver/runs/:id/app_choice`, then `POST /driver/runs/:id/complete` with `on_contractor_app: true` | [runs § 1](runs.md#1-drive-the-days-runs-get-driverruns), [driving § 12](driving.md#12-main-contractor-app-post-driverrunsidapp_choice) |
 
 ## On Route
 

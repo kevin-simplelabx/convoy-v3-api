@@ -24,6 +24,8 @@ module OpsControl
     def arrived? = arrived_at.present?
     def started? = @occ.started_at.present? || arrived?
     def running? = started? && !done?
+    # The driver continues in the main contractor's app: no GPS or stop reaches us until they come back to end the run.
+    def on_contractor_app? = @occ.contractor_app_choice == "contractor"
     def not_started? = !started? && !done?
 
     def ping_at = live&.recorded_at
@@ -62,7 +64,7 @@ module OpsControl
 
     MOVING_KMH = 3
 
-    # GPS column: at_drop_off (ended), no_signal, on_route (stops reached k of n), or the distance to the first pick-up;
+    # GPS column: at_drop_off (ended), on_contractor_app (tracked in the main contractor's app), no_signal, on_route (stops reached k of n), or the distance to the first pick-up;
     # the last speed and moving ("Moving" / "Not moving": over 3 km/h).
     def gps
       stops = planned.size
@@ -90,6 +92,7 @@ module OpsControl
 
     def gps_status
       return "at_drop_off" if done?
+      return "on_contractor_app" if on_contractor_app?
       return "no_signal" if ping_at.nil? || gps_lost?
 
       arrived? ? "on_route" : "to_first_pickup"
@@ -103,7 +106,10 @@ module OpsControl
     def mins(seconds) = [ (seconds / 60.0).round, 1 ].max
     def level(value, pair) = value >= pair[1] ? 2 : 1
 
+    # On the main contractor's app (chosen after Start) nothing about the road comes to us: no alert.
     def find_hits
+      return [] if on_contractor_app?
+
       s = first_pickup_at
       to_go = (s - @now) / 60.0
       list = []

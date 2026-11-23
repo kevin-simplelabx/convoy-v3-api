@@ -6,6 +6,8 @@
 #  id                          :bigint           not null, primary key
 #  cancelled_at                :timestamptz
 #  cancelled_by_client         :boolean          default(FALSE), not null
+#  contractor_app_choice       :string
+#  contractor_app_chosen_at    :timestamptz
 #  date                        :date             not null
 #  driver_end                  :string
 #  driver_end_reason           :string

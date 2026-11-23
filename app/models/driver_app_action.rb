@@ -1,5 +1,5 @@
 # One driving action sent by the Convoy Driver app (start, arrive, leave, skip, attendance, count, edit route, complete,
-# force end, skip trip), kept once by the app's client_id: the same action sent again (after being offline, or a retry)
+# force end, skip trip, the main contractor's app), kept once by the app's client_id: the same action sent again (after being offline, or a retry)
 # is answered without doing it twice. `at` = when it happened on the phone; payload = what was sent (audit).
 # == Schema Information
 #
@@ -31,7 +31,7 @@ class DriverAppAction < ApplicationRecord
   include TenantScoped
 
   KINDS = %w[start arrive leave skip_stop attendance count route complete force_end skip
-             disposal_start disposal_run_start disposal_run_end disposal_extend disposal_end].freeze
+             app_choice disposal_start disposal_run_start disposal_run_end disposal_extend disposal_end].freeze
 
   belongs_to :driver_account
   belongs_to :occurrence, class_name: "TripOccurrence", foreign_key: %i[occurrence_id occurrence_date], primary_key: %i[id date]

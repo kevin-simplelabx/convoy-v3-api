@@ -10227,6 +10227,8 @@ CREATE TABLE public.trip_occurrences (
     driver_end character varying,
     driver_end_reason character varying,
     end_on_board integer,
+    contractor_app_choice character varying,
+    contractor_app_chosen_at timestamp with time zone,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
     CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
 )
@@ -10305,6 +10307,8 @@ CREATE TABLE public.trip_occurrences_y2026m09 (
     driver_end character varying,
     driver_end_reason character varying,
     end_on_board integer,
+    contractor_app_choice character varying,
+    contractor_app_chosen_at timestamp with time zone,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
     CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
 );
@@ -10368,6 +10372,8 @@ CREATE TABLE public.trip_occurrences_y2026m10 (
     driver_end character varying,
     driver_end_reason character varying,
     end_on_board integer,
+    contractor_app_choice character varying,
+    contractor_app_chosen_at timestamp with time zone,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
     CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
 );
@@ -10431,6 +10437,8 @@ CREATE TABLE public.trip_occurrences_y2026m11 (
     driver_end character varying,
     driver_end_reason character varying,
     end_on_board integer,
+    contractor_app_choice character varying,
+    contractor_app_chosen_at timestamp with time zone,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
     CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
 );
@@ -10494,6 +10502,8 @@ CREATE TABLE public.trip_occurrences_y2026m12 (
     driver_end character varying,
     driver_end_reason character varying,
     end_on_board integer,
+    contractor_app_choice character varying,
+    contractor_app_chosen_at timestamp with time zone,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
     CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
 );
@@ -10557,6 +10567,8 @@ CREATE TABLE public.trip_occurrences_y2027m01 (
     driver_end character varying,
     driver_end_reason character varying,
     end_on_board integer,
+    contractor_app_choice character varying,
+    contractor_app_chosen_at timestamp with time zone,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
     CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
 );
@@ -10620,6 +10632,8 @@ CREATE TABLE public.trip_occurrences_y2027m02 (
     driver_end character varying,
     driver_end_reason character varying,
     end_on_board integer,
+    contractor_app_choice character varying,
+    contractor_app_chosen_at timestamp with time zone,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
     CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
 );
@@ -10683,6 +10697,8 @@ CREATE TABLE public.trip_occurrences_y2027m03 (
     driver_end character varying,
     driver_end_reason character varying,
     end_on_board integer,
+    contractor_app_choice character varying,
+    contractor_app_chosen_at timestamp with time zone,
     CONSTRAINT trip_occurrences_one_source CHECK ((num_nonnulls(trip_id, school_route_id) = 1)),
     CONSTRAINT trip_occurrences_status CHECK (((status)::text = ANY (ARRAY[('scheduled'::character varying)::text, ('cancelled'::character varying)::text, ('completed'::character varying)::text, ('removed'::character varying)::text, ('skipped'::character varying)::text])))
 );
@@ -30110,6 +30126,7 @@ ALTER TABLE public.trip_occurrences
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261123100000'),
 ('20261119110000'),
 ('20261119100300'),
 ('20261119100200'),

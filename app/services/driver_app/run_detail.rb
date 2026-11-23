@@ -1,6 +1,6 @@
 # Trip Details in the Driver app: the run card plus everything the driver reads before and during the trip — trip
-# value, notes, airport and disposal blocks, Day n of N, standby, attachments, Point of Contact, the main contractor's
-# app, the replacement, the points (map and stop list with what was recorded), the names and Before You Go.
+# value, notes, airport and disposal blocks, Day n of N, standby, attachments, Point of Contact (the main contractor's
+# app is on the card), the replacement, the points (map and stop list with what was recorded), the names and Before You Go.
 module DriverApp
   class RunDetail < ApplicationService
     def initialize(member:, occ:)
@@ -14,7 +14,7 @@ module DriverApp
       passengers = Occurrences::Passengers.call(@occ, points:)
       RunList.new(member: @member, runs: [ @occ ]).card(@occ).merge(
         trip_value: Runs.trip_value(@occ, @member), notes: @trip&.notes, airport:, disposal:, series:, standby:, attachments:,
-        contacts:, contractor:, replacement:, driver_feedback:, points: with_record(points, passengers), passengers:,
+        contacts:, replacement:, driver_feedback:, points: with_record(points, passengers), passengers:,
         before_you_go: { not_riding: not_riding(passengers, points), skipped_points: skipped_points(points) },
         expected_pax: passengers.any? ? passengers.count { !it[:state].in?(%w[bus_not_required not_boarding]) } : @occ.pax
       )
@@ -126,13 +126,6 @@ module DriverApp
       office = school.client if school.client&.phone.present?
       [ (attendant && { role: "attendant", name: attendant.name, phone: attendant.phone, note: attendant.notes.presence }),
         (office && { role: "school_office", name: office.contact_name.presence || school.name, phone: office.phone, note: nil }) ].compact
-    end
-
-    # A sub-contracted trip the main contractor wants run in its own driver app (trip form: Requires contractor app).
-    def contractor
-      return unless @trip&.subcontracted?
-
-      { name: @occ.client&.name, requires_app: @trip.require_contractor_app }
     end
 
     def replacement

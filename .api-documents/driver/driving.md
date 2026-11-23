@@ -1,7 +1,8 @@
 # Driver app — Driving a trip
 
 On Route: Swipe to start (On the Way), Arrive and Leave (by hand or after the geofence countdown), Skip a point,
-Take Attendance (tick or QR scan), Count passengers, Edit Route, Complete Trip, Force End Trip, Skip Trip.
+Take Attendance (tick or QR scan), Count passengers, Edit Route, Complete Trip, Force End Trip, Skip Trip, the main
+contractor's app (Continue on {app} / Stay on Convoy Driver App).
 Conventions: [README.md](README.md). Paths start with `/api/v1`. The trip and its points: [runs.md](runs.md).
 
 ## Contents
@@ -17,7 +18,8 @@ Conventions: [README.md](README.md). Paths start with `/api/v1`. The trip and it
 9. [Complete the trip](#9-complete-the-trip-post-driverrunsidcomplete)
 10. [Force End Trip](#10-force-end-trip-post-driverrunsidforce_end)
 11. [Skip the whole trip](#11-skip-the-whole-trip-post-driverrunsidskip)
-12. [Errors and reasons](#12-errors-and-reasons)
+12. [Main contractor app](#12-main-contractor-app-post-driverrunsidapp_choice)
+13. [Errors and reasons](#13-errors-and-reasons)
 
 ---
 
@@ -120,40 +122,66 @@ alighted"; Driver's Feedback, optional).
 - Everyone still on the bus alights (names: `state` → `alighted`); the last point gets its arrival and departure if not
   sent; the trip ends (`status: "ended"`). `feedback` goes to the office (Trip History › driver report).
 - `422` code `not_started` before Start.
+- On a run driven in the main contractor's app: `{ client_id, at, on_contractor_app: true, feedback }` (§ 12).
 
 ## 10. Force End Trip: `POST /driver/runs/:id/force_end`
 
 `{ client_id, at, reason, called_operations: true, feedback }` (the warning: call operations, pick a reason, tick that
 operations was called).
 
-- `reason`: one of § 12. Without `called_operations: true`: `422` code `call_operations`.
+- `reason`: one of § 13. Without `called_operations: true`: `422` code `call_operations`.
 - The trip ends where it is: points not reached are recorded as skipped ("Trip force ended"); who is still on the bus is
   recorded for the office. Trip History shows "Force ended: <reason>".
 
 ## 11. Skip the whole trip: `POST /driver/runs/:id/skip`
 
-`{ client_id, at, reason }`, before leaving the first point. `reason`: one of § 12.
+`{ client_id, at, reason }`, before leaving the first point. `reason`: one of § 13.
 
 - The trip is not run: `status: "skipped"` ("Skipped"); Trip History shows Skipped by Driver; the client is not charged
   and the driver is not paid for it (as a trip cancelled by the company).
 - After the first point is left: `422` code `started` "This trip has started. Use Force End Trip".
 
-## 12. Errors and reasons
+## 12. Main contractor app: `POST /driver/runs/:id/app_choice`
+
+When the run's `contractor.requires_app` is true ([runs § 1](runs.md#1-drive-the-days-runs-get-driverruns)), the main
+contractor wants the driver on its own app. On Start the app asks "Continue on {`contractor.name`}" (sheet: "Please
+continue using {name} and return to Convoy Driver App when the trip is completed").
+
+`{ client_id, at, choice }`, after Start:
+
+- `choice: "stay"`: Stay on Convoy Driver App (the driver ticked "I confirm to stay on Convoy Driver App"). Drive as
+  usual; end with Complete Trip (§ 9) or Force End Trip (§ 10).
+- `choice: "contractor"`: Continue on {name}. The driver drives in the contractor's app; nothing is sent here (no
+  points, counts or GPS). When they come back and tick "I have completed my trip on {name}" → Continue:
+  `POST /driver/runs/:id/complete { client_id, at, on_contractor_app: true }`. The run ends as completed
+  (`driver_end.kind: "completed"`, `on_board: null`), no point gets a record, and `driver_feedback` is "Completed on
+  {name}. Stops and counts recorded there." unless `feedback` is sent.
+- The answer has `contractor.choice` and `chosen_at`. The choice is saved on the server: after a restart, a run with
+  `choice: "contractor"` reopens the "I have completed my trip on {name}" dialog instead of asking again. It can be
+  changed (stay ↔ contractor) until the run ends.
+- The office sees it: Ops Control shows the GPS column as "On {name}'s app" with no alert for the run; Trip History
+  shows "Completed on {name}'s app".
+- Errors: `not_required` (`contractor.requires_app` is not true), `not_started` (before Start), `ended`, `invalid`
+  (`details.choice`). `complete` with `on_contractor_app: true` while `choice` is not `contractor`: `choose_contractor_first`.
+
+## 13. Errors and reasons
 
 | `error.code` | When | App |
 | --- | --- | --- |
 | `too_early` | Start more than 60 min before | countdown |
 | `busy` | another trip is on the road (`details.run_id`) | Busy |
 | `started` | Start twice; Skip Trip after leaving a point | — / Force End instead |
-| `not_started` | arrive, leave, skip a point, count, complete, force end before Start | Swipe first |
+| `not_started` | arrive, leave, skip a point, count, complete, force end, app choice before Start | Swipe first |
 | `not_arrived` | leave before arriving | arrive first |
 | `attendance_needed` | leave with names not ticked (`details.missing`, `names`) | Leave without attendance warning → `force: true` |
 | `count_needed` | leave a counted run without a count | Count sheet, or `force: true` |
 | `not_on_trip` | attendance for a child not on the list | Not on this trip |
 | `call_operations` | force end without `called_operations` | tick the box |
+| `not_required` | `app_choice` on a run whose main contractor does not require its app | — |
+| `choose_contractor_first` | `complete` with `on_contractor_app: true` before `app_choice` `contractor` | ask Continue on {name} |
 | `replaced`, `cancelled`, `ended` | the trip is no longer the driver's to drive (`ended`: after Complete / Force End, or the end time passed without a Start — then before `not_started` too) | refresh |
 | `disposal_not_started`, `disposal_end_needed`, `not_disposal`, `tell_operations` | disposal actions ([disposal.md](disposal.md)) | — |
-| `invalid` | a missing or wrong field (`details.<field>`): no `client_id` (UUID), unknown `position`, reason not on the list | — |
+| `invalid` | a missing or wrong field (`details.<field>`): no `client_id` (UUID), unknown `position`, reason or `choice` not on the list | — |
 
 Reasons:
 

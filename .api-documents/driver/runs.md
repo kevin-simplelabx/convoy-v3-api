@@ -41,13 +41,19 @@ cards, [vehicle.md § 2](vehicle.md#2-the-switch-vehicle-card-on-drive)). A card
   "client": { "name": "St. Stephen's School", "via": null },
   "status": "scheduled", "status_label": "Scheduled", "seen": false, "started_at": null, "ended_at": null, "driver_end": null,
   "points_count": 4, "first_point": "Blk 123 Tampines St 11", "last_point": "St. Stephen's School",
-  "expected_pax": 13, "requires": "attendance", "vehicle": { "id": 7, "plate": "PD997M" }, "replaced_by": null }
+  "expected_pax": 13, "requires": "attendance", "contractor": null, "vehicle": { "id": 7, "plate": "PD997M" }, "replaced_by": null }
 ```
 
 - `seen: false` → the New badge (until Trip Details is opened, § 5; it comes back when the run's time, bus or driver changes).
 - `client.via`: on a sub-contracted trip, the main contractor ("Google Asia Pacific · via ABC Transport").
 - `expected_pax`: School Bus = children on the route less Bus Not Required; others = the planned passengers.
 - `requires`: `attendance` (School Bus, School Run: tick names), `count` (shuttles with head count), or null.
+- `contractor`: on a sub-contracted trip, the main contractor and its own driver app, else null:
+  `{ "name": "Eastern Coaches", "requires_app": true, "choice": "contractor", "chosen_at": "2026-11-03T07:35:00+08:00" }`.
+  `name` is also the app's name ("Continue on Eastern Coaches"). `requires_app: true` = the main contractor wants the
+  driver on its app (trip form: Require Main Contractor App). `choice` = what the driver picked after Start, null until
+  then: `stay` (Stay on Convoy Driver App, drive as usual) or `contractor` (Continue on `name`: the card can say "On
+  Eastern Coaches' app"). See [driving § 12](driving.md#12-main-contractor-app-post-driverrunsidapp_choice).
 - `status: "replaced"` → `replaced_by: { driver_name, vehicle_plate }` ("Replaced by Siti · PD4472H"); the run is read-only.
 - `driver_end`: how the driver ended the run, null until then (and for a run the office ended):
   `{ "kind": "forced", "at": "2026-11-03T14:05:00+08:00", "reason": "Accident", "on_board": 4 }`.
@@ -89,7 +95,6 @@ The card fields plus:
   "attachments": [ { "url": "/api/v1/downloads/...", "name": "Route 3 rider list.pdf", "size": 48211, "content_type": "application/pdf" } ],
   "contacts": [ { "role": "requestor", "name": "Priya", "phone": "+6591110000", "note": null },
                 { "role": "guest", "name": "Mr Chen", "phone": "+6592220000", "note": null } ],
-  "contractor": { "name": "ABC Transport", "requires_app": true },
   "replacement": null,
   "driver_feedback": { "note": "Clementi pick-up B is blocked by roadworks", "at": "2026-11-03T08:40:00+08:00" },
   "points": [
@@ -117,10 +122,9 @@ The card fields plus:
 - `trip_value`: the driver pay multiplier, shown for **own drivers only**; null for managed drivers, disposals and replaced runs.
 - `airport.flight_city`: the other city of the flight (may be null): arrival → "From Sydney"; departure → "Flight to
   London · be at the terminal 2.5 hours before".
-- `airport`, `disposal`, `series` (Day `day` of `of` for a booking over several days), `standby`, `contractor`, `replacement`:
+- `airport`, `disposal`, `series` (Day `day` of `of` for a booking over several days), `standby`, `replacement`:
   null when they do not apply. `disposal.record` and the actions: [disposal.md](disposal.md).
-- `contractor.requires_app: true` = the main contractor wants this run done in its own driver app ("Continue on
-  `name`'s app"); the trip form has no app name yet. The handover flow in the app is not built on the server yet.
+- `contractor` (the main contractor's app, with the driver's choice) is a card field (§ 1).
 - `contacts` = Point of Contact, `{ role, name, phone, note }`: on trips the requestor, the guest (when not the requestor)
   and the main contractor's contact; on **School Bus** the route's attendant (`note` = the office's note, e.g. "Travels on
   the bus. Call first if a child is not at the stop") and the school office (the school's contact in Convoy OS). Only the
@@ -178,7 +182,7 @@ Send when Trip Details opens → the card with `seen: true`.
 
 `ended` with `started_at: null` = **the run was not driven in the app**: its end time passed without a Start (the office
 counts it as done for pay and invoices), or the office ended it. It cannot be started or driven any more (every action
-answers `422` code `ended`, [driving § 12](driving.md#12-errors-and-reasons)) and never shows in `on_going` (§ 3). Show
+answers `422` code `ended`, [driving § 13](driving.md#13-errors-and-reasons)) and never shows in `on_going` (§ 3). Show
 it as Ended with no times; the app has no separate "not driven" status.
 
 A run the driver started stays `on_the_way` / `started` after its end time passes, until the driver completes or force

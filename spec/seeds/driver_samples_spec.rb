@@ -30,13 +30,15 @@ RSpec.describe "Driver app sample accounts seed" do
     travel_to(Time.zone.local(2026, 11, 18, 5, 0)) do
       ActsAsTenant.with_tenant(company) do
         eric, frankie = driver.("+6592104100"), driver.("+6592474471")
-        expect(runs.(eric, Date.current)).to include([ "08:00", "disposal", nil, "scheduled" ])
-        # the switch tomorrow 12:00: Eric drives Frankie's afternoon transfer, then both go back to their own bus
+        expect(runs.(eric, Date.current)).to include([ "08:00", "disposal", nil, "scheduled" ], [ "16:00", "ad_hoc", nil, "scheduled" ])
+        expect(Trip.find_by!(label: "seed-driver-contractor")).to have_attributes(subcontracted: true, require_contractor_app: true)
+        # the switch tomorrow 12:00: Eric drives Frankie's afternoon transfer and Frankie Eric's Eastern Coaches run, then
+        # both go back to their own bus
         expect(DriverApp::Vehicles.switches(eric).map { [ it[:vehicle].plate, it[:starts_at] ] })
           .to eq([ [ "PC7939R", Time.zone.local(2026, 11, 19, 12, 0) ] ])
         expect(runs.(eric, Date.current + 1)).to eq([ [ "08:00", "disposal", nil, "scheduled" ], [ "14:00", "ad_hoc", nil, "scheduled" ] ])
-        expect(runs.(frankie, Date.current + 1)).to be_empty
-        expect(runs.(eric, Date.current + 2).map(&:second)).to eq(%w[disposal])
+        expect(runs.(frankie, Date.current + 1)).to eq([ [ "16:00", "ad_hoc", nil, "scheduled" ] ])
+        expect(runs.(eric, Date.current + 2).map(&:first)).to eq(%w[08:00 16:00])
         expect(runs.(frankie, Date.current + 2).map(&:second)).to eq(%w[ad_hoc])
 
         expect(runs.(driver.("+6592844842"), Date.current).map(&:third)).to eq([ "AM 2", "PM 2" ]) # Ah Beng
@@ -67,7 +69,7 @@ RSpec.describe "Driver app sample accounts seed" do
         expect(DriverApp::Vehicles.current(eric)[:vehicle].plate).to eq("PD997M")
         expect(DriverApp::Vehicles.switches(eric).map { [ it[:vehicle].plate, it[:starts_at] ] })
           .to eq([ [ "PC7939R", Time.zone.local(2026, 11, 21, 12, 0) ] ])
-        expect(runs.(eric, Date.current).map(&:second)).to eq(%w[disposal])
+        expect(runs.(eric, Date.current).map(&:second)).to eq(%w[disposal ad_hoc])
         expect(runs.(driver.("+6592844842"), Date.current).map(&:third)).to eq([ "AM 2", "PM 2" ])
         expect(runs.(driver.("+6590034455"), Date.current).first.third).to eq("AM 1")
 

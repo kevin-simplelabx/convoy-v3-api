@@ -7,9 +7,12 @@
 #   attendance  tick children Boarded / Not Boarded / Alighted (QR scan or by hand)
 #   count       boarded and alighted at the current point (runs without names)
 #   route       Edit Route: the points skipped today and the children not boarding (the whole set each time)
-#   complete    at the last point: everyone on board alights, optional feedback, the run ends
+#   complete    at the last point: everyone on board alights, optional feedback, the run ends; on_contractor_app: the
+#               driver drove it in the main contractor's app (stops and counts recorded there), the run ends as it is
 #   force_end   end where it is (a reason, after calling operations): the rest is not reached, who is on board is recorded
 #   skip        skip the whole trip before leaving the first point (a reason)
+#   app_choice  after Start, on a run whose main contractor requires its own app: stay on Convoy Driver App or continue on
+#               the contractor's app (can change until the run ends)
 #   disposal_*  a disposal's start, runs, extensions and end (DisposalActions)
 # Each action carries client_id (uuid, from the app) and at (when it happened on the phone): the same client_id again
 # does nothing (offline retries). Only this service writes driving data on a run.
@@ -20,6 +23,7 @@ module DriverApp
     ACTIONS = DriverAppAction::KINDS
     FORCE_END_REASONS = [ "Vehicle breakdown", "Accident", "Road closed", "Medical emergency", "Instructed by operations", "Other" ].freeze
     SKIP_TRIP_REASONS = [ "Traffic Congestion", "Permission granted by Supervisor/Manager" ].freeze
+    APP_CHOICES = %w[stay contractor].freeze
     SKIP_STOP_REASONS = [ "No Passengers", "Passengers are late", "Traffic Congestion", "Instruction given by supervisor/client" ].freeze
     START_EARLY = 60.minutes
     # Actions that record arrivals at points: On Time (Trip History, Dashboard) is worked out again after them.
@@ -153,6 +157,8 @@ module DriverApp
 
     def complete
       started!
+      return complete_on_contractor_app if ActiveModel::Type::Boolean.new.cast(@params[:on_contractor_app])
+
       raise Error.new("End the disposal with the odometer", code: "disposal_end_needed") if @occ.kind == "disposal"
       last = points.reject { it[:waypoint] }.last
       event = event_for(last)
@@ -198,7 +204,31 @@ module DriverApp
                           driver_end: "skipped", driver_end_reason: reason, updated_at: Time.current, **next_version)
     end
 
+    def app_choice
+      contractor = Runs.contractor(@occ)
+      raise Error.new("This trip does not use the main contractor's app", code: "not_required") unless contractor&.dig(:requires_app)
+
+      started!
+      choice = @params[:choice].to_s
+      raise Error.new("Pick stay or contractor", details: { choice: [ "is not on the list" ] }) unless APP_CHOICES.include?(choice)
+
+      @occ.update_columns(contractor_app_choice: choice, contractor_app_chosen_at: @at, updated_at: Time.current) # rubocop:disable Rails/SkipsModelValidations
+      Realtime.runs_changed([ @occ ])
+    end
+
     private
+
+    # "I have completed my trip on {app}": no point is recorded here, who was on board is not known.
+    def complete_on_contractor_app
+      name = Runs.contractor(@occ)&.dig(:name)
+      unless @occ.contractor_app_choice == "contractor"
+        raise Error.new("Choose Continue on #{name || "the main contractor's app"} first", code: "choose_contractor_first")
+      end
+
+      feedback(@params[:feedback].presence || "Completed on #{name}. Stops and counts recorded there.")
+      Occurrences::DriverProgress.call(@occ, :end, at: @at)
+      @occ.update_columns(driver_end: "completed") # rubocop:disable Rails/SkipsModelValidations
+    end
 
     # A new status is a real change: an office drawer opened before it gets 409 on its next action. The row is held by
     # lock! (call), so its lock_version is current.
