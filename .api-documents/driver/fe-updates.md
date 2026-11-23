@@ -4,8 +4,8 @@ Things the app does by itself (no server field or call) and changes the app has 
 
 ## 23/11/2026 — #18 Push notifications (new endpoints, no breaking change)
 
-**State: built on the server, not on staging yet.** This entry will say "Live on staging" once it is deployed. The
-WebSocket and the reload on start / resume stay as they are; push is added on top for a closed or background app.
+**Live on staging** (deployed `0f13284` 23/11; Firebase checked from the server). The WebSocket and the reload on
+start / resume stay as they are; push is added on top for a closed or background app.
 
 **Set up.** Firebase project `convoy-transport-company-stg` (the same one as the old Convoy apps). Register the Driver
 app there (`google-services.json` / `GoogleService-Info.plist`). On iOS turn on Push Notifications and Background Modes →
@@ -27,8 +27,8 @@ No badge count, and no sound per kind (not in the HTML): the default sound.
 
 ## 23/11/2026 — #16 Main contractor app (new endpoint and fields, no breaking change)
 
-**State: built on the server, not on staging yet.** This entry will say "Live on staging" once it is deployed and
-re-seeded. Until then keep the phone-only `extChoice`. After that, drop it and follow the flow below.
+**Live on staging** (deployed `0f13284` and re-seeded 23/11). Drop the phone-only `extChoice` and follow the flow below.
+Sample: Eric Pang's "NYP Industry Visit" (Eastern Coaches, weekdays 16:00) requires the main contractor's app.
 
 **How to use it.** It applies to runs where `contractor.requires_app` is `true`. `contractor` is on every run card.
 

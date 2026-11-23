@@ -4,7 +4,7 @@ Changes to calls the app already uses. Newest first.
 
 ## 23/11/2026 — Push notifications (no breaking change)
 
-**State: built on the server, not on staging yet** (this line will say "Live on staging" once deployed). The app already
+**Live on staging** (deployed `0f13284` 23/11). The app already
 registers its token (`PUT /app/device`); nothing changes in the calls.
 
 | # | What to change | Doc |
