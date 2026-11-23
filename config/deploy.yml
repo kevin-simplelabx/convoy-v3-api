@@ -42,6 +42,7 @@ env:
     - RAILS_MASTER_KEY
     - CONVOY_V3_DATABASE_PASSWORD
     - ROUTING_SECRET
+    - FIREBASE_CREDENTIALS
   clear:
     DB_HOST: convoy_v3-db
     APP_HOST: convoy-api-staging.convoy.sg

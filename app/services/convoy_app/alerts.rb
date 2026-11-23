@@ -10,7 +10,7 @@
 #   Shuttles::Alerts (Phase 6) writes the shuttle change alerts the same way.
 # School Bus alerts go to every active adult of the Family; bills to the Billing Contact (decisions 2026-11-16). The account
 # that did the thing itself (a parent withdrawing, a booker cancelling) is not told. Every row has a dedupe key, so a writer
-# may run again without repeating an alert. Nothing is pushed (`pushed_at` stays empty).
+# may run again without repeating an alert. Each new row is pushed to the account's phones (Push::AppAlerts).
 module ConvoyApp
   module Alerts
     # A School Bus rider linked to a Family: the child, the Family's adults (account ids) and Billing Contacts.
@@ -26,8 +26,9 @@ module ConvoyApp
       rows = rows.reject { it[:app_account_id].nil? }.uniq { [ it[:app_account_id], it[:dedupe_key] ] }
       return 0 if rows.empty?
 
-      written = AppNotification.insert_all(rows.map { COLUMNS.merge(it) }, unique_by: %i[app_account_id dedupe_key], returning: %i[app_account_id])
-      Realtime.alerts_changed(written.rows.flatten)
+      written = AppNotification.insert_all(rows.map { COLUMNS.merge(it) }, unique_by: %i[app_account_id dedupe_key], returning: %i[id app_account_id])
+      Realtime.alerts_changed(written.rows.map(&:last))
+      Push.later("app", written.rows.map(&:first))
       written.length
     end
 

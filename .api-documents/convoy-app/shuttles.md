@@ -237,7 +237,7 @@ the switch = `PUT …/alerts { enabled }`; a tap opens the sheet; `employer.id` 
 ## 8. Alerts the app receives (inbox)
 
 A background job (every 5 minutes) writes rows into the account's **inbox** (the Alerts tab, [home.md § 4](home.md#4-alerts-tab-inbox);
-no push is sent yet); they also show on Home as banners until the run (or day) ends. Only the change alerts of the HTML and route
+each is pushed too, [home § 4.1](home.md#41-push-notifications)); they also show on Home as banners until the run (or day) ends. Only the change alerts of the HTML and route
 **notices** exist; **Remind Me (5 / 10 / 15 min before the stop) and Running Late are saved settings only** for now. A notice Convoy
 OS sends to the route's riders comes as `shuttle_notice` while **Notices** is ticked ([home.md § 5](home.md#5-which-alerts-are-written-and-when)).
 

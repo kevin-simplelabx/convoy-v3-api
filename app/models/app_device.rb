@@ -1,5 +1,5 @@
 # The push token of a phone signed in to the Convoy App (FCM / APNs). It goes with the sign-in: signing out removes it.
-# Nothing is pushed yet (no provider); alerts are kept in the app's inbox.
+# New inbox alerts are pushed to it (Push::AppAlerts) while Account › Notifications › Push is on.
 # == Schema Information
 #
 # Table name: app_devices

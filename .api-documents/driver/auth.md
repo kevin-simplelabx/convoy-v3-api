@@ -100,7 +100,7 @@ Account › Switch Company → pick one: `{ membership: "operator_driver-2" }` �
 
 ### 4.2 Sign Out: `DELETE /driver/session`
 
-→ `204`. The token stops working.
+→ `204`. The token stops working, and the phone's push token is removed ([notifications § 5](notifications.md#5-push-notifications)).
 
 ## 5. Companies, invitations, Employment History
 

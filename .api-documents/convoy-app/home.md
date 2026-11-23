@@ -103,7 +103,7 @@ alert stays in the inbox. Another person's id → `404`.
 
 ## 4. Alerts tab (inbox)
 
-One inbox per account across Family, staff and bookings. No push is sent yet; the rows are the same ones a push will carry.
+One inbox per account across Family, staff and bookings. Every new alert is also sent as a push (§ 4.1).
 
 `GET /app/alerts?filter=all|delays|notices&page=` →
 
@@ -136,6 +136,29 @@ One inbox per account across Family, staff and bookings. No push is sent yet; th
 
 - **Mark All Read**: `POST /app/alerts/read_all` → `{ data: { updated, unread: 0 } }`.
 - Empty: "Nothing here yet."
+
+### 4.1 Push notifications
+
+Firebase Cloud Messaging, Android and iOS (Firebase project `convoy-transport-company-stg`; nothing to set up for APNs).
+Each new inbox alert (every kind of § 5) is pushed once to **every phone the account is signed in on** that registered a
+token ([auth § 4.1](auth.md#41-register-the-push-token-patch-appdevice)), unless **Notifications › Push** is off
+(`notify_push: false`, [account § 3](account.md#3-account-changes-patch-appprofile)). The alert is in the inbox either way.
+
+`notification` = the alert's `title` and `body` (default sound). `data` (all values are strings; keys with no value are
+left out):
+
+```json
+{ "type": "app_alert", "id": "41", "kind": "school_late", "target": "live", "target_id": "5" }
+```
+
+| Key | Meaning |
+| --- | --- |
+| `type` | always `app_alert` |
+| `id`, `kind` | the inbox alert (`GET /app/alerts` → `data[].id`, `kind`) |
+| `target`, `target_id`, `trip_id` | = the alert's `target.kind`, `target.id`, `target.trip_id` (table above) |
+
+**Tap**: `POST /app/alerts/:id/read`, then open `target` as a tap in the inbox does (`404` = not this person's any more:
+open the Alerts tab). In the foreground the WebSocket already refreshes the inbox (`alerts_changed`).
 
 ## 5. Which alerts are written, and when
 

@@ -54,8 +54,8 @@ The shared rules (JSON in snake_case, `{ data }` answers, the error format, rate
 - **Files** (account, adult and child photos): `multipart/form-data`, JPEG / PNG / WebP / HEIC. A file comes back as
   `{ url, name, size, content_type, thumb_url }`: signed links valid for an hour that need no header (an image
   source); fetch the account again for fresh links.
-- **Push** is not sent yet. The phone still registers its token ([auth.md § 4](auth.md#4-several-phones-and-the-push-token)),
-  so nothing changes in the app when push starts. Every alert is in the inbox (`GET /app/alerts`, [home.md § 4](home.md#4-alerts-tab-inbox)).
+- **Push**: every new inbox alert is pushed to each phone that registered its token ([auth.md § 4](auth.md#4-several-phones-and-the-push-token))
+  while Notifications › Push is on ([home.md § 4.1](home.md#41-push-notifications)). Every alert is in the inbox too (`GET /app/alerts`).
 - Names shown to people (`display_name`) follow **Show My Name As** (`name_order`): "Rachel Tan" or "Tan Rachel".
 
 ## Sample accounts (staging and local seed)

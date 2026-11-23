@@ -1,7 +1,7 @@
 # One line on the Driver app's bell for a driver at a company: a trip given to them (run_assigned), moved or put on
 # another bus (run_changed), given to another driver (run_unassigned), cancelled (run_cancelled), no longer planned
 # (run_removed), a bus to take over (vehicle_switch), or a notice from the office (notice). Unread until opened; an
-# Acknowledge notice until acknowledged. pushed_at: when it went out as a push (not sent yet).
+# Acknowledge notice until acknowledged. pushed_at: when it reached the driver's phone as a push (Push::DriverNotifications).
 # == Schema Information
 #
 # Table name: driver_notifications
@@ -48,8 +48,11 @@ class DriverNotification < ApplicationRecord
 
   validates :kind, inclusion: { in: KINDS }
 
-  # The driver's bell refreshes (Realtime); RunNotifications#flush reports its bulk insert itself.
-  after_create_commit { Realtime.notifications_changed([ { driver_id:, operator_driver_id: } ]) }
+  # The driver's bell refreshes (Realtime) and the phone gets a push; RunNotifications#flush reports its bulk insert itself.
+  after_create_commit do
+    Realtime.notifications_changed([ { driver_id:, operator_driver_id: } ])
+    Push.later("driver", id)
+  end
   validates :title, presence: true
 
   scope :for_member, ->(m) { where(m.is_a?(OperatorDriver) ? { operator_driver_id: m.id } : { driver_id: m.id }) }

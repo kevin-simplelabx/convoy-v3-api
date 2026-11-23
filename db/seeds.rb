@@ -4,7 +4,10 @@
 files = Dir[Rails.root.join("db/seeds/*.rb")].sort
 files = files.select { |f| File.basename(f, ".rb") == ENV["SEED"] } if ENV["SEED"].present?
 
-files.each do |file|
-  puts "Seeding #{File.basename(file)}"
-  load file
+# Sample bell / inbox lines are not pushed to the phones signed in on staging.
+Push.pausing do
+  files.each do |file|
+    puts "Seeding #{File.basename(file)}"
+    load file
+  end
 end

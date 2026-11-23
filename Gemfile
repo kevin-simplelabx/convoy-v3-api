@@ -41,6 +41,9 @@ gem "oj"
 # HTTP client (OSRM proxy, external APIs)
 gem "faraday"
 
+# Google service-account OAuth token for Firebase Cloud Messaging (push to the Driver app and the Convoy App) [https://github.com/googleapis/google-auth-library-ruby]
+gem "googleauth"
+
 # Claude API (reads log cards, insurance papers, invoices, route lists, trip requests)
 gem "anthropic"
 

@@ -81,8 +81,8 @@ account (§ 2).
 | Photo: remove | `remove_photo: true` |
 | Notifications switches | `notify_push`, `notify_sms`, `notify_email` (booleans; defaults on / **off** / on) |
 
-- The notification switches are stored for when real push, SMS and email go out (nothing is sent yet, so they change
-  nothing today).
+- `notify_push` off stops push notifications to every phone of the account ([home § 4.1](home.md#41-push-notifications));
+  the inbox still gets every alert. SMS and email are not sent yet, so `notify_sms` / `notify_email` change nothing today.
 - `422` as in § 1 (a name cannot be emptied); a file that is not an image (JPEG, PNG, WebP, HEIC).
 
 ## 4. Mobile and Emails

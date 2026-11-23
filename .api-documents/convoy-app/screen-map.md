@@ -268,5 +268,5 @@ Staff reach an employer only through an accepted, not paused link ([organisation
 | Contact + Report an Issue (`contact`; Shuttles Report a Lost Item / Contact Transport Desk) | **Phase 4b** (planned) |
 | Stop Photos (`stopPhotos`, sheet `phBrief`, Live help request) | **Phase 4b** (planned) |
 
-Also not in the app, by decision: boarding pass, seat booking, school prepay, real push / SMS / email (the inbox has
-every alert), change Admin / Billing Contact, delete an adult / leave a Family.
+Also not in the app, by decision: boarding pass, seat booking, school prepay, real SMS / email (the inbox has every
+alert; push is sent, [home § 4.1](home.md#41-push-notifications)), change Admin / Billing Contact, delete an adult / leave a Family.

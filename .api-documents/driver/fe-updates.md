@@ -2,6 +2,29 @@
 
 Things the app does by itself (no server field or call) and changes the app has to act on. Newest first.
 
+## 23/11/2026 — #18 Push notifications (new endpoints, no breaking change)
+
+**State: built on the server, not on staging yet.** This entry will say "Live on staging" once it is deployed. The
+WebSocket and the reload on start / resume stay as they are; push is added on top for a closed or background app.
+
+**Set up.** Firebase project `convoy-transport-company-stg` (the same one as the old Convoy apps). Register the Driver
+app there (`google-services.json` / `GoogleService-Info.plist`). On iOS turn on Push Notifications and Background Modes →
+Remote notifications. iOS needs no APNs setup from you: the server sends through Firebase only.
+
+1. **After sign-in, and on every new token from Firebase**: `PUT /driver/device { device: { platform: "ios" | "android",
+   push_token } }` → `204`. No company needs to be picked.
+2. **Sign Out** removes the token by itself. `DELETE /driver/device` is for "notifications off on this phone".
+3. **Every new bell line** (all 7 kinds, from **every** company the driver works for) arrives as a push: `title` / `body`
+   as in the bell, `data` = `type: "driver_notification"`, `id`, `kind`, `company_id`, `membership`, and `run_id` /
+   `run_date`, `notice_id` or `vehicle_id` (all strings).
+4. **Tap**: Switch Company to `membership` if it is not the current one, fetch the bell, open line `id` as a tap there.
+
+No badge count, and no sound per kind (not in the HTML): the default sound.
+
+| # | Breaking | Change | Doc |
+| --- | --- | --- | --- |
+| 18 | no | `PUT` / `DELETE /driver/device`; push for each new bell line; Sign Out removes the token. | [notifications § 5](notifications.md#5-push-notifications) |
+
 ## 23/11/2026 — #16 Main contractor app (new endpoint and fields, no breaking change)
 
 **State: built on the server, not on staging yet.** This entry will say "Live on staging" once it is deployed and
@@ -56,5 +79,5 @@ API-ISSUES.md re-checked 23/11 at 5bc9041. No API change in this entry.
 | 15 | no | **Re-opened: a seed bug, not test data.** Our 20/11 answer was wrong: Siti's SSS AM 1 is driven by the seed but nobody is left behind, so no point has `left_early`. Cause: the live simulator had already ticked every child on that run before the seed drove it, so no child was left to leave behind. **Fixed and live: see "#15 fixed" above.** | [README § Sample accounts](README.md#sample-accounts-staging-and-local-seed) |
 | 16 | — | Main contractor handover: planned, not built yet. Keep the phone-only choice (`extChoice`) meanwhile; the endpoint and its field on the run will be announced here. **Built: see "#16 Main contractor app" above.** | [runs § 4](runs.md#4-trip-details-get-driverrunsid) |
 | 17 | — | Update with Singpass: **not planned for now**. Keep the button hidden; fields already verified stay locked. You can move #17 to Closed ("not planned"). | [profile § 1](profile.md#1-the-profile-get-driverprofile) |
-| 18 | — | Push notifications: planned, not built yet. WebSocket while open + reload on start / resume stays the contract until the device-token endpoint and push payloads are announced here. | [notifications.md](notifications.md), [../websocket.md](../websocket.md) |
+| 18 | — | Push notifications: planned, not built yet. WebSocket while open + reload on start / resume stays the contract until the device-token endpoint and push payloads are announced here. **To prepare now:** pushes go through Firebase Cloud Messaging for Android and iOS, Firebase project `convoy-transport-company-stg` (the same one as the old Convoy apps; iOS needs no APNs setup from you or us, the Apple key is already in that project). Register the Driver app there (`google-services.json` / `GoogleService-Info.plist`), turn on Push Notifications + Background Modes → Remote notifications on iOS, and get the FCM token. **Built: see "#18 Push notifications" above.** | [notifications.md](notifications.md), [../websocket.md](../websocket.md) |
 | 19 | — | **Staging only; there is no production API yet.** Keep the prod flavor / `PRODUCTION_BASE_API_URL` on staging; the prod host will be announced here. You can move #19 to Closed. | [../integration.md § 2](../integration.md#2-environments-and-test-accounts) |

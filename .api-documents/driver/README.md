@@ -52,7 +52,7 @@ The shared rules (JSON in snake_case, `{ data }` answers, the error format, rate
 - **Live updates**: a WebSocket, no polling ([../websocket.md](../websocket.md)): `DriverChannel` says when the driver's runs
   (`runs_changed`) or bell (`notifications_changed`) changed → fetch `GET /driver/runs` / `GET /driver/notifications` again.
   Fetch once on app start, on each (re)connect and when the app comes back to the front (the socket is closed in the
-  background; push notifications are not sent yet).
+  background; a closed app gets **push notifications** for new bell lines, [notifications § 5](notifications.md#5-push-notifications)).
 
 ## Sample accounts (staging and local seed)
 

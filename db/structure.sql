@@ -3425,6 +3425,41 @@ ALTER SEQUENCE public.driver_app_sessions_id_seq OWNED BY public.driver_app_sess
 
 
 --
+-- Name: driver_devices; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.driver_devices (
+    id bigint NOT NULL,
+    driver_account_id bigint NOT NULL,
+    driver_jwt_id bigint NOT NULL,
+    platform character varying NOT NULL,
+    push_token character varying NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT driver_devices_platform CHECK (((platform)::text = ANY ((ARRAY['ios'::character varying, 'android'::character varying])::text[])))
+);
+
+
+--
+-- Name: driver_devices_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.driver_devices_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: driver_devices_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.driver_devices_id_seq OWNED BY public.driver_devices.id;
+
+
+--
 -- Name: driver_invites; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -12816,6 +12851,13 @@ ALTER TABLE ONLY public.driver_app_sessions ALTER COLUMN id SET DEFAULT nextval(
 
 
 --
+-- Name: driver_devices id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_devices ALTER COLUMN id SET DEFAULT nextval('public.driver_devices_id_seq'::regclass);
+
+
+--
 -- Name: driver_invites id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -14908,6 +14950,14 @@ ALTER TABLE ONLY public.driver_app_actions
 
 ALTER TABLE ONLY public.driver_app_sessions
     ADD CONSTRAINT driver_app_sessions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: driver_devices driver_devices_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_devices
+    ADD CONSTRAINT driver_devices_pkey PRIMARY KEY (id);
 
 
 --
@@ -18735,6 +18785,27 @@ CREATE INDEX index_driver_app_sessions_on_driver_id_and_signed_in_at ON public.d
 --
 
 CREATE INDEX index_driver_app_sessions_on_tracking_device_id ON public.driver_app_sessions USING btree (tracking_device_id);
+
+
+--
+-- Name: index_driver_devices_on_driver_account_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_driver_devices_on_driver_account_id ON public.driver_devices USING btree (driver_account_id);
+
+
+--
+-- Name: index_driver_devices_on_driver_jwt_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_driver_devices_on_driver_jwt_id ON public.driver_devices USING btree (driver_jwt_id);
+
+
+--
+-- Name: index_driver_devices_on_push_token; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_driver_devices_on_push_token ON public.driver_devices USING btree (push_token);
 
 
 --
@@ -29000,6 +29071,14 @@ ALTER TABLE ONLY public.school_operator_pays
 
 
 --
+-- Name: driver_devices fk_rails_d5ecf580bf; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_devices
+    ADD CONSTRAINT fk_rails_d5ecf580bf FOREIGN KEY (driver_account_id) REFERENCES public.driver_accounts(id) ON DELETE CASCADE;
+
+
+--
 -- Name: pay_bonuses fk_rails_d5f53ac59a; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -29429,6 +29508,14 @@ ALTER TABLE ONLY public.vehicle_cost_spike_acks
 
 ALTER TABLE ONLY public.bus_requests
     ADD CONSTRAINT fk_rails_e9c2aefaf3 FOREIGN KEY (household_id) REFERENCES public.households(id) ON DELETE SET NULL;
+
+
+--
+-- Name: driver_devices fk_rails_e9cd33829f; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.driver_devices
+    ADD CONSTRAINT fk_rails_e9cd33829f FOREIGN KEY (driver_jwt_id) REFERENCES public.driver_jwts(id) ON DELETE CASCADE;
 
 
 --
@@ -30126,6 +30213,7 @@ ALTER TABLE public.trip_occurrences
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261123120000'),
 ('20261123100000'),
 ('20261119110000'),
 ('20261119100300'),

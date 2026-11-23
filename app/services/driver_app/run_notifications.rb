@@ -46,8 +46,9 @@ module DriverApp
       rows = @changes.flat_map { |c| lines(c.merge(title: c[:gone] ? titles[c[:source].values_at("trip_id", "school_route_id")] || c[:source]["trip_label"] : nil), runs[c[:id]]) }
       return if rows.empty?
 
-      DriverNotification.insert_all!(rows)
+      ids = DriverNotification.insert_all!(rows, returning: :id).rows.flatten
       Realtime.notifications_changed(rows)
+      Push.later("driver", ids)
     end
 
     # The office cancelled a run, or brought it back.

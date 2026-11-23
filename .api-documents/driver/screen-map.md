@@ -85,6 +85,8 @@ carry `{ client_id, at }` ([driving.md § 1](driving.md#1-how-every-action-works
 | Tap a line / Mark all read | `POST /driver/notifications/:id/read` / `read_all` | [notifications § 2](notifications.md#2-mark-as-read) |
 | Notice detail (text, picture, link) | `GET /driver/notices/:id` | [notifications § 3](notifications.md#3-open-a-notice-get-drivernoticesid) |
 | Acknowledge | `POST /driver/notices/:id/acknowledge` | [notifications § 4](notifications.md#4-acknowledge-a-notice-post-drivernoticesidacknowledge) |
+| Push token (after sign-in, new token from Firebase) / notifications off on this phone | `PUT /driver/device` / `DELETE /driver/device` | [notifications § 5](notifications.md#5-push-notifications) |
+| Tap a push notification | `PATCH /driver/session` (other company), `GET /driver/notifications`, then as a tap on the line | [notifications § 5.3](notifications.md#53-the-message) |
 
 ## Account
 

@@ -106,8 +106,9 @@ Example: `{"command":"subscribe","identifier":"{\"channel\":\"TrackChannel\",\"s
 
 - **On every (re)connect**, after `confirm_subscription`: fetch what is on screen once (changes made while the socket was
   closed are not replayed).
-- **App to the background**: iOS / Android close the socket; nothing arrives until the app is opened again (push
-  notifications are not sent yet). **App back to the front**: new ticket → connect → subscribe → fetch the screen.
+- **App to the background**: iOS / Android close the socket; nothing arrives on it until the app is opened again. New
+  bell lines (Driver app) and inbox alerts (Convoy App) come as push notifications meanwhile
+  ([driver/notifications.md § 5](driver/notifications.md#5-push-notifications), [convoy-app/home.md § 4.1](convoy-app/home.md#41-push-notifications)). **App back to the front**: new ticket → connect → subscribe → fetch the screen.
 - **Lost connection** (network change, `close` without a `disconnect` frame, no frame for 10 s — pings come every 3 s):
   reconnect with a new ticket, waiting 1 s, 2 s, 4 s … up to 30 s between tries.
 - **`disconnect` with `reconnect: true`** (server restart, a deploy): reconnect as above.

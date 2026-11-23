@@ -1,4 +1,4 @@
-# The push token of this phone (FCM / APNs), kept with the sign-in; nothing is pushed yet.
+# The push token of this phone (FCM), kept with the sign-in; new inbox alerts are pushed to it (Push::AppAlerts).
 module Api
   module V1
     module ConvoyApp

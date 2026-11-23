@@ -94,13 +94,14 @@ Sign In screen.
 ### 4.1 Register the push token: `PATCH /app/device`
 
 `{ device: { platform, push_token } }` → `204`. `platform` is `ios` or `android`; `push_token` is the FCM / APNs token
-(up to 4096 characters). `PUT` works the same (Rails accepts both). Call it after sign-in and whenever the OS gives a new token. Works before Create Your Account.
+(up to 4096 characters; with Firebase on iOS too, give the FCM token, not the raw APNs one). `PUT` works the same (Rails accepts both). Call it after sign-in and whenever the OS gives a new token. Works before Create Your Account.
 
 - One token per sign-in: a second call replaces the first. A token that another sign-in registers moves to that
   sign-in (a phone passed to another person never keeps the old person's token).
 - Flat parameters (`{ platform, push_token }`) are accepted too.
 - `422` an unknown `platform` (`details`); `400` / `422` when `push_token` is missing.
-- Nothing is pushed yet: alerts will be kept in the app's inbox (later phase).
+- New inbox alerts are pushed to it ([home § 4.1](home.md#41-push-notifications)). A token Firebase answers as gone is
+  dropped by the server; register again on the next token.
 
 ### 4.2 Remove it: `DELETE /app/device`
 

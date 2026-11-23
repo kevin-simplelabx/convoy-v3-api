@@ -38,6 +38,7 @@ class DriverJwt < ApplicationRecord
   belongs_to :driver, optional: true
   belongs_to :operator_driver, optional: true
   belongs_to :driver_app_session, optional: true
+  has_one :device, class_name: "DriverDevice", dependent: :delete
 
   # Signed out (or kicked by a sign-in on another phone): its WebSocket closes.
   after_destroy_commit { Realtime.disconnect(self) }

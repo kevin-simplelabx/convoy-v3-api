@@ -3,9 +3,10 @@
 The bell on Drive (red dot when unread) and the Notifications tab: what changed for the driver's trips today and
 tomorrow, a bus to take over, and notices from the office — **Open** notices (a detail page) and **Acknowledge** notices
 (the office needs them read; the time is recorded).
-Conventions: [README.md](README.md). Paths start with `/api/v1`. Needs a picked company. Push notifications are not sent
-yet: fetch the list on app start, when the app comes to the front, and when the WebSocket says `notifications_changed`
-([../websocket.md](../websocket.md)); no polling.
+Conventions: [README.md](README.md). Paths start with `/api/v1`. Needs a picked company (not the push token, § 5).
+Fetch the list on app start, when the app comes to the front, and when the WebSocket says `notifications_changed`
+([../websocket.md](../websocket.md)); no polling. Every new line is also sent as a **push notification** (§ 5), so a
+closed app hears about it too.
 
 ## Contents
 
@@ -13,7 +14,8 @@ yet: fetch the list on app start, when the app comes to the front, and when the 
 2. [Mark as read](#2-mark-as-read)
 3. [Open a notice](#3-open-a-notice-get-drivernoticesid)
 4. [Acknowledge a notice](#4-acknowledge-a-notice-post-drivernoticesidacknowledge)
-5. [Values reference](#5-values-reference)
+5. [Push notifications](#5-push-notifications)
+6. [Values reference](#6-values-reference)
 
 ---
 
@@ -94,7 +96,58 @@ The detail screen (`notice.id` from the bell). Opening it records that the drive
 → the notice with `acknowledged_at` (the office sees who acknowledged and when). Again is fine (the first time stays).
 `422` "This notice needs no acknowledgement" on an Open notice.
 
-## 5. Values reference
+## 5. Push notifications
+
+Firebase Cloud Messaging, Android and iOS (Firebase project `convoy-transport-company-stg`; the APNs key is already in
+it, nothing to set up for iOS on the server). Each new bell line (§ 1, all 7 kinds) is pushed once to the phone the
+driver is signed in on, **from every company the driver works for**, not only the picked one. Nothing else is pushed.
+
+### 5.1 Register the push token: `PUT /driver/device`
+
+`{ device: { platform, push_token } }` → `204`. `platform` is `ios` or `android`; `push_token` is the FCM registration
+token (up to 4096 characters). `PATCH` works the same; flat parameters (`{ platform, push_token }`) are accepted too.
+Call it after sign-in and whenever Firebase gives a new token (`onTokenRefresh`). No company needs to be picked.
+
+- One token per sign-in: a second call replaces it. A token another sign-in registers moves to that sign-in.
+- The token goes with the sign-in: **Sign Out** and signing in on another phone remove it (one phone at a time).
+- A token Firebase answers as gone (app removed, token expired) is dropped by the server; register again on the next
+  token from Firebase.
+- `422` an unknown `platform` (`details`); `400` / `422` when `push_token` is missing.
+
+### 5.2 Remove it: `DELETE /driver/device`
+
+→ `204`. For "stop notifications on this phone" (the OS permission turned off). Sign Out removes it too.
+
+### 5.3 The message
+
+`notification` = the bell line's `title` and `body` (default sound). `data` (all values are strings; keys with no value
+are left out):
+
+```json
+{ "type": "driver_notification", "id": "41", "kind": "run_assigned", "company_id": "3", "membership": "driver-12",
+  "run_id": "812", "run_date": "2026-11-04" }
+```
+
+| Key | Meaning |
+| --- | --- |
+| `type` | always `driver_notification` |
+| `id` | the bell line (`GET /driver/notifications` → `data[].id`) |
+| `kind` | as § 6 |
+| `company_id`, `membership` | the company of the line; `membership` is the key for Switch Company ([auth § 4.1](auth.md#41-switch-company-patch-driversession)) |
+| `run_id`, `run_date` | run lines (`run_*` kinds) |
+| `notice_id` | `notice` lines |
+| `vehicle_id` | `vehicle_switch` lines |
+
+**Tap** (app opened from the push):
+1. If `membership` is not the current one (`GET /driver/session` → `current`), Switch Company to it first
+   (`PATCH /driver/session { membership }`). A membership no longer active answers `422` (or `404`): just open the bell.
+2. Fetch the bell (§ 1) and open line `id` as a tap on it there (mark read, then open by `run.open` / kind). If the
+   line is not in the list any more, open the bell.
+
+**In the foreground** the WebSocket already refreshes the bell (`notifications_changed`); show the push as a banner or
+not, as the app prefers.
+
+## 6. Values reference
 
 | Field | Values |
 | --- | --- |

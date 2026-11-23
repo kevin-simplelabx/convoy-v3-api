@@ -49,7 +49,8 @@
 # cancelled, no / changed service, notice), a Family bill issued, a bus request answered, a booking confirmed / changed /
 # declined / cancelled, an organisation or Family invite. `dedupe_key` makes every alert fire once per account;
 # `occurrence_id` + `occurrence_date` point at the run (partitioned table, so no foreign key); `target` + `target_id` say
-# what a tap opens; `banner_until` keeps it on Home as a banner until then (unless dismissed). Nothing is pushed yet.
+# what a tap opens; `banner_until` keeps it on Home as a banner until then (unless dismissed). `pushed_at`: when it
+# reached a phone as a push (Push::AppAlerts).
 class AppNotification < ApplicationRecord
   # kind => [icon, tone, filter group (delays / notices / nil), chip]. Tone: info (teal), warning (orange), success, danger.
   CATALOGUE = {

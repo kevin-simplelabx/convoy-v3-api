@@ -2,6 +2,17 @@
 
 Changes to calls the app already uses. Newest first.
 
+## 23/11/2026 — Push notifications (no breaking change)
+
+**State: built on the server, not on staging yet** (this line will say "Live on staging" once deployed). The app already
+registers its token (`PUT /app/device`); nothing changes in the calls.
+
+| # | What to change | Doc |
+| --- | --- | --- |
+| 1 | Firebase project `convoy-transport-company-stg` (as the old Convoy apps): register the Convoy App there; on iOS turn on Push Notifications + Background Modes → Remote notifications. Send the **FCM** token on iOS too (no APNs setup needed) | [auth § 4.1](auth.md#41-register-the-push-token-patch-appdevice) |
+| 2 | Each new inbox alert arrives as a push: `title` / `body` as in the inbox, `data` = `type: "app_alert"`, `id`, `kind`, `target`, `target_id`, `trip_id` (strings). Tap → `POST /app/alerts/:id/read`, open `target` as in the inbox | [home § 4.1](home.md#41-push-notifications) |
+| 3 | Notifications › Push (`notify_push`) now really stops push on every phone of the account | [account § 3](account.md#3-account-changes-patch-appprofile) |
+
 ## 19/11/2026 — Live updates over a WebSocket (**breaking**: stop polling)
 
 The app no longer polls. Guide: [../websocket.md](../websocket.md).

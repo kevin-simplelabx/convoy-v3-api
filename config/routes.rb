@@ -64,6 +64,7 @@ Rails.application.routes.draw do
       # Convoy Driver app (drivers' phones)
       namespace :driver_app, path: "driver" do
         resource :cable_ticket, only: :create
+        resource :device, only: %i[update destroy]
         resource :session, only: %i[show create update destroy] do
           post :code
           post :email
