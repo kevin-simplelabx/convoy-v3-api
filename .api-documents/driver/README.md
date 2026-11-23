@@ -66,11 +66,11 @@ Sign in with the mobile and code `123456`:
 | `+65 9002 3344` | Lee Kok Wah (SimpleDrive, bus PD4472H) | School Run (name list) every school day, and the Cross-site Shuttle's 12:00 return every weekday |
 | `+65 9001 2233` | Kumar s/o Rajan (SimpleDrive, bus PD3318K) | his next run (weekdays 07:45) taken by a replacement: shows as Replaced |
 | `+65 9247 4471` | Frankie Ho (SimpleDrive, bus PC7939R) | the other side of Eric's bus swap; a transfer every day at 14:00 |
-| `+65 9003 4455` | Siti Nurhaliza (SimpleDrive, bus PC8841T) | St. Stephen's AM 1 every school day (Ethan Tan has a photo; the attendant has a note) and the MBC Campus Shuttle; yesterday's ended runs (Plan): a School Bus run left early with a child not boarded, a skipped point and feedback; a shuttle force ended (Accident); a shuttle skipped before the start; Vehicle History: the five days before yesterday driven |
+| `+65 9003 4455` | Siti Nurhaliza (SimpleDrive, bus PC8841T) | St. Stephen's AM 1 every school day (Ethan Tan has a photo; the attendant has a note) and the MBC Campus Shuttle; her last ended runs (Plan; dates below): on the **last school day before the seed**, St. Stephen's AM 1 left its first point early with a child not boarded (`left_early`), skipped the next point and was completed with feedback; on the **last day before the seed with her shuttles**, a shuttle force ended (Accident) and the next one skipped before the start; Vehicle History: the five days before yesterday driven |
 
 How long it lasts: the runs above come from recurring trips and routes, so they exist every day up to 120 days ahead
 (the daily job adds the next day). Three things are made by the seed for the day it runs: the bus swap (tomorrow),
-Kumar's Replaced run (his next run), Siti's ended runs (yesterday) and Siti's / Tony's driven days (the five days before
+Kumar's Replaced run (his next run), Siti's ended runs (the last school day / shuttle day before the seed: in the school holidays that is the last day of term, e.g. 20/11/2026) and Siti's / Tony's driven days (the five days before
 yesterday). They are made again each time staging is re-seeded.
 
 **School holidays:** School Bus and School Run follow the MOE school calendar. There are no school runs in the holidays

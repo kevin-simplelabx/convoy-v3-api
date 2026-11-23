@@ -1,7 +1,7 @@
 # Reports > Shuttle Report sample: stop events (arrivals, departures, boardings; no GPS) for the MBC Campus Shuttle runs
 # of the last three months that have none, so the report has real rows. Mostly on time, some early, a few late, a
 # rare early departure; riders vary by run and day (seeded by the run, so seeds give the same numbers). Yesterday is left
-# to the Driver app sample (95_driver_app: what Siti Nurhaliza recorded in the app).
+# out; 95_driver_app replaces these on the shuttles Siti Nurhaliza ended in the Driver app.
 with_company("SD") do
   Time.use_zone(ActsAsTenant.current_tenant.timezone) do
     trip = Trip.kept.find_by(label: "seed-mbc-shuttle")

@@ -3,7 +3,8 @@
 # started: in the morning a child boards when the bus leaves their stop (QR pass, card, palm, or ticked by the attendant)
 # and alights at the school gate once the run ends; in the afternoon everyone boards at the school and alights when the bus
 # reaches their stop. A child with Bus Not Required has no row; every 17th child was not at the stop. Running it again
-# writes the runs from the start.
+# writes the runs from the start. A run the driver drives in the Driver app (it has driver_app_actions) keeps what the app
+# recorded: the simulator does not touch it.
 module SchoolLive
   class Simulate < ApplicationService
     METHODS = %w[qr card qr palm card tick].freeze
@@ -16,6 +17,7 @@ module SchoolLive
     def call
       raise Error, "Sample live data is not for production" if Rails.env.production? && ENV["SAMPLE_DATA"] != "1"
 
+      @in_app = DriverAppAction.where(occurrence_date: @now.to_date).distinct.pluck(:occurrence_id).to_set
       School.find_each do |school|
         SchoolLive.runs(school, @now.to_date).each_value do |list|
           ctx = SchoolLive.context(school, @now.to_date, list)
@@ -28,6 +30,8 @@ module SchoolLive
 
     def write(run)
       occ = run.occ
+      return if @in_app.include?(occ.id)
+
       occ.passenger_marks.delete_all
       return unless run.started?
 

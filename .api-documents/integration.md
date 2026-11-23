@@ -72,6 +72,7 @@ Examples come from test and seed data (names like `user111@example.com`): use th
 | --- | --- |
 | Staging | `https://convoy-api-staging.convoy.sg/api/v1` |
 | Local | `http://localhost:3000/api/v1` |
+| Production | not set up yet; use staging |
 
 Put the base URL in environment config, never hard-code it. Staging accepts browser calls from any `localhost` port.
 

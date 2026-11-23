@@ -142,45 +142,61 @@ with_company("SD") do
   end
 end
 
-# How Siti Nurhaliza ended yesterday's runs in the Driver app (Trip Details shows the record): the School Bus run left
+# How Siti Nurhaliza ended her last runs in the Driver app (Plan / Trip Details show the record): the School Bus run left
 # its first point with a child not boarded, skipped the next point and was completed with feedback; a shuttle force
-# ended after its first point (Accident); the next shuttle was skipped before the start. Sent through DriverApp::Drive
-# with fixed client_ids, so a second seed is replayed, not done again.
+# ended after its first point (Accident); the next shuttle was skipped before the start.
+# Days: the last school day before the seed for the School Bus run (not "yesterday": weekends and school holidays have
+# no school run), the last day before the seed with two of her shuttles for the others.
+# Other seeds and the live simulator write on the same past runs first (92_trip_history completes them, 94_shuttle_report
+# adds stop events, Telematics::Simulate ticks the children, the Vehicle History step below marks them driven). So a run
+# already showing its record is left alone; any other run is put back to never driven (everything those wrote, and what
+# an older version of this seed drove, removed) and driven again through DriverApp::Drive. The seed fails if a record
+# is still missing afterwards.
 with_company("SD") do
-  siti = Driver.find_by(phone: "+6590034455")
-  account = siti && DriverAccount.for_phone!(siti.phone).tap(&:link_memberships!)
-  yesterday = Date.current - 1
-  # A database seeded before AM 1 was Siti's (45_school_bus moves it to her bus from the seed day): yesterday's AM 1,
-  # never driven in the app, becomes hers.
-  am1 = School.find_by(name: "St. Stephen's School")&.plans&.find_by(session: "am", in_use: true)&.routes&.find_by(number: 1)
-  am1_run = am1 && TripOccurrence.where.not(status: %w[removed skipped cancelled]).find_by(school_route: am1, date: yesterday)
-  if siti && am1_run && am1_run.driver_id != siti.id && am1_run.started_at.nil? && !DriverAppAction.exists?(occurrence_id: am1_run.id)
-    am1_run.update_columns(driver_id: siti.id, vehicle_id: Vehicle.kept.find_by!(plate: "PC8841T").id) # rubocop:disable Rails/SkipsModelValidations
+  siti = Driver.find_by!(phone: "+6590034455")
+  account = DriverAccount.for_phone!(siti.phone).tap(&:link_memberships!)
+  past = TripOccurrence.where(date: ...Date.current).where.not(status: "removed")
+  # Cancelled by the office or the client: not hers to drive. Skipped by her (driver_end skipped): this seed's own record.
+  usable = ->(scope) { scope.where.not(status: "cancelled").or(scope.where(driver_end: "skipped")) }
+
+  # AM 1 is Siti's from the day 45_school_bus put it on her bus; on a database seeded before that, the run of the chosen
+  # day may still be another driver's, never driven in the app: it becomes hers.
+  am1 = School.find_by!(name: "St. Stephen's School").plans.find_by!(session: "am", in_use: true).routes.find_by!(number: 1)
+  bus = usable.(past.where(school_route: am1)).order(date: :desc).first
+  if bus && bus.driver_id != siti.id && bus.started_at.nil?
+    bus.update_columns(driver_id: siti.id, vehicle_id: Vehicle.kept.find_by!(plate: "PC8841T").id) # rubocop:disable Rails/SkipsModelValidations
   end
-  runs = siti ? TripOccurrence.where(driver: siti, date: yesterday).where.not(status: %w[removed skipped]).includes(:stop_events).order(:start_time, :id).to_a : []
-  # Runs this seed drove before (replayed by client_id), or runs never driven in the app (other seeds' telematics stop
-  # events are cleared below before the run is driven).
-  mine = DriverAppAction.where(driver_account: account, occurrence_id: runs.map(&:id)).distinct.pluck(:occurrence_id)
-  runs = runs.select { mine.include?(it.id) || (it.started_at.nil? && it.stop_events.none? { |e| e.source == "driver_app" } && !it.cancelled?) }
+  mine = usable.(past.where(driver: siti, kind: "corporate_shuttle"))
+  day = mine.group(:date).having("count(*) >= 2").maximum(:date)&.keys&.max
+  shuttles = day ? mine.where(date: day).order(:start_time, :id).first(2) : []
+  raise "Siti's ended runs: no St. Stephen's AM 1 run before today" unless bus
+  raise "Siti's ended runs: no day before today with two of her shuttles" unless shuttles.size == 2
+
+  events = ->(occ) { OccurrenceStopEvent.where(occurrence_id: occ.id, occurrence_date: occ.date) }
+  recorded = {
+    bus: ->(occ) { occ.driver_end == "completed" && events.(occ).where("left_early_missing > 0").exists? && events.(occ).exists?(skipped: true) },
+    forced: ->(occ) { occ.driver_end == "forced" },
+    skipped: ->(occ) { occ.driver_end == "skipped" }
+  }
+  reset = lambda do |occ|
+    events.(occ).delete_all
+    OccurrencePassenger.where(occurrence_id: occ.id, occurrence_date: occ.date).delete_all
+    DriverAppAction.where(occurrence_id: occ.id, occurrence_date: occ.date).delete_all
+    occ.update_columns(status: "scheduled", started_at: nil, ended_at: nil, driver_end: nil, driver_end_reason: nil, end_on_board: nil, # rubocop:disable Rails/SkipsModelValidations
+                       cancelled_at: nil, cancelled_by_id: nil, max_delay_minutes: nil, overridden_fields: occ.overridden_fields - [ "status" ])
+  end
   drive = lambda do |occ, step, action, at, **params|
-    occ.reload
-    # The driver did this yesterday, before the job completed the run (92_trip_history runs it): a run completed without
-    # a start refuses every action, so a run driven for the first time is reopened, without the stop events another
-    # seed made up for it (94_shuttle_report on a database seeded before it left yesterday out).
-    if mine.exclude?(occ.id) && DriverApp::Runs.not_driven?(occ)
-      OccurrenceStopEvent.where(occurrence_id: occ.id, occurrence_date: occ.date).delete_all
-      occ.update_columns(status: "scheduled", max_delay_minutes: nil) # rubocop:disable Rails/SkipsModelValidations
-    end
-    DriverApp::Drive.call(account:, member: siti, occ:, action:,
+    DriverApp::Drive.call(account:, member: siti, occ: occ.reload, action:,
                           params: { client_id: Digest::UUID.uuid_v5(Digest::UUID::OID_NAMESPACE, "seed-driver-end-#{occ.id}-#{step}"), at: at.iso8601, **params })
   end
-  puts "  Siti's ended runs: no School Bus run yesterday (#{yesterday})" unless runs.any?(&:school_route)
-  puts "  Siti's ended runs: fewer than 2 shuttles yesterday (#{yesterday})" if runs.count { it.kind == "corporate_shuttle" } < 2
 
-  if (bus = runs.find(&:school_route))
+  unless recorded[:bus].(bus)
+    reset.(bus)
     t = bus.starts_at
     points = Occurrences::Stops.detailed(bus).reject { it[:waypoint] }
-    kids = Occurrences::Passengers.call(bus, points:).select { it[:state] == "expected" }
+    kids = Occurrences::Passengers.call(bus.reload, points:).select { it[:state] == "expected" }
+    raise "Siti's ended runs: no child to leave behind at the first point of #{bus.date}" if kids.none? { it[:pickup_position] == points.first[:position] }
+
     drive.(bus, "start", :start, t - 5.minutes)
     points[0..-2].each_with_index do |p, i|
       at = t + (i * 8).minutes
@@ -198,8 +214,9 @@ with_company("SD") do
     drive.(bus, "complete", :complete, bus.ends_at, feedback: "Waited at the first point, one child did not come down")
   end
 
-  shuttles = runs.select { it.kind == "corporate_shuttle" }
-  if (forced = shuttles.first)
+  forced, skipped = shuttles
+  unless recorded[:forced].(forced)
+    reset.(forced)
     t = forced.starts_at
     first = Occurrences::Stops.detailed(forced).reject { it[:waypoint] }.first
     drive.(forced, "start", :start, t - 5.minutes)
@@ -208,9 +225,13 @@ with_company("SD") do
     drive.(forced, "force-end", :force_end, t + 12.minutes, reason: "Accident", called_operations: true,
                                                               feedback: "Minor collision at the junction, nobody hurt. Passengers walked to the office")
   end
-  if (skipped = shuttles.second)
+  unless recorded[:skipped].(skipped)
+    reset.(skipped)
     drive.(skipped, "skip", :skip, skipped.starts_at - 20.minutes, reason: "Traffic Congestion")
   end
+
+  { bus:, forced:, skipped: }.each { |k, occ| raise "Siti's ended runs: the #{k} record on #{occ.date} did not come out" unless recorded[k].(occ.reload) }
+  puts "  Siti's ended runs: School Bus #{bus.date}, shuttles #{day}"
 end
 
 # Vehicle History (the buses driven each day) counts runs started in the app. Siti's and Tony Tan's runs of the five

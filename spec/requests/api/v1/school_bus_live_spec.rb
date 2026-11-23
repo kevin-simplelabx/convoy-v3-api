@@ -161,6 +161,19 @@ RSpec.describe "School Bus Live Ops" do
     expect(within_tenant(company) { OccurrencePassenger.count }).to eq(2)
   end
 
+  it "leaves a run the driver drives in the Driver app to the app" do
+    within_tenant(company) do
+      occ = f[:r1].occurrences.find_by!(date: Date.new(2026, 11, 3))
+      account = DriverAccount.create!(phone: "+6591112222")
+      DriverAppAction.create!(company_id: company.id, driver_account: account, client_id: SecureRandom.uuid, occurrence: occ, kind: "start",
+                              at: occ.started_at, payload: {})
+      SchoolLive::Simulate.call
+    end
+    rows = within_tenant(company) { OccurrencePassenger.order(:passenger_key).pluck(:passenger_key, :state, :source) }
+    expect(rows.map { it.first(2) }).to eq([ %w[S-1 boarded], %w[S-2 not_boarded] ]) # what was there before, kept
+    expect(rows.map(&:last)).not_to include("simulator")
+  end
+
   it "shows a School Bus run on the Live Map with the school and the children at each stop" do
     within_tenant(company) { school.riders.find_by!(rid: "S-1").update!(address: "101 Bedok North Ave 4") }
     sign_in_as(create(:user, company:, permissions: %w[vehicles]))

@@ -7,6 +7,7 @@
 # were started by the driver (every 4th started 6 min late, every 5th lost GPS 5 min ago), and for a run starting within
 # 20 min every 3rd bus is on its way (started) while the others wait at the first pick-up, not started.
 # School Bus runs of today get the children's attendance (SchoolLive::Simulate).
+# A run the driver drives in the Driver app (it has driver_app_actions) is left to the app: no sample points, stops or start.
 # Running it again redoes the runs in progress from their start, so it is safe to repeat.
 module Telematics
   class Simulate < ApplicationService
@@ -23,6 +24,7 @@ module Telematics
       raise Error, "Sample live data is not for production" if Rails.env.production? && ENV["SAMPLE_DATA"] != "1"
 
       vehicles = Vehicle.kept.includes(:tracking_devices).order(:plate).to_a
+      @in_app = DriverAppAction.where(occurrence_date: @now.to_date).distinct.pluck(:occurrence_id).to_set
       runs = LiveMap.runs_around(vehicles.map(&:id), @now).group_by(&:vehicle_id)
       idle = vehicles.reject { |v| runs[v.id]&.any? { |o| o.date == @now.to_date } }
       offline = idle.last(2).map(&:id)
@@ -30,7 +32,7 @@ module Telematics
       vehicles.each_with_index do |v, i|
         device = device_for(v, i)
         list = runs[v.id] || []
-        if (occ = LiveMap.run_now(list, @now)) then drive(occ, device, i)
+        if (occ = LiveMap.run_now(list, @now)) then @in_app.include?(occ.id) ? nil : drive(occ, device, i)
         elsif (k = offline.index(v.id)) then went_offline(device, i, k)
         else park(v, device, list, i)
         end
@@ -121,7 +123,7 @@ module Telematics
     def park(v, device, list, i)
       done = list.reverse.find { |o| o.ends_at <= @now }
       nxt = list.find { |o| o.starts_at > @now }
-      if nxt && i % 3 == 0 && nxt.starts_at <= @now + 20.minutes && (first = Occurrences::Stops.planned(nxt).find { |s| s[:lat] })
+      if nxt && i % 3 == 0 && nxt.starts_at <= @now + 20.minutes && @in_app.exclude?(nxt.id) && (first = Occurrences::Stops.planned(nxt).find { |s| s[:lat] })
         return approach(nxt, device, first, i)
       end
 
