@@ -4,7 +4,7 @@ Things the app does by itself (no server field or call) and changes the app has 
 
 ## 25/11/2026 — #20 new Firebase project, #21 token registration at the same moment (no API change)
 
-**Not on staging yet** (staging still sends from the old project until the next deploy; this file says when it is).
+**Live on staging** (deployed `5575e0f` 25/11; Firebase checked from the server: project `convoy-v3-transport-company`, sign-in OK).
 
 **#20 — move the Driver app to Firebase project `convoy-v3-transport-company`.** We were wrong that the old Convoy apps
 used `convoy-transport-company-stg`. Neither old project is used: v3 has its own project, the one that already hosts the

@@ -4,7 +4,7 @@ Changes to calls the app already uses. Newest first.
 
 ## 25/11/2026 — Push: new Firebase project (no API change)
 
-**Not on staging yet** (staging still sends from the old project until the next deploy; this file says when it is).
+**Live on staging** (deployed `5575e0f` 25/11; Firebase checked from the server: project `convoy-v3-transport-company`, sign-in OK).
 
 | # | What to change | Doc |
 | --- | --- | --- |
