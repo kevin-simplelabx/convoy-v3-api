@@ -31,4 +31,14 @@ class AppDevice < ApplicationRecord
   enum :platform, { ios: "ios", android: "android" }, validate: true
 
   validates :push_token, presence: true, length: { maximum: 4096 }
+
+  # Saves the phone's token for this sign-in: one per sign-in, and a token another sign-in has moves here. The sign-in row
+  # is locked first, so registrations sent at the same moment wait for each other instead of both inserting.
+  def self.register!(jwt, attrs)
+    transaction do
+      jwt.lock!
+      where(push_token: attrs[:push_token]).where.not(app_jwt_id: jwt.id).delete_all
+      where(app_jwt: jwt).first_or_initialize.update!(app_account_id: jwt.app_account_id, **attrs)
+    end
+  end
 end

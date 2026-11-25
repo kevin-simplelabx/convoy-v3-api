@@ -6,12 +6,7 @@ module Api
       class DevicesController < BaseController
         # PUT /driver/device { device: { platform (ios|android), push_token } }
         def update
-          attrs = params.expect(device: %i[platform push_token])
-          DriverDevice.transaction do
-            DriverDevice.where(push_token: attrs[:push_token]).where.not(driver_jwt_id: current_driver_jwt.id).delete_all
-            device = current_driver_jwt.device || current_driver_jwt.build_device(driver_account: current_account)
-            device.update!(attrs)
-          end
+          DriverDevice.register!(current_driver_jwt, params.expect(device: %i[platform push_token]).to_h.symbolize_keys)
           head :no_content
         end
 

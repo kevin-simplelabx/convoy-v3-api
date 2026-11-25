@@ -4,12 +4,9 @@ Mismatches between the Driver app API on staging (https://convoy-api-staging.con
 (convoy-v3-api/.api-documents/driver/). Each endpoint is called on staging before it is wired; the scrubbed answers are
 kept as test fixtures in test/fixtures/. The backend answers in fe-updates.md.
 
-Last re-checked 2026-11-23 against convoy-v3-api 5bc9041. **Open: 0. Waiting on the backend: 4 (#16–#19).** The next
-issue is #20.
+Last re-checked 2026-11-25 against convoy-v3-api a904f35. **Open: 2 (#20, #21).** The next issue is #22.
 
 ## Open
-
-None.
 
 New issues go here, newest on top, in the integration.md § 9 format:
 
@@ -20,46 +17,31 @@ New issues go here, newest on top, in the integration.md § 9 format:
     Doc says: <doc>.md § x — what the doc says, and what the app does meanwhile
     ```
 
-## Waiting on the backend
-
-Not mismatches: the docs say these are not built on the server yet. The app works around them as below; wire them when
-fe-updates.md announces them, then move them to Closed.
-
-### 19. Prod host (23/11)
+### 21. Push: two token registrations at once answer 500 (25/11)
 ```
-Endpoint: none, the production API host is not given yet
-Doc says: README.md gives only staging (https://convoy-api-staging.convoy.sg)
-App:      the prod flavor's .env and the CI workflow's prod default (.github/workflows/android-build.yml,
-          PRODUCTION_BASE_API_URL) both point at staging. Set the repo variable PRODUCTION_BASE_API_URL once known.
+Endpoint: PATCH /driver/device { device: { platform: "android", push_token } }   (Eric, same token, 3 calls at once)
+Got:      204, 500, 500 (internal_server_error "Something went wrong"); the same calls one after another: 204, 204
+Doc says: notifications.md § 5.1 — "a second call replaces it"; nothing about a 500
+App:      sends one registration at a time (Push._register), since Android gives the token at start-up and through
+          onTokenRefresh together. The server should make the upsert safe (unique push_token / driver_jwt_id).
 ```
 
-### 18. Push notifications (23/11)
+### 20. Push: which Firebase project? (25/11)
 ```
-Endpoint: none (no device-token registration, no push)
-Doc says: README.md, notifications.md — push notifications are not sent yet
-App:      no Firebase / push setup. Updates come over the WebSocket (/cable) while the app is open, and from polling
-          on start and resume. A closed app gets no alert for a new or changed run, or a notice.
-Needs:    a device-token endpoint (register / remove on sign out) and the push payloads per notification kind.
+Endpoint: PATCH /driver/device { device: { platform, push_token } }   (Eric: 204; DELETE 204; platform "web" 422)
+Got:      the server sends Driver pushes from Firebase project convoy-transport-company-stg, but the Driver app (ids
+          com.simplelabx.convoydriver / .staging) is registered in convoy-1131e, as the old Convoy Driver app was. A
+          token from one project cannot be sent to from another.
+Doc says: notifications.md § 5, fe-updates 23/11 #18 — convoy-transport-company-stg, "the same one as the old Convoy
+          apps": not true for the Driver app.
+App:      push is wired on convoy-1131e (lib/configs/firebase_options.dart, lib/services/push.dart). 25/11, Tony:
+          iOS simulator and Android emulator register their token (PATCH /device 204); on iOS a tapped push opens
+          the bell. Nothing arrives from staging until the server sends through convoy-1131e.
+Needs:    the server to send Driver app pushes through convoy-1131e (its service account), for staging and prod.
 ```
-
-### 17. Update with Singpass (23/11)
-```
-Endpoint: none (no Myinfo link)
-Doc says: profile.md § 1, screen-map.md — Update with Singpass is not available yet
-App:      the button is hidden (settings_sections.dart, singpassAction: null); fields already verified with Singpass
-          show locked.
-Needs:    the Myinfo authorise URL / callback flow and the endpoint that saves the verified fields.
-```
-
-### 16. Main contractor handover (23/11)
-```
-Endpoint: none; GET /driver/runs/:id gives contractor.requires_app only
-Doc says: runs.md § 4, screen-map.md — the handover flow is not built on the server (and the trip form has no app name)
-App:      "Continue on X's app" / keep driving here is kept on the phone only (TripsNotifier.extChoice): the office
-          never sees it, and it is lost when the app restarts.
-Needs:    an action to record the choice (e.g. POST /driver/runs/:id/handover {to: "contractor" | "stay"}) and it in
-          the run's answer.
-```
+Fixed on our side 25/11: the Android API key in convoy-1131e had no Android apps in its application restrictions
+(Firebase Installations answered 403 ACCESS_DENIED, so no FCM token). Both packages with the debug and release SHA-1s
+were added.
 
 ## Closed
 
@@ -81,4 +63,8 @@ All checked on staging. Numbers are kept so `API-ISSUES #N` references in old co
 | 12 | WebSocket | A bad ticket gets the `disconnect` frame |
 | 13 | Notifications | `run.open` on bell lines; the app uses it and dims `open: false` lines |
 | 14 | Vehicle History | Counts only runs the driver started |
-| 15 | Sample data | Siti's records re-seeded; a School Bus child not boarded (`left_early`) is still missing — test data only, closed without a fix |
+| 15 | Sample data | Seed bug, fixed 23/11: Siti's SSS AM 1 (run 1841, 20/11) has `left_early: { missing: 1 }`, a skipped point and feedback; runs 603 force ended (Accident) and 605 skipped |
+| 16 | Driving | Main contractor app built 23/11: `contractor { name, requires_app, choice, chosen_at }` on every run card, `POST /runs/:id/app_choice`, `complete` with `on_contractor_app`. Wired; the phone-only `extChoice` is gone. Checked: the card field, `not_started`, `not_required`; the success path (Eric's NYP Industry Visit, from 15:00 SGT) not driven yet |
+| 17 | Profile | Update with Singpass: not planned. The button stays hidden; verified fields stay locked |
+| 18 | Notifications | Push built 23/11 (`PUT` / `DELETE /driver/device`, a push per new bell line). Wired 25/11 on Firebase convoy-1131e; delivery waits on #20 |
+| 19 | Environments | Staging only, no production API yet: the prod flavor and CI keep staging until a host is announced |

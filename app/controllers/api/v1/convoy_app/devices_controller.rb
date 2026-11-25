@@ -7,12 +7,7 @@ module Api
 
         # PUT /app/device { platform (ios|android), push_token }
         def update
-          attrs = params.expect(device: %i[platform push_token])
-          AppDevice.transaction do
-            AppDevice.where(push_token: attrs[:push_token]).where.not(app_jwt_id: current_app_jwt.id).delete_all
-            device = current_app_jwt.devices.first_or_initialize(app_account: current_account)
-            device.update!(attrs)
-          end
+          AppDevice.register!(current_app_jwt, params.expect(device: %i[platform push_token]).to_h.symbolize_keys)
           head :no_content
         end
 

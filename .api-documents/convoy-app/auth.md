@@ -98,6 +98,7 @@ Sign In screen.
 
 - One token per sign-in: a second call replaces the first. A token that another sign-in registers moves to that
   sign-in (a phone passed to another person never keeps the old person's token).
+- Calls sent at the same moment are fine: they wait for each other, each answers `204`, and the last one wins.
 - Flat parameters (`{ platform, push_token }`) are accepted too.
 - `422` an unknown `platform` (`details`); `400` / `422` when `push_token` is missing.
 - New inbox alerts are pushed to it ([home § 4.1](home.md#41-push-notifications)). A token Firebase answers as gone is

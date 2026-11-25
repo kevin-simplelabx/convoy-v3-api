@@ -2,6 +2,15 @@
 
 Changes to calls the app already uses. Newest first.
 
+## 25/11/2026 — Push: new Firebase project (no API change)
+
+**Not on staging yet** (staging still sends from the old project until the next deploy; this file says when it is).
+
+| # | What to change | Doc |
+| --- | --- | --- |
+| 1 | Firebase project is now **`convoy-v3-transport-company`** (not `convoy-transport-company-stg`, row 1 of 23/11): add the Convoy App's Android packages (with SHA-1s) and iOS bundle ids there, replace the Firebase config files, and upload the APNs key (.p8) under Project settings → Cloud Messaging. Calls do not change; the app registers its new token with `PUT /app/device` as now. Until the app is on the new project, no push arrives | [home § 4.1](home.md#41-push-notifications) |
+| 2 | `PUT /app/device` calls sent at the same moment now all answer `204` and keep one token per sign-in (two calls at once could answer `500` or keep two tokens) | [auth § 4.1](auth.md#41-register-the-push-token-patch-appdevice) |
+
 ## 23/11/2026 — Push notifications (no breaking change)
 
 **Live on staging** (deployed `0f13284` 23/11). The app already

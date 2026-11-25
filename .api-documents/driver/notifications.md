@@ -98,8 +98,9 @@ The detail screen (`notice.id` from the bell). Opening it records that the drive
 
 ## 5. Push notifications
 
-Firebase Cloud Messaging, Android and iOS (Firebase project `convoy-transport-company-stg`; the APNs key is already in
-it, nothing to set up for iOS on the server). Each new bell line (§ 1, all 7 kinds) is pushed once to the phone the
+Firebase Cloud Messaging, Android and iOS. Firebase project **`convoy-v3-transport-company`** (staging; the same project
+as the Convoy App and the staging web app). Register the app's Android packages and iOS bundle ids there and upload the
+APNs key (.p8) in its Cloud Messaging settings; the server sends through Firebase only. Each new bell line (§ 1, all 7 kinds) is pushed once to the phone the
 driver is signed in on, **from every company the driver works for**, not only the picked one. Nothing else is pushed.
 
 ### 5.1 Register the push token: `PUT /driver/device`
@@ -109,6 +110,8 @@ token (up to 4096 characters). `PATCH` works the same; flat parameters (`{ platf
 Call it after sign-in and whenever Firebase gives a new token (`onTokenRefresh`). No company needs to be picked.
 
 - One token per sign-in: a second call replaces it. A token another sign-in registers moves to that sign-in.
+- Calls sent at the same moment (start-up and `onTokenRefresh`) are fine: they wait for each other, each answers `204`,
+  and the last one wins.
 - The token goes with the sign-in: **Sign Out** and signing in on another phone remove it (one phone at a time).
 - A token Firebase answers as gone (app removed, token expired) is dropped by the server; register again on the next
   token from Firebase.

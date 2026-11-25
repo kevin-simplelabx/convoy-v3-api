@@ -3,8 +3,9 @@
 module Push
   class Fcm
     SCOPE = "https://www.googleapis.com/auth/firebase.messaging".freeze
-    # Error codes that mean the token is no use any more (app removed, token from another Firebase project, malformed).
-    GONE = %w[UNREGISTERED SENDER_ID_MISMATCH].freeze
+    # Error codes that mean the token is no use any more (app removed, malformed). SENDER_ID_MISMATCH (a token from
+    # another Firebase project) is not one: it is a set-up error, raised and reported, and the token is kept.
+    GONE = %w[UNREGISTERED].freeze
 
     def initialize(credentials_json)
       @project_id = JSON.parse(credentials_json).fetch("project_id")

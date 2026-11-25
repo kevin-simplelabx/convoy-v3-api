@@ -31,4 +31,15 @@ class DriverDevice < ApplicationRecord
   enum :platform, { ios: "ios", android: "android" }, validate: true
 
   validates :push_token, presence: true, length: { maximum: 4096 }
+
+  # Saves the phone's token for this sign-in: one per sign-in, and a token another sign-in has moves here. The sign-in row
+  # is locked first, so registrations sent at the same moment (start-up and onTokenRefresh) wait for each other instead
+  # of both inserting (API-ISSUES #21).
+  def self.register!(jwt, attrs)
+    transaction do
+      jwt.lock!
+      where(push_token: attrs[:push_token]).where.not(driver_jwt_id: jwt.id).delete_all
+      find_or_initialize_by(driver_jwt: jwt).update!(driver_account_id: jwt.driver_account_id, **attrs)
+    end
+  end
 end

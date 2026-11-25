@@ -139,7 +139,9 @@ One inbox per account across Family, staff and bookings. Every new alert is also
 
 ### 4.1 Push notifications
 
-Firebase Cloud Messaging, Android and iOS (Firebase project `convoy-transport-company-stg`; nothing to set up for APNs).
+Firebase Cloud Messaging, Android and iOS. Firebase project **`convoy-v3-transport-company`** (staging; the same project
+as the Driver app and the staging web app): register the app's Android packages and iOS bundle ids there and upload the
+APNs key (.p8) in its Cloud Messaging settings.
 Each new inbox alert (every kind of § 5) is pushed once to **every phone the account is signed in on** that registered a
 token ([auth § 4.1](auth.md#41-register-the-push-token-patch-appdevice)), unless **Notifications › Push** is off
 (`notify_push: false`, [account § 3](account.md#3-account-changes-patch-appprofile)). The alert is in the inbox either way.

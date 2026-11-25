@@ -2,12 +2,41 @@
 
 Things the app does by itself (no server field or call) and changes the app has to act on. Newest first.
 
+## 25/11/2026 — #20 new Firebase project, #21 token registration at the same moment (no API change)
+
+**Not on staging yet** (staging still sends from the old project until the next deploy; this file says when it is).
+
+**#20 — move the Driver app to Firebase project `convoy-v3-transport-company`.** We were wrong that the old Convoy apps
+used `convoy-transport-company-stg`. Neither old project is used: v3 has its own project, the one that already hosts the
+staging web app, for the Driver app and the Convoy App both. To do on your side (ask the project owner for access):
+
+1. Add the Android apps `com.simplelabx.convoydriver` and `com.simplelabx.convoydriver.staging` with the debug and
+   release SHA-1s, and the iOS app(s); replace `google-services.json`, `GoogleService-Info.plist` and
+   `firebase_options.dart`.
+2. Upload the APNs key (.p8, Key ID, Team ID) under Project settings → Cloud Messaging → Apple app configuration.
+3. If the Android API key in Google Cloud → Credentials has app restrictions, add both packages with their SHA-1s (the
+   403 you fixed in `convoy-1131e`).
+4. Nothing changes in the calls: the app registers the new token with `PUT /driver/device` as now (a new project gives
+   a new token at start-up).
+
+A token from another Firebase project is no longer dropped by the server: the push fails and we see the error in our
+logs, and the token stays until the app registers a new one. So until step 1 is on the phone, nothing arrives.
+
+**#21 — fixed.** Registrations sent at the same moment for one sign-in now wait for each other: each answers `204`, one
+token is kept per sign-in (the last call's). You may keep sending one at a time; it is not needed any more.
+
+| # | Breaking | Change / answer | Doc |
+| --- | --- | --- | --- |
+| 20 | no (set-up) | Firebase project is `convoy-v3-transport-company` for the Driver app (and the Convoy App); register the apps + APNs key there. A wrong-project token is kept and the error logged, no longer dropped. | [notifications § 5](notifications.md#5-push-notifications) |
+| 21 | no | `PUT` / `PATCH /driver/device` sent at the same moment: all `204`, one token per sign-in (the 500 is fixed). | [notifications § 5.1](notifications.md#51-register-the-push-token-put-driverdevice) |
+
 ## 23/11/2026 — #18 Push notifications (new endpoints, no breaking change)
 
 **Live on staging** (deployed `0f13284` 23/11; Firebase checked from the server). The WebSocket and the reload on
 start / resume stay as they are; push is added on top for a closed or background app.
 
-**Set up.** Firebase project `convoy-transport-company-stg` (the same one as the old Convoy apps). Register the Driver
+**Set up.** ~~Firebase project `convoy-transport-company-stg` (the same one as the old Convoy apps).~~ Replaced 25/11:
+project `convoy-v3-transport-company`, see #20 above. Register the Driver
 app there (`google-services.json` / `GoogleService-Info.plist`). On iOS turn on Push Notifications and Background Modes →
 Remote notifications. iOS needs no APNs setup from you: the server sends through Firebase only.
 

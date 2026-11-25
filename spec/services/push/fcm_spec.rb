@@ -34,6 +34,11 @@ RSpec.describe Push::Fcm do
     expect(deliver).to eq(:unregistered)
   end
 
+  it "raises Push::Error for a token from another Firebase project (a set-up error: the token is kept)" do
+    stub_fcm { |s| s.post(path) { [ 403, {}, { error: { status: "PERMISSION_DENIED", message: "SenderId mismatch", details: [ { errorCode: "SENDER_ID_MISMATCH" } ] } }.to_json ] } }
+    expect { deliver }.to raise_error(Push::Error, /FCM 403.*SenderId mismatch/)
+  end
+
   it "raises Push::Error on other answers and when Firebase cannot be reached" do
     stub_fcm { |s| s.post(path) { [ 503, {}, { error: { status: "UNAVAILABLE" } }.to_json ] } }
     expect { deliver }.to raise_error(Push::Error, /FCM 503/)
